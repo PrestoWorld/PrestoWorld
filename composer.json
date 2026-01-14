@@ -13,5 +13,8 @@
             "email": "puleeno@gmail.com"
         }
     ],
-    "require": {}
+    "minimum-stability": "dev",
+    "require": {
+        "witals/framework": "*"
+    }
 }
