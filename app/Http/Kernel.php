@@ -33,6 +33,14 @@ class Kernel implements KernelContract
      */
     public function handle(Request $request): Response
     {
+        // Reset debug bar for the current request
+        if ($this->app->has(\App\Foundation\Debug\DebugBar::class)) {
+            $this->app->make(\App\Foundation\Debug\DebugBar::class)->reset();
+        }
+
+        // Bind the current request instance to the container
+        $this->app->instance(Request::class, $request);
+
         $this->logger->info("Incoming request: {method} {uri}", [
             'method' => $request->method(),
             'uri' => $request->uri(),
@@ -137,6 +145,19 @@ class Kernel implements KernelContract
                 'posts' => $postsData,
                 'themes' => $themeManager->all()
             ]);
+
+            // Inject Debug Bar
+            if (env('APP_DEBUG_BAR', false)) {
+                $debugBar = $this->app->make(\App\Foundation\Debug\DebugBar::class);
+                $debugBarHtml = $debugBar->render();
+                
+                if (str_contains($html, '</body>')) {
+                    $html = str_replace('</body>', $debugBarHtml . '</body>', $html);
+                } else {
+                    $html .= $debugBarHtml;
+                }
+            }
+
             return \Witals\Framework\Http\Response::html($html);
         }
 
