@@ -8,6 +8,7 @@ use Witals\Framework\Application;
 use Witals\Framework\Contracts\Http\Kernel as KernelContract;
 use Witals\Framework\Http\Request;
 use Witals\Framework\Http\Response;
+use Psr\Log\LoggerInterface;
 
 /**
  * HTTP Kernel
@@ -19,10 +20,12 @@ class Kernel implements KernelContract
 
     protected Application $app;
     protected array $middleware = [];
+    protected LoggerInterface $logger;
 
-    public function __construct(Application $app)
+    public function __construct(Application $app, LoggerInterface $logger)
     {
         $this->app = $app;
+        $this->logger = $logger;
     }
 
     /**
@@ -30,6 +33,12 @@ class Kernel implements KernelContract
      */
     public function handle(Request $request): Response
     {
+        $this->logger->info("Incoming request: {method} {uri}", [
+            'method' => $request->method(),
+            'uri' => $request->uri(),
+            'ip' => $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1',
+        ]);
+
         try {
             // Simple routing example
             $path = $request->path();
@@ -200,7 +209,12 @@ class Kernel implements KernelContract
 
     protected function getEnvironmentName(): string
     {
-        return $this->app->isRoadRunner() ? 'RoadRunner' : 'Traditional Web Server';
+        if ($this->app->isRoadRunner()) return 'RoadRunner';
+        if ($this->app->isReactPhp()) return 'ReactPHP';
+        if ($this->app->isSwoole()) return 'Swoole';
+        if ($this->app->isOpenSwoole()) return 'OpenSwoole';
+        
+        return 'Traditional Web Server';
     }
 
     protected function getPhpVersion(): string
@@ -210,10 +224,12 @@ class Kernel implements KernelContract
 
     protected function getServerInfo(): string
     {
-        if ($this->app->isRoadRunner()) {
-            return 'RoadRunner';
-        }
-        return $_SERVER['SERVER_SOFTWARE'] ?? 'Unknown';
+        if ($this->app->isRoadRunner()) return 'RoadRunner';
+        if ($this->app->isReactPhp()) return 'ReactPHP (Event Loop)';
+        if ($this->app->isSwoole()) return 'Swoole Server';
+        if ($this->app->isOpenSwoole()) return 'OpenSwoole Server';
+
+        return $_SERVER['SERVER_SOFTWARE'] ?? 'Unknown SAPI';
     }
 
     protected function getMemoryUsage(): string

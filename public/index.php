@@ -7,8 +7,10 @@
 
 declare(strict_types=1);
 
+use Witals\Framework\Contracts\RuntimeType;
+use Witals\Framework\Server\ServerFactory;
+
 define('WITALS_START', microtime(true));
-define('WITALS_ENVIRONMENT', 'traditional');
 
 // Register the Composer autoloader
 require_once __DIR__ . '/../vendor/autoload.php';
@@ -16,15 +18,6 @@ require_once __DIR__ . '/../vendor/autoload.php';
 // Bootstrap the application
 $app = require_once __DIR__ . '/../bootstrap/app.php';
 
-// Boot the application (lifecycle: onBoot)
-$app->boot();
-
-// Handle the incoming request
-$request = \Witals\Framework\Http\Request::createFromGlobals();
-$response = $app->handle($request);
-
-// Send the response
-$response->send();
-
-// Terminate the application
-$app->terminate($request, $response);
+// Create and start the traditional server using the factory
+$server = ServerFactory::create(RuntimeType::TRADITIONAL, $app);
+$server->start();

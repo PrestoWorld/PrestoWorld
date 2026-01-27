@@ -4,12 +4,12 @@ rpc:
   listen: tcp://127.0.0.1:6001
 
 server:
-  command: "php worker.php"
+  command: "php witals serve --roadrunner"
   relay: pipes
   relay_timeout: 20s
 
 http:
-  address: 127.0.0.1:8800
+  address: 0.0.0.0:8080
   middleware: ["static", "gzip"]
   static:
     dir: "public"
@@ -35,11 +35,12 @@ logs:
 
 reload:
   interval: 1s
-  patterns: [".php"]
+  patterns: [".php", ".yaml", ".env"]
   services:
     http:
-      dirs: ["app", "public"]
-      ignore: ["vendor"]
+      recursive: true
+      dirs: ["app", "bootstrap", "vendor/witals/framework/src"]
+      ignore: ["vendor", "tests"]
 
 metrics:
   address: localhost:2112
