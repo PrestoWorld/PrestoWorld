@@ -16,9 +16,30 @@ declare(strict_types=1);
 use App\Foundation\Application;
 use Witals\Framework\Contracts\RuntimeType;
 
-// Load environment variables
-$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/..');
-$dotenv->safeLoad();
+use App\Foundation\Config\ChainConfigLoader;
+use App\Foundation\Config\ConfigLoader;
+use App\Foundation\Config\Dotenv\DotenvReader;
+use App\Foundation\Config\Dotenv\DotenvTransformer;
+use App\Foundation\Config\WordPress\WordPressConfigReader;
+use App\Foundation\Config\WordPress\WordPressConfigTransformer;
+
+// 1. Initialize Chain Config Loader
+$loader = new ChainConfigLoader();
+
+// 2. Add Native .env loader (High Priority)
+$loader->addLoader(
+    new ConfigLoader(new DotenvReader(), new DotenvTransformer()),
+    __DIR__ . '/../.env'
+);
+
+// 3. Add WordPress config loader (Fallback Strategy / Zero Migrate)
+$loader->addLoader(
+    new ConfigLoader(new WordPressConfigReader(), new WordPressConfigTransformer()),
+    __DIR__ . '/../public/wp-config.php'
+);
+
+// 4. Execute Load
+$loader->load();
 
 // Auto-detect runtime or use explicitly set environment
 $runtime = null;

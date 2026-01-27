@@ -157,6 +157,9 @@ class Kernel implements KernelContract
                 'environment' => $this->getEnvironmentName(),
                 'is_roadrunner' => $this->app->isRoadRunner(),
                 'database' => $this->checkDatabase(),
+                'db_user' => env('DB_USERNAME', 'unknown'),
+                'db_prefix' => env('WP_TABLE_PREFIX', 'unknown'),
+                'auth_key_sample' => substr(env('WP_AUTH_KEY', 'none'), 0, 10) . '...',
             ],
             'php' => [
                 'version' => PHP_VERSION,
