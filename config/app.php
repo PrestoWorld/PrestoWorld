@@ -38,6 +38,7 @@ return [
         // Core Providers
         App\Providers\LogServiceProvider::class,
         App\Providers\DatabaseServiceProvider::class,
+        App\Foundation\Theme\ThemeServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
         
         // Add more providers here

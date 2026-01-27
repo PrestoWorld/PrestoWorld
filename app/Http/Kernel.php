@@ -124,6 +124,16 @@ class Kernel implements KernelContract
             $postsData = ['error' => 'ORM Error: ' . $e->getMessage()];
         }
 
+        // Use Theme Engine to render if not a JSON request
+        if (str_contains($request->header('accept', ''), 'text/html') || !$request->header('accept')) {
+            $themeManager = $this->app->make(\App\Foundation\Theme\ThemeManager::class);
+            $html = $themeManager->render('index', [
+                'title' => 'Home',
+                'posts' => $postsData
+            ]);
+            return \Witals\Framework\Http\Response::html($html);
+        }
+
         return Response::json([
             'message' => 'Welcome to PrestoWorld Native!',
             'runtime' => $this->getEnvironmentName(),
