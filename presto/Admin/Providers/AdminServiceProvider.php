@@ -18,7 +18,16 @@ class AdminServiceProvider extends ServiceProvider
             return new AdminManager($app, $app->make(\Psr\Log\LoggerInterface::class));
         });
 
-        // 2. Register Built-in Drivers
+        // 2. Register Repositories
+        $this->singleton(\PrestoWorld\Admin\MenuRepository::class, function ($app) {
+            return new \PrestoWorld\Admin\MenuRepository();
+        });
+
+        $this->singleton(\PrestoWorld\Admin\DashboardWidgetRepository::class, function ($app) {
+            return new \PrestoWorld\Admin\DashboardWidgetRepository();
+        });
+
+        // 3. Register Built-in Drivers
         $this->app->make(AdminManager::class)->registerDriver('presto', PrestoDashboardDriver::class);
     }
 

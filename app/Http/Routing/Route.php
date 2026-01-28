@@ -14,11 +14,26 @@ class Route
     protected $action;
     protected array $parameters = [];
 
+    protected array $wheres = [];
+
     public function __construct(string $method, string $path, $action)
     {
         $this->method = strtoupper($method);
         $this->path = '/' . ltrim($path, '/');
         $this->action = $action;
+    }
+
+    public function where(string|array $name, ?string $expression = null): static
+    {
+        if (is_array($name)) {
+            foreach ($name as $n => $exp) {
+                $this->wheres[$n] = $exp;
+            }
+        } else {
+            $this->wheres[$name] = $expression;
+        }
+
+        return $this;
     }
 
     public function matches(Request $request): bool
@@ -47,9 +62,12 @@ class Route
 
     protected function getRegexPattern(): string
     {
-        // Convert {param} to (?P<param>[^/]+)
-        $pattern = preg_replace('/\{([a-zA-Z0-9_]+)\}/', '(?P<$1>[^/]+)', $this->path);
-        return '#^' . $pattern . '$#';
+        // Convert {param} to (?P<param>[^/]+) or (?P<param>expression)
+        return '#^' . preg_replace_callback('/\{([a-zA-Z0-9_]+)\}/', function ($matches) {
+            $name = $matches[1];
+            $expression = $this->wheres[$name] ?? '[^/]+';
+            return "(?P<{$name}>{$expression})";
+        }, $this->path) . '$#';
     }
 
     public function getAction()

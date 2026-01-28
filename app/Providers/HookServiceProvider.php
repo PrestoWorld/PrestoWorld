@@ -112,6 +112,20 @@ class HookServiceProvider extends ServiceProvider
             $hooks->addFilter('home_page_content', function($html) use ($runtime) {
                  return str_replace('</body>', '<div style="background:linear-gradient(90deg, #ff00cc, #333399); color:white; padding:10px; text-align:center; position:fixed; top:0; left:0; width:100%; z-index:99999; font-weight:bold; box-shadow:0 2px 10px rgba(0,0,0,0.5);">⚡ PrestoWorld Hooks Active via ' . $runtime . '!</div></body>', $html);
             });
+
+            // 3. Admin Simulation: Register a widget and a menu page using WP helper style
+            if (function_exists('wp_add_dashboard_widget')) {
+                wp_add_dashboard_widget('presto_welcome_widget', 'PrestoWorld Welcome', function() {
+                    echo "<div class='premium-card' style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 12px;'>
+                            <h4>Modern Hybrid Rendering</h4>
+                            <p>This content is rendered from a legacy-style <code>echo</code> within a WordPress callback, beautifully integrated into the PrestoWorld dashboard.</p>
+                          </div>";
+                });
+
+                add_menu_page('Analytics Dashboard', 'Analytics', 'manage_options', 'presto-analytics', function() {
+                    echo "<h1>Analytics View</h1><p>Rendering from callback...</p>";
+                }, 'dashicons-chart-bar', 5);
+            }
         }
     }
 }
