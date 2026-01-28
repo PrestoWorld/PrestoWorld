@@ -136,17 +136,28 @@ class Kernel implements KernelContract
         // Use Theme Engine to render if not a JSON request
         if (str_contains($request->header('accept', ''), 'text/html') || !$request->header('accept')) {
             $themeManager = $this->app->make(\App\Foundation\Theme\ThemeManager::class);
+            $hooks = $this->app->make('hooks');
+
+
+            // Trigger Action
+            $hooks->doAction('pre_render_home');
+
+            // Apply Filter to Title
+            $pageTitle = $hooks->applyFilters('home_page_title', 'Home');
             
             // Allow dynamic theme switching for demo
             $targetTheme = $request->query('theme', env('THEME_ACTIVE', 'default'));
             $themeManager->setActiveTheme($targetTheme);
 
             $html = $themeManager->render('index', [
-                'title' => 'Home',
+                'title' => $pageTitle, // Used filtered title
                 'posts' => $postsData,
                 'posts_error' => $postsError,
                 'themes' => $themeManager->all()
             ]);
+
+            // Apply Filter to HTML Content
+            $html = $hooks->applyFilters('home_page_content', $html);
 
             // Inject Debug Bar
             if (env('APP_DEBUG_BAR', false)) {
