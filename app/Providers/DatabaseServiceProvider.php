@@ -52,9 +52,17 @@ class DatabaseServiceProvider extends ServiceProvider
             } else {
                 $schemaArray = $this->getSchema($app, $dbal);
                 
-                // Securely save the compiled schema
-                $content = "<?php\n\ndeclare(strict_types=1);\n\nreturn " . var_export($schemaArray, true) . ";\n";
-                file_put_contents($cacheFile, $content);
+                // Ensure cache directory exists
+                $cacheDir = dirname($cacheFile);
+                if (!is_dir($cacheDir)) {
+                    mkdir($cacheDir, 0755, true);
+                }
+
+                // Securely save the compiled schema if directory is writable
+                if (is_writable($cacheDir)) {
+                    $content = "<?php\n\ndeclare(strict_types=1);\n\nreturn " . var_export($schemaArray, true) . ";\n";
+                    file_put_contents($cacheFile, $content);
+                }
             }
 
             return new ORM(
