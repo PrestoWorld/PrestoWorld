@@ -22,21 +22,44 @@ class NativeEngine extends AbstractEngine
 
     public function render(string $view, array $data = []): string
     {
-        // For Native, we use the theme's src/views directory
-        $viewPath = $this->theme->getPath() . '/src/views/' . $view . '.php';
-        
-        if (!file_exists($viewPath)) {
-            $viewPath = $this->theme->getPath() . '/index.php';
+        // Support template hierarchy - try multiple paths
+        $possiblePaths = [
+            $this->theme->getPath() . '/src/views/' . $view . '.php',
+            $this->theme->getPath() . '/resources/views/' . $view . '.php',
+            $this->theme->getPath() . '/' . $view . '.php',
+        ];
+
+        // Find the first existing template
+        $viewPath = null;
+        foreach ($possiblePaths as $path) {
+            if (file_exists($path)) {
+                $viewPath = $path;
+                break;
+            }
         }
 
-        if (file_exists($viewPath)) {
+        // Fallback to index.php if no specific template found
+        if (!$viewPath) {
+            $indexPaths = [
+                $this->theme->getPath() . '/src/views/index.php',
+                $this->theme->getPath() . '/index.php',
+            ];
+            foreach ($indexPaths as $path) {
+                if (file_exists($path)) {
+                    $viewPath = $path;
+                    break;
+                }
+            }
+        }
+
+        if ($viewPath && file_exists($viewPath)) {
             extract($data);
             ob_start();
             include $viewPath;
             return ob_get_clean();
         }
 
-        return "Native View Not Found: " . $view;
+        throw new \RuntimeException("Native View Not Found: " . $view);
     }
 
     public function getTemplateEngineName(): string

@@ -103,8 +103,17 @@
             <?php foreach($posts as $post): ?>
                 <?php if (is_array($post)): ?>
                 <div class="post-card">
-                    <div class="post-title"><?php echo $post['title'] ?? 'N/A'; ?> <span class="badge"><?php echo $post['type'] ?? 'post'; ?></span></div>
-                    <div class="post-meta">ID: <?php echo $post['id'] ?? '?'; ?> • Published: <?php echo $post['date'] ?? 'N/A'; ?></div>
+                    <div class="post-title">
+                        <a href="<?php echo htmlspecialchars($post['url'] ?? '#'); ?>" style="color: inherit; text-decoration: none;">
+                            <?php echo htmlspecialchars($post['title'] ?? 'N/A'); ?>
+                        </a>
+                        <span class="badge"><?php echo htmlspecialchars($post['type'] ?? 'post'); ?></span>
+                    </div>
+                    <div class="post-meta">
+                        ID: <?php echo htmlspecialchars($post['id'] ?? '?'); ?> • 
+                        Slug: <?php echo htmlspecialchars($post['slug'] ?? 'N/A'); ?> • 
+                        Published: <?php echo htmlspecialchars($post['date'] ?? 'N/A'); ?>
+                    </div>
                 </div>
                 <?php endif; ?>
             <?php endforeach; ?>

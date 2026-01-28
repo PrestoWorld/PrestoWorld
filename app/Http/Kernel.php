@@ -48,31 +48,19 @@ class Kernel implements KernelContract
         ]);
 
         try {
-            // Simple routing example
-            $path = $request->path();
+            // Use the Router to dispatch the request
+            // This will check native routes first, then fallback to WordPress if configured
+            $router = $this->app->make(\App\Http\Routing\Router::class);
+            $result = $router->dispatch($request);
 
-            // Route: Home
-            if ($path === '/' || $path === '') {
-                return $this->handleHome($request);
+            if ($result instanceof Response) {
+                return $this->injectDebugBar($request, $result);
             }
 
-            // Route: Health check
-            if ($path === '/health') {
-                return $this->handleHealth($request);
-            }
-
-            // Route: Info
-            if ($path === '/info') {
-                return $this->handleInfo($request);
-            }
-
-            // 404 Not Found
-            return Response::json([
-                'error' => 'Not Found',
-                'path' => $path,
-            ], 404);
+            return Response::html((string)$result);
 
         } catch (\Throwable $e) {
+            $this->logger->error("Request error: " . $e->getMessage(), ['exception' => $e]);
             return Response::json([
                 'error' => 'Internal Server Error',
                 'message' => $e->getMessage(),
@@ -81,9 +69,35 @@ class Kernel implements KernelContract
     }
 
     /**
+     * Inject Debug Bar into HTML responses
+     */
+    protected function injectDebugBar(Request $request, Response $response): Response
+    {
+        if (!env('APP_DEBUG_BAR', false) || !$this->app->has(\App\Foundation\Debug\DebugBar::class)) {
+            return $response;
+        }
+
+        $content = $response->getContent();
+        if (!is_string($content) || !str_contains($response->getHeader('Content-Type', ''), 'text/html')) {
+            return $response;
+        }
+
+        $debugBar = $this->app->make(\App\Foundation\Debug\DebugBar::class);
+        $debugBarHtml = $debugBar->render();
+        
+        if (str_contains($content, '</body>')) {
+            $content = str_replace('</body>', $debugBarHtml . '</body>', $content);
+        } else {
+            $content .= $debugBarHtml;
+        }
+
+        return Response::html($content);
+    }
+
+    /**
      * Handle home route
      */
-    protected function handleHome(Request $request): Response
+    public function handleHome(Request $request): Response
     {
         $modules = [];
         if (app()->has(\App\Foundation\Module\ModuleManager::class)) {
@@ -123,6 +137,8 @@ class Kernel implements KernelContract
                         'id' => $post->id,
                         'title' => $post->title,
                         'type' => $post->type,
+                        'slug' => $post->slug,
+                        'url' => get_permalink($post->id),
                         'date' => $post->date->format('Y-m-d H:i:s'),
                     ];
                 }
@@ -199,7 +215,7 @@ class Kernel implements KernelContract
     /**
      * Handle health check route
      */
-    protected function handleHealth(Request $request): Response
+    public function handleHealth(Request $request): Response
     {
         return Response::json([
             'status' => 'healthy',
@@ -212,7 +228,7 @@ class Kernel implements KernelContract
     /**
      * Handle info route
      */
-    protected function handleInfo(Request $request): Response
+    public function handleInfo(Request $request): Response
     {
         return Response::json([
             'app' => [

@@ -24,6 +24,9 @@ class Post
 
     #[Column(type: 'string', name: 'post_type')]
     public string $type;
+
+    #[Column(type: 'string', name: 'post_name', nullable: true)]
+    public ?string $slug = null;
     
     #[Column(type: 'datetime', name: 'post_date')]
     public \DateTimeImmutable $date;
