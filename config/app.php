@@ -41,6 +41,7 @@ return [
         App\Providers\DatabaseServiceProvider::class,
         PrestoWorld\Theme\ThemeServiceProvider::class,
         App\Foundation\Debug\DebugServiceProvider::class,
+        Witals\Framework\Auth\AuthServiceProvider::class,
         
         // WordPress Bridge (loads helpers early)
         Prestoworld\Bridge\WordPress\Providers\WordPressServiceProvider::class,

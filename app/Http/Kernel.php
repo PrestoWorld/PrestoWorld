@@ -18,8 +18,6 @@ class Kernel implements KernelContract
 {
 
 
-    protected Application $app;
-    protected array $middleware = [];
     protected LoggerInterface $logger;
 
     public function __construct(Application $app, LoggerInterface $logger)
@@ -27,6 +25,10 @@ class Kernel implements KernelContract
         $this->app = $app;
         $this->logger = $logger;
     }
+
+    protected array $middleware = [
+        \Witals\Framework\Auth\Middleware\AuthMiddleware::class,
+    ];
 
     /**
      * Handle an incoming HTTP request
@@ -47,6 +49,55 @@ class Kernel implements KernelContract
             'ip' => $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1',
         ]);
 
+        // Create Middleware Pipeline
+        $pipeline = $this->middleware;
+        
+        // Add Router Dispatch as the final destination
+        $pipeline[] = function ($request) {
+            return $this->dispatchToRouter($request);
+        };
+
+        return $this->sendRequestThroughPipeline($request, $pipeline);
+    }
+
+    /**
+     * Execute the middleware pipeline
+     */
+    protected function sendRequestThroughPipeline(Request $request, array $pipeline): Response
+    {
+        $middleware = array_shift($pipeline);
+
+        if ($middleware === null) {
+             // Should not happen if pipeline always has the destination
+             throw new \RuntimeException("Middleware pipeline exhausted without response");
+        }
+
+        // Create the callback for the NEXT middleware in line
+        $next = function ($nextRequest) use ($pipeline) {
+            return $this->sendRequestThroughPipeline($nextRequest, $pipeline);
+        };
+
+        // If generic closure
+        if ($middleware instanceof \Closure) {
+            return $middleware($request, $next);
+        }
+
+        // If class string
+        if (is_string($middleware)) {
+             $instance = $this->app->make($middleware);
+             if (method_exists($instance, 'handle')) {
+                 return $instance->handle($request, $next);
+             }
+        }
+
+        throw new \RuntimeException("Invalid middleware: " . json_encode($middleware));
+    }
+
+    /**
+     * Dispatch request to Router
+     */
+    protected function dispatchToRouter(Request $request): Response
+    {
         try {
             $router = $this->app->make(\App\Http\Routing\Router::class);
             $result = $router->dispatch($request);
