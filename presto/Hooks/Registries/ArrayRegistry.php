@@ -27,4 +27,31 @@ class ArrayRegistry implements HookRegistryInterface
     {
         return $this->registry[$type][$hook] ?? [];
     }
+
+    public function remove(string $type, string $hook, string $callback, int $priority): void
+    {
+        if (!isset($this->registry[$type][$hook])) return;
+
+        foreach ($this->registry[$type][$hook] as $key => $meta) {
+            if ($meta['callback'] === $callback && $meta['priority'] === $priority) {
+                unset($this->registry[$type][$hook][$key]);
+            }
+        }
+    }
+
+    public function clear(string $type, string $hook, ?int $priority = null): void
+    {
+        if (!isset($this->registry[$type][$hook])) return;
+
+        if ($priority === null) {
+            unset($this->registry[$type][$hook]);
+            return;
+        }
+
+        foreach ($this->registry[$type][$hook] as $key => $meta) {
+            if ($meta['priority'] === $priority) {
+                unset($this->registry[$type][$hook][$key]);
+            }
+        }
+    }
 }

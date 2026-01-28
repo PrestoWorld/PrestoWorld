@@ -18,4 +18,14 @@ interface HookRegistryInterface
      * Should return an array of callback strings sorted by priority.
      */
     public function get(string $type, string $hook): array;
+
+    /**
+     * Remove a specific hook.
+     */
+    public function remove(string $type, string $hook, string $callback, int $priority): void;
+
+    /**
+     * Remove all hooks for a given tag, optionally filtered by priority.
+     */
+    public function clear(string $type, string $hook, ?int $priority = null): void;
 }

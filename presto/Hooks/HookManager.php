@@ -153,6 +153,25 @@ class HookManager
     }
 
     /**
+     * Remove a filter
+     */
+    public function removeFilter(string $hook, mixed $callback, int $priority = 10): void
+    {
+        $this->registry->remove('filter', $hook, $this->sanitize($callback), $priority);
+    }
+
+    /**
+     * Remove all filters
+     */
+    public function removeAllFilters(string $hook, int|bool $priority = false): void
+    {
+        if ($priority === false) {
+            $priority = null;
+        }
+        $this->registry->clear('filter', $hook, $priority);
+    }
+
+    /**
      * Add an action (Observer)
      */
     public function addAction(string $hook, mixed $callback, int $priority = 10, HookStateType $stateType = HookStateType::VOLATILE): void
@@ -170,6 +189,25 @@ class HookManager
         foreach ($hooksMetadata as $meta) {
             $this->dispatcher->dispatch($hook, $meta, $args);
         }
+    }
+
+    /**
+     * Remove an action
+     */
+    public function removeAction(string $hook, mixed $callback, int $priority = 10): void
+    {
+        $this->registry->remove('action', $hook, $this->sanitize($callback), $priority);
+    }
+
+    /**
+     * Remove all actions
+     */
+    public function removeAllActions(string $hook, int|bool $priority = false): void
+    {
+        if ($priority === false) {
+            $priority = null;
+        }
+        $this->registry->clear('action', $hook, $priority);
     }
 
     /**

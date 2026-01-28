@@ -52,4 +52,21 @@ class SwooleTableRegistry implements HookRegistryInterface
         usort($hooks, fn($a, $b) => $a['priority'] <=> $b['priority']);
         return $hooks;
     }
+
+    public function remove(string $type, string $hook, string $callback, int $priority): void
+    {
+        $key = md5($type . $hook . $callback . $priority);
+        $this->table->del($key);
+    }
+
+    public function clear(string $type, string $hook, ?int $priority = null): void
+    {
+        foreach ($this->table as $key => $row) {
+            if ($row['type'] === $type && $row['hook_name'] === $hook) {
+                if ($priority === null || $row['priority'] === $priority) {
+                    $this->table->del($key);
+                }
+            }
+        }
+    }
 }

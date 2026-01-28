@@ -73,4 +73,47 @@ class FileCompiledRegistry implements HookRegistryInterface
     {
         return $this->hooks[$type][$hook] ?? [];
     }
+
+    public function remove(string $type, string $hook, string $callback, int $priority): void
+    {
+        if (!isset($this->hooks[$type][$hook])) return;
+
+        $modified = false;
+        foreach ($this->hooks[$type][$hook] as $key => $meta) {
+            if ($meta['callback'] === $callback && $meta['priority'] === $priority) {
+                unset($this->hooks[$type][$hook][$key]);
+                $modified = true;
+            }
+        }
+
+        if ($modified) {
+            // Re-index not strictly needed but good for clean export
+            $this->hooks[$type][$hook] = array_values($this->hooks[$type][$hook]);
+            $this->save();
+        }
+    }
+
+    public function clear(string $type, string $hook, ?int $priority = null): void
+    {
+        if (!isset($this->hooks[$type][$hook])) return;
+
+        if ($priority === null) {
+            unset($this->hooks[$type][$hook]);
+            $this->save();
+            return;
+        }
+
+        $modified = false;
+        foreach ($this->hooks[$type][$hook] as $key => $meta) {
+            if ($meta['priority'] === $priority) {
+                unset($this->hooks[$type][$hook][$key]);
+                $modified = true;
+            }
+        }
+
+        if ($modified) {
+            $this->hooks[$type][$hook] = array_values($this->hooks[$type][$hook]);
+            $this->save();
+        }
+    }
 }

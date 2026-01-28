@@ -33,4 +33,49 @@ class APCuRegistry implements HookRegistryInterface
         $key = $this->prefix . $type . ':' . $hook;
         return apcu_fetch($key) ?: [];
     }
+
+    public function remove(string $type, string $hook, string $callback, int $priority): void
+    {
+        $key = $this->prefix . $type . ':' . $hook;
+        $hooks = apcu_fetch($key);
+
+        if (!$hooks || !is_array($hooks)) return;
+
+        $modified = false;
+        foreach ($hooks as $k => $meta) {
+            if ($meta['callback'] === $callback && $meta['priority'] === $priority) {
+                unset($hooks[$k]);
+                $modified = true;
+            }
+        }
+
+        if ($modified) {
+            apcu_store($key, array_values($hooks));
+        }
+    }
+
+    public function clear(string $type, string $hook, ?int $priority = null): void
+    {
+        $key = $this->prefix . $type . ':' . $hook;
+        
+        if ($priority === null) {
+            apcu_delete($key);
+            return;
+        }
+
+        $hooks = apcu_fetch($key);
+        if (!$hooks || !is_array($hooks)) return;
+
+        $modified = false;
+        foreach ($hooks as $k => $meta) {
+            if ($meta['priority'] === $priority) {
+                unset($hooks[$k]);
+                $modified = true;
+            }
+        }
+
+        if ($modified) {
+            apcu_store($key, array_values($hooks));
+        }
+    }
 }

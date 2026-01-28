@@ -12,6 +12,12 @@ class WordPressServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        // Load WordPress Helpers
+        $helpers = __DIR__ . '/../helpers.php';
+        if (file_exists($helpers)) {
+            require_once $helpers;
+        }
+
         // Register WordPress Loader
         $this->singleton(WordPressLoader::class, function ($app) {
             return new WordPressLoader($app);

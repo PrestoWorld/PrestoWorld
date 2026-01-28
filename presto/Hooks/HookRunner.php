@@ -87,7 +87,11 @@ class HookRunner
                 return $result;
             }
 
-            // Fallback for standard callables
+            // Fallback for standard callables (function names, etc.)
+            if (is_callable($callback)) {
+                return call_user_func_array($callback, $args);
+            }
+
             return $this->app->call($callback, $args);
             
         } catch (Throwable $e) {
