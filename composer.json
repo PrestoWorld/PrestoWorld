@@ -32,7 +32,8 @@
         "psr/http-server-middleware": "^1.0@dev",
         "psr/http-server-handler": "^1.0@dev",
         "spiral/stempler": "^3.17@dev",
-        "laravel/serializable-closure": "2.x-dev"
+        "laravel/serializable-closure": "2.x-dev",
+        "prestoworld/wp-bridge": "dev-master"
     },
     "require-dev": {
         "spiral/roadrunner-cli": "^2.6"

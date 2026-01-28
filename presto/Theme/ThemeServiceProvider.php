@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Foundation\Theme;
+namespace PrestoWorld\Theme;
 
 use App\Support\ServiceProvider;
 

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Foundation\Theme\Contracts;
+namespace PrestoWorld\Theme\Contracts;
 
 interface ThemeInterface
 {

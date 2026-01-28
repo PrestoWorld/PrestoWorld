@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -83,20 +83,20 @@
 <body>
     <div class="container">
         <h1>PrestoWorld Native</h1>
-        <p class="subtitle">Trình diễn sức mạnh của Native Theme Engine + CycleORM</p>
+        <p class="subtitle">Experience the power of Native Theme Engine with CycleORM</p>
         
         <div class="posts">
-            <h3>Bài viết mới nhất (Từ WordPress DB):</h3>
+            <h3>Latest Posts (from WordPress Database):</h3>
             <?php if (!empty($posts_error)): ?>
                 <div class="post-card" style="border-left-color: #ef4444;">
-                    <div class="post-title" style="color: #ef4444;">Lỗi: <?php echo $posts_error; ?></div>
-                    <div class="post-meta">Vui lòng kiểm tra cấu hình Database trong .env hoặc wp-config.php</div>
+                    <div class="post-title" style="color: #ef4444;">Error: <?php echo $posts_error; ?></div>
+                    <div class="post-meta">Please check your Database configuration in .env or wp-config.php</div>
                 </div>
             <?php endif; ?>
 
             <?php if (empty($posts) && empty($posts_error)): ?>
                 <div class="post-card">
-                    <div class="post-title">Không tìm thấy bài viết nào.</div>
+                    <div class="post-title">No posts found.</div>
                 </div>
             <?php endif; ?>
 
@@ -104,7 +104,7 @@
                 <?php if (is_array($post)): ?>
                 <div class="post-card">
                     <div class="post-title"><?php echo $post['title'] ?? 'N/A'; ?> <span class="badge"><?php echo $post['type'] ?? 'post'; ?></span></div>
-                    <div class="post-meta">ID: <?php echo $post['id'] ?? '?'; ?> • Ngày đăng: <?php echo $post['date'] ?? 'N/A'; ?></div>
+                    <div class="post-meta">ID: <?php echo $post['id'] ?? '?'; ?> • Published: <?php echo $post['date'] ?? 'N/A'; ?></div>
                 </div>
                 <?php endif; ?>
             <?php endforeach; ?>

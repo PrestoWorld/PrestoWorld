@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Foundation\Theme\Adapters;
+namespace PrestoWorld\Theme\Adapters;
 
 use App\Foundation\Theme\Contracts\ThemeAdapterInterface;
 use App\Foundation\Theme\Theme;

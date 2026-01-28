@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Contracts;
+namespace PrestoWorld\Contracts;
 
 /**
  * Service Provider Contract

@@ -2,10 +2,14 @@
 
 declare(strict_types=1);
 
-namespace App\Foundation\Theme;
+namespace PrestoWorld\Theme;
 
 use App\Foundation\Application;
-use App\Foundation\Theme\Contracts\ThemeInterface;
+use PrestoWorld\Theme\Contracts\ThemeInterface;
+use PrestoWorld\Theme\Engines\AbstractEngine;
+use PrestoWorld\Theme\Engines\NativeEngine;
+use PrestoWorld\Theme\Engines\GutenbergEngine;
+use PrestoWorld\Theme\Engines\LegacyEngine;
 
 class Theme implements ThemeInterface
 {
@@ -14,6 +18,7 @@ class Theme implements ThemeInterface
     protected array $metadata;
     protected ThemeType $type;
     protected bool $booted = false;
+    protected ?AbstractEngine $engine = null;
 
     public function __construct(Application $app, string $path, array $metadata = [])
     {
@@ -73,13 +78,22 @@ class Theme implements ThemeInterface
             }
         }
 
-        // FSE Detection: theme.json (standard WP) or templates directory
+        // Gutenberg/FSE Detection: theme.json (standard WP) or templates directory
         if (is_dir($this->path . '/templates')) {
-            return ThemeType::FSE;
+            return ThemeType::GUTENBERG;
         }
 
         // Classic WordPress themes don't have templates dir but have style.css + index.php
         return ThemeType::LEGACY;
+    }
+
+    public function getEngine(): AbstractEngine
+    {
+        if ($this->engine === null) {
+            $this->engine = $this->app->make(ThemeManager::class)->resolveEngine($this);
+        }
+
+        return $this->engine;
     }
 
     public function getName(): string
@@ -118,12 +132,14 @@ class Theme implements ThemeInterface
             return;
         }
 
-        $helpersPath = $this->path . '/src/helpers.php';
-        if (file_exists($helpersPath)) {
-            require_once $helpersPath;
-        }
+        $this->getEngine()->boot();
 
         $this->booted = true;
+    }
+
+    public function load(): void
+    {
+        $this->getEngine()->load();
     }
 
     public function isActive(): bool

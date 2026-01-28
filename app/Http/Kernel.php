@@ -135,7 +135,7 @@ class Kernel implements KernelContract
 
         // Use Theme Engine to render if not a JSON request
         if (str_contains($request->header('accept', ''), 'text/html') || !$request->header('accept')) {
-            $themeManager = $this->app->make(\App\Foundation\Theme\ThemeManager::class);
+            $themeManager = $this->app->make(\PrestoWorld\Theme\ThemeManager::class);
             $hooks = $this->app->make('hooks');
 
 
@@ -148,6 +148,7 @@ class Kernel implements KernelContract
             // Allow dynamic theme switching for demo
             $targetTheme = $request->query('theme', env('THEME_ACTIVE', 'default'));
             $themeManager->setActiveTheme($targetTheme);
+            $themeManager->loadActiveTheme();
 
             $html = $themeManager->render('index', [
                 'title' => $pageTitle, // Used filtered title
@@ -175,7 +176,7 @@ class Kernel implements KernelContract
         }
 
         $themesInfo = [];
-        $themeManager = $this->app->make(\App\Foundation\Theme\ThemeManager::class);
+        $themeManager = $this->app->make(\PrestoWorld\Theme\ThemeManager::class);
         foreach ($themeManager->all() as $theme) {
             $themesInfo[] = [
                 'name' => $theme->getName(),

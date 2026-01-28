@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Support;
 
-use App\Contracts\ServiceProviderInterface;
+use PrestoWorld\Contracts\ServiceProviderInterface;
 use Witals\Framework\Application;
 
 /**

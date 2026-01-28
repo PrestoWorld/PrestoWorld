@@ -10,8 +10,8 @@ class DebugServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->singleton(DebugBar::class, function () {
-            return new DebugBar();
+        $this->singleton(DebugBar::class, function ($app) {
+            return new DebugBar($app);
         });
     }
 

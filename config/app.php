@@ -38,11 +38,11 @@ return [
         // Core Providers
         App\Providers\LogServiceProvider::class,
         App\Providers\HookServiceProvider::class,
-        \App\Providers\DatabaseServiceProvider::class,
-        \App\Foundation\Theme\ThemeServiceProvider::class,
-        \App\Foundation\Debug\DebugServiceProvider::class,
+        App\Providers\DatabaseServiceProvider::class,
+        PrestoWorld\Theme\ThemeServiceProvider::class,
+        App\Foundation\Debug\DebugServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
-        \App\Providers\ViewServiceProvider::class,
+        App\Providers\ViewServiceProvider::class,
         
         // Add more providers here
     ],

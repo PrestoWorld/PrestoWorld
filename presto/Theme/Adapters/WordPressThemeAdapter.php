@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Foundation\Theme\Adapters;
+namespace PrestoWorld\Theme\Adapters;
 
 use App\Foundation\Theme\Contracts\ThemeAdapterInterface;
 use App\Foundation\Theme\Theme;
@@ -29,8 +29,8 @@ class WordPressThemeAdapter implements ThemeAdapterInterface
     public function render(string $view, array $data = []): string
     {
         try {
-            /** @var \PrestoWorld\WordPress\WordPressBridge $bridge */
-            $bridge = $this->app->make(\PrestoWorld\WordPress\WordPressBridge::class);
+            /** @var \App\WordPress\WordPressBridge $bridge */
+            $bridge = $this->app->make(\App\WordPress\WordPressBridge::class);
             
             // Force the specific WordPress theme
             $bridge->forceTheme($this->theme->getName());
