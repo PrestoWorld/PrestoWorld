@@ -27,7 +27,14 @@ class HookServiceProvider extends ServiceProvider
                 return new \PrestoWorld\Hooks\Registries\APCuRegistry();
             }
 
-            // Fallback for Shared Hosting (Restricted)
+            // For Modern/Long-Running apps without Shared Memory (e.g. RoadRunner without APCu),
+            // use ArrayRegistry to avoid file race conditions during worker boot.
+            // Each worker will have its own isolated registry in memory.
+            if ($app->isLongRunning()) {
+                return new \PrestoWorld\Hooks\Registries\ArrayRegistry();
+            }
+
+            // Fallback for Shared Hosting (Restricted / Traditional)
             return new \PrestoWorld\Hooks\Registries\FileCompiledRegistry(
                 path_join($app->basePath(), 'storage/framework/hooks.php')
             );
@@ -86,5 +93,25 @@ class HookServiceProvider extends ServiceProvider
                 $this->app->make(HookManager::class)->flushCache();
             }
         });
+
+        // Register Core/Demo Hooks
+        if ($this->app->has('hooks')) {
+            $hooks = $this->app->make('hooks');
+
+            // 1. Filter: Modify Title
+            $hooks->addFilter('home_page_title', function($title) {
+                return $title . ' - Powered by PrestoWorld Hooks';
+            });
+
+            // 2. Filter: Inject content into Header
+            $runtime = $this->app->isRoadRunner() ? 'RoadRunner' : (
+                $this->app->isOpenSwoole() ? 'OpenSwoole' : (
+                $this->app->isSwoole() ? 'Swoole' : 'Traditional Web Server'
+            ));
+            
+            $hooks->addFilter('home_page_content', function($html) use ($runtime) {
+                 return str_replace('</body>', '<div style="background:linear-gradient(90deg, #ff00cc, #333399); color:white; padding:10px; text-align:center; position:fixed; top:0; left:0; width:100%; z-index:99999; font-weight:bold; box-shadow:0 2px 10px rgba(0,0,0,0.5);">⚡ PrestoWorld Hooks Active via ' . $runtime . '!</div></body>', $html);
+            });
+        }
     }
 }

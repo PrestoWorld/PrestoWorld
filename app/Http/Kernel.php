@@ -138,24 +138,6 @@ class Kernel implements KernelContract
             $themeManager = $this->app->make(\App\Foundation\Theme\ThemeManager::class);
             $hooks = $this->app->make('hooks');
 
-            // --- DEMO HOOK REGISTRATION (Normally in a Plugin/Provider) ---
-            // 1. Action: Log that we are rendering home
-            $hooks->addAction('pre_render_home', function() {
-                // This will appear in logs or stdout
-                // echo "Rendering Home Page via Action Hook!\n"; 
-            });
-
-            // 2. Filter: Modify Title
-            $hooks->addFilter('home_page_title', function($title) {
-                return $title . ' - Powered by PrestoWorld Hooks';
-            });
-
-            // 3. Filter: Inject content into Footer (now Header to avoid DebugBar overlap)
-            $runtime = $this->getEnvironmentName();
-            $hooks->addFilter('home_page_content', function($html) use ($runtime) {
-                 return str_replace('</body>', '<div style="background:linear-gradient(90deg, #ff00cc, #333399); color:white; padding:10px; text-align:center; position:fixed; top:0; left:0; width:100%; z-index:99999; font-weight:bold; box-shadow:0 2px 10px rgba(0,0,0,0.5);">⚡ PrestoWorld Hooks Active via ' . $runtime . '!</div></body>', $html);
-            });
-            // -------------------------------------------------------------
 
             // Trigger Action
             $hooks->doAction('pre_render_home');
