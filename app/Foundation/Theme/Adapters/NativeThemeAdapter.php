@@ -19,20 +19,30 @@ class NativeThemeAdapter implements ThemeAdapterInterface
         if (file_exists($helpersPath)) {
             require_once $helpersPath;
         }
+
+        // Register theme views path to the view system
+        $viewPath = $theme->getPath() . '/src/views';
+        if (is_dir($viewPath)) {
+            \Witals\Framework\Application::getInstance()->view()->addLocation($viewPath);
+            // Also register as a namespace for easy access e.g. theme::home
+            \Witals\Framework\Application::getInstance()->view()->addNamespace('theme', $viewPath);
+        }
     }
 
     public function render(string $view, array $data = []): string
     {
-        $viewPath = $this->theme->getPath() . '/src/views/' . str_replace('.', '/', $view) . '.php';
+        $viewFactory = \Witals\Framework\Application::getInstance()->view();
 
-        if (!file_exists($viewPath)) {
-            return "Native View [{$view}] not found.";
+        if (!$viewFactory->exists($view)) {
+            // Try with theme namespace
+            if ($viewFactory->exists("theme::{$view}")) {
+                $view = "theme::{$view}";
+            } else {
+                return "Native View [{$view}] not found in theme or resources.";
+            }
         }
 
-        extract($data);
-        ob_start();
-        include $viewPath;
-        return ob_get_clean();
+        return $viewFactory->make($view, $data)->render();
     }
 
     public function getType(): string

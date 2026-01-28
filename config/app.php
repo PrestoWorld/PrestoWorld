@@ -41,6 +41,7 @@ return [
         \App\Foundation\Theme\ThemeServiceProvider::class,
         \App\Foundation\Debug\DebugServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
+        \App\Providers\ViewServiceProvider::class,
         
         // Add more providers here
     ],

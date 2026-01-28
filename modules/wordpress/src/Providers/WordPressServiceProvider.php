@@ -16,7 +16,7 @@ class WordPressServiceProvider extends ServiceProvider
         $this->singleton(WordPressLoader::class, function ($app) {
             return new WordPressLoader($app);
         });
-
+        
         // Register WordPress Bridge
         $this->singleton(WordPressBridge::class, function ($app) {
             return new WordPressBridge(

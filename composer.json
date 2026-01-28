@@ -29,7 +29,8 @@
         "cycle/database": "^2.0",
         "cycle/annotated": "^3.0",
         "psr/http-server-middleware": "^1.0@dev",
-        "psr/http-server-handler": "^1.0@dev"
+        "psr/http-server-handler": "^1.0@dev",
+        "spiral/stempler": "^3.17@dev"
     },
     "require-dev": {
         "spiral/roadrunner-cli": "^2.6"

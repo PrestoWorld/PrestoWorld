@@ -167,4 +167,12 @@ class Application extends BaseApplication
     {
         return isset($this->serviceProviders[$provider]);
     }
+
+    /**
+     * Customize the error log destination for PrestoWorld.
+     */
+    public function getErrorLogPath(): string
+    {
+        return $this->basePath('storage/logs/prestoworld.log');
+    }
 }
