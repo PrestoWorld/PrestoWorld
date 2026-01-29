@@ -54,11 +54,19 @@ class NativeEngine extends AbstractEngine
 
         if ($viewPath && file_exists($viewPath)) {
             extract($data);
-            error_log("NativeEngine: Rendering " . basename($viewPath) . " [OB Level: " . ob_get_level() . "]");
+            
             ob_start();
-            include $viewPath;
-            return ob_get_clean();
+            try {
+                include $viewPath;
+                return ob_get_clean() ?: '';
+            } catch (\Throwable $e) {
+                if (ob_get_level() > 0) {
+                    ob_end_clean();
+                }
+                throw $e;
+            }
         }
+
 
         throw new \RuntimeException("Native View Not Found: " . $view);
     }
