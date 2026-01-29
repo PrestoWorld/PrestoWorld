@@ -34,7 +34,9 @@
         "spiral/stempler": "^3.17@dev",
         "laravel/serializable-closure": "2.x-dev",
         "prestoworld/wp-bridge": "dev-master",
-        "spiral/data-grid": "dev-master"
+        "spiral/data-grid": "dev-master",
+        "mongodb/mongodb": "v2.x-dev",
+        "paragonie/paseto": "dev-master"
     },
     "require-dev": {
         "spiral/roadrunner-cli": "^2.6"

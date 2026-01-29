@@ -104,6 +104,13 @@ class DebugBar
                 $context = 'Error';
             }
         }
+
+        // WordPress Admin Screen Detection
+        $wpScreen = null;
+        if (isset($GLOBALS['__presto_admin_context'])) {
+            $data = $GLOBALS['__presto_admin_context'];
+            $wpScreen = ($data['driver'] ?? 'wp') . ':' . ($data['screen'] ?? 'unknown');
+        }
         $html = "
         <!-- PrestoWorld Debug Bar -->
         <style>
@@ -223,6 +230,12 @@ class DebugBar
                 <span class='pw-db-label'>Context:</span>
                 <span class='pw-db-value' title='Current Queried Object'>$context</span>
             </div>
+            " . ($wpScreen ? "
+            <div class='pw-db-item'>
+                <span class='pw-db-label'>Screen:</span>
+                <span class='pw-db-value pw-db-highlight'>$wpScreen</span>
+            </div>" : "") . "
+
 
             <div class='pw-db-divider'></div>
 

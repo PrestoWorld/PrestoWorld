@@ -1,0 +1,23 @@
+{
+  "name": "woocommerce/woocommerce",
+  "description": "WooCommerce - The most customizable eCommerce platform for building your online business.",
+  "type": "wordpress-plugin",
+  "extra": {
+    "presto": {
+      "transformers": [
+        {
+          "id": "wc_orders",
+          "class": "Prestoworld\\Bridge\\WordPress\\Sandbox\\Transformers\\WooCommerceOrderTransformer",
+          "keywords": ["update_post_meta", "wc_get_orders", "WC_Order"],
+          "enabled": true
+        },
+        {
+          "id": "wc_product_meta",
+          "class": "WooCommerce\\Presto\\Transformers\\ProductMetaTransformer",
+          "keywords": ["get_post_meta", "WC_Product"],
+          "enabled": true
+        }
+      ]
+    }
+  }
+}

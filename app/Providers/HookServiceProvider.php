@@ -15,30 +15,49 @@ class HookServiceProvider extends ServiceProvider
             return new \Witals\Framework\Support\EnvironmentDetector($app);
         });
 
-        // 1. Determine Registry Implementation
+        // 1. Determine Registry Implementation (Strategy Pattern via Config)
         $this->app->singleton(\PrestoWorld\Contracts\Hooks\Registries\HookRegistryInterface::class, function ($app) {
-            $detector = $app->make(\Witals\Framework\Support\EnvironmentDetector::class);
+            // Auto-detect if not set
+            $default = 'memory';
+            if (extension_loaded('pdo_sqlite')) $default = 'sqlite';
+            
+            $driver = env('HOOK_REGISTRY_DRIVER', $default); 
 
-            if ($detector->isModern()) {
-                return new \PrestoWorld\Hooks\Registries\SwooleTableRegistry();
+            switch ($driver) {
+                case 'redis':
+                    if ($app->has('redis')) {
+                        $redis = $app->make('redis');
+                    } else {
+                        $redis = new \Redis();
+                        $redis->connect(env('REDIS_HOST', '127.0.0.1'), (int)env('REDIS_PORT', 6379));
+                        if (env('REDIS_PASSWORD')) {
+                            $redis->auth(env('REDIS_PASSWORD'));
+                        }
+                    }
+                    return new \PrestoWorld\Hooks\Registries\RedisRegistry($redis);
+
+                case 'mongodb':
+                    $uri = env('MONGODB_URI', 'mongodb://localhost:27017');
+                    $db = env('MONGODB_DATABASE', 'presto_core');
+                    return new \PrestoWorld\Hooks\Registries\MongoRegistry($uri, $db);
+
+                case 'sqlite':
+                     $dbPath = path_join($app->basePath(), 'storage/framework/hooks.sqlite');
+                     if (!is_dir(dirname($dbPath))) mkdir(dirname($dbPath), 0755, true);
+                     return new \PrestoWorld\Hooks\Registries\SQLiteRegistry($dbPath);
+                
+                case 'apcu':
+                    return new \PrestoWorld\Hooks\Registries\APCuRegistry();
+
+                case 'swoole':
+                    return new \PrestoWorld\Hooks\Registries\SwooleTableRegistry();
+                
+                case 'memory':
+                default:
+                    return new \PrestoWorld\Hooks\Registries\ArrayRegistry();
             }
-
-            if ($detector->hasAPCu()) {
-                return new \PrestoWorld\Hooks\Registries\APCuRegistry();
-            }
-
-            // For Modern/Long-Running apps without Shared Memory (e.g. RoadRunner without APCu),
-            // use ArrayRegistry to avoid file race conditions during worker boot.
-            // Each worker will have its own isolated registry in memory.
-            if ($app->isLongRunning()) {
-                return new \PrestoWorld\Hooks\Registries\ArrayRegistry();
-            }
-
-            // Fallback for Shared Hosting (Restricted / Traditional)
-            return new \PrestoWorld\Hooks\Registries\FileCompiledRegistry(
-                path_join($app->basePath(), 'storage/framework/hooks.php')
-            );
         });
+
 
         // 2. Determine Dispatcher Implementation
         $this->app->singleton(\PrestoWorld\Contracts\Hooks\Dispatchers\ActionDispatcherInterface::class, function ($app) {
