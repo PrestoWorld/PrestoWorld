@@ -27,7 +27,7 @@ class Kernel implements KernelContract
     }
 
     protected array $middleware = [
-        // \Witals\Framework\Auth\Middleware\AuthMiddleware::class,
+        \Witals\Framework\Auth\Middleware\AuthMiddleware::class,
     ];
 
     /**
