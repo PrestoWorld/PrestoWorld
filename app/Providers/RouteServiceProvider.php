@@ -23,12 +23,11 @@ class RouteServiceProvider extends ServiceProvider
         error_log("RouteServiceProvider: Booting and loading routes...");
 
         // Set the smart fallback to WordPress if the bridge is enabled
-        $wpDispatcherClass = \Prestoworld\Bridge\WordPress\Routing\WordPressDispatcher::class;
-        if ($this->app->has($wpDispatcherClass)) {
-            $router->setWordPressFallback(function ($request) use ($wpDispatcherClass) {
-                return $this->app->make($wpDispatcherClass)->dispatch($request);
-            });
-        }
+        error_log("RouteServiceProvider: Force setting WordPress fallback dispatcher.");
+        $router->setWordPressFallback(function ($request) {
+            $wpDispatcherClass = \Prestoworld\Bridge\WordPress\Routing\WordPressDispatcher::class;
+            return $this->app->make($wpDispatcherClass)->dispatch($request);
+        });
 
         // Load modern routes
         $this->loadRoutes($router);

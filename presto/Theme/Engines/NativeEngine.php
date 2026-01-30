@@ -24,32 +24,23 @@ class NativeEngine extends AbstractEngine
     {
         // Support template hierarchy - try multiple paths
         $possiblePaths = [
-            $this->theme->getPath() . '/src/views/' . $view . '.php',
             $this->theme->getPath() . '/resources/views/' . $view . '.php',
             $this->theme->getPath() . '/' . $view . '.php',
         ];
 
         // Find the first existing template
         $viewPath = null;
+        clearstatcache();
         foreach ($possiblePaths as $path) {
+            // error_log("NativeEngine: Checking path: {$path}");
             if (file_exists($path)) {
                 $viewPath = $path;
                 break;
             }
         }
 
-        // Fallback to index.php if no specific template found
         if (!$viewPath) {
-            $indexPaths = [
-                $this->theme->getPath() . '/src/views/index.php',
-                $this->theme->getPath() . '/index.php',
-            ];
-            foreach ($indexPaths as $path) {
-                if (file_exists($path)) {
-                    $viewPath = $path;
-                    break;
-                }
-            }
+            error_log("NativeEngine: View not found '{$view}' in " . $this->theme->getPath() . ". Checked: " . implode(', ', $possiblePaths));
         }
 
         if ($viewPath && file_exists($viewPath)) {

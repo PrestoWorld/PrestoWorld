@@ -211,8 +211,9 @@ class Kernel implements KernelContract
             $pageTitle = $hooks->applyFilters('home_page_title', 'Home');
             
             // Allow dynamic theme switching for demo
-            $targetTheme = $request->query('theme', env('THEME_ACTIVE', 'default'));
-            $themeManager->setActiveTheme($targetTheme);
+            if ($targetTheme = $request->query('theme')) {
+                $themeManager->setActiveTheme($targetTheme);
+            }
             $themeManager->loadActiveTheme();
 
             $html = $themeManager->render('index', [
@@ -222,7 +223,7 @@ class Kernel implements KernelContract
                 'themes' => $themeManager->all()
             ]);
 
-            // Apply Filter to HTML Content
+            // Apply Native Filter to Content
             $html = $hooks->applyFilters('home_page_content', $html);
 
             // Inject Debug Bar
@@ -236,6 +237,9 @@ class Kernel implements KernelContract
                     $html .= $debugBarHtml;
                 }
             }
+
+            // Apply GLOBAL Filter as the very last step (MU-Plugins, etc)
+            $html = $hooks->applyFilters('presto.response_body', $html);
 
             return \Witals\Framework\Http\Response::html($html);
         }

@@ -29,8 +29,22 @@ class DatabaseServiceProvider extends ServiceProvider
 
         // 1. Register Database Manager (DBAL)
         $this->singleton(DatabaseProviderInterface::class, function ($app) {
-            $config = new DatabaseConfig($app->config('database'));
+            $dbConfig = $app->config('database');
+            $driver = $dbConfig['default'] ?? env('DB_CONNECTION', 'mysql');
+            
+            $config = new DatabaseConfig($dbConfig);
             $manager = new DatabaseManager($config);
+
+            // Fix for WordPress legacy tables with zero dates (0000-00-00 00:00:00)
+            // SQLSTATE[42000]: 1067 Invalid default value for 'user_registered'
+            if ($driver === 'mysql' || $driver === 'mariadb') {
+                $db = $manager->database($driver);
+                $db->execute("SET sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''))");
+                $db->execute("SET sql_mode=(SELECT REPLACE(@@sql_mode,'NO_ZERO_DATE',''))");
+                $db->execute("SET sql_mode=(SELECT REPLACE(@@sql_mode,'NO_ZERO_IN_DATE',''))");
+                $db->execute("SET sql_mode=(SELECT REPLACE(@@sql_mode,'STRICT_TRANS_TABLES',''))");
+                $db->execute("SET sql_mode=(SELECT REPLACE(@@sql_mode,'STRICT_ALL_TABLES',''))");
+            }
 
             // Intercept queries for Statistics/Debug Bar
             if (env('APP_DEBUG_BAR', false) && $app->has(\App\Foundation\Debug\DebugBar::class)) {
@@ -40,7 +54,17 @@ class DatabaseServiceProvider extends ServiceProvider
             return $manager;
         });
 
-        // 2. Register ORM
+        // 2. Register Database Interface (Default Connection)
+        $this->singleton(\Cycle\Database\DatabaseInterface::class, function ($app) {
+            return $app->make(DatabaseProviderInterface::class)->database();
+        });
+
+        // 3. Register legacy 'wpdb' alias for compatibility
+        $this->singleton('wpdb', function ($app) {
+            return $app->make(\Cycle\Database\DatabaseInterface::class);
+        });
+
+        // 4. Register ORM
         $this->singleton(ORMInterface::class, function ($app) {
             $dbal = $app->make(DatabaseProviderInterface::class);
             
@@ -70,6 +94,11 @@ class DatabaseServiceProvider extends ServiceProvider
                 new ORMSchema($schemaArray)
             );
         });
+
+        // 3. Register Entity Manager
+        $this->singleton(\Cycle\ORM\EntityManagerInterface::class, function ($app) {
+            return new \Cycle\ORM\EntityManager($app->make(ORMInterface::class));
+        });
     }
 
     private function getSchema($app, $dbal): array
@@ -79,6 +108,7 @@ class DatabaseServiceProvider extends ServiceProvider
         
         $finder = (new Finder())->files()->in([
             $app->basePath('app/Models'),
+            $app->basePath('vendor/prestoworld/wp-bridge/src/Sandbox/Models'),
         ]);
         
         // Check if modules have models
@@ -102,6 +132,7 @@ class DatabaseServiceProvider extends ServiceProvider
             new Schema\Generator\GenerateRelations(),       // generate entity relations
             new Schema\Generator\GenerateTypecast(),        // typecast non-string columns
             new Schema\Generator\RenderTables(),            // declare table schemas
+            new Schema\Generator\SyncTables(),              // sync table schemas with database
             new Schema\Generator\ValidateEntities(),        // make sure all entity schemas are correct
         ]);
 
