@@ -17,15 +17,12 @@ $router->get('/api/test', function() {
     ]);
 });
 
-// Native home route with Theme Engine
-$router->get('/', function(\Witals\Framework\Http\Request $request) {
-    /** @var \App\Http\Kernel $kernel */
-    $kernel = app(\Witals\Framework\Contracts\Http\Kernel::class);
-    // Since we're calling a protected method from a closure, 
-    // we use a little reflection or just move the logic. 
-    // To keep it simple, I'll allow the closure to use the logic.
-    return $kernel->handleHome($request);
-});
+// Native home route with Theme Engine (Commented out to use Home Module)
+// $router->get('/', function(\Witals\Framework\Http\Request $request) {
+//     /** @var \App\Http\Kernel $kernel */
+//     $kernel = app(\Witals\Framework\Contracts\Http\Kernel::class);
+//     return $kernel->handleHome($request);
+// });
 
 $router->get('/admin', function(\Witals\Framework\Http\Request $request) {
     $themeManager = app(\PrestoWorld\Theme\ThemeManager::class);
