@@ -187,7 +187,7 @@ class Kernel implements KernelContract
                         'title' => $post->title,
                         'type' => $post->type,
                         'slug' => $post->slug,
-                        'url' => get_permalink($post),
+                        'url' => '#',
                         'date' => $post->date->format('Y-m-d H:i:s'),
                     ];
                 }
@@ -246,10 +246,9 @@ class Kernel implements KernelContract
         }
 
         return Response::json([
-            'message' => 'Welcome to PrestoWorld Native!',
+            'message' => 'Welcome to Witals Framework!',
             'runtime' => $this->getEnvironmentName(),
             'modules' => $modules,
-            'wordpress_enabled' => config('modules.enabled.wordpress') ? 'Yes' : 'No',
             'latest_posts' => $postsData,
             'available_themes' => $themesInfo
         ]);
@@ -280,8 +279,6 @@ class Kernel implements KernelContract
                 'is_roadrunner' => $this->app->isRoadRunner(),
                 'database' => $this->checkDatabase(),
                 'db_user' => env('DB_USERNAME', 'unknown'),
-                'db_prefix' => env('WP_TABLE_PREFIX', 'unknown'),
-                'auth_key_sample' => substr(env('WP_AUTH_KEY', 'none'), 0, 10) . '...',
             ],
             'php' => [
                 'version' => PHP_VERSION,
