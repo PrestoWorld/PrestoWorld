@@ -129,7 +129,7 @@ class HomeController
                             'slug' => $post->slug,
                             'type' => $post->type,
                             'date' => $post->date instanceof \DateTimeInterface ? $post->date->format('M d, Y') : 'Unknown',
-                            'url' => '#'
+                            'url' => function_exists('get_permalink') ? get_permalink($post) : '#'
                         ];
                     }
                 }
