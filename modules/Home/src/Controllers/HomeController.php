@@ -62,7 +62,7 @@ class HomeController
                 'request' => $request, 
                 'section' => $section,
                 'name' => $name,
-                'posts' => $postsData
+                'posts' => $postsData // Pass posts to section callbacks too
             ]);
 
             $content .= $hooks->applyFilters("home_section_{$name}_output", $sectionOutput, $section);
@@ -78,7 +78,7 @@ class HomeController
             return Response::html($themeManager->render('index', [
                 'title' => $pageTitle,
                 'content' => $content,
-                'posts' => $postsData,
+                'posts' => $postsData, // Explicitly pass to theme
                 'is_module_home' => true
             ]));
         }
@@ -101,6 +101,7 @@ class HomeController
                     ->limit(3)
                     ->fetchAll();
 
+                // Fallback to raw query if ORM is empty (mapping issues?)
                 if (empty($posts)) {
                     $rawPosts = $this->app->make(\Cycle\Database\DatabaseInterface::class)
                         ->select('ID', 'post_title', 'post_name', 'post_date', 'post_type')
