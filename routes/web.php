@@ -24,13 +24,6 @@ $router->get('/api/test', function() {
 //     return $kernel->handleHome($request);
 // });
 
-$router->get('/admin', function(\Witals\Framework\Http\Request $request) {
-    $themeManager = app(\PrestoWorld\Theme\ThemeManager::class);
-    $themeManager->loadActiveTheme(); 
-    $html = $themeManager->render('admin-dashboard', []);
-    return \Witals\Framework\Http\Response::html($html);
-});
-
 $router->get('/health', function(\Witals\Framework\Http\Request $request) {
     return app(\Witals\Framework\Contracts\Http\Kernel::class)->handleHealth($request);
 });
