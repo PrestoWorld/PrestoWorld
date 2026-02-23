@@ -1,0 +1,167 @@
+{
+    "version": "1.0.0",
+    "module": "orders",
+    "description": "Orders table. Depends on: customers.",
+    "tables": [
+        {
+            "name": "optilarity_orders",
+            "comment": "Customer orders. customer_id FK -> optilarity_customers.",
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "primary"
+                },
+                {
+                    "name": "order_number",
+                    "type": "string",
+                    "size": 64,
+                    "nullable": false
+                },
+                {
+                    "name": "customer_id",
+                    "type": "integer",
+                    "nullable": true,
+                    "comment": "FK -> optilarity_customers.id"
+                },
+                {
+                    "name": "customer_email",
+                    "type": "string",
+                    "size": 255,
+                    "nullable": true
+                },
+                {
+                    "name": "status",
+                    "type": "enum",
+                    "values": [
+                        "pending",
+                        "processing",
+                        "completed",
+                        "cancelled",
+                        "refunded"
+                    ],
+                    "default": "pending",
+                    "nullable": false
+                },
+                {
+                    "name": "payment_status",
+                    "type": "enum",
+                    "values": [
+                        "pending",
+                        "paid",
+                        "failed",
+                        "refunded"
+                    ],
+                    "default": "pending",
+                    "nullable": false
+                },
+                {
+                    "name": "payment_method",
+                    "type": "string",
+                    "size": 100,
+                    "nullable": true
+                },
+                {
+                    "name": "transaction_id",
+                    "type": "string",
+                    "size": 255,
+                    "nullable": true
+                },
+                {
+                    "name": "subtotal",
+                    "type": "decimal",
+                    "precision": 10,
+                    "scale": 2,
+                    "default": 0
+                },
+                {
+                    "name": "tax",
+                    "type": "decimal",
+                    "precision": 10,
+                    "scale": 2,
+                    "default": 0
+                },
+                {
+                    "name": "total",
+                    "type": "decimal",
+                    "precision": 10,
+                    "scale": 2,
+                    "default": 0
+                },
+                {
+                    "name": "currency",
+                    "type": "string",
+                    "size": 10,
+                    "default": "USD"
+                },
+                {
+                    "name": "items",
+                    "type": "json",
+                    "nullable": true,
+                    "comment": "JSON array of line items"
+                },
+                {
+                    "name": "notes",
+                    "type": "text",
+                    "nullable": true
+                },
+                {
+                    "name": "created_at",
+                    "type": "datetime",
+                    "nullable": false
+                },
+                {
+                    "name": "paid_at",
+                    "type": "datetime",
+                    "nullable": true
+                },
+                {
+                    "name": "updated_at",
+                    "type": "datetime",
+                    "nullable": true
+                }
+            ],
+            "indexes": [
+                {
+                    "name": "uq_order_number",
+                    "columns": [
+                        "order_number"
+                    ],
+                    "unique": true
+                },
+                {
+                    "name": "idx_order_customer",
+                    "columns": [
+                        "customer_id"
+                    ]
+                },
+                {
+                    "name": "idx_order_status",
+                    "columns": [
+                        "status"
+                    ]
+                },
+                {
+                    "name": "idx_order_pay_status",
+                    "columns": [
+                        "payment_status"
+                    ]
+                },
+                {
+                    "name": "idx_order_created",
+                    "columns": [
+                        "created_at"
+                    ]
+                }
+            ],
+            "foreign_keys": [
+                {
+                    "column": "customer_id",
+                    "references": "optilarity_customers",
+                    "on": "id",
+                    "on_delete": "SET NULL",
+                    "on_update": "CASCADE"
+                }
+            ]
+        }
+    ]
+}

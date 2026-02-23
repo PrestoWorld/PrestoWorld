@@ -1,0 +1,16 @@
+{
+    "name": "profile",
+    "version": "1.0.0",
+    "description": "User Profile Module",
+    "priority": 45,
+    "enabled": true,
+    "depends": [],
+    "autoload": {
+        "psr-4": {
+            "Modules\\Profile\\": "src/"
+        }
+    },
+    "providers": [
+        "Modules\\Profile\\ProfileServiceProvider"
+    ]
+}

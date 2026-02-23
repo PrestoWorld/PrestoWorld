@@ -1,0 +1,111 @@
+{
+    "version": "1.0.0",
+    "module": "customers",
+    "description": "Customer Management Module - no dependencies, foundational table",
+    "tables": [
+        {
+            "name": "optilarity_customers",
+            "comment": "Stores customer records. Referenced by orders, invoices, licenses, memberships.",
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "primary"
+                },
+                {
+                    "name": "user_id",
+                    "type": "integer",
+                    "nullable": true,
+                    "comment": "Optional link to app user account"
+                },
+                {
+                    "name": "first_name",
+                    "type": "string",
+                    "size": 100,
+                    "nullable": false
+                },
+                {
+                    "name": "last_name",
+                    "type": "string",
+                    "size": 100,
+                    "nullable": false
+                },
+                {
+                    "name": "email",
+                    "type": "string",
+                    "size": 255,
+                    "nullable": false
+                },
+                {
+                    "name": "phone",
+                    "type": "string",
+                    "size": 50,
+                    "nullable": true
+                },
+                {
+                    "name": "company",
+                    "type": "string",
+                    "size": 200,
+                    "nullable": true
+                },
+                {
+                    "name": "country",
+                    "type": "string",
+                    "size": 100,
+                    "nullable": true
+                },
+                {
+                    "name": "address",
+                    "type": "text",
+                    "nullable": true
+                },
+                {
+                    "name": "status",
+                    "type": "enum",
+                    "values": [
+                        "active",
+                        "suspended",
+                        "banned"
+                    ],
+                    "default": "active",
+                    "nullable": false
+                },
+                {
+                    "name": "notes",
+                    "type": "text",
+                    "nullable": true
+                },
+                {
+                    "name": "created_at",
+                    "type": "datetime",
+                    "nullable": false
+                },
+                {
+                    "name": "updated_at",
+                    "type": "datetime",
+                    "nullable": true
+                }
+            ],
+            "indexes": [
+                {
+                    "name": "uq_customer_email",
+                    "columns": [
+                        "email"
+                    ],
+                    "unique": true
+                },
+                {
+                    "name": "idx_customer_status",
+                    "columns": [
+                        "status"
+                    ]
+                },
+                {
+                    "name": "idx_customer_user",
+                    "columns": [
+                        "user_id"
+                    ]
+                }
+            ]
+        }
+    ]
+}

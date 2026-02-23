@@ -1,0 +1,20 @@
+{
+    "name": "license-manager",
+    "version": "1.0.0",
+    "description": "Software License Manager Module",
+    "priority": 30,
+    "enabled": true,
+    "depends": [
+        "customers",
+        "orders",
+        "software-catalog"
+    ],
+    "autoload": {
+        "psr-4": {
+            "Modules\\LicenseManager\\": "src/"
+        }
+    },
+    "providers": [
+        "Modules\\LicenseManager\\LicenseManagerServiceProvider"
+    ]
+}

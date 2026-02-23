@@ -1,0 +1,16 @@
+{
+    "name": "software-catalog",
+    "version": "1.0.0",
+    "description": "Software Catalog - Licenses, Plugins Repository & Theme Manager",
+    "priority": 40,
+    "enabled": true,
+    "depends": [],
+    "autoload": {
+        "psr-4": {
+            "Modules\\SoftwareCatalog\\": "src/"
+        }
+    },
+    "providers": [
+        "Modules\\SoftwareCatalog\\SoftwareCatalogServiceProvider"
+    ]
+}

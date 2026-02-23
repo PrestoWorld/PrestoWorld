@@ -1,0 +1,19 @@
+{
+    "name": "invoices",
+    "version": "1.0.0",
+    "description": "Invoice Management Module",
+    "priority": 20,
+    "enabled": true,
+    "depends": [
+        "customers",
+        "orders"
+    ],
+    "autoload": {
+        "psr-4": {
+            "Modules\\Invoices\\": "src/"
+        }
+    },
+    "providers": [
+        "Modules\\Invoices\\InvoicesServiceProvider"
+    ]
+}

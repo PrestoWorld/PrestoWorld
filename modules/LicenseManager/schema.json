@@ -1,0 +1,146 @@
+{
+    "version": "1.0.0",
+    "module": "license-manager",
+    "description": "License keys. Depends on: customers, orders, software-catalog.",
+    "tables": [
+        {
+            "name": "optilarity_licenses",
+            "comment": "Software license keys. FKs -> customers, orders, software_products.",
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "primary"
+                },
+                {
+                    "name": "license_key",
+                    "type": "string",
+                    "size": 64,
+                    "nullable": false
+                },
+                {
+                    "name": "customer_id",
+                    "type": "integer",
+                    "nullable": true,
+                    "comment": "FK -> optilarity_customers.id"
+                },
+                {
+                    "name": "order_id",
+                    "type": "integer",
+                    "nullable": true,
+                    "comment": "FK -> optilarity_orders.id"
+                },
+                {
+                    "name": "product_id",
+                    "type": "integer",
+                    "nullable": true,
+                    "comment": "FK -> optilarity_software_products.id"
+                },
+                {
+                    "name": "status",
+                    "type": "enum",
+                    "values": [
+                        "active",
+                        "expired",
+                        "suspended",
+                        "revoked"
+                    ],
+                    "default": "active",
+                    "nullable": false
+                },
+                {
+                    "name": "max_activations",
+                    "type": "integer",
+                    "default": 1
+                },
+                {
+                    "name": "activations_used",
+                    "type": "integer",
+                    "default": 0
+                },
+                {
+                    "name": "activated_domains",
+                    "type": "json",
+                    "nullable": true,
+                    "comment": "JSON array of activated domain names"
+                },
+                {
+                    "name": "expires_at",
+                    "type": "date",
+                    "nullable": true
+                },
+                {
+                    "name": "created_at",
+                    "type": "datetime",
+                    "nullable": false
+                },
+                {
+                    "name": "updated_at",
+                    "type": "datetime",
+                    "nullable": true
+                }
+            ],
+            "indexes": [
+                {
+                    "name": "uq_license_key",
+                    "columns": [
+                        "license_key"
+                    ],
+                    "unique": true
+                },
+                {
+                    "name": "idx_license_customer",
+                    "columns": [
+                        "customer_id"
+                    ]
+                },
+                {
+                    "name": "idx_license_order",
+                    "columns": [
+                        "order_id"
+                    ]
+                },
+                {
+                    "name": "idx_license_product",
+                    "columns": [
+                        "product_id"
+                    ]
+                },
+                {
+                    "name": "idx_license_status",
+                    "columns": [
+                        "status"
+                    ]
+                },
+                {
+                    "name": "idx_license_expires",
+                    "columns": [
+                        "expires_at"
+                    ]
+                }
+            ],
+            "foreign_keys": [
+                {
+                    "column": "customer_id",
+                    "references": "optilarity_customers",
+                    "on": "id",
+                    "on_delete": "SET NULL",
+                    "on_update": "CASCADE"
+                },
+                {
+                    "column": "order_id",
+                    "references": "optilarity_orders",
+                    "on": "id",
+                    "on_delete": "SET NULL",
+                    "on_update": "CASCADE"
+                },
+                {
+                    "column": "product_id",
+                    "references": "optilarity_software_products",
+                    "on": "id",
+                    "on_delete": "SET NULL",
+                    "on_update": "CASCADE"
+                }
+            ]
+        }
+    ]
+}

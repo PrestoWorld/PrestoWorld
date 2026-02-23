@@ -1,0 +1,144 @@
+{
+    "version": "1.0.0",
+    "module": "software-catalog",
+    "description": "Software Catalog — Software products, Plugins, Themes. No FKs (root catalog).",
+    "tables": [
+        {
+            "name": "optilarity_software_products",
+            "comment": "Software products (type: software | plugin | theme). Root table — no FKs.",
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "primary"
+                },
+                {
+                    "name": "type",
+                    "type": "enum",
+                    "values": [
+                        "software",
+                        "plugin",
+                        "theme"
+                    ],
+                    "default": "software",
+                    "nullable": false,
+                    "comment": "Discriminator: software | plugin | theme"
+                },
+                {
+                    "name": "name",
+                    "type": "string",
+                    "size": 255,
+                    "nullable": false
+                },
+                {
+                    "name": "slug",
+                    "type": "string",
+                    "size": 255,
+                    "nullable": false
+                },
+                {
+                    "name": "description",
+                    "type": "text",
+                    "nullable": true
+                },
+                {
+                    "name": "version",
+                    "type": "string",
+                    "size": 50,
+                    "nullable": true
+                },
+                {
+                    "name": "author",
+                    "type": "string",
+                    "size": 200,
+                    "nullable": true
+                },
+                {
+                    "name": "homepage_url",
+                    "type": "string",
+                    "size": 500,
+                    "nullable": true
+                },
+                {
+                    "name": "download_url",
+                    "type": "string",
+                    "size": 500,
+                    "nullable": true
+                },
+                {
+                    "name": "thumbnail",
+                    "type": "string",
+                    "size": 500,
+                    "nullable": true
+                },
+                {
+                    "name": "price",
+                    "type": "decimal",
+                    "precision": 10,
+                    "scale": 2,
+                    "default": 0
+                },
+                {
+                    "name": "currency",
+                    "type": "string",
+                    "size": 10,
+                    "default": "USD"
+                },
+                {
+                    "name": "changelog",
+                    "type": "json",
+                    "nullable": true,
+                    "comment": "JSON array {version, date, notes}"
+                },
+                {
+                    "name": "metadata",
+                    "type": "json",
+                    "nullable": true,
+                    "comment": "Type-specific extra data (tags, wp_version_required, etc.)"
+                },
+                {
+                    "name": "status",
+                    "type": "enum",
+                    "values": [
+                        "active",
+                        "draft",
+                        "deprecated",
+                        "archived"
+                    ],
+                    "default": "active",
+                    "nullable": false
+                },
+                {
+                    "name": "created_at",
+                    "type": "datetime",
+                    "nullable": false
+                },
+                {
+                    "name": "updated_at",
+                    "type": "datetime",
+                    "nullable": true
+                }
+            ],
+            "indexes": [
+                {
+                    "name": "uq_product_slug",
+                    "columns": [
+                        "slug"
+                    ],
+                    "unique": true
+                },
+                {
+                    "name": "idx_product_type",
+                    "columns": [
+                        "type"
+                    ]
+                },
+                {
+                    "name": "idx_product_status",
+                    "columns": [
+                        "status"
+                    ]
+                }
+            ]
+        }
+    ]
+}

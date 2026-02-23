@@ -1,0 +1,216 @@
+{
+    "version": "1.0.0",
+    "module": "memberships",
+    "description": "Membership Plans + Subscriptions. Depends on: customers.",
+    "tables": [
+        {
+            "name": "optilarity_membership_plans",
+            "comment": "Available membership/subscription plans. No FKs — root table.",
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "primary"
+                },
+                {
+                    "name": "name",
+                    "type": "string",
+                    "size": 200,
+                    "nullable": false
+                },
+                {
+                    "name": "slug",
+                    "type": "string",
+                    "size": 200,
+                    "nullable": false
+                },
+                {
+                    "name": "description",
+                    "type": "text",
+                    "nullable": true
+                },
+                {
+                    "name": "price",
+                    "type": "decimal",
+                    "precision": 10,
+                    "scale": 2,
+                    "default": 0
+                },
+                {
+                    "name": "billing_cycle",
+                    "type": "enum",
+                    "values": [
+                        "monthly",
+                        "yearly",
+                        "lifetime"
+                    ],
+                    "default": "monthly",
+                    "nullable": false
+                },
+                {
+                    "name": "currency",
+                    "type": "string",
+                    "size": 10,
+                    "default": "USD"
+                },
+                {
+                    "name": "max_licenses",
+                    "type": "integer",
+                    "nullable": true,
+                    "comment": "null = unlimited"
+                },
+                {
+                    "name": "max_domains",
+                    "type": "integer",
+                    "nullable": true
+                },
+                {
+                    "name": "features",
+                    "type": "json",
+                    "nullable": true,
+                    "comment": "JSON array of feature strings"
+                },
+                {
+                    "name": "is_active",
+                    "type": "boolean",
+                    "default": true
+                },
+                {
+                    "name": "created_at",
+                    "type": "datetime",
+                    "nullable": false
+                },
+                {
+                    "name": "updated_at",
+                    "type": "datetime",
+                    "nullable": true
+                }
+            ],
+            "indexes": [
+                {
+                    "name": "uq_plan_slug",
+                    "columns": [
+                        "slug"
+                    ],
+                    "unique": true
+                },
+                {
+                    "name": "idx_plan_active",
+                    "columns": [
+                        "is_active"
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "optilarity_memberships",
+            "comment": "Customer subscriptions to plans. FKs -> customers + plans.",
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "primary"
+                },
+                {
+                    "name": "customer_id",
+                    "type": "integer",
+                    "nullable": false,
+                    "comment": "FK -> optilarity_customers.id"
+                },
+                {
+                    "name": "plan_id",
+                    "type": "integer",
+                    "nullable": false,
+                    "comment": "FK -> optilarity_membership_plans.id"
+                },
+                {
+                    "name": "status",
+                    "type": "enum",
+                    "values": [
+                        "active",
+                        "cancelled",
+                        "expired",
+                        "trialing"
+                    ],
+                    "default": "active",
+                    "nullable": false
+                },
+                {
+                    "name": "start_date",
+                    "type": "date",
+                    "nullable": true
+                },
+                {
+                    "name": "end_date",
+                    "type": "date",
+                    "nullable": true
+                },
+                {
+                    "name": "trial_end_date",
+                    "type": "date",
+                    "nullable": true
+                },
+                {
+                    "name": "auto_renew",
+                    "type": "boolean",
+                    "default": false
+                },
+                {
+                    "name": "notes",
+                    "type": "text",
+                    "nullable": true
+                },
+                {
+                    "name": "created_at",
+                    "type": "datetime",
+                    "nullable": false
+                },
+                {
+                    "name": "cancelled_at",
+                    "type": "datetime",
+                    "nullable": true
+                }
+            ],
+            "indexes": [
+                {
+                    "name": "idx_mem_customer",
+                    "columns": [
+                        "customer_id"
+                    ]
+                },
+                {
+                    "name": "idx_mem_plan",
+                    "columns": [
+                        "plan_id"
+                    ]
+                },
+                {
+                    "name": "idx_mem_status",
+                    "columns": [
+                        "status"
+                    ]
+                },
+                {
+                    "name": "idx_mem_end",
+                    "columns": [
+                        "end_date"
+                    ]
+                }
+            ],
+            "foreign_keys": [
+                {
+                    "column": "customer_id",
+                    "references": "optilarity_customers",
+                    "on": "id",
+                    "on_delete": "CASCADE",
+                    "on_update": "CASCADE"
+                },
+                {
+                    "column": "plan_id",
+                    "references": "optilarity_membership_plans",
+                    "on": "id",
+                    "on_delete": "RESTRICT",
+                    "on_update": "CASCADE"
+                }
+            ]
+        }
+    ]
+}
