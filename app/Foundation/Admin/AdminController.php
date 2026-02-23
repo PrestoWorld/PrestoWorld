@@ -106,11 +106,23 @@ abstract class AdminController
         $current = $_SERVER['REQUEST_URI'] ?? '';
         $items   = '';
         foreach ($links as $link) {
-            $active = str_starts_with($current, $link['url']) ? ' active' : '';
+            $active = ($current === $link['url'] || str_starts_with($current, $link['url'] . '/')) ? ' active' : '';
             $items .= "<a href=\"{$link['url']}\" class=\"presto-nav-item{$active}\">{$link['label']}</a>";
         }
 
-        return "<nav class=\"presto-admin-nav\"><div class=\"presto-nav-brand\">⚡ Optilarity</div><div class=\"presto-nav-links\">{$items}</div></nav>";
+        return <<<HTML
+        <nav class="presto-admin-nav">
+            <div class="presto-nav-brand">Digital<span>Core.</span></div>
+            <div class="presto-nav-links">{$items}</div>
+            <div class="presto-nav-user">
+                <div class="user-avatar" style="background: linear-gradient(135deg, #6366f1, #a855f7);">AD</div>
+                <div class="user-info">
+                    <span class="user-name">Alexander Dev</span>
+                    <span class="user-role">Super Admin</span>
+                </div>
+            </div>
+        </nav>
+HTML;
     }
 
     // =========================================================================
@@ -256,114 +268,118 @@ abstract class AdminController
     protected function adminCss(): string
     {
         return <<<CSS
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        :root {
+            --bg-body: #0a0c10;
+            --bg-card: #12151c;
+            --bg-nav: #0d0f14;
+            --border: rgba(255,255,255,0.08);
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --primary: #6366f1;
+            --primary-light: #818cf8;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+        }
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        body.presto-admin { font-family: 'Inter', sans-serif; font-size: 14px; background: #f0f2f5; color: #1a1a2e; min-height: 100vh; }
+        body.presto-admin { font-family: 'Inter', sans-serif; font-size: 14px; background: var(--bg-body); color: var(--text-main); min-height: 100vh; }
 
         /* Nav */
-        .presto-admin-nav { background: #0f172a; color: #e2e8f0; display: flex; align-items: center; padding: 0 24px; height: 56px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,.3); gap: 32px; }
-        .presto-nav-brand { font-size: 18px; font-weight: 700; color: #fff; white-space: nowrap; }
-        .presto-nav-links { display: flex; align-items: center; gap: 4px; overflow-x: auto; }
-        .presto-nav-item { color: #94a3b8; text-decoration: none; padding: 6px 12px; border-radius: 8px; font-size: 13px; font-weight: 500; white-space: nowrap; transition: background .15s, color .15s; }
-        .presto-nav-item:hover, .presto-nav-item.active { background: rgba(99,102,241,.25); color: #c7d2fe; }
+        .presto-admin-nav { background: var(--bg-nav); color: var(--text-main); display: flex; align-items: center; padding: 0 32px; height: 64px; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid var(--border); gap: 40px; }
+        .presto-nav-brand { font-size: 20px; font-weight: 800; color: #fff; white-space: nowrap; }
+        .presto-nav-brand span { color: var(--primary); }
+        .presto-nav-links { display: flex; align-items: center; gap: 4px; flex: 1; overflow-x: auto; }
+        .presto-nav-item { color: var(--text-dim); text-decoration: none; padding: 8px 16px; border-radius: 10px; font-size: 13px; font-weight: 500; white-space: nowrap; transition: 0.2s; }
+        .presto-nav-item:hover, .presto-nav-item.active { background: rgba(99,102,241,0.12); color: var(--primary-light); }
+        .presto-nav-user { display: flex; align-items: center; gap: 12px; padding-left: 20px; border-left: 1px solid var(--border); }
+        .user-avatar { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; color: #fff; }
+        .user-info { display: flex; flex-direction: column; }
+        .user-name { font-size: 13px; font-weight: 600; }
+        .user-role { font-size: 11px; color: var(--text-dim); }
 
         /* Wrap / header */
-        .presto-admin-wrap { max-width: 1400px; margin: 0 auto; padding: 24px 20px; }
-        .presto-admin-header { margin-bottom: 24px; }
-        .presto-breadcrumbs { font-size: 12px; color: #64748b; margin-bottom: 8px; }
-        .presto-breadcrumbs a { color: #6366f1; text-decoration: none; }
-        .presto-admin-title-bar { display: flex; align-items: center; gap: 16px; }
-        .presto-admin-title { font-size: 24px; font-weight: 700; color: #0f172a; }
+        .presto-admin-wrap { max-width: 1600px; margin: 0 auto; padding: 32px 40px; }
+        .presto-admin-header { margin-bottom: 32px; }
+        .presto-breadcrumbs { font-size: 12px; color: var(--text-dim); margin-bottom: 12px; }
+        .presto-breadcrumbs a { color: var(--primary); text-decoration: none; }
+        .presto-admin-title-bar { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+        .presto-admin-title { font-size: 28px; font-weight: 800; letter-spacing: -0.02em; }
+        .section-title { font-size: 18px; font-weight: 700; margin: 40px 0 20px; color: var(--text-main); display: flex; align-items: center; gap: 10px; }
 
         /* Buttons */
-        .presto-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; border: 1px solid transparent; cursor: pointer; text-decoration: none; transition: all .15s; }
-        .presto-btn-primary   { background: #6366f1; color: #fff; border-color: #6366f1; }
-        .presto-btn-primary:hover { background: #4f46e5; }
-        .presto-btn-secondary { background: #fff; color: #374151; border-color: #d1d5db; }
-        .presto-btn-secondary:hover { background: #f3f4f6; }
-        .presto-btn-danger    { background: #ef4444; color: #fff; border-color: #ef4444; }
-        .presto-btn-ghost     { background: transparent; color: #6b7280; border-color: transparent; }
+        .presto-btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 12px; font-size: 13px; font-weight: 600; border: 1px solid transparent; cursor: pointer; text-decoration: none; transition: 0.2s; }
+        .presto-btn-primary { background: var(--primary); color: #fff; }
+        .presto-btn-primary:hover { background: #4f46e5; transform: translateY(-1px); }
+        .presto-btn-secondary { background: rgba(255,255,255,0.05); color: var(--text-main); border-color: var(--border); }
+        .presto-btn-secondary:hover { background: rgba(255,255,255,0.1); }
+        .btn-ghost-sm { background: none; border: none; color: var(--text-dim); font-size: 12px; font-weight: 500; cursor: pointer; transition: 0.2s; padding: 4px 0; }
+        .btn-ghost-sm:hover { color: var(--primary-light); }
 
         /* Card */
-        .presto-card { background: #fff; border-radius: 12px; border: 1px solid #e5e7eb; box-shadow: 0 1px 3px rgba(0,0,0,.06); margin-bottom: 20px; overflow: hidden; }
-        .presto-card-header { padding: 16px 20px; border-bottom: 1px solid #f3f4f6; }
-        .presto-card-title  { font-size: 15px; font-weight: 600; color: #111827; }
-        .presto-card-body   { padding: 20px; }
+        .presto-card { background: var(--bg-card); border-radius: 20px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.2); margin-bottom: 24px; overflow: hidden; }
+        .presto-card-header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+        .presto-card-title { font-size: 16px; font-weight: 700; }
+        .presto-card-body { padding: 24px; }
+        .p-0 { padding: 0 !important; }
 
-        /* Table */
-        .presto-table-wrap { background: #fff; border-radius: 12px; border: 1px solid #e5e7eb; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+        /* Premium Stat Card */
+        .presto-dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
+        .stat-card-premium { display: flex; align-items: center; justify-content: space-between; padding: 24px; }
+        .stat-main { display: flex; flex-direction: column; }
+        .stat-label { font-size: 13px; color: var(--text-dim); font-weight: 500; margin-bottom: 8px; }
+        .stat-value { font-size: 32px; font-weight: 800; line-height: 1; margin-bottom: 8px; }
+        .stat-trend { font-size: 12px; font-weight: 600; }
+        .trend-up { color: var(--success); }
+        .stat-icon-wrap { width: 48px; height: 48px; border-radius: 12px; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; font-size: 20px; }
+        .stat-card-premium.danger { border-left: 4px solid var(--danger); }
+
+        /* Category Card */
+        .presto-category-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; }
+        .category-card .cat-header { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
+        .cat-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+        .cat-title-group h3 { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+        .cat-stats { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+        .cat-stat { display: flex; justify-content: space-between; font-size: 13px; color: var(--text-dim); }
+        .cat-stat strong { color: var(--text-main); }
+        .cat-progress { margin-top: 16px; }
+        .progress-label { display: flex; justify-content: space-between; font-size: 11px; font-weight: 600; text-transform: uppercase; margin-bottom: 6px; color: var(--text-dim); }
+        .progress-bar { height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--primary); border-radius: 3px; }
+        .cat-footer { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+
+        /* List Table */
         .presto-list-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        .presto-list-table thead { background: #f8fafc; }
-        .presto-list-table th, .presto-list-table td { padding: 10px 14px; border-bottom: 1px solid #f1f5f9; text-align: left; vertical-align: middle; }
-        .presto-list-table th { font-weight: 600; color: #374151; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; }
-        .presto-list-table tr:last-child td { border-bottom: none; }
-        .presto-list-table tbody tr:hover { background: #f8fafc; }
-        .presto-list-table .check-column { width: 40px; }
-        .row-actions { font-size: 12px; color: #6b7280; margin-top: 4px; }
-        .row-actions a { color: #6366f1; text-decoration: none; }
-        .row-actions a:hover { text-decoration: underline; }
+        .presto-list-table th { text-align: left; padding: 16px 24px; font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-dim); border-bottom: 1px solid var(--border); letter-spacing: 0.05em; }
+        .presto-list-table td { padding: 16px 24px; border-bottom: 1px solid var(--border); color: var(--text-main); }
+        .presto-list-table tr:hover { background: rgba(255,255,255,0.02); }
+        code { background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-family: monospace; color: var(--primary-light); }
 
-        /* Top bar / filters */
-        .presto-table-topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 12px; }
-        .presto-subsubsub { display: flex; list-style: none; gap: 0; font-size: 13px; }
-        .presto-subsubsub li a { color: #6366f1; text-decoration: none; padding: 4px 8px; border-radius: 6px; }
-        .presto-subsubsub li a.current, .presto-subsubsub li a:hover { background: #eef2ff; }
-        .presto-search-box { display: flex; gap: 8px; }
-        .presto-search-box input { padding: 7px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 13px; min-width: 220px; outline: none; }
-        .presto-search-box input:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,.1); }
+        /* Badge Custom */
+        .badge { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+        .badge-active { background: rgba(16,185,129,0.15); color: var(--success); }
+        .badge-software { background: rgba(99,102,241,0.15); color: var(--primary-light); }
+        .badge-plugin { background: rgba(59,130,246,0.15); color: #60a5fa; }
+        .badge-membership { background: rgba(245,158,11,0.15); color: var(--warning); }
 
-        /* Tablenav */
-        .tablenav { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; flex-wrap: wrap; gap: 10px; }
-        .tablenav-pages { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #6b7280; }
-        .tablenav-pages .button { padding: 4px 10px; border: 1px solid #d1d5db; border-radius: 6px; text-decoration: none; color: #374151; font-size: 12px; }
-        .tablenav-pages .button:hover { background: #f3f4f6; }
-        .alignleft.actions { display: flex; gap: 8px; align-items: center; }
-        .presto-select { padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 13px; }
+        /* Dashboard Bottom Layout */
+        .dashboard-bottom-row { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-top: 24px; }
+        .card-tabs { display: flex; gap: 8px; }
+        .tab-btn { background: rgba(255,255,255,0.05); border: none; color: var(--text-dim); padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; }
+        .tab-btn.active { background: var(--primary); color: #fff; }
 
-        /* Badge */
-        .badge { display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 100px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
-        .badge-active     { background: #d1fae5; color: #065f46; }
-        .badge-pending    { background: #fef9c3; color: #854d0e; }
-        .badge-completed  { background: #dbeafe; color: #1e40af; }
-        .badge-cancelled  { background: #fee2e2; color: #991b1b; }
-        .badge-expired    { background: #f3f4f6; color: #6b7280; }
-        .badge-paid       { background: #d1fae5; color: #065f46; }
-        .badge-failed     { background: #fee2e2; color: #991b1b; }
-        .badge-draft      { background: #f3f4f6; color: #6b7280; }
-        .badge-sent       { background: #dbeafe; color: #1e40af; }
-        .badge-overdue    { background: #fee2e2; color: #991b1b; }
-        .badge-suspended  { background: #fef3c7; color: #92400e; }
-        .badge-revoked    { background: #fee2e2; color: #991b1b; }
-        .badge-trialing   { background: #f0fdf4; color: #15803d; }
-        .badge-software   { background: #ede9fe; color: #5b21b6; }
-        .badge-plugin     { background: #dbeafe; color: #1e3a8a; }
-        .badge-theme      { background: #fce7f3; color: #9d174d; }
-        .badge-deprecated { background: #f3f4f6; color: #6b7280; }
-        .badge-archived   { background: #f3f4f6; color: #6b7280; }
-
-        /* Form */
-        .presto-form { display: flex; flex-direction: column; gap: 0; }
-        .presto-field-group { margin-bottom: 20px; }
-        .presto-field-label { display: block; font-weight: 500; font-size: 13px; color: #374151; margin-bottom: 6px; }
-        .presto-input { width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; font-family: inherit; outline: none; transition: border-color .15s, box-shadow .15s; background: #fff; }
-        .presto-input:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,.1); }
-        .presto-textarea { resize: vertical; min-height: 100px; }
-        .presto-checkbox-label { display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; }
-        .presto-field-hint { font-size: 12px; color: #6b7280; margin-top: 4px; }
-        .presto-submit-bar { display: flex; gap: 12px; align-items: center; justify-content: flex-end; padding-top: 16px; border-top: 1px solid #f3f4f6; margin-top: 8px; }
-
-        /* Notice */
-        .presto-notice { padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; font-size: 13px; font-weight: 500; }
-        .presto-notice-success { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
-        .presto-notice-error   { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
-        .presto-notice-warning { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
-        .presto-notice-info    { background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; }
-
-        /* Stat grid (dashboard-style cards) */
-        .presto-stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
-        .presto-stat-card { background:#fff; border-radius:12px; border:1px solid #e5e7eb; padding:20px; text-align:center; }
-        .presto-stat-value { font-size: 32px; font-weight: 800; color: #0f172a; }
-        .presto-stat-label { font-size: 12px; color: #64748b; margin-top: 4px; text-transform: uppercase; letter-spacing: .05em; }
+        /* Donut Mock */
+        .donut-chart-mock { width: 150px; height: 150px; border-radius: 50%; border: 15px solid var(--primary); margin: 20px auto; position: relative; display: flex; align-items: center; justify-content: center; border-left-color: var(--success); border-bottom-color: var(--warning); border-right-color: #ec4899; }
+        .donut-inner { font-size: 20px; font-weight: 800; }
+        .chart-legend { list-style: none; margin-top: 20px; display: flex; flex-direction: column; gap: 10px; }
+        .chart-legend li { display: flex; align-items: center; justify-content: space-between; font-size: 13px; color: var(--text-dim); }
+        .dot { width: 8px; height: 8px; border-radius: 50%; margin-right: 10px; display: inline-block; }
+        
+        /* Form Overrides for Dark Theme */
+        .presto-input, .presto-select { background: rgba(0,0,0,0.2); border-color: var(--border); color: var(--text-main); }
+        .presto-input:focus { border-color: var(--primary); background: rgba(0,0,0,0.3); }
+        .presto-field-label { color: var(--text-main); }
+        CSS;
         CSS;
     }
 

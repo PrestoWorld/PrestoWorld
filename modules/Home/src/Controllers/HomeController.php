@@ -62,7 +62,7 @@ class HomeController
                 'request' => $request, 
                 'section' => $section,
                 'name' => $name,
-                'posts' => $postsData // Pass posts to section callbacks too
+                'posts' => $postsData
             ]);
 
             $content .= $hooks->applyFilters("home_section_{$name}_output", $sectionOutput, $section);
@@ -78,7 +78,7 @@ class HomeController
             return Response::html($themeManager->render('index', [
                 'title' => $pageTitle,
                 'content' => $content,
-                'posts' => $postsData, // Explicitly pass to theme
+                'posts' => $postsData,
                 'is_module_home' => true
             ]));
         }
@@ -101,7 +101,6 @@ class HomeController
                     ->limit(3)
                     ->fetchAll();
 
-                // Fallback to raw query if ORM is empty (mapping issues?)
                 if (empty($posts)) {
                     $rawPosts = $this->app->make(\Cycle\Database\DatabaseInterface::class)
                         ->select('ID', 'post_title', 'post_name', 'post_date', 'post_type')
@@ -130,7 +129,7 @@ class HomeController
                             'slug' => $post->slug,
                             'type' => $post->type,
                             'date' => $post->date instanceof \DateTimeInterface ? $post->date->format('M d, Y') : 'Unknown',
-                            'url' => function_exists('get_permalink') ? get_permalink($post) : '#'
+                            'url' => '#'
                         ];
                     }
                 }
