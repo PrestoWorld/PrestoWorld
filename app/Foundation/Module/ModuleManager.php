@@ -104,30 +104,85 @@ class ModuleManager
     }
 
     /**
-     * Sort modules by priority
+     * Sort modules using a topological sort so that dependencies are always
+     * loaded before the modules that depend on them.
+     * Falls back to priority ordering when no dependency edge exists.
+     *
+     * @throws \RuntimeException on circular dependency
      */
     private function getSortedModules(): array
     {
-        $modules = $this->modules;
+        $modules  = $this->modules;  // name => ModuleInterface
+        $sorted   = [];
+        $visiting = [];              // grey nodes (currently on stack)
+        $visited  = [];              // black nodes (fully processed)
 
-        usort($modules, function (ModuleInterface $a, ModuleInterface $b) {
-            // Sort by priority (lower first)
+        $visit = null;
+        $visit = function (string $name) use (&$modules, &$sorted, &$visiting, &$visited, &$visit): void {
+            if (isset($visited[$name])) {
+                return;
+            }
+
+            if (isset($visiting[$name])) {
+                throw new \RuntimeException(
+                    "ModuleManager: Circular dependency detected involving module '{$name}'."
+                );
+            }
+
+            $visiting[$name] = true;
+
+            $module = $modules[$name] ?? null;
+            if ($module !== null) {
+                // Visit each dependency first
+                foreach ($module->getDependencies() as $depName) {
+                    if (!isset($modules[$depName])) {
+                        error_log("ModuleManager: Module '{$name}' depends on '{$depName}' which is not installed.");
+                        continue;
+                    }
+                    $visit($depName);
+                }
+            }
+
+            unset($visiting[$name]);
+            $visited[$name] = true;
+
+            if ($module !== null) {
+                $sorted[] = $module;
+            }
+        };
+
+        // Sort modules by priority first so that same-priority modules with no
+        // dependency edges are still ordered deterministically.
+        $prioritised = array_values($modules);
+        usort($prioritised, function (ModuleInterface $a, ModuleInterface $b) {
             if ($a->getPriority() !== $b->getPriority()) {
                 return $a->getPriority() <=> $b->getPriority();
             }
-            // Same priority? alphabetical
             return strcmp($a->getName(), $b->getName());
         });
 
-        return $modules;
+        foreach ($prioritised as $module) {
+            $visit($module->getName());
+        }
+
+        return $sorted;
     }
 
     /**
-     * Get all discovered modules
+     * Get all discovered modules (unordered, keyed by name).
      */
     public function all(): array
     {
         return $this->modules;
+    }
+
+    /**
+     * Get all enabled modules in guaranteed dependency-safe load order.
+     * Use this instead of all() whenever order matters (schema sync, boots, etc.).
+     */
+    public function allSorted(): array
+    {
+        return $this->getSortedModules();
     }
 
     /**
