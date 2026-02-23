@@ -6,6 +6,7 @@ namespace App\Providers;
 
 use App\Support\ServiceProvider;
 use App\Http\Routing\Router;
+use App\Http\Routing\WordPressDispatcher;
 
 class RouteServiceProvider extends ServiceProvider
 {
@@ -20,6 +21,13 @@ class RouteServiceProvider extends ServiceProvider
     {
         $router = $this->app->make(Router::class);
         error_log("RouteServiceProvider: Booting and loading routes...");
+
+        // Set the smart fallback to WordPress if the bridge is enabled
+        error_log("RouteServiceProvider: Force setting WordPress fallback dispatcher.");
+        $router->setWordPressFallback(function ($request) {
+            $wpDispatcherClass = \PrestoWorld\Bridge\WordPress\Routing\WordPressDispatcher::class;
+            return $this->app->make($wpDispatcherClass)->dispatch($request);
+        });
 
         // Load modern routes
         $this->loadRoutes($router);

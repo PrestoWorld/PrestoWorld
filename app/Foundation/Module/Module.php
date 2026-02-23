@@ -56,6 +56,16 @@ abstract class Module implements ModuleInterface
         ];
     }
 
+    /**
+     * Return the list of module names this module depends on.
+     * Declared as "depends": ["customers", "orders"] in module.json.
+     * These modules are guaranteed to be loaded (and their tables synced) first.
+     */
+    public function getDependencies(): array
+    {
+        return $this->metadata['depends'] ?? [];
+    }
+
     public function getProviders(): array
     {
         return $this->metadata['providers'] ?? [];

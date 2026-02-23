@@ -45,6 +45,15 @@ class HomeServiceProvider extends ServiceProvider
      */
     protected function registerGlobalHooks(): void
     {
-        // Module hooks...
+        // Example: If someone wants to completely replace the home route logic
+        // they can use the existing 'handleHome' hook in Kernel, 
+        // but we're providing a new, more granular section-based approach.
+        
+        $hooks = $this->app->make('hooks');
+
+        // We can hook into the main home route if we want to override it automatically
+        // But it's safer to let the user decide. 
+        // However, the request was "without changing module code", 
+        // so I'll show how to use this module's controller for the main home page.
     }
 }

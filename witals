@@ -33,6 +33,8 @@ $remainingArgv = array_slice($argv, 2);
 match ($commandName) {
     'serve', 'server' => (new ServeCommand($app))->handle($remainingArgv),
     'wordpress:zero-migrate' => handleWordPressZeroMigration($app, $remainingArgv),
+    'schema:sync' => handleSchemaSync($app, $remainingArgv),
+    'db:seed' => handleDbSeed($app, $remainingArgv),
     'help' => displayHelp(),
     default => exitWithUnknownCommand($commandName),
 };
@@ -55,6 +57,8 @@ function displayHelp(): void
     echo "  php witals <command> [options]\n\n";
     echo "Available commands:\n";
     echo "  serve, server    Start the application server\n";
+    echo "  schema:sync      Synchronize database schema from modules\n";
+    echo "  db:seed          Seed database with sample data\n";
     echo "  wordpress:zero-migrate  Migrate WordPress to PrestoWorld\n";
     echo "  help             Display this help message\n\n";
 }
@@ -152,6 +156,93 @@ function handleWordPressZeroMigration($app, array $argv): void
         
     } catch (\Exception $e) {
         echo "❌ Migration error: {$e->getMessage()}\n";
+        exit(1);
+    }
+}
+
+function handleSchemaSync($app, array $argv): void
+{
+    echo "🔄 Synchronizing Module Schemas...\n\n";
+
+    try {
+        $app->boot(); // Ensure providers register ModuleSchemaManager
+        
+        $moduleManager = $app->make(\App\Foundation\Module\ModuleManager::class);
+        $schemaManager = $app->make(\App\Foundation\Database\ModuleSchemaManager::class);
+
+        foreach ($moduleManager->allSorted() as $module) {
+            if ($module->isEnabled()) {
+                echo "  Checking schema for module: " . $module->getName() . "... ";
+                $synced = $schemaManager->syncModule($module->getPath());
+                if (!empty($synced)) {
+                    echo "✅ Synced: " . implode(', ', $synced) . "\n";
+                } else {
+                    echo "✓ No changes\n";
+                }
+            }
+        }
+
+        echo "\n✨ Schema synchronization complete!\n";
+    } catch (\Throwable $e) {
+        echo "❌ Error during schema sync: {$e->getMessage()}\n";
+        echo "File: {$e->getFile()}:{$e->getLine()}\n";
+        exit(1);
+    }
+}
+
+function handleDbSeed($app, array $argv): void
+{
+    echo "🌱 Seeding Database...\n\n";
+
+    try {
+        $app->boot();
+        $db = $app->make(\Cycle\Database\DatabaseInterface::class);
+
+        // Define seeders or just run the logic here for now
+        $seeders = [
+            'Customers' => function($db) {
+                $count = $db->select()->from('optilarity_customers')->count();
+                if ($count > 0) return "Already has data";
+                $db->insert('optilarity_customers')->values([
+                    'first_name' => 'Alice', 'last_name' => 'Wonder', 'email' => 'alice@example.com', 'created_at' => date('Y-m-d H:i:s'), 'status' => 'active'
+                ])->run();
+                return "Inserted sample customer";
+            },
+            'Products' => function($db) {
+                $count = $db->select()->from('optilarity_software_products')->count();
+                if ($count > 0) return "Already has data";
+                $db->insert('optilarity_software_products')->values([
+                    'type' => 'software', 'name' => 'Engine Core', 'slug' => 'engine-core', 'version' => '2.0.0', 'price' => 99, 'status' => 'active', 'created_at' => date('Y-m-d H:i:s')
+                ])->run();
+                return "Inserted sample product";
+            },
+            'Orders' => function($db) {
+                $count = $db->select()->from('optilarity_orders')->count();
+                if ($count > 0) return "Already has data";
+                $db->insert('optilarity_orders')->values([
+                    'order_number' => 'ORD-1001', 'customer_email' => 'alice@example.com', 'total' => 99, 'currency' => 'USD', 'status' => 'completed', 'payment_status' => 'paid', 'created_at' => date('Y-m-d H:i:s')
+                ])->run();
+                return "Inserted sample order";
+            },
+            'Plans' => function($db) {
+                $count = $db->select()->from('optilarity_membership_plans')->count();
+                if ($count > 0) return "Already has data";
+                $db->insert('optilarity_membership_plans')->values([
+                    'name' => 'Pro Plan', 'slug' => 'pro-plan', 'price' => 29, 'currency' => 'USD', 'billing_cycle' => 'monthly', 'is_active' => 1, 'created_at' => date('Y-m-d H:i:s')
+                ])->run();
+                return "Inserted sample plan";
+            }
+        ];
+
+        foreach ($seeders as $name => $seeder) {
+            echo "  Seeding {$name}... ";
+            $result = $seeder($db);
+            echo "✅ {$result}\n";
+        }
+
+        echo "\n✨ Seeding complete!\n";
+    } catch (\Throwable $e) {
+        echo "❌ Error during seeding: {$e->getMessage()}\n";
         exit(1);
     }
 }

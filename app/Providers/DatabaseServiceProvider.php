@@ -27,6 +27,13 @@ class DatabaseServiceProvider extends ServiceProvider
             return new \App\Foundation\Database\QueryInterceptor($app->make(\App\Foundation\Debug\DebugBar::class));
         });
 
+        // Register Module Schema Manager (declarative schema.json syncer)
+        $this->singleton(\App\Foundation\Database\ModuleSchemaManager::class, function ($app) {
+            return new \App\Foundation\Database\ModuleSchemaManager(
+                $app->make(\Cycle\Database\DatabaseProviderInterface::class)
+            );
+        });
+
         // 1. Register Database Manager (DBAL)
         $this->singleton(DatabaseProviderInterface::class, function ($app) {
             $dbConfig = $app->config('database');
@@ -100,6 +107,36 @@ class DatabaseServiceProvider extends ServiceProvider
                 }
             }
         });
+    }
+
+    public function boot(): void
+    {
+        // Sync all module schemas declared via schema.json.
+        // Uses allSorted() to guarantee FK-referenced tables are created
+        // before the tables that reference them (topological dependency order).
+        try {
+            $app = $this->app;
+            if ($app->has(\App\Foundation\Module\ModuleManager::class)) {
+                $moduleManager = $app->make(\App\Foundation\Module\ModuleManager::class);
+                $schemaManager = $app->make(\App\Foundation\Database\ModuleSchemaManager::class);
+
+                // allSorted() returns modules in topological order (deps first)
+                foreach ($moduleManager->allSorted() as $module) {
+                    if ($module->isEnabled()) {
+                        $synced = $schemaManager->syncModule($module->getPath());
+                        if (!empty($synced)) {
+                            error_log(sprintf(
+                                'SchemaManager: [%s] synced tables: %s',
+                                $module->getName(),
+                                implode(', ', $synced)
+                            ));
+                        }
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            error_log('SchemaManager boot error: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+        }
     }
 
     private function getSchema($app, $dbal): array
