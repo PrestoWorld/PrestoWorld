@@ -29,6 +29,54 @@ class OrderAdminController extends AdminController
         );
     }
 
+    /** GET /dashboard/orders/{id} */
+    public function show(Request $request, int $id): Response
+    {
+        $order = $this->db()->select('*')->from('optilarity_orders')->where('id', $id)->run()->fetch();
+        if (!$order) {
+            return $this->htmlResponse($this->adminPage('Not Found', $this->notice('Order not found.', 'error')), 404);
+        }
+
+        $content = <<<HTML
+        <div class="presto-card mb-32">
+            <div class="presto-card-header">
+                <h2 class="presto-card-title">Order #{$order['order_number']}</h2>
+                <div class="card-actions">
+                    <a href="/dashboard/orders/{$id}/edit" class="presto-btn presto-btn-secondary">Edit Order</a>
+                </div>
+            </div>
+            <div class="presto-card-body">
+                <div class="dashboard-bottom-row" style="margin-top:0; grid-template-columns: 1fr 1fr;">
+                    <div>
+                        <h3 class="section-title" style="margin-top:0;">Dữ liệu đơn hàng</h3>
+                        <p><strong>Ngày tạo:</strong> {$order['created_at']}</p>
+                        <p><strong>Trạng thái:</strong> <span class="badge badge-{$order['status']}">{$order['status']}</span></p>
+                        <p><strong>Thanh toán:</strong> <span class="badge badge-{$order['payment_status']}">{$order['payment_status']}</span></p>
+                        <p><strong>Phương thức:</strong> {$order['payment_method']}</p>
+                    </div>
+                    <div>
+                        <h3 class="section-title" style="margin-top:0;">Khách hàng & Tổng tiền</h3>
+                        <p><strong>Email:</strong> {$order['customer_email']}</p>
+                        <p><strong>ID Khách:</strong> #{$order['customer_id']}</p>
+                        <p><strong>Tổng cộng:</strong> <strong style="font-size: 24px;">{$order['total']} {$order['currency']}</strong></p>
+                        <p><strong>Mã giao dịch:</strong> {$order['transaction_id']}</p>
+                    </div>
+                </div>
+                <div style="margin-top: 40px; border-top: 1px solid var(--border); padding-top: 24px;">
+                    <h3 class="section-title" style="margin-top:0;">Ghi chú</h3>
+                    <div style="background: rgba(0,0,0,0.2); padding: 20px; border-radius: 12px; min-height: 100px;">
+                        {$order['notes']}
+                    </div>
+                </div>
+            </div>
+        </div>
+HTML;
+
+        return $this->htmlResponse($this->adminPage('Order Detail', $content, [
+            'breadcrumbs' => ['Orders' => '/dashboard/orders', 'Detail' => '']
+        ]));
+    }
+
     /** GET /dashboard/orders/create */
     public function create(Request $request): Response
     {

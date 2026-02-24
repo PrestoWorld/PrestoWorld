@@ -30,6 +30,7 @@ class OrdersServiceProvider extends ServiceProvider
         $router->get('/dashboard/orders',                 [Controllers\OrderAdminController::class, 'index']);
         $router->get('/dashboard/orders/create',          [Controllers\OrderAdminController::class, 'create']);
         $router->post('/dashboard/orders/create',         [Controllers\OrderAdminController::class, 'store']);
+        $router->get('/dashboard/orders/{id}',            [Controllers\OrderAdminController::class, 'show']);
         $router->get('/dashboard/orders/{id}/edit',       [Controllers\OrderAdminController::class, 'edit']);
         $router->put('/dashboard/orders/{id}/edit',       [Controllers\OrderAdminController::class, 'update']);
     }
