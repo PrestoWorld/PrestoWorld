@@ -312,19 +312,41 @@ abstract class AdminController
         return "<textarea name=\"{$name}\" id=\"field-{$name}\" rows=\"{$rows}\" class=\"presto-input presto-textarea\"{$ph}>{$val}</textarea>";
     }
 
-    /**
-     * @param array<string, string> $options  [value => label]
-     */
-    protected function select(string $name, array $options, mixed $selected = '', bool $required = false): string
+    protected function select(string $name, array $options, mixed $selected = '', bool $searchable = false, string $placeholder = 'Search...'): string
     {
-        $req  = $required ? ' required' : '';
-        $html = "<select name=\"{$name}\" id=\"field-{$name}\" class=\"presto-select\"{$req}>";
+        if ($searchable) {
+            $formattedOptions = [];
+            foreach ($options as $val => $lbl) {
+                $formattedOptions[] = ['value' => (string)$val, 'label' => (string)$lbl];
+            }
+            return $this->searchableSelect($name, $formattedOptions, $selected, $placeholder);
+        }
+
+        $html = "<select name=\"{$name}\" id=\"field-{$name}\" class=\"presto-select\">";
         foreach ($options as $val => $label) {
             $sel   = (string)$val === (string)$selected ? ' selected' : '';
             $html .= "<option value=\"{$val}\"{$sel}>{$label}</option>";
         }
         $html .= '</select>';
         return $html;
+    }
+
+    protected function searchableSelect(string $name, array $options, mixed $value = '', string $placeholder = 'Search...'): string
+    {
+        $jsonOptions = json_encode($options);
+        return <<<HTML
+        <div data-solid-component="ComboBox" data-config='{"name":"{$name}", "options":{$jsonOptions}, "value":"{$value}", "placeholder":"{$placeholder}"}'></div>
+HTML;
+    }
+
+    protected function searchableFieldGroup(string $label, string $name, array $options, mixed $value = '', string $placeholder = 'Search...'): string
+    {
+        return <<<HTML
+        <div class="presto-field-group">
+            <label class="presto-field-label">{$label}</label>
+            <div class="presto-field-control">{$this->searchableSelect($name, $options, $value, $placeholder)}</div>
+        </div>
+HTML;
     }
 
     protected function checkbox(string $name, bool $checked = false, string $label = ''): string
