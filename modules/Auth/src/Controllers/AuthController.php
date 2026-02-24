@@ -228,7 +228,8 @@ class AuthController extends BaseAuthController
         }
 
         try {
-            $db = $this->app->make(\Cycle\Database\DatabaseInterface::class);
+            $dbal = $this->app->make(\Cycle\Database\DatabaseProviderInterface::class);
+            $db = $dbal->database();
             
             // Check if email exists
             $exists = $db->table('users')->where('email', $email)->count();
@@ -237,14 +238,14 @@ class AuthController extends BaseAuthController
             }
 
             // Create user
-            $db->table('users')->insert([
+            $db->insert('users')->values([
                 'name'     => $name,
                 'email'    => $email,
                 'password' => password_hash($password, PASSWORD_DEFAULT),
                 'role'     => 'admin', // Default for now
-                'created_at' => new \DateTime(),
-                'updated_at' => new \DateTime(),
-            ]);
+                'created_at' => date('Y-m-d H:i:s'),
+                'updated_at' => date('Y-m-d H:i:s'),
+            ])->run();
 
             return Response::html('', 302, [
                 'Location' => '/login?success=' . urlencode('Đăng ký thành công! Vui lòng đăng nhập.')

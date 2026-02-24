@@ -371,10 +371,11 @@ class AuthController
     protected function authenticateUser(string $email, string $password): ?array
     {
         try {
-            $db = $this->app->make(\Cycle\Database\DatabaseInterface::class);
+            $dbal = $this->app->make(\Cycle\Database\DatabaseProviderInterface::class);
+            $db = $dbal->database();
+            
             $user = $db->table('users')
                 ->where('email', $email)
-                ->select(['id', 'email', 'password', 'name', 'role'])
                 ->run()
                 ->fetch();
 

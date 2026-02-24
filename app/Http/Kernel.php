@@ -123,6 +123,11 @@ class Kernel implements KernelContract
      */
     protected function injectDebugBar(Request $request, Response $response): Response
     {
+        // Skip for redirects or non-HTML responses
+        if ($response->getStatusCode() >= 300 && $response->getStatusCode() < 400) {
+            return $response;
+        }
+
         if (!env('APP_DEBUG_BAR', false) || !$this->app->has(\App\Foundation\Debug\DebugBar::class)) {
             return $response;
         }
@@ -141,7 +146,7 @@ class Kernel implements KernelContract
             $content .= $debugBarHtml;
         }
 
-        return Response::html($content);
+        return new Response($content, $response->getStatusCode(), $response->getHeaders());
     }
 
     /**
