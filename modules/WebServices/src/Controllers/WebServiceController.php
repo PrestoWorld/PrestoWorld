@@ -4,19 +4,20 @@ declare(strict_types=1);
 
 namespace Modules\WebServices\Controllers;
 
-use App\Http\Controllers\Controller;
 use Witals\Framework\Http\Response;
 use Witals\Framework\Http\Request;
 use Cycle\Database\DatabaseProviderInterface;
 use Cake\Chronos\Chronos;
+use Witals\Framework\Container\Container;
 
-class WebServiceController extends Controller
+class WebServiceController
 {
     protected DatabaseProviderInterface $dbal;
+    protected Container $app;
 
-    public function __construct($app)
+    public function __construct(Container $app)
     {
-        parent::__construct($app);
+        $this->app = $app;
         $this->dbal = $app->make(DatabaseProviderInterface::class);
     }
 
@@ -159,6 +160,38 @@ class WebServiceController extends Controller
         }
 
         return Response::json(['success' => true, 'message' => 'Seeded ' . count($services) . ' services.']);
+    }
+
+    public function show(string $slug): Response
+    {
+        $service = $this->dbal->database()->select('*')
+            ->from('optilarity_web_services')
+            ->where('slug', $slug)
+            ->run()
+            ->fetch();
+        
+        if (!$service) return Response::json(['success' => false, 'message' => 'Not found'], 404);
+        return Response::json(['success' => true, 'data' => $service]);
+    }
+
+    public function catalog(): Response
+    {
+        $services = $this->dbal->database()->select('*')
+            ->from('optilarity_web_services')
+            ->where('status', 'active')
+            ->run()
+            ->fetchAll();
+
+        $themeManager = $this->app->make(\PrestoWorld\Theme\ThemeManager::class);
+        $html = $themeManager->render('page', [
+            'page' => [
+                'title' => 'Dịch vụ kĩ thuật',
+                'content' => 'Danh sách các dịch vụ kĩ thuật tối ưu website...'
+            ],
+            'services' => $services
+        ]);
+
+        return Response::html($html);
     }
 
     protected function getOrCreateCustomerId(string $email): int

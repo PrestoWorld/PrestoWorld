@@ -82,23 +82,24 @@
                 <h2>Sản phẩm nổi bật</h2>
                 <div class="products-grid">
                     <?php 
-                    $demo_products = [
-                        ['title' => 'Tokoo Theme', 'tag' => 'Theme', 'price' => '$59.00', 'img' => 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&q=80&w=300'],
-                        ['title' => 'Elementor Pro', 'tag' => 'Plugin', 'price' => '$9.00', 'img' => 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=300'],
-                        ['title' => 'Adobe Creative Cloud', 'tag' => 'Software', 'price' => '$15.00', 'img' => 'https://images.unsplash.com/photo-1626785774573-4b799315345d?auto=format&fit=crop&q=80&w=300'],
-                        ['title' => 'Rank Math SEO Pro', 'tag' => 'Plugin', 'price' => '$5.00', 'img' => 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=300']
+                    $display_services = !empty($web_services) ? $web_services : [
+                        ['name' => 'Tokoo Theme', 'category' => 'Theme', 'base_price' => 59.00, 'img' => 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&q=80&w=300'],
+                        ['name' => 'Elementor Pro', 'category' => 'Plugin', 'base_price' => 9.00, 'img' => 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=300'],
+                        ['name' => 'Adobe Creative Cloud', 'category' => 'Software', 'base_price' => 15.00, 'img' => 'https://images.unsplash.com/photo-1626785774573-4b799315345d?auto=format&fit=crop&q=80&w=300'],
+                        ['name' => 'Rank Math SEO Pro', 'category' => 'Plugin', 'base_price' => 5.00, 'img' => 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=300']
                     ];
-                    foreach($demo_products as $p): 
+                    foreach($display_services as $s): 
+                        $img = $s['img'] ?? 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=300';
                     ?>
                     <div class="product-card">
                         <div class="product-thumb">
-                            <img src="<?php echo $p['img']; ?>" alt="">
+                            <img src="<?php echo $img; ?>" alt="">
                         </div>
                         <div class="product-info">
-                            <span class="product-tag"><?php echo $p['tag']; ?></span>
-                            <h3><?php echo $p['title']; ?></h3>
+                            <span class="product-tag"><?php echo ucfirst($s['category']); ?></span>
+                            <h3><?php echo $s['name']; ?></h3>
                             <div class="product-footer">
-                                <span class="product-price"><?php echo $p['price']; ?></span>
+                                <span class="product-price">$<?php echo number_format((float)$s['base_price'], 2); ?></span>
                                 <button style="background: #f1f5f9; border: none; padding: 4px; border-radius: 4px; cursor: pointer;">
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14m-7-7 7 7-7 7"/></svg>
                                 </button>

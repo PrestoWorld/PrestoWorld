@@ -102,6 +102,7 @@
                     <li><a href="/hosting">Hosting & VPS</a></li>
                     <li><a href="/blog" class="<?php echo str_contains($_SERVER['REQUEST_URI'], '/blog') ? 'active' : ''; ?>">Blog</a></li>
                     <li><a href="/memberships">Membership</a></li>
+                    <li><a href="/affiliates" class="<?php echo str_contains($_SERVER['REQUEST_URI'], '/affiliates') ? 'active' : ''; ?>">Cộng tác viên</a></li>
                     <li><a href="/services">Dịch vụ</a></li>
                 </ul>
             </nav>

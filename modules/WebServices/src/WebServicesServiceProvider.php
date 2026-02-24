@@ -12,6 +12,7 @@ class WebServicesServiceProvider extends BaseServiceProvider
     public function register(): void
     {
         $this->singleton(Controllers\WebServiceController::class, fn($app) => new Controllers\WebServiceController($app));
+        $this->singleton(Controllers\WebServiceAdminController::class, fn($app) => new Controllers\WebServiceAdminController($app));
     }
 
     public function boot(): void
@@ -26,5 +27,12 @@ class WebServicesServiceProvider extends BaseServiceProvider
 
         // --- Frontend ---
         $router->get('/services',                   [Controllers\WebServiceController::class, 'catalog']);
+
+        // --- Admin Dashboard (CRUD) ---
+        $router->get('/dashboard/web-services',                 [Controllers\WebServiceAdminController::class, 'index']);
+        $router->get('/dashboard/web-services/create',          [Controllers\WebServiceAdminController::class, 'create']);
+        $router->post('/dashboard/web-services/create',         [Controllers\WebServiceAdminController::class, 'store']);
+        $router->get('/dashboard/web-services/{id}/edit',       [Controllers\WebServiceAdminController::class, 'edit']);
+        $router->put('/dashboard/web-services/{id}/edit',       [Controllers\WebServiceAdminController::class, 'update']);
     }
 }

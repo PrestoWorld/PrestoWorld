@@ -103,6 +103,101 @@ class BlogController
         ]);
     }
 
+    public function category(string $slug): Response
+    {
+        $category = $this->dbal->database()->select('*')
+            ->from('optilarity_blog_categories')
+            ->where('slug', $slug)
+            ->run()
+            ->fetch();
+
+        if (!$category) {
+            return Response::json(['error' => 'Category not found'], 404);
+        }
+
+        $posts = $this->dbal->database()->select('p.*', 'c.name as category_name')
+            ->from('optilarity_blog_posts as p')
+            ->leftJoin('optilarity_blog_categories as c')->on('p.category_id', 'c.id')
+            ->where('p.category_id', $category['id'])
+            ->where('p.status', 'publish')
+            ->orderBy('p.published_at', 'DESC')
+            ->run()
+            ->fetchAll();
+
+        $categories = $this->dbal->database()->select('c.*', 'COUNT(p.id) as post_count')
+            ->from('optilarity_blog_categories as c')
+            ->leftJoin('optilarity_blog_posts as p')->on('c.id', 'p.category_id')
+            ->groupBy('c.id')
+            ->run()
+            ->fetchAll();
+
+        return $this->render('blog/index', [
+            'posts' => $posts,
+            'categories' => $categories,
+            'current_category' => $category,
+            'title' => 'Chuyên mục: ' . $category['name']
+        ]);
+    }
+
+    public function tag(string $slug): Response
+    {
+        $tag = $this->dbal->database()->select('*')
+            ->from('optilarity_blog_tags')
+            ->where('slug', $slug)
+            ->run()
+            ->fetch();
+
+        if (!$tag) {
+            return Response::json(['error' => 'Tag not found'], 404);
+        }
+
+        $posts = $this->dbal->database()->select('p.*', 'c.name as category_name')
+            ->from('optilarity_blog_posts as p')
+            ->join('optilarity_blog_post_tags as pt')->on('p.id', 'pt.post_id')
+            ->leftJoin('optilarity_blog_categories as c')->on('p.category_id', 'c.id')
+            ->where('pt.tag_id', $tag['id'])
+            ->where('p.status', 'publish')
+            ->run()
+            ->fetchAll();
+
+        $categories = $this->dbal->database()->select('c.*', 'COUNT(p.id) as post_count')
+            ->from('optilarity_blog_categories as c')
+            ->leftJoin('optilarity_blog_posts as p')->on('c.id', 'p.category_id')
+            ->groupBy('c.id')
+            ->run()
+            ->fetchAll();
+
+        return $this->render('blog/index', [
+            'posts' => $posts,
+            'categories' => $categories,
+            'current_tag' => $tag,
+            'title' => 'Tag: #' . $tag['name']
+        ]);
+    }
+
+    public function apiIndex(): Response
+    {
+        $posts = $this->dbal->database()->select('*')
+            ->from('optilarity_blog_posts')
+            ->where('status', 'publish')
+            ->run()
+            ->fetchAll();
+        
+        return Response::json(['success' => true, 'data' => $posts]);
+    }
+
+    public function apiShow(string $slug): Response
+    {
+        $post = $this->dbal->database()->select('*')
+            ->from('optilarity_blog_posts')
+            ->where('slug', $slug)
+            ->run()
+            ->fetch();
+        
+        if (!$post) return Response::json(['success' => false, 'message' => 'Not found'], 404);
+        return Response::json(['success' => true, 'data' => $post]);
+    }
+
     protected function render(string $view, array $data = []): Response
     {
         $themeManager = $this->app->make(\PrestoWorld\Theme\ThemeManager::class);

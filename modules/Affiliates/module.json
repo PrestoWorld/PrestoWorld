@@ -1,0 +1,19 @@
+{
+    "name": "affiliates",
+    "version": "1.0.0",
+    "description": "Comprehensive Affiliate Marketing System",
+    "priority": 60,
+    "enabled": true,
+    "depends": [
+        "customers",
+        "orders"
+    ],
+    "autoload": {
+        "psr-4": {
+            "Modules\\Affiliates\\": "src/"
+        }
+    },
+    "providers": [
+        "Modules\\Affiliates\\AffiliatesServiceProvider"
+    ]
+}

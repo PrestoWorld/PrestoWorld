@@ -18,6 +18,7 @@
                     <li><a href="#">Themes</a></li>
                     <li><a href="#">Plugins</a></li>
                     <li><a href="#">Softwares</a></li>
+                    <li><a href="/portal">Trung tâm khách hàng</a></li>
                 </ul>
             </div>
             <div class="footer-col">
