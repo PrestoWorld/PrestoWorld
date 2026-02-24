@@ -129,6 +129,94 @@
                     "on_delete": "CASCADE"
                 }
             ]
+        },
+        {
+            "name": "optilarity_ssl_orders",
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "primary"
+                },
+                {
+                    "name": "ssl_id",
+                    "type": "integer"
+                },
+                {
+                    "name": "order_id",
+                    "type": "integer"
+                },
+                {
+                    "name": "created_at",
+                    "type": "datetime"
+                }
+            ],
+            "indexes": [
+                {
+                    "columns": [
+                        "ssl_id",
+                        "order_id"
+                    ],
+                    "unique": true
+                }
+            ],
+            "foreign_keys": [
+                {
+                    "column": "ssl_id",
+                    "references": "optilarity_ssl_certificates",
+                    "on": "id",
+                    "on_delete": "CASCADE"
+                },
+                {
+                    "column": "order_id",
+                    "references": "optilarity_orders",
+                    "on": "id",
+                    "on_delete": "CASCADE"
+                }
+            ]
+        },
+        {
+            "name": "optilarity_email_orders",
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "primary"
+                },
+                {
+                    "name": "email_id",
+                    "type": "integer"
+                },
+                {
+                    "name": "order_id",
+                    "type": "integer"
+                },
+                {
+                    "name": "created_at",
+                    "type": "datetime"
+                }
+            ],
+            "indexes": [
+                {
+                    "columns": [
+                        "email_id",
+                        "order_id"
+                    ],
+                    "unique": true
+                }
+            ],
+            "foreign_keys": [
+                {
+                    "column": "email_id",
+                    "references": "optilarity_email_hosting",
+                    "on": "id",
+                    "on_delete": "CASCADE"
+                },
+                {
+                    "column": "order_id",
+                    "references": "optilarity_orders",
+                    "on": "id",
+                    "on_delete": "CASCADE"
+                }
+            ]
         }
     ]
 }

@@ -141,6 +141,55 @@
                     "on_delete": "CASCADE"
                 }
             ]
+        },
+        {
+            "name": "optilarity_hosting_orders",
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "primary"
+                },
+                {
+                    "name": "hosting_id",
+                    "type": "integer"
+                },
+                {
+                    "name": "order_id",
+                    "type": "integer"
+                },
+                {
+                    "name": "meta_data",
+                    "type": "json",
+                    "nullable": true
+                },
+                {
+                    "name": "created_at",
+                    "type": "datetime"
+                }
+            ],
+            "indexes": [
+                {
+                    "columns": [
+                        "hosting_id",
+                        "order_id"
+                    ],
+                    "unique": true
+                }
+            ],
+            "foreign_keys": [
+                {
+                    "column": "hosting_id",
+                    "references": "optilarity_hostings",
+                    "on": "id",
+                    "on_delete": "CASCADE"
+                },
+                {
+                    "column": "order_id",
+                    "references": "optilarity_orders",
+                    "on": "id",
+                    "on_delete": "CASCADE"
+                }
+            ]
         }
     ]
 }

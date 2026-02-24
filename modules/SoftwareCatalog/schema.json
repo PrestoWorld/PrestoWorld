@@ -20,8 +20,7 @@
                         "theme"
                     ],
                     "default": "software",
-                    "nullable": false,
-                    "comment": "Discriminator: software | plugin | theme"
+                    "nullable": false
                 },
                 {
                     "name": "name",
@@ -86,14 +85,12 @@
                 {
                     "name": "changelog",
                     "type": "json",
-                    "nullable": true,
-                    "comment": "JSON array {version, date, notes}"
+                    "nullable": true
                 },
                 {
                     "name": "metadata",
                     "type": "json",
-                    "nullable": true,
-                    "comment": "Type-specific extra data (tags, wp_version_required, etc.)"
+                    "nullable": true
                 },
                 {
                     "name": "status",
@@ -137,6 +134,56 @@
                     "columns": [
                         "status"
                     ]
+                }
+            ]
+        },
+        {
+            "name": "optilarity_software_orders",
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "primary"
+                },
+                {
+                    "name": "product_id",
+                    "type": "integer"
+                },
+                {
+                    "name": "order_id",
+                    "type": "integer"
+                },
+                {
+                    "name": "license_key",
+                    "type": "string",
+                    "size": 100,
+                    "nullable": true
+                },
+                {
+                    "name": "created_at",
+                    "type": "datetime"
+                }
+            ],
+            "indexes": [
+                {
+                    "columns": [
+                        "product_id",
+                        "order_id"
+                    ],
+                    "unique": true
+                }
+            ],
+            "foreign_keys": [
+                {
+                    "column": "product_id",
+                    "references": "optilarity_software_products",
+                    "on": "id",
+                    "on_delete": "CASCADE"
+                },
+                {
+                    "column": "order_id",
+                    "references": "optilarity_orders",
+                    "on": "id",
+                    "on_delete": "CASCADE"
                 }
             ]
         }
