@@ -56,25 +56,72 @@ class LicenseController
 
     public function activate(Request $request, int $id): Response
     {
-        return Response::json(['success' => true, 'message' => 'Activated']);
+        return Response::json(['success' => true, 'message' => 'Use verify API for automatic activation']);
     }
 
     public function deactivate(Request $request, int $id): Response
     {
-        return Response::json(['success' => true, 'message' => 'Deactivated']);
+        $this->dbal->database()->update('optilarity_licenses', [
+            'activated_domains' => '[]',
+            'activations_used' => 0
+        ], ['id' => $id])->run();
+        return Response::json(['success' => true, 'message' => 'All activations cleared']);
     }
 
     public function revoke(Request $request, int $id): Response
     {
-        $this->dbal->database()->update('optilarity_licenses', ['status' => 'revoked'], ['id' => $id]);
+        $this->dbal->database()->update('optilarity_licenses', ['status' => 'revoked'], ['id' => $id])->run();
         return Response::json(['success' => true, 'message' => 'Revoked']);
     }
 
+    /**
+     * Secure verification endpoint
+     */
     public function verify(Request $request): Response
     {
-        $key = $request->query()['key'] ?? '';
-        $license = $this->dbal->database()->select('*')->from('optilarity_licenses')->where('license_key', $key)->run()->fetch();
-        if (!$license) return Response::json(['valid' => false], 404);
-        return Response::json(['valid' => true, 'status' => $license['status']]);
+        $service = app(\Modules\LicenseManager\Services\LicenseService::class);
+        $data = (array)$request->post();
+        
+        // Identification is needed to find the specific private key
+        $key = $data['license_key'] ?? $request->query()['key'] ?? '';
+
+        // Support both plain and encrypted payloads
+        if (isset($data['payload']) && $key) {
+            $decrypted = $service->decryptData($data['payload'], $key);
+            if ($decrypted) {
+                $data = $decrypted;
+            }
+        }
+
+        $email = $data['email'] ?? $request->query()['email'] ?? '';
+        $domain = $data['domain'] ?? $request->query()['domain'] ?? '';
+        $machineId = $data['machine_id'] ?? $data['device_id'] ?? $request->query()['machine_id'] ?? '';
+        $version = $data['version'] ?? $request->query()['version'] ?? '';
+
+        // Determine activation identity (domain for web, machine_id for desktop)
+        $identity = $machineId ?: $domain;
+
+        $meta = [
+            'ip' => $request->server()['REMOTE_ADDR'] ?? null,
+            'user_agent' => $request->server()['HTTP_USER_AGENT'] ?? null,
+        ];
+
+        $result = $service->verify($key, $email, $identity, $version, $meta);
+        
+        // Get the specific public key for this license to return it
+        $publicKey = '';
+        if ($key) {
+            $private = $service->getLicensePrivateKey($key);
+            if ($private) {
+                $publicKey = $service->getPublicKeyFromPrivate($private);
+            }
+        }
+
+        return Response::json([
+            'success' => true,
+            'payload' => $key ? $service->encryptResponse($result, $key) : null,
+            'public_key' => $publicKey,
+            'timestamp' => time()
+        ]);
     }
 }

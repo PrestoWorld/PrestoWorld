@@ -11,6 +11,9 @@ class LicenseManagerServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        $this->singleton(Services\LicenseService::class, fn($app) => new Services\LicenseService($app));
+        $this->singleton(Services\EnvatoService::class, fn($app) => new Services\EnvatoService());
+
         $this->singleton(Controllers\LicenseController::class, fn($app) => new Controllers\LicenseController($app));
         $this->singleton(Controllers\LicenseAdminController::class, fn($app) => new Controllers\LicenseAdminController($app));
     }
@@ -29,6 +32,7 @@ class LicenseManagerServiceProvider extends ServiceProvider
         $router->post('/api/licenses/{id}/deactivate', [Controllers\LicenseController::class, 'deactivate']);
         $router->post('/api/licenses/{id}/revoke',     [Controllers\LicenseController::class, 'revoke']);
         $router->get('/api/license/verify',            [Controllers\LicenseController::class, 'verify']);
+        $router->post('/api/license/verify',           [Controllers\LicenseController::class, 'verify']);
 
         // --- Admin UI ---
         $router->get('/dashboard/licenses',                  [Controllers\LicenseAdminController::class, 'index']);

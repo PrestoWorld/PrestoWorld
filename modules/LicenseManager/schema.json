@@ -48,6 +48,46 @@
                     "nullable": false
                 },
                 {
+                    "name": "license_type",
+                    "type": "enum",
+                    "values": [
+                        "optilarity",
+                        "envato",
+                        "templatemonster"
+                    ],
+                    "default": "optilarity",
+                    "nullable": false
+                },
+                {
+                    "name": "license_mode",
+                    "type": "enum",
+                    "values": [
+                        "strict",
+                        "share"
+                    ],
+                    "default": "strict",
+                    "nullable": false
+                },
+                {
+                    "name": "thirdparty_code",
+                    "type": "string",
+                    "size": 128,
+                    "nullable": true
+                },
+                {
+                    "name": "software_version",
+                    "type": "string",
+                    "size": 32,
+                    "nullable": true
+                },
+                {
+                    "name": "email",
+                    "type": "string",
+                    "size": 128,
+                    "nullable": true,
+                    "comment": "Used for external verification or when customer_id is missing"
+                },
+                {
                     "name": "max_activations",
                     "type": "integer",
                     "default": 1
@@ -66,6 +106,11 @@
                 {
                     "name": "expires_at",
                     "type": "date",
+                    "nullable": true
+                },
+                {
+                    "name": "last_verified_at",
+                    "type": "datetime",
                     "nullable": true
                 },
                 {
@@ -138,6 +183,125 @@
                     "references": "optilarity_software_products",
                     "on": "id",
                     "on_delete": "SET NULL",
+                    "on_update": "CASCADE"
+                }
+            ]
+        },
+        {
+            "name": "optilarity_user_keys",
+            "comment": "Stores RSA private keys per customer.",
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "primary"
+                },
+                {
+                    "name": "customer_id",
+                    "type": "integer",
+                    "nullable": false
+                },
+                {
+                    "name": "private_key",
+                    "type": "text",
+                    "nullable": false
+                },
+                {
+                    "name": "created_at",
+                    "type": "datetime",
+                    "nullable": false
+                },
+                {
+                    "name": "updated_at",
+                    "type": "datetime",
+                    "nullable": true
+                }
+            ],
+            "indexes": [
+                {
+                    "name": "uq_customer_key",
+                    "columns": [
+                        "customer_id"
+                    ],
+                    "unique": true
+                }
+            ],
+            "foreign_keys": [
+                {
+                    "column": "customer_id",
+                    "references": "optilarity_customers",
+                    "on": "id",
+                    "on_delete": "CASCADE",
+                    "on_update": "CASCADE"
+                }
+            ]
+        },
+        {
+            "name": "optilarity_license_activations",
+            "comment": "History of license activation attempts.",
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "primary"
+                },
+                {
+                    "name": "license_id",
+                    "type": "integer",
+                    "nullable": false
+                },
+                {
+                    "name": "domain",
+                    "type": "string",
+                    "size": 255,
+                    "nullable": true
+                },
+                {
+                    "name": "ip_address",
+                    "type": "string",
+                    "size": 45,
+                    "nullable": true
+                },
+                {
+                    "name": "user_agent",
+                    "type": "text",
+                    "nullable": true
+                },
+                {
+                    "name": "status",
+                    "type": "string",
+                    "size": 20,
+                    "default": "success"
+                },
+                {
+                    "name": "message",
+                    "type": "text",
+                    "nullable": true
+                },
+                {
+                    "name": "created_at",
+                    "type": "datetime",
+                    "nullable": false
+                }
+            ],
+            "indexes": [
+                {
+                    "name": "idx_activation_license",
+                    "columns": [
+                        "license_id"
+                    ]
+                },
+                {
+                    "name": "idx_activation_domain",
+                    "columns": [
+                        "domain"
+                    ]
+                }
+            ],
+            "foreign_keys": [
+                {
+                    "column": "license_id",
+                    "references": "optilarity_licenses",
+                    "on": "id",
+                    "on_delete": "CASCADE",
                     "on_update": "CASCADE"
                 }
             ]

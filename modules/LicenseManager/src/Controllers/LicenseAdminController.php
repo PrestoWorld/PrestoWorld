@@ -38,7 +38,10 @@ class LicenseAdminController extends AdminController
             $key = implode('-', array_map(fn() => strtoupper(bin2hex(random_bytes(4))), range(1, 4)));
             $this->db()->insert('optilarity_licenses')->values([
                 'license_key'      => $key,
+                'license_type'     => $body['license_type'] ?? 'optilarity',
+                'license_mode'     => $body['license_mode'] ?? 'strict',
                 'customer_id'      => $body['customer_id']  ? (int)$body['customer_id']  : null,
+                'email'            => $body['email']        ?: null,
                 'order_id'         => $body['order_id']     ? (int)$body['order_id']     : null,
                 'product_id'       => $body['product_id']   ? (int)$body['product_id']   : null,
                 'status'           => $body['status']        ?? 'active',
@@ -68,6 +71,9 @@ class LicenseAdminController extends AdminController
         $body = (array)$request->post();
         try {
             $this->db()->update('optilarity_licenses', [
+                'license_type'    => $body['license_type']     ?? 'optilarity',
+                'license_mode'    => $body['license_mode']     ?? 'strict',
+                'email'           => $body['email']            ?: null,
                 'status'          => $body['status']           ?? 'active',
                 'max_activations' => (int)($body['max_activations'] ?? 1),
                 'expires_at'      => $body['expires_at']       ?: null,
@@ -82,13 +88,18 @@ class LicenseAdminController extends AdminController
     private function renderForm(array $data = [], string $action = '', string $method = 'POST', array $products = []): string
     {
         $statusOpts   = ['active' => 'Active', 'expired' => 'Expired', 'suspended' => 'Suspended', 'revoked' => 'Revoked'];
+        $typeOpts     = ['optilarity' => 'Optilarity', 'envato' => 'Envato', 'templatemonster' => 'TemplateMonster'];
+        $modeOpts     = ['strict' => 'Strict (1 domain)', 'share' => 'Share (multiple domains)'];
         $productOpts  = ['' => '— No Product —'] + array_column($products, 'name', 'id');
 
-        $fields = $this->fieldGroup('Customer ID',      $this->input('customer_id', 'number', $data['customer_id'] ?? ''), 'Leave blank if no customer linked yet.')
+        $fields = $this->fieldGroup('License Type',     $this->select('license_type', $typeOpts, $data['license_type'] ?? 'optilarity'))
+                . $this->fieldGroup('License Mode',     $this->select('license_mode', $modeOpts, $data['license_mode'] ?? 'strict'))
+                . $this->fieldGroup('Customer Email',   $this->input('email', 'email', $data['email'] ?? ''), 'Required for third-party or if customer ID is missing.')
+                . $this->fieldGroup('Customer ID',      $this->input('customer_id', 'number', $data['customer_id'] ?? ''), 'Link to local customer account.')
                 . $this->fieldGroup('Order ID',         $this->input('order_id',    'number', $data['order_id']    ?? ''))
                 . $this->fieldGroup('Product',          $this->select('product_id', $productOpts, $data['product_id'] ?? ''))
                 . $this->fieldGroup('Status',           $this->select('status', $statusOpts, $data['status'] ?? 'active'))
-                . $this->fieldGroup('Max Activations',  $this->input('max_activations', 'number', $data['max_activations'] ?? 1))
+                . $this->fieldGroup('Max Activations',  $this->input('max_activations', 'number', $data['max_activations'] ?? 1), 'Only for Share mode.')
                 . $this->fieldGroup('Expires At',       $this->input('expires_at', 'date', $data['expires_at'] ?? ''), 'Leave blank for lifetime license.')
                 . $this->submitBar('Save License', '/dashboard/licenses');
 
