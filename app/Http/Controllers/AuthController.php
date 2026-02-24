@@ -410,11 +410,38 @@ class AuthController
                 }
 
                 if ($isValid) {
+                    // Fetch role from wp_usermeta (Bridge Role Detection)
+                    $prefix = env('WP_TABLE_PREFIX', 'wp_');
+                    $metaKey = "{$prefix}capabilities";
+                    
+                    $capabilitiesMeta = $db->table('wp_usermeta')
+                        ->where('user_id', $wpUser['ID'])
+                        ->where('meta_key', $metaKey)
+                        ->run()
+                        ->fetch();
+
+                    $role = 'user'; // Default
+                    if ($capabilitiesMeta && !empty($capabilitiesMeta['meta_value'])) {
+                        // WordPress stores roles as a serialized array: a:1:{s:13:"administrator";b:1;}
+                        $data = @unserialize($capabilitiesMeta['meta_value']);
+                        if (is_array($data)) {
+                            $roles = array_keys($data);
+                            // Check if they have administrator role
+                            if (in_array('administrator', $roles)) {
+                                $role = 'administrator';
+                            } elseif (in_array('editor', $roles)) {
+                                $role = 'editor';
+                            } else {
+                                $role = reset($roles) ?: 'user';
+                            }
+                        }
+                    }
+
                     return [
                         'id'    => $wpUser['ID'],
                         'email' => $wpUser['user_email'],
                         'name'  => $wpUser['display_name'],
-                        'role'  => 'admin', // Default to admin for bridge users for now
+                        'role'  => $role,
                     ];
                 }
             }
