@@ -8,6 +8,8 @@
             "PrestoWorld\\": "presto/",
             "Modules\\WebServices\\": "modules/WebServices/src/",
             "Modules\\ReminderManager\\": "modules/ReminderManager/src/",
+            "Modules\\Blog\\": "modules/Blog/src/",
+            "Modules\\StaticPages\\": "modules/StaticPages/src/",
             "Modules\\": "modules/"
         },
         "files": [

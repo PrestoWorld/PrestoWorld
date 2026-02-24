@@ -1,0 +1,62 @@
+{
+    "version": "1.0.0",
+    "module": "static-pages",
+    "description": "Static Pages Management (About, Contact, Privacy)",
+    "tables": [
+        {
+            "name": "optilarity_static_pages",
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "primary"
+                },
+                {
+                    "name": "title",
+                    "type": "string",
+                    "size": 255
+                },
+                {
+                    "name": "slug",
+                    "type": "string",
+                    "size": 255
+                },
+                {
+                    "name": "content",
+                    "type": "longText"
+                },
+                {
+                    "name": "meta_description",
+                    "type": "string",
+                    "size": 255,
+                    "nullable": true
+                },
+                {
+                    "name": "status",
+                    "type": "enum",
+                    "values": [
+                        "draft",
+                        "publish"
+                    ],
+                    "default": "publish"
+                },
+                {
+                    "name": "created_at",
+                    "type": "datetime"
+                },
+                {
+                    "name": "updated_at",
+                    "type": "datetime",
+                    "nullable": true
+                }
+            ],
+            "indexes": [
+                {
+                    "columns": [
+                        "slug"
+                    ],
+                    "unique": true
+                }
+            ]
+        }
+    ]
+}

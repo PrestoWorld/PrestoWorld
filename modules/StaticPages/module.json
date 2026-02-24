@@ -1,0 +1,15 @@
+{
+    "name": "static-pages",
+    "version": "1.0.0",
+    "description": "Static Pages Module",
+    "priority": 70,
+    "enabled": true,
+    "autoload": {
+        "psr-4": {
+            "Modules\\StaticPages\\": "src/"
+        }
+    },
+    "providers": [
+        "Modules\\StaticPages\\StaticPagesServiceProvider"
+    ]
+}
