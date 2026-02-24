@@ -185,6 +185,19 @@ abstract class AdminController
         $current = $_SERVER['REQUEST_URI'] ?? '';
         $html = '<div class="presto-nav-groups">';
         
+        // Check if any submenu child is active
+        $anySubmenuActive = false;
+        foreach ($groups as $data) {
+            if (isset($data['children'])) {
+                foreach ($data['children'] as $child) {
+                    if ($current === $child['url'] || str_starts_with($current, $child['url'] . '?')) {
+                        $anySubmenuActive = true;
+                        break 2;
+                    }
+                }
+            }
+        }
+
         foreach ($groups as $groupLabel => $data) {
             // Case 1: Simple Link (Indexed or has 'url')
             if (isset($data['url'])) {
@@ -208,7 +221,9 @@ abstract class AdminController
                 }
             }
 
-            $openClass = $hasActiveChild ? ' is-open' : '';
+            // Default to open 'Kinh doanh' if no other submenu is active
+            $shouldOpen = $hasActiveChild || (!$anySubmenuActive && $groupLabel === 'Kinh doanh');
+            $openClass = $shouldOpen ? ' is-open' : '';
             $activeParentClass = $hasActiveChild ? ' active-parent' : '';
             
             $html .= "<div class=\"presto-nav-group-wrapper{$openClass}\">";
