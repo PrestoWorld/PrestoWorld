@@ -22,10 +22,12 @@ use Witals\Framework\Http\Response;
 abstract class AdminController
 {
     protected mixed $app;
+    protected \Witals\Framework\Support\AssetManager $assets;
 
     public function __construct(mixed $app)
     {
         $this->app = $app;
+        $this->assets = $app->make(\Witals\Framework\Support\AssetManager::class);
     }
 
     // =========================================================================
@@ -58,6 +60,16 @@ abstract class AdminController
             $breadcrumbHtml = '<nav class="presto-breadcrumbs">' . implode(' › ', $parts) . '</nav>';
         }
 
+        // Configure assets for Admin (using advanced AssetManager)
+        $this->assets->setContext('admin');
+        
+        // admin-dashboard depends on admin-core.css
+        $this->assets->enqueueCss('admin-core', 'css/admin-core.css');
+        $this->assets->enqueueCss('admin-dashboard', 'css/admin-dashboard.css', ['admin-core']);
+
+        // JS assets
+        $this->assets->enqueueJs('admin-core', 'js/admin-solid-core.js', [], ['defer' => true]);
+
         return <<<HTML
         <!DOCTYPE html>
         <html lang="en">
@@ -65,9 +77,7 @@ abstract class AdminController
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>{$title} — DigitalCore Admin</title>
-            <style>
-                {$this->adminCss()}
-            </style>
+            {$this->assets->renderCss()}
         </head>
         <body class="presto-admin">
             <div class="presto-admin-layout">
@@ -125,7 +135,7 @@ abstract class AdminController
                     </div>
                 </main>
             </div>
-            <script>{$this->adminJs()}</script>
+            {$this->assets->renderJs()}
         </body>
         </html>
         HTML;

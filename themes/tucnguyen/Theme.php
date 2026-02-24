@@ -16,6 +16,13 @@ class Theme implements NativeComponentInterface
         // Register native hooks (No Sandbox needed)
         add_filter('presto_page_title', [$this, 'modifyTitle']);
         
+        // Configure Assets
+        $assets = app(\Witals\Framework\Support\AssetManager::class);
+        $assets->setContext('frontend'); // This sets mode to 'internal' (inline)
+        
+        // Enqueue frontend CSS (will be inlined in the view)
+        $assets->enqueueCss('frontend-core', 'css/frontend.css');
+        
         // Native themes can use PSR-4 autoloading via /themes/tucnguyen/src
     }
 
