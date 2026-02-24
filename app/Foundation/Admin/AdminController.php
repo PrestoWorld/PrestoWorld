@@ -147,6 +147,14 @@ abstract class AdminController
     {
         $groups = [
             ['label' => 'Bảng điều khiển', 'url' => '/dashboard', 'icon' => '📊'],
+            'Kinh doanh' => [
+                'icon' => '🛍️',
+                'children' => [
+                    ['label' => 'Đơn hàng',      'url' => '/dashboard/orders',     'icon' => '🛒'],
+                    ['label' => 'Khách hàng',    'url' => '/dashboard/customers',  'icon' => '👥'],
+                    ['label' => 'Hóa đơn',       'url' => '/dashboard/invoices',   'icon' => '📄'],
+                ]
+            ],
             'Sản phẩm Số' => [
                 'icon' => '📦',
                 'children' => [
@@ -163,14 +171,6 @@ abstract class AdminController
                     ['label' => 'Quản lý Tên miền', 'url' => '/dashboard/domains',   'icon' => '🌐'],
                     ['label' => 'Chứng chỉ SSL',    'url' => '/dashboard/infrastructure/ssl', 'icon' => '🔒'],
                     ['label' => 'Email Hosting',    'url' => '/dashboard/infrastructure/email', 'icon' => '📧'],
-                ]
-            ],
-            'Kinh doanh' => [
-                'icon' => '🛍️',
-                'children' => [
-                    ['label' => 'Đơn hàng',      'url' => '/dashboard/orders',     'icon' => '🛒'],
-                    ['label' => 'Khách hàng',    'url' => '/dashboard/customers',  'icon' => '👥'],
-                    ['label' => 'Hóa đơn',       'url' => '/dashboard/invoices',   'icon' => '📄'],
                 ]
             ],
             'Hệ thống' => [
