@@ -12,6 +12,10 @@ class WordPressZeroMigrateCommand extends Command
 {
     protected string $name = 'wordpress:zero-migrate';
     protected string $description = 'Migrate WordPress to PrestoWorld';
+    protected array $options = [
+        '--dry-run, -d' => 'Check what would be migrated without making any changes',
+        '--force, -f' => 'Force migration even if some checks fail',
+    ];
 
     public function handle(array $args): int
     {
