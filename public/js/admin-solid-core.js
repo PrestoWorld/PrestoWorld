@@ -159,7 +159,115 @@ const BulkActionUI = (props) => {
 
 // --- COMPONENT REGISTRY ---
 const COMPONENTS = {
-    'BulkActions': BulkActionUI
+    'BulkActions': BulkActionUI,
+    'ComboBox': (props) => {
+        const config = props.config;
+        const [isOpen, setIsOpen] = createSignal(false);
+        const [search, setSearch] = createSignal('');
+        const [selected, setSelected] = createSignal(
+            config.options.find(o => String(o.value) === String(config.value)) || null
+        );
+
+        const filteredOptions = () => {
+            const s = search().toLowerCase();
+            return s === '' ? config.options : config.options.filter(o => o.label.toLowerCase().includes(s));
+        };
+
+        const select = (opt) => {
+            setSelected(opt);
+            setIsOpen(false);
+            setSearch('');
+
+            // Sync with hidden input for form submission
+            const el = document.getElementById(props.mountId);
+            let input = el.querySelector(`input[name="${config.name}"]`);
+            if (!input) {
+                input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = config.name;
+                el.appendChild(input);
+            }
+            input.value = opt.value;
+        };
+
+        // Close on click outside
+        document.addEventListener('click', (e) => {
+            if (isOpen() && !e.target.closest('.solid-combobox')) setIsOpen(false);
+        });
+
+        return html`
+            <div class="solid-combobox ${() => isOpen() ? 'is-open' : ''}">
+                <div class="combobox-toggle" onClick=${() => setIsOpen(!isOpen())}>
+                    <span class="label">${() => selected() ? selected().label : (config.placeholder || 'Select...')}</span>
+                    <span class="chevron"></span>
+                </div>
+                
+                <div class="combobox-menu">
+                    <div class="search-wrap">
+                        <input 
+                            type="text" 
+                            placeholder="Type to search..." 
+                            value=${search} 
+                            onInput=${(e) => setSearch(e.target.value)}
+                            onClick=${(e) => e.stopPropagation()}
+                            autoFocus
+                        />
+                    </div>
+                    <ul class="options-list">
+                        <${For} each=${filteredOptions}>
+                            ${(opt) => html`
+                                <li 
+                                    class="option-item ${() => selected() && selected().value === opt.value ? 'is-selected' : ''}"
+                                    onClick=${(e) => { e.stopPropagation(); select(opt); }}
+                                >
+                                    ${opt.label}
+                                </li>
+                            `}
+                        <//>
+                        <${Show} when=${() => filteredOptions().length === 0}>
+                            <li class="no-results">No matches found</li>
+                        <//>
+                    </ul>
+                </div>
+
+                <style>
+                    .solid-combobox { position: relative; width: 100%; font-family: inherit; }
+                    .combobox-toggle {
+                        background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.08);
+                        border-radius: 14px; padding: 16px 20px; color: #fff; font-size: 15px;
+                        font-weight: 600; cursor: pointer; display: flex; justify-content: space-between;
+                        align-items: center; transition: 0.3s; backdrop-filter: blur(5px);
+                    }
+                    .solid-combobox.is-open .combobox-toggle { border-color: #6366f1; box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.25); }
+                    .chevron { width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 5px solid #64748b; transition: 0.3s; }
+                    .solid-combobox.is-open .chevron { transform: rotate(180deg); border-top-color: #6366f1; }
+                    
+                    .combobox-menu {
+                        position: absolute; top: calc(100% + 8px); left: 0; right: 0;
+                        background: #111827; border: 1px solid rgba(255,255,255,0.1);
+                        border-radius: 16px; z-index: 1000; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+                        opacity: 0; transform: translateY(-10px); pointer-events: none;
+                        transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); padding: 8px;
+                    }
+                    .solid-combobox.is-open .combobox-menu { opacity: 1; transform: translateY(0); pointer-events: auto; }
+                    
+                    .search-wrap { padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.05); margin-bottom: 8px; }
+                    .search-wrap input {
+                        width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+                        border-radius: 10px; padding: 10px 14px; color: #fff; font-size: 13px; outline: none;
+                    }
+                    .options-list { max-height: 250px; overflow-y: auto; list-style: none; padding: 0; margin: 0; }
+                    .option-item {
+                        padding: 12px 16px; border-radius: 10px; color: #9ca3af; font-size: 14px;
+                        cursor: pointer; transition: 0.2s; margin-bottom: 2px;
+                    }
+                    .option-item:hover { background: rgba(99, 102, 241, 0.1); color: #fff; }
+                    .option-item.is-selected { background: #6366f1; color: #fff; font-weight: 700; }
+                    .no-results { padding: 20px; text-align: center; color: #4b5563; font-size: 13px; font-style: italic; }
+                </style>
+            </div>
+        `;
+    }
 };
 
 // --- MOUNTING LOGIC ---

@@ -288,8 +288,8 @@ HTML;
         $payStatusOpts  = ['pending' => 'Pending', 'paid' => 'Paid', 'failed' => 'Failed', 'refunded' => 'Refunded'];
         $currencyOpts   = ['USD' => 'USD', 'EUR' => 'EUR', 'GBP' => 'GBP', 'VND' => 'VND'];
 
-        $planOpts = ['' => '-- Không gán hosting --'];
-        foreach ($plans as $p) $planOpts[$p['id']] = $p['name'];
+        $planOpts = [];
+        foreach ($plans as $p) $planOpts[] = ['value' => (string)$p['id'], 'label' => $p['name']];
 
         $swListHtml = '<div class="presto-check-list">';
         foreach ($softwares as $s) {
@@ -336,7 +336,8 @@ HTML;
         
         <div class="presto-grid">
             <div class="col-6">
-                {$this->fieldGroup('Gắn nhanh Hosting Plan', $this->select('hosting_plan_id', $planOpts, $data['hosting_plan_id'] ?? ''))}
+                <label class="presto-field-label">Gắn nhanh Hosting Plan</label>
+                {$this->searchableSelect('hosting_plan_id', $planOpts, $data['hosting_plan_id'] ?? '', 'Tìm kiếm gói hosting...')}
             </div>
             <div class="col-6">
                 {$this->fieldGroup('Tên miền đi kèm Hosting', $this->input('hosting_domain', 'text', $data['hosting_domain'] ?? '', 'example.com'))}
@@ -354,5 +355,13 @@ HTML;
 HTML;
 
         return $this->formCard('Cấu hình Đơn hàng Chi tiết', $this->formOpen($action, $method) . $formContent . $this->formClose());
+    }
+
+    protected function searchableSelect(string $name, array $options, mixed $value = '', string $placeholder = 'Search...'): string
+    {
+        $jsonOptions = json_encode($options);
+        return <<<HTML
+        <div data-solid-component="ComboBox" data-config='{"name":"{$name}", "options":{$jsonOptions}, "value":"{$value}", "placeholder":"{$placeholder}"}'></div>
+HTML;
     }
 }
