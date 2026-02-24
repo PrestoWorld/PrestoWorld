@@ -144,36 +144,90 @@ abstract class AdminController
     protected function adminNav(): string
     {
         $groups = [
-            'Sản phẩm & License' => [
-                ['label' => 'Dashboard',    'url' => '/dashboard',          'icon' => '📊'],
-                ['label' => 'Themes Manager', 'url' => '/dashboard/catalog?type=theme', 'icon' => '🎨'],
-                ['label' => 'Plugins Repository', 'url' => '/dashboard/catalog?type=plugin', 'icon' => '🔌'],
-                ['label' => 'Software Licenses', 'url' => '/dashboard/licenses', 'icon' => '💻'],
-                ['label' => 'Gói Thành Viên', 'url' => '/dashboard/memberships', 'icon' => '💎'],
+            ['label' => 'Bảng điều khiển', 'url' => '/dashboard', 'icon' => '📊'],
+            'Sản phẩm Số' => [
+                'icon' => '📦',
+                'children' => [
+                    ['label' => 'Gói Thành Viên', 'url' => '/dashboard/memberships', 'icon' => '💎'],
+                    ['label' => 'Software Licenses', 'url' => '/dashboard/licenses', 'icon' => '💻'],
+                    ['label' => 'Themes Manager', 'url' => '/dashboard/catalog?type=theme', 'icon' => '🎨'],
+                    ['label' => 'Plugins Repository', 'url' => '/dashboard/catalog?type=plugin', 'icon' => '🔌'],
+                ]
+            ],
+            'Dịch vụ Hạ tầng' => [
+                'icon' => '☁️',
+                'children' => [
+                    ['label' => 'Quản lý Hosting',  'url' => '/dashboard/hosting',   'icon' => '🖥️'],
+                    ['label' => 'Quản lý Tên miền', 'url' => '/dashboard/domains',   'icon' => '🌐'],
+                    ['label' => 'Chứng chỉ SSL',    'url' => '/dashboard/infrastructure/ssl', 'icon' => '🔒'],
+                    ['label' => 'Email Hosting',    'url' => '/dashboard/infrastructure/email', 'icon' => '📧'],
+                ]
             ],
             'Kinh doanh' => [
-                ['label' => 'License Keys',  'url' => '/dashboard/licenses',   'icon' => '🔑'],
-                ['label' => 'Đơn hàng',      'url' => '/dashboard/orders',     'icon' => '🛒'],
-                ['label' => 'Khách hàng',    'url' => '/dashboard/customers',  'icon' => '👥'],
-                ['label' => 'Hóa đơn',       'url' => '/dashboard/invoices',   'icon' => '📄'],
+                'icon' => '🛍️',
+                'children' => [
+                    ['label' => 'Đơn hàng',      'url' => '/dashboard/orders',     'icon' => '🛒'],
+                    ['label' => 'Khách hàng',    'url' => '/dashboard/customers',  'icon' => '👥'],
+                    ['label' => 'Hóa đơn',       'url' => '/dashboard/invoices',   'icon' => '📄'],
+                ]
             ],
             'Hệ thống' => [
-                ['label' => 'API Keys (Updater)', 'url' => '/dashboard/profile', 'icon' => '⚡'],
-                ['label' => 'Webhooks',      'url' => '/dashboard/webhooks',   'icon' => '🪝'],
+                'icon' => '⚙️',
+                'children' => [
+                    ['label' => 'API Keys (Updater)', 'url' => '/dashboard/profile', 'icon' => '⚡'],
+                    ['label' => 'Webhooks',      'url' => '/dashboard/webhooks',   'icon' => '🪝'],
+                ]
             ]
         ];
 
         $current = $_SERVER['REQUEST_URI'] ?? '';
         $html = '<div class="presto-nav-groups">';
-        foreach ($groups as $groupLabel => $links) {
-            $html .= "<div class='nav-group-title'>{$groupLabel}</div>";
-            foreach ($links as $link) {
-                $active = ($current === $link['url'] || str_starts_with($current, $link['url'] . '?')) ? ' active' : '';
-                $html .= "<a href=\"{$link['url']}\" class=\"presto-nav-item{$active}\">";
-                $html .= "<span class='nav-icon'>{$link['icon']}</span> <span class='nav-label'>{$link['label']}</span>";
+        
+        foreach ($groups as $groupLabel => $data) {
+            // Case 1: Simple Link (Indexed or has 'url')
+            if (isset($data['url'])) {
+                $active = ($current === $data['url'] || str_starts_with($current, $data['url'] . '?')) ? ' active' : '';
+                $html .= "<a href=\"{$data['url']}\" class=\"presto-nav-item{$active}\">";
+                $html .= "  <span class='nav-icon'>{$data['icon']}</span> <span class='nav-label'>{$data['label']}</span>";
                 $html .= "</a>";
+                continue;
             }
+
+            // Case 2: Named Group with Children
+            if (!isset($data['children']) || !is_array($data['children'])) {
+                continue;
+            }
+
+            $hasActiveChild = false;
+            foreach ($data['children'] as $child) {
+                if ($current === $child['url'] || str_starts_with($current, $child['url'] . '?')) {
+                    $hasActiveChild = true;
+                    break;
+                }
+            }
+
+            $openClass = $hasActiveChild ? ' is-open' : '';
+            $activeParentClass = $hasActiveChild ? ' active-parent' : '';
+            
+            $html .= "<div class=\"presto-nav-group-wrapper{$openClass}\">";
+            $html .= "  <div class=\"presto-nav-item has-children{$activeParentClass}\" data-toggle=\"submenu\">";
+            $html .= "      <span class='nav-icon'>{$data['icon']}</span>";
+            $html .= "      <span class='nav-label'>{$groupLabel}</span>";
+            $html .= "      <span class='nav-chevron'><svg width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9l6 6 6-6'/></svg></span>";
+            $html .= "  </div>";
+            $html .= "  <div class=\"presto-submenu\">";
+            
+            foreach ($data['children'] as $child) {
+                $childActive = ($current === $child['url'] || str_starts_with($current, $child['url'] . '?')) ? ' active' : '';
+                $html .= "      <a href=\"{$child['url']}\" class=\"presto-submenu-item{$childActive}\">";
+                $html .= "          <span class='sub-icon'>{$child['icon']}</span> <span class='sub-label'>{$child['label']}</span>";
+                $html .= "      </a>";
+            }
+            
+            $html .= "  </div>";
+            $html .= "</div>";
         }
+        
         $html .= '</div>';
         return $html;
     }
@@ -357,15 +411,25 @@ abstract class AdminController
         .presto-sidebar-brand { padding: 48px 24px; font-size: 24px; font-weight: 800; display: flex; align-items: center; gap: 14px; letter-spacing: -0.04em; }
         .presto-sidebar-brand span { color: var(--primary); }
         
-        .presto-nav-groups { padding: 0 14px; flex: 1; overflow-y: auto; scrollbar-width: none; }
+        .presto-nav-groups { padding: 24px 14px; flex: 1; overflow-y: auto; scrollbar-width: none; }
         .presto-nav-groups::-webkit-scrollbar { display: none; }
-        .nav-group-title { padding: 40px 14px 14px; font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.15em; opacity: 0.8; }
-        .presto-nav-item { display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-radius: 16px; color: var(--text-dim); text-decoration: none; font-weight: 600; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); margin-bottom: 6px; }
+        .presto-nav-item { display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-radius: 16px; color: var(--text-dim); text-decoration: none; font-weight: 600; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); margin-bottom: 6px; cursor: pointer; position: relative; }
         .presto-nav-item:hover { background: rgba(255,255,255,0.04); color: var(--text-main); transform: translateX(5px); }
-        .presto-nav-item.active { background: linear-gradient(135deg, rgba(99, 102, 241, 0.18) 0%, rgba(99, 102, 241, 0.06) 100%); color: var(--primary); box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.25); position: relative; }
+        .presto-nav-item.active { background: linear-gradient(135deg, rgba(99, 102, 241, 0.18) 0%, rgba(99, 102, 241, 0.06) 100%); color: var(--primary); box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.25); }
         .presto-nav-item.active::after { content: ''; position: absolute; left: 0; top: 14px; bottom: 14px; width: 4px; background: var(--primary); border-radius: 0 4px 4px 0; box-shadow: 0 0 15px var(--primary-glow); }
+        
+        .active-parent { color: #fff !important; }
         .nav-icon { font-size: 18px; opacity: 0.7; transition: 0.3s; }
         .presto-nav-item.active .nav-icon { opacity: 1; filter: drop-shadow(0 0 8px var(--primary-glow)); }
+        .nav-chevron { margin-left: auto; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); opacity: 0.4; }
+        .is-open .nav-chevron { transform: rotate(180deg); opacity: 1; color: var(--primary); }
+
+        .presto-submenu { max-height: 0; overflow: hidden; transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1); padding-left: 12px; }
+        .is-open .presto-submenu { max-height: 500px; padding-bottom: 12px; }
+        .presto-submenu-item { display: flex; align-items: center; gap: 10px; padding: 10px 18px; border-radius: 12px; color: var(--text-muted); font-size: 13px; font-weight: 600; transition: 0.25s; margin-bottom: 2px; }
+        .presto-submenu-item:hover { color: var(--text-main); background: rgba(255,255,255,0.03); padding-left: 22px; }
+        .presto-submenu-item.active { color: var(--primary); font-weight: 700; background: rgba(99, 102, 241, 0.05); }
+        .sub-icon { font-size: 14px; opacity: 0.6; }
         
         .sidebar-footer { padding: 32px 14px; border-top: 1px solid var(--border); }
         .nav-user-profile { display: flex; align-items: center; gap: 14px; padding: 16px; background: rgba(0,0,0,0.3); border-radius: 20px; border: 1px solid var(--border); box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
@@ -560,17 +624,21 @@ abstract class AdminController
             });
         }
 
-        // Non-GET row actions
-        document.querySelectorAll('a[data-method]').forEach(a => {
-            a.addEventListener('click', e => {
-                e.preventDefault();
-                const method = a.dataset.method;
-                const url    = a.dataset.url;
-                fetch(url, { method, headers: {'Content-Type':'application/json'} })
-                    .then(r => r.json())
-                    .then(d => { if (d.success !== false) location.reload(); else alert(d.message || 'Error'); });
+        // Multi-level menu toggle
+        document.querySelectorAll('[data-toggle="submenu"]').forEach(parent => {
+            parent.addEventListener('click', () => {
+                const wrapper = parent.closest('.presto-nav-group-wrapper');
+                
+                // Close others (Accordion style)
+                document.querySelectorAll('.presto-nav-group-wrapper').forEach(other => {
+                    if (other !== wrapper) other.classList.remove('is-open');
+                });
+                
+                wrapper.classList.toggle('is-open');
             });
         });
+
+        // Non-GET row actions
         JS;
     }
 }

@@ -1,0 +1,134 @@
+{
+    "version": "1.0.0",
+    "tables": [
+        {
+            "name": "optilarity_ssl_certificates",
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "primary"
+                },
+                {
+                    "name": "customer_id",
+                    "type": "integer"
+                },
+                {
+                    "name": "domain",
+                    "type": "string",
+                    "size": 255
+                },
+                {
+                    "name": "provider",
+                    "type": "string",
+                    "size": 100
+                },
+                {
+                    "name": "type",
+                    "type": "string",
+                    "size": 50,
+                    "default": "DV"
+                },
+                {
+                    "name": "status",
+                    "type": "string",
+                    "size": 20,
+                    "default": "active"
+                },
+                {
+                    "name": "expiry_date",
+                    "type": "datetime"
+                },
+                {
+                    "name": "created_at",
+                    "type": "datetime"
+                },
+                {
+                    "name": "updated_at",
+                    "type": "datetime"
+                }
+            ],
+            "indexes": [
+                {
+                    "columns": [
+                        "domain"
+                    ]
+                },
+                {
+                    "columns": [
+                        "customer_id"
+                    ]
+                }
+            ],
+            "foreign_keys": [
+                {
+                    "column": "customer_id",
+                    "references": "optilarity_customers",
+                    "on": "id",
+                    "on_delete": "CASCADE"
+                }
+            ]
+        },
+        {
+            "name": "optilarity_email_hosting",
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "primary"
+                },
+                {
+                    "name": "customer_id",
+                    "type": "integer"
+                },
+                {
+                    "name": "domain",
+                    "type": "string",
+                    "size": 255
+                },
+                {
+                    "name": "plan_name",
+                    "type": "string",
+                    "size": 100
+                },
+                {
+                    "name": "mailbox_count",
+                    "type": "integer",
+                    "default": 5
+                },
+                {
+                    "name": "status",
+                    "type": "string",
+                    "size": 20,
+                    "default": "active"
+                },
+                {
+                    "name": "created_at",
+                    "type": "datetime"
+                },
+                {
+                    "name": "updated_at",
+                    "type": "datetime"
+                }
+            ],
+            "indexes": [
+                {
+                    "columns": [
+                        "domain"
+                    ]
+                },
+                {
+                    "columns": [
+                        "customer_id"
+                    ]
+                }
+            ],
+            "foreign_keys": [
+                {
+                    "column": "customer_id",
+                    "references": "optilarity_customers",
+                    "on": "id",
+                    "on_delete": "CASCADE"
+                }
+            ]
+        }
+    ]
+}
