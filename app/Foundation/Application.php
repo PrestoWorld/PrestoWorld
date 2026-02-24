@@ -39,7 +39,7 @@ class Application extends BaseApplication
     /**
      * Register a service provider
      */
-    public function register(string|ServiceProviderInterface $provider): void
+    public function register(object|string $provider): mixed
     {
         // If string, instantiate
         if (is_string($provider)) {
@@ -50,24 +50,35 @@ class Application extends BaseApplication
 
         // Skip if already registered
         if (isset($this->serviceProviders[$providerClass])) {
-            return;
+            return $this->serviceProviders[$providerClass];
         }
 
-        // Check if should load
-        if (!$provider->shouldLoad()) {
-            return;
-        }
+        // Handle PrestoWorld specific logic if it implements the interface
+        if ($provider instanceof ServiceProviderInterface) {
+            // Check if should load
+            if (!$provider->shouldLoad()) {
+                return $provider;
+            }
 
-        // Register dependencies first
-        foreach ($provider->dependencies() as $dependency) {
-            $this->register($dependency);
+            // Register dependencies first
+            foreach ($provider->dependencies() as $dependency) {
+                $this->register($dependency);
+            }
         }
 
         // Register the provider
-        $provider->register();
+        if (method_exists($provider, 'register')) {
+            $provider->register();
+        }
         
         $this->serviceProviders[$providerClass] = $provider;
         $this->loadedProviders[$providerClass] = true;
+
+        if ($this->booted && method_exists($provider, 'boot')) {
+            $provider->boot();
+        }
+
+        return $provider;
     }
 
     /**
