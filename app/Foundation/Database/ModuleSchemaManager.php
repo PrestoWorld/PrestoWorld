@@ -52,7 +52,7 @@ use Cycle\Database\Schema\AbstractColumn;
  */
 class ModuleSchemaManager
 {
-    private const REGISTRY_TABLE = 'optilarity_schema_registry';
+    private const REGISTRY_TABLE = 'schema_registry';
 
     /** Map schema.json type aliases → Cycle DBAL column methods */
     private const TYPE_MAP = [
@@ -128,7 +128,9 @@ class ModuleSchemaManager
 
         $moduleName    = $schema['module']  ?? basename($modulePath);
         $schemaVersion = $schema['version'] ?? '1.0.0';
-        $currentHash   = hash('sha256', $raw);
+        
+        // Canonicalize the JSON to ensure the hash is consistent regardless of whitespace/formatting
+        $currentHash = hash('sha256', json_encode($schema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
 
         // Ensure the registry itself exists (cheap: only runs if table missing)
         $this->ensureRegistry();

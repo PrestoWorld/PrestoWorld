@@ -75,5 +75,11 @@ abstract class AbstractEngine
         if (file_exists($helpersPath)) {
             require_once $helpersPath;
         }
+
+        // Support standard WordPress functions.php
+        $functionsPath = $this->theme->getPath() . '/functions.php';
+        if (file_exists($functionsPath)) {
+            require_once $functionsPath;
+        }
     }
 }

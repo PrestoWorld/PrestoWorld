@@ -81,7 +81,7 @@ class ThemeManager
         return $this->activeTheme;
     }
 
-    public function render(string $view, array $data = []): string
+    public function render(string|array $view, array $data = []): string
     {
         if (!$this->activeTheme) {
             $this->setActiveTheme('tucnguyen');
@@ -91,7 +91,22 @@ class ThemeManager
             return "No active theme set.";
         }
 
-        return $this->activeTheme->getEngine()->render($view, $data);
+        $views = is_array($view) ? $view : [$view];
+        $engine = $this->activeTheme->getEngine();
+
+        foreach ($views as $v) {
+            try {
+                return $engine->render($v, $data);
+            } catch (\Throwable $e) {
+                // If it's a "View Not Found" error, continue. Otherwise throw.
+                if (strpos($e->getMessage(), 'View Not Found') !== false) {
+                    continue;
+                }
+                throw $e;
+            }
+        }
+
+        throw new \RuntimeException("None of the templates found: " . implode(', ', $views));
     }
 
     public function all(): array

@@ -75,7 +75,7 @@ class HomeController
             $themeManager = $this->app->make(\PrestoWorld\Theme\ThemeManager::class);
             $themeManager->loadActiveTheme();
 
-            return Response::html($themeManager->render('index', [
+            return Response::html($themeManager->render(['modules/home/index', 'home', 'index'], [
                 'title' => $pageTitle,
                 'content' => $content,
                 'posts' => $postsData,
