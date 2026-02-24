@@ -4,7 +4,7 @@
                 <div class="logo" style="color: white; margin-bottom: 20px;">
                     Digital<span>Core.</span>
                 </div>
-                <p>Nền tảng cung cấp giải pháp tài nguyên số hàng đầu dành cho các nhà phát triển và doanh nghiệp sáng tạo.</p>
+                <p>The leading digital resource platform for developers and creative businesses worldwide.</p>
                 <div class="socials" style="display: flex; gap: 10px; margin-top: 20px;">
                     <div style="width: 32px; height: 32px; background: #1e293b; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;">f</div>
                     <div style="width: 32px; height: 32px; background: #1e293b; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;">t</div>
@@ -12,38 +12,38 @@
                 </div>
             </div>
             <div class="footer-col">
-                <h4>Sản phẩm</h4>
+                <h4>Solutions</h4>
                 <ul>
-                    <li><a href="#">Tên miền</a></li>
-                    <li><a href="#">Themes</a></li>
-                    <li><a href="#">Plugins</a></li>
-                    <li><a href="#">Softwares</a></li>
-                    <li><a href="/portal">Trung tâm khách hàng</a></li>
+                    <li><a href="#">Domain Search</a></li>
+                    <li><a href="#">Premium Themes</a></li>
+                    <li><a href="#">Utility Plugins</a></li>
+                    <li><a href="#">Pro Software</a></li>
+                    <li><a href="/portal">Client Dashboard</a></li>
                 </ul>
             </div>
             <div class="footer-col">
-                <h4>Công ty</h4>
+                <h4>Company</h4>
                 <ul>
-                    <li><a href="/about-us">Về chúng tôi</a></li>
-                    <li><a href="/career">Tuyển dụng</a></li>
-                    <li><a href="/contact">Liên hệ</a></li>
-                    <li><a href="/privacy-policy">Bảo mật</a></li>
+                    <li><a href="/about-us">About Us</a></li>
+                    <li><a href="/careers">Careers</a></li>
+                    <li><a href="/contact">Contact Support</a></li>
+                    <li><a href="/privacy-policy">Security</a></li>
                 </ul>
             </div>
             <div class="footer-col">
-                <h4>Đăng ký nhận tin</h4>
-                <p>Nhận ngay thông tin về các sản phẩm và khuyến mãi mới nhất.</p>
+                <h4>Stay Updated</h4>
+                <p>Subscribe to our newsletter for the latest products and exclusive offers.</p>
                 <div class="newsletter">
-                    <input type="email" placeholder="Email của bạn">
-                    <button>Gửi</button>
+                    <input type="email" placeholder="Your work email">
+                    <button>Subscribe</button>
                 </div>
             </div>
         </div>
         <div class="container footer-bottom">
-            <div>© <?php echo date('Y'); ?> DigitalCore. Tất cả quyền được bảo lưu.</div>
+            <div>© <?php echo date('Y'); ?> DigitalCore. All rights reserved.</div>
             <div style="display: flex; gap: 20px;">
-                <a href="#">Điều khoản sử dụng</a>
-                <a href="#">Chính sách bảo mật</a>
+                <a href="#">Terms of Service</a>
+                <a href="#">Privacy Policy</a>
             </div>
         </div>
     </footer>

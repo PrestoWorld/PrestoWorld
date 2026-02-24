@@ -4,12 +4,12 @@
         <!-- Hero Section -->
         <section class="hero container">
             <div class="hero-content">
-                <div class="hero-badge">🚀 Kho tài nguyên số hàng đầu</div>
-                <h1>Nâng tầm <span class="gradient-text">dự án số</span> với kho tài nguyên cao cấp</h1>
-                <p>Khám phá hàng ngàn Theme, Plugin và Phần mềm chất lượng giúp tăng tốc quá trình phát triển dự án của bạn.</p>
+                <div class="hero-badge">🚀 #1 Trusted Digital Marketplace</div>
+                <h1>Empower your <span class="gradient-text">digital ecosystem</span> with premium assets</h1>
+                <p>Unlock thousands of enterprise-grade themes, plugins, and software designed to streamline your development and scale your business faster.</p>
                 <div class="hero-btns">
-                    <a href="#" class="btn-orange">Xem kho tài nguyên</a>
-                    <a href="#" class="btn-outline">Dùng thử ngay</a>
+                    <a href="/marketplace" class="btn-orange">Explore Marketplace</a>
+                    <a href="/register" class="btn-outline">Start Free Trial</a>
                 </div>
                 <div style="margin-top: 30px; display: flex; align-items: center; gap: 10px;">
                     <div class="avatars" style="display: flex;">
@@ -17,27 +17,27 @@
                         <img src="https://i.pravatar.cc/40?u=2" style="border-radius: 50%; border: 2px solid white; margin-right: -10px;">
                         <img src="https://i.pravatar.cc/40?u=3" style="border-radius: 50%; border: 2px solid white;">
                     </div>
-                    <div style="font-size: 14px; font-weight: 500;">+10,000 khách hàng tin dùng</div>
+                    <div style="font-size: 14px; font-weight: 600; color: var(--boltz-text-dark);">Trusted by 10,000+ developers worldwide</div>
                 </div>
             </div>
             <div class="hero-image">
-                <img src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80&w=800" alt="Tech Dashboard">
+                <img src="https://images.unsplash.com/photo-1551434678-e076c223a692?auto=format&fit=crop&q=80&w=800" alt="Professional Tech Development">
             </div>
         </section>
 
         <!-- Domain Section -->
         <section class="domain-section">
             <div class="container">
-                <h2>Bắt đầu với tên miền hoàn hảo của bạn</h2>
+                <h2>Secure Your Competitive Edge with the Perfect Domain</h2>
                 <div class="domain-search-bar">
-                    <input type="text" placeholder="Nhập tên miền bạn mong muốn...">
-                    <button>Kiểm tra</button>
+                    <input type="text" placeholder="Search your ideal domain name...">
+                    <button>Check Availability</button>
                 </div>
                 <div class="domain-tips">
                     <span>.com <b>$9.99</b></span>
                     <span>.net <b>$12.50</b></span>
                     <span>.org <b>$8.00</b></span>
-                    <span>.vn <b>$25.00</b></span>
+                    <span>.io <b>$35.00</b></span>
                 </div>
             </div>
         </section>
@@ -45,33 +45,33 @@
         <!-- Ecosystem -->
         <section class="ecosystem container">
             <div class="section-header">
-                <h2>Khám phá hệ sinh thái DigitalCore</h2>
-                <a href="#">Xem tất cả danh mục →</a>
+                <h2>The DigitalCore Solutions Suite</h2>
+                <a href="/catalog">Explore All Categories →</a>
             </div>
             <div class="ecosystem-grid">
                 <div class="eco-card">
                     <div class="eco-icon blue">🎨</div>
-                    <h3>Themes</h3>
-                    <p>Bộ sưu tập giao diện website đa dạng, chuẩn SEO và tối ưu trải nghiệm.</p>
-                    <a href="#" class="read-more">Khám phá ngay →</a>
+                    <h3>Premium Themes</h3>
+                    <p>Curated, SEO-optimized layouts designed for conversion and high-speed performance.</p>
+                    <a href="/themes" class="read-more">Browse Collection →</a>
                 </div>
                 <div class="eco-card">
                     <div class="eco-icon purple">🔌</div>
-                    <h3>Plugins</h3>
-                    <p>Mở rộng tính năng website với kho Plugin mạnh mẽ và linh hoạt.</p>
-                    <a href="#" class="read-more">Khám phá ngay →</a>
+                    <h3>Scalable Plugins</h3>
+                    <p>Extend your platform functionality with robust, developer-vetted plugins and tools.</p>
+                    <a href="/plugins" class="read-more">Explore Add-ons →</a>
                 </div>
                 <div class="eco-card">
                     <div class="eco-icon orange">💻</div>
-                    <h3>Software</h3>
-                    <p>Phần mềm bản quyền hỗ trợ thiết kế, lập trình và quản lý doanh nghiệp.</p>
-                    <a href="#" class="read-more">Khám phá ngay →</a>
+                    <h3>Business Software</h3>
+                    <p>Enterprise-grade licenses for design, development, and operational efficiency.</p>
+                    <a href="/software" class="read-more">View Software →</a>
                 </div>
                 <div class="eco-card">
                     <div class="eco-icon cyan">👑</div>
-                    <h3>Membership</h3>
-                    <p>Đăng ký thành viên để sở hữu toàn bộ kho tài nguyên không giới hạn.</p>
-                    <a href="#" class="read-more">Khám phá ngay →</a>
+                    <h3>VIP Memberships</h3>
+                    <p>Infinite access to our entire resource library for a single, predictable periodic fee.</p>
+                    <a href="/membership" class="read-more">See Plans →</a>
                 </div>
             </div>
         </section>
@@ -79,7 +79,7 @@
         <!-- Featured Products -->
         <section class="featured">
             <div class="container">
-                <h2>Sản phẩm nổi bật</h2>
+                <h2>Top-Rated Digital Assets</h2>
                 <div class="products-grid">
                     <?php 
                     $display_services = !empty($web_services) ? $web_services : [
@@ -114,42 +114,43 @@
         <!-- Pricing Section -->
         <section class="pricing container">
             <div class="pricing-header">
-                <p style="color: var(--secondary); font-weight: 700; margin-bottom: 10px;">LỰA CHỌN PHÙ HỢP CHO BẠN</p>
-                <h2 style="font-size: 36px; font-weight: 800;">Hiệu năng cao, Tốc độ vượt trội</h2>
+                <p style="color: var(--secondary); font-weight: 700; margin-bottom: 10px;">PLAN YOUR GROWTH</p>
+                <h2 style="font-size: 36px; font-weight: 800;">Enterprise Performance. Accessible Pricing.</h2>
             </div>
             <div class="pricing-grid">
+            <div class="pricing-grid">
                 <div class="price-card">
-                    <div class="price-name">Starter</div>
-                    <div class="price-amt">$3.99 <span>/ tháng</span></div>
+                    <div class="price-name">Essentials</div>
+                    <div class="price-amt">$3.99 <span>/ month</span></div>
                     <ul class="price-features">
-                        <li>✅ 01 Website</li>
-                        <li>✅ 10GB SSD Storage</li>
-                        <li>✅ Unlimited Bandwidth</li>
-                        <li>❌ No Priority Support</li>
+                        <li>✅ 01 Active Project</li>
+                        <li>✅ 10GB Secure Hosting</li>
+                        <li>✅ Unlimited Data Transfer</li>
+                        <li>✅ Daily Backups</li>
                     </ul>
-                    <a href="#" class="btn-price">Đăng ký ngay</a>
+                    <a href="/checkout/starter" class="btn-price">Start Free Trial</a>
                 </div>
                 <div class="price-card featured-plan">
-                    <div class="price-name">Pro</div>
-                    <div class="price-amt">$9.99 <span>/ tháng</span></div>
+                    <div class="price-name">Professional</div>
+                    <div class="price-amt">$9.99 <span>/ month</span></div>
                     <ul class="price-features">
-                        <li>✅ 10 Website</li>
-                        <li>✅ 50GB SSD Storage</li>
-                        <li>✅ Priority Support</li>
-                        <li>✅ Advanced Analytics</li>
+                        <li>✅ 10 Active Projects</li>
+                        <li>✅ 50GB NVMe Storage</li>
+                        <li>✅ Priority Technical Support</li>
+                        <li>✅ White-label Service</li>
                     </ul>
-                    <a href="#" class="btn-price">Bắt đầu ngay</a>
+                    <a href="/checkout/pro" class="btn-price">Get Started Now</a>
                 </div>
                 <div class="price-card">
-                    <div class="price-name">Business</div>
-                    <div class="price-amt">$24.99 <span>/ tháng</span></div>
+                    <div class="price-name">Enterprise</div>
+                    <div class="price-amt">$24.99 <span>/ month</span></div>
                     <ul class="price-features">
-                        <li>✅ Unlimited Website</li>
-                        <li>✅ 200GB SSD Storage</li>
-                        <li>✅ 24/7 Support</li>
-                        <li>✅ Managed Service</li>
+                        <li>✅ Unlimited Active Projects</li>
+                        <li>✅ 200GB Storage & CDN</li>
+                        <li>✅ Dedicated Account Manager</li>
+                        <li>✅ 99.9% Uptime Guarantee</li>
                     </ul>
-                    <a href="#" class="btn-price">Liên hệ ngay</a>
+                    <a href="/contact-sales" class="btn-price">Contact Sales</a>
                 </div>
             </div>
         </section>
@@ -158,10 +159,10 @@
         <section class="cta-banner container">
             <div class="cta-inner">
                 <div class="cta-content">
-                    <p style="text-transform: uppercase; font-weight: 700; margin-bottom: 20px;">CHƯƠNG TRÌNH ĐẶC BIỆT</p>
-                    <h2>Mở khóa quyền truy cập Không giới hạn.</h2>
-                    <p>Chỉ với $29.99/tháng, bạn có thể tải toàn bộ kho tài nguyên hơn 5.000+ sản phẩm liên tục được cập nhật.</p>
-                    <a href="#" class="btn-white">Đăng ký thành viên ngay</a>
+                    <p style="text-transform: uppercase; font-weight: 700; margin-bottom: 20px;">EXCLUSIVE OPPORTUNITY</p>
+                    <h2>Unlock Unlimited Potential with VIP Access.</h2>
+                    <p>For just <b>$29.99/mo</b>, gain complete access to 5,000+ premium resources with weekly updates and direct license management.</p>
+                    <a href="/membership/vip" class="btn-white">Join the VIP Circle</a>
                 </div>
                 <div class="cta-vignette"></div>
             </div>
@@ -172,23 +173,23 @@
             <div class="highlights-grid">
                 <div class="highlight-item">
                     <div class="highlight-icon">⚡</div>
-                    <b>Hiệu năng cao</b>
-                    <p>Tối ưu tốc độ tải trang</p>
+                    <b>High-Performance</b>
+                    <p>Optimized for lightning-fast speeds</p>
                 </div>
                 <div class="highlight-item">
                     <div class="highlight-icon">🛡️</div>
-                    <b>Bảo mật tuyệt đối</b>
-                    <p>Mã hóa dữ liệu 256-bit</p>
+                    <b>Secure & Compliant</b>
+                    <p>AES-256 bank-grade encryption</p>
                 </div>
                 <div class="highlight-item">
                     <div class="highlight-icon">💬</div>
-                    <b>Hỗ trợ 24/7</b>
-                    <p>Đội ngũ hỗ trợ chuyên nghiệp</p>
+                    <b>24/7 Expert Support</b>
+                    <p>Human-led assistance, any time</p>
                 </div>
                 <div class="highlight-item">
                     <div class="highlight-icon">🔄</div>
-                    <b>Cập nhật liên tục</b>
-                    <p>Dữ liệu được làm mới hàng ngày</p>
+                    <b>Lifetime Updates</b>
+                    <p>Always sync with current tech</p>
                 </div>
             </div>
         </section>

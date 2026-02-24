@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo $title ?? 'DigitalCore'; ?> - Nâng tầm dự án số của bạn</title>
+    <title><?php echo $title ?? 'DigitalCore'; ?> - Elevate Your Digital Projects</title>
     <?php echo app(\Witals\Framework\Support\AssetManager::class)->renderCss(); ?>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -98,17 +98,17 @@
             </a>
             <nav>
                 <ul>
-                    <li><a href="#">Sản phẩm</a></li>
+                    <li><a href="#">Marketplace</a></li>
                     <li><a href="/hosting">Hosting & VPS</a></li>
-                    <li><a href="/blog" class="<?php echo str_contains($_SERVER['REQUEST_URI'], '/blog') ? 'active' : ''; ?>">Blog</a></li>
-                    <li><a href="/memberships">Membership</a></li>
-                    <li><a href="/affiliates" class="<?php echo str_contains($_SERVER['REQUEST_URI'], '/affiliates') ? 'active' : ''; ?>">Cộng tác viên</a></li>
-                    <li><a href="/services">Dịch vụ</a></li>
+                    <li><a href="/blog" class="<?php echo str_contains($_SERVER['REQUEST_URI'], '/blog') ? 'active' : ''; ?>">Resources</a></li>
+                    <li><a href="/memberships">Memberships</a></li>
+                    <li><a href="/affiliates" class="<?php echo str_contains($_SERVER['REQUEST_URI'], '/affiliates') ? 'active' : ''; ?>">Partners</a></li>
+                    <li><a href="/services">Services</a></li>
                 </ul>
             </nav>
             <div class="header-actions">
-                <a href="#" class="btn-login">Đăng nhập</a>
-                <a href="#" class="btn-primary">Tham gia</a>
+                <a href="/auth/login" class="btn-login">Sign In</a>
+                <a href="/auth/register" class="btn-primary">Get Started</a>
             </div>
         </div>
     </header>
