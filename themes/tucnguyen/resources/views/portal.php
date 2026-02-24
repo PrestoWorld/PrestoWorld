@@ -231,26 +231,26 @@
             
             <nav class="portal-nav-list">
                 <a href="/portal" class="portal-nav-link <?php echo $_SERVER['REQUEST_URI'] === '/portal' ? 'active' : ''; ?>">
-                    <span class="nav-icon-box">🏠</span> Dashboard
+                    <span class="nav-icon-box">🏠</span> <?php echo __('Bảng điều khiển'); ?>
                 </a>
                 <a href="/portal/services" class="portal-nav-link <?php echo str_contains($_SERVER['REQUEST_URI'], '/services') ? 'active' : ''; ?>">
-                    <span class="nav-icon-box">📦</span> Sản phẩm đã mua
+                    <span class="nav-icon-box">📦</span> <?php echo __('Sản phẩm đã mua'); ?>
                 </a>
                 <a href="/portal/billing" class="portal-nav-link <?php echo str_contains($_SERVER['REQUEST_URI'], '/billing') ? 'active' : ''; ?>">
-                    <span class="nav-icon-box">💳</span> Thanh toán
+                    <span class="nav-icon-box">💳</span> <?php echo __('Thanh toán'); ?>
                 </a>
                 <a href="/portal/tickets" class="portal-nav-link <?php echo str_contains($_SERVER['REQUEST_URI'], '/tickets') ? 'active' : ''; ?>">
-                    <span class="nav-icon-box">🎫</span> Hỗ trợ / Tickets
+                    <span class="nav-icon-box">🎫</span> <?php echo __('Hỗ trợ / Tickets'); ?>
                 </a>
                 <a href="/portal/affiliates" class="portal-nav-link <?php echo str_contains($_SERVER['REQUEST_URI'], '/affiliates') ? 'active' : ''; ?>">
-                    <span class="nav-icon-box">🤝</span> Cộng tác viên
+                    <span class="nav-icon-box">🤝</span> <?php echo __('Cộng tác viên'); ?>
                 </a>
                 <a href="/portal/profile" class="portal-nav-link <?php echo str_contains($_SERVER['REQUEST_URI'], '/profile') ? 'active' : ''; ?>">
-                    <span class="nav-icon-box">⚙️</span> Cài đặt tài khoản
+                    <span class="nav-icon-box">⚙️</span> <?php echo __('Cài đặt tài khoản'); ?>
                 </a>
                 <div style="margin-top: 20px; border-top: 1px solid #F4F7FE; padding-top: 20px;">
                     <a href="/auth/logout" class="portal-nav-link" style="color: #ef4444;">
-                        <span class="nav-icon-box">🚪</span> Đăng xuất
+                        <span class="nav-icon-box">🚪</span> <?php echo __('Đăng xuất'); ?>
                     </a>
                 </div>
             </nav>

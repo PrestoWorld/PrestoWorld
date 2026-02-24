@@ -22,8 +22,12 @@ class NativeEngine extends AbstractEngine
 
     public function render(string $view, array $data = []): string
     {
-        // Support template hierarchy - try multiple paths
+        // Support template hierarchy and multi-language - try multiple paths
+        $locale = $this->theme->getApp()->translator()->getLocale();
+        
         $possiblePaths = [
+            $this->theme->getPath() . '/resources/views/' . $view . '.' . $locale . '.php',
+            $this->theme->getPath() . '/' . $view . '.' . $locale . '.php',
             $this->theme->getPath() . '/resources/views/' . $view . '.php',
             $this->theme->getPath() . '/' . $view . '.php',
         ];

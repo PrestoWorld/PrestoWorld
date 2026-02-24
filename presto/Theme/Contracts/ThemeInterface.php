@@ -40,4 +40,9 @@ interface ThemeInterface
      * Check if theme is active
      */
     public function isActive(): bool;
+
+    /**
+     * Get the application instance
+     */
+    public function getApp(): \App\Foundation\Application;
 }

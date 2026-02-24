@@ -82,6 +82,71 @@
         .cat-list li { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f1f5f9; }
         .cat-list a { text-decoration: none; color: var(--gray); font-weight: 500; font-size: 14px; }
         .cat-count { background: #f1f5f9; padding: 2px 8px; border-radius: 10px; font-size: 12px; color: var(--gray); }
+
+        /* Dropdown Stylings */
+        .nav-item-has-dropdown { position: relative; }
+        .nav-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            transform: translateY(10px);
+            background: white;
+            min-width: 600px;
+            border-radius: 20px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.12);
+            border: 1px solid #f1f5f9;
+            padding: 30px;
+            opacity: 0;
+            visibility: hidden;
+            transition: 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+            z-index: 1000;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+        }
+        .nav-dropdown.wide-2col { min-width: 500px; grid-template-columns: repeat(2, 1fr); }
+
+        .nav-dropdown.single-col { min-width: 250px; grid-template-columns: 1fr; }
+        
+        .nav-item-has-dropdown:hover .nav-dropdown {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .dropdown-group-title {
+            grid-column: span 1;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--primary);
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            padding-left: 12px;
+        }
+        
+        .dropdown-link {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            padding: 12px;
+            border-radius: 12px;
+            text-decoration: none;
+            color: var(--dark);
+            transition: 0.2s;
+        }
+        .dropdown-link:hover { background: #f8fafc; }
+        .dropdown-link .icon { 
+            width: 40px; height: 40px; 
+            background: #eff6ff; border-radius: 10px; 
+            display: flex; align-items: center; justify-content: center; 
+            color: var(--primary); font-size: 20px;
+            flex-shrink: 0;
+        }
+        .dropdown-link .text { display: flex; flex-direction: column; }
+        .dropdown-link .title { font-weight: 700; font-size: 14px; margin-bottom: 2px; }
+        .dropdown-link .desc { font-size: 12px; color: var(--gray); font-weight: 400; line-height: 1.4; }
+        .nav-arrow { font-size: 9px; margin-left: 6px; vertical-align: middle; }
     </style>
 </head>
 <body>
@@ -98,17 +163,141 @@
             </a>
             <nav>
                 <ul>
-                    <li><a href="#">Marketplace</a></li>
-                    <li><a href="/hosting">Hosting & VPS</a></li>
-                    <li><a href="/blog" class="<?php echo str_contains($_SERVER['REQUEST_URI'], '/blog') ? 'active' : ''; ?>">Resources</a></li>
-                    <li><a href="/memberships">Memberships</a></li>
-                    <li><a href="/affiliates" class="<?php echo str_contains($_SERVER['REQUEST_URI'], '/affiliates') ? 'active' : ''; ?>">Partners</a></li>
-                    <li><a href="/services">Services</a></li>
+                    <li class="nav-item-has-dropdown">
+                        <a href="#"><?php echo __('Products'); ?> <span class="nav-arrow">▼</span></a>
+                        <div class="nav-dropdown">
+                            <div>
+                                <div class="dropdown-group-title"><?php echo __('Cloud & Infrastructure'); ?></div>
+                                <a href="/hosting" class="dropdown-link">
+                                    <div class="icon">☁️</div>
+                                    <div class="text">
+                                        <span class="title"><?php echo __('Hosting'); ?></span>
+                                        <span class="desc"><?php echo __('High-speed web hosting'); ?></span>
+                                    </div>
+                                </a>
+                                <a href="/vps" class="dropdown-link">
+                                    <div class="icon">⚡</div>
+                                    <div class="text">
+                                        <span class="title"><?php echo __('VPS Server'); ?></span>
+                                        <span class="desc"><?php echo __('Powerful virtual servers'); ?></span>
+                                    </div>
+                                </a>
+                                <a href="/domains" class="dropdown-link">
+                                    <div class="icon">🌐</div>
+                                    <div class="text">
+                                        <span class="title"><?php echo __('Domains'); ?></span>
+                                        <span class="desc"><?php echo __('Register your brand'); ?></span>
+                                    </div>
+                                </a>
+                                <a href="/ssl" class="dropdown-link">
+                                    <div class="icon">🔒</div>
+                                    <div class="text">
+                                        <span class="title"><?php echo __('SSL Certificates'); ?></span>
+                                        <span class="desc"><?php echo __('Security for website'); ?></span>
+                                    </div>
+                                </a>
+                            </div>
+                            <div>
+                                <div class="dropdown-group-title"><?php echo __('Digital Assets'); ?></div>
+                                <a href="/code/themes" class="dropdown-link">
+                                    <div class="icon">🎨</div>
+                                    <div class="text">
+                                        <span class="title"><?php echo __('Premium Themes'); ?></span>
+                                        <span class="desc"><?php echo __('Beautiful web designs'); ?></span>
+                                    </div>
+                                </a>
+                                <a href="/code/plugins" class="dropdown-link">
+                                    <div class="icon">🔌</div>
+                                    <div class="text">
+                                        <span class="title"><?php echo __('Powerful Plugins'); ?></span>
+                                        <span class="desc"><?php echo __('Extend site features'); ?></span>
+                                    </div>
+                                </a>
+                            </div>
+                            <div>
+                                <div class="dropdown-group-title"><?php echo __('Software & Tools'); ?></div>
+                                <a href="/software" class="dropdown-link">
+                                    <div class="icon">💻</div>
+                                    <div class="text">
+                                        <span class="title"><?php echo __('Utility Software'); ?></span>
+                                        <span class="desc"><?php echo __('Useful desktop apps'); ?></span>
+                                    </div>
+                                </a>
+                                <a href="/tools" class="dropdown-link">
+                                    <div class="icon">💰</div>
+                                    <div class="text">
+                                        <span class="title"><?php echo __('MMO Tools'); ?></span>
+                                        <span class="desc"><?php echo __('Make money online'); ?></span>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="nav-item-has-dropdown">
+                        <a href="#"><?php echo __('Pro Services'); ?> <span class="nav-arrow">▼</span></a>
+                        <div class="nav-dropdown wide-2col">
+                            <div>
+                                <div class="dropdown-group-title"><?php echo __('Speed & Performance'); ?></div>
+                                <a href="/services/speed" class="dropdown-link">
+                                    <div class="icon">🚀</div>
+                                    <div class="text">
+                                        <span class="title"><?php echo __('Speed Optimization'); ?></span>
+                                        <span class="desc"><?php echo __('Lightning fast loading'); ?></span>
+                                    </div>
+                                </a>
+                                <a href="/services/pagespeed" class="dropdown-link">
+                                    <div class="icon">📈</div>
+                                    <div class="text">
+                                        <span class="title"><?php echo __('Google PageSpeed'); ?></span>
+                                        <span class="desc"><?php echo __('Score 90+ on mobile'); ?></span>
+                                    </div>
+                                </a>
+                            </div>
+                            <div>
+                                <div class="dropdown-group-title"><?php echo __('Cyber Security'); ?></div>
+                                <a href="/services/security" class="dropdown-link">
+                                    <div class="icon">🛡️</div>
+                                    <div class="text">
+                                        <span class="title"><?php echo __('Web Security'); ?></span>
+                                        <span class="desc"><?php echo __('Full site protection'); ?></span>
+                                    </div>
+                                </a>
+                                <a href="/services/malware" class="dropdown-link">
+                                    <div class="icon">🦠</div>
+                                    <div class="text">
+                                        <span class="title"><?php echo __('Malware Removal'); ?></span>
+                                        <span class="desc"><?php echo __('WordPress & PHP cleanup'); ?></span>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="nav-item-has-dropdown">
+                        <a href="#"><?php echo __('Partner'); ?> <span class="nav-arrow">▼</span></a>
+                        <div class="nav-dropdown single-col">
+                            <a href="/memberships" class="dropdown-link">
+                                <div class="icon">💎</div>
+                                <div class="text">
+                                    <span class="title"><?php echo __('VIP Membership'); ?></span>
+                                    <span class="desc"><?php echo __('Exclusive privileges'); ?></span>
+                                </div>
+                            </a>
+                            <a href="/affiliates" class="dropdown-link">
+                                <div class="icon">🤝</div>
+                                <div class="text">
+                                    <span class="title"><?php echo __('Affiliate Program'); ?></span>
+                                    <span class="desc"><?php echo __('Earn high commission'); ?></span>
+                                </div>
+                            </a>
+                        </div>
+                    </li>
+                    <li><a href="/blog"><?php echo __('Blog'); ?></a></li>
                 </ul>
             </nav>
             <div class="header-actions">
-                <a href="/auth/login" class="btn-login">Sign In</a>
-                <a href="/auth/register" class="btn-primary">Get Started</a>
+                <?php include __DIR__ . '/lang-switcher.php'; ?>
+                <a href="/auth/login" class="btn-login"><?php echo __('Sign In'); ?></a>
+                <a href="/auth/register" class="btn-primary"><?php echo __('Get Started'); ?></a>
             </div>
         </div>
     </header>

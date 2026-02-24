@@ -147,4 +147,9 @@ class Theme implements ThemeInterface
         // Avoid circular dependency by getting manager from app
         return $this->app->make(ThemeManager::class)->getActiveTheme() === $this;
     }
+
+    public function getApp(): Application
+    {
+        return $this->app;
+    }
 }

@@ -60,7 +60,31 @@ class Route
         return false;
     }
 
-    protected function getRegexPattern(): string
+    /**
+     * Match against an explicit method + path string (no Request mutation needed).
+     * Used by LocalizedRouter to match against a locale-stripped path.
+     */
+    public function matchesMethodAndPath(string $method, string $path): bool
+    {
+        $requestMethod = strtoupper($method);
+        if ($this->method !== $requestMethod) {
+            if (!($this->method === 'GET' && $requestMethod === 'HEAD')) {
+                return false;
+            }
+        }
+
+        $pattern = $this->getRegexPattern();
+        $match   = preg_match($pattern, $path, $matches);
+
+        if ($match) {
+            $this->parameters = array_filter($matches, 'is_string', ARRAY_FILTER_USE_KEY);
+            return true;
+        }
+
+        return false;
+    }
+
+    public function getRegexPattern(): string
     {
         // Convert {param} to (?P<param>[^/]+) or (?P<param>expression)
         return '#^' . preg_replace_callback('/\{([a-zA-Z0-9_]+)\}/', function ($matches) {

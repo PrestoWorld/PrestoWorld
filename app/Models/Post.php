@@ -7,9 +7,14 @@ namespace App\Models;
 use Cycle\Annotated\Annotation\Column;
 use Cycle\Annotated\Annotation\Entity;
 
+use App\Support\Traits\Translatable;
+
 #[Entity(table: 'wp_posts')]
 class Post
 {
+    use Translatable;
+
+    protected array $translatable = ['title', 'content'];
     #[Column(type: 'primary', name: 'ID')]
     public int $id;
 

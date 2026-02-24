@@ -99,3 +99,72 @@ if (!function_exists('now')) {
         return \Cake\Chronos\Chronos::now();
     }
 }
+
+if (!function_exists('trans')) {
+    /**
+     * Translate the given message.
+     */
+    function trans(string $key, array $replace = [], ?string $locale = null)
+    {
+        return app()->translator()->get($key, $replace, $locale);
+    }
+}
+
+if (!function_exists('__')) {
+    /**
+     * Translate the given message (alias for trans).
+     */
+    function __(string $key, array $replace = [], ?string $locale = null)
+    {
+        return trans($key, $replace, $locale);
+    }
+}
+
+if (!function_exists('locale_url')) {
+    /**
+     * Get URL with locale prefix.
+     */
+    function locale_url(string $path, ?string $locale = null): string
+    {
+        $locale = $locale ?: app()->translator()->getLocale();
+        $defaultLocale = config('app.locale', 'en');
+        
+        $path = '/' . ltrim($path, '/');
+        
+        if ($locale === $defaultLocale) {
+            return $path;
+        }
+        
+        return '/' . $locale . $path;
+    }
+}
+
+if (!function_exists('current_url_with_lang')) {
+    /**
+     * Get current URL with a different language code.
+     */
+    function current_url_with_lang(string $locale): string
+    {
+        $request = app(\Witals\Framework\Http\Request::class);
+        $path = $request->path();
+        
+        // Strip out existing locale prefix from request path if present
+        $supportedLocales = config('app.locales', ['en', 'vi']);
+        if (preg_match('#^/([a-z]{2})(/.*)?$#', $path, $matches)) {
+            if (in_array($matches[1], $supportedLocales, true)) {
+                $path = ($matches[2] ?? '/');
+            }
+        }
+        
+        $url = locale_url($path, $locale);
+        
+        $query = $_GET;
+        unset($query['lang']); // Cleanup old system
+        
+        if (!empty($query)) {
+            $url .= '?' . http_build_query($query);
+        }
+        
+        return $url;
+    }
+}

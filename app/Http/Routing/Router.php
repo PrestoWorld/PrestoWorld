@@ -9,7 +9,9 @@ use Witals\Framework\Http\Request;
 use Witals\Framework\Http\Response;
 use Psr\Log\LoggerInterface;
 
-class Router
+use App\Http\Routing\Contracts\RouterInterface;
+
+class Router implements RouterInterface
 {
     protected Application $app;
     protected \Psr\Log\LoggerInterface $logger;
