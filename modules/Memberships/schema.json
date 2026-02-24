@@ -211,6 +211,61 @@
                     "on_update": "CASCADE"
                 }
             ]
+        },
+        {
+            "name": "optilarity_membership_orders",
+            "comment": "Pivot: links memberships to orders.",
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "primary"
+                },
+                {
+                    "name": "membership_id",
+                    "type": "integer",
+                    "nullable": false
+                },
+                {
+                    "name": "order_id",
+                    "type": "integer",
+                    "nullable": false
+                },
+                {
+                    "name": "created_at",
+                    "type": "datetime",
+                    "nullable": false
+                }
+            ],
+            "indexes": [
+                {
+                    "columns": [
+                        "membership_id",
+                        "order_id"
+                    ],
+                    "unique": true
+                },
+                {
+                    "columns": [
+                        "order_id"
+                    ]
+                }
+            ],
+            "foreign_keys": [
+                {
+                    "column": "membership_id",
+                    "references": "optilarity_memberships",
+                    "on": "id",
+                    "on_delete": "CASCADE",
+                    "on_update": "CASCADE"
+                },
+                {
+                    "column": "order_id",
+                    "references": "optilarity_orders",
+                    "on": "id",
+                    "on_delete": "CASCADE",
+                    "on_update": "CASCADE"
+                }
+            ]
         }
     ]
 }

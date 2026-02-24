@@ -93,18 +93,46 @@ class SoftwareCatalogAdminController extends AdminController
         $statusOpts   = ['active' => 'Active', 'draft' => 'Draft', 'deprecated' => 'Deprecated', 'archived' => 'Archived'];
         $currencyOpts = ['USD' => 'USD', 'EUR' => 'EUR', 'GBP' => 'GBP', 'VND' => 'VND'];
 
-        $fields = $this->fieldGroup('Type *',          $this->select('type', $typeOpts, $data['type'] ?? 'software'))
-                . $this->fieldGroup('Product Name *',  $this->input('name', 'text', $data['name'] ?? '', '', true))
-                . $this->fieldGroup('Description',     $this->textarea('description', $data['description'] ?? ''))
-                . $this->fieldGroup('Version',         $this->input('version',      'text', $data['version']      ?? '', 'e.g. 1.2.0'))
-                . $this->fieldGroup('Author',          $this->input('author',       'text', $data['author']       ?? ''))
-                . $this->fieldGroup('Homepage URL',    $this->input('homepage_url', 'url',  $data['homepage_url'] ?? ''))
-                . $this->fieldGroup('Download URL',    $this->input('download_url', 'url',  $data['download_url'] ?? ''))
-                . $this->fieldGroup('Price',           $this->input('price', 'number', $data['price'] ?? 0), 'Set 0 for free products.')
-                . $this->fieldGroup('Currency',        $this->select('currency', $currencyOpts, $data['currency'] ?? 'USD'))
-                . $this->fieldGroup('Status',          $this->select('status', $statusOpts, $data['status'] ?? 'active'))
-                . $this->submitBar('Save Product', '/dashboard/catalog');
+        $formContent = <<<HTML
+        <div class="presto-form-section-head">
+            <div class="icon-wrap">📦</div>
+            <h3>Thông tin Sản phẩm chính</h3>
+        </div>
+        <div class="presto-grid">
+            <div class="col-8">{$this->fieldGroup('Tên sản phẩm *', $this->input('name', 'text', $data['name'] ?? '', 'Product name', true))}</div>
+            <div class="col-4">{$this->fieldGroup('Loại (Type) *', $this->select('type', $typeOpts, $data['type'] ?? 'software'))}</div>
+            
+            <div class="col-12">{$this->fieldGroup('Mô tả sản phẩm', $this->textarea('description', $data['description'] ?? '', 'Chi tiết về tính năng...'))}</div>
+            
+            <div class="col-4">{$this->fieldGroup('Phiên bản', $this->input('version', 'text', $data['version'] ?? '', '1.0.0'))}</div>
+            <div class="col-4">{$this->fieldGroup('Tác giả/Nhà phát triển', $this->input('author', 'text', $data['author'] ?? ''))}</div>
+            <div class="col-4">{$this->fieldGroup('Trạng thái hiển thị', $this->select('status', $statusOpts, $data['status'] ?? 'active'))}</div>
+        </div>
 
-        return $this->formCard('Product Details', $this->formOpen($action, $method) . $fields . $this->formClose());
+        <div class="presto-form-section-head">
+            <div class="icon-wrap">🔗</div>
+            <h3>Liên kết & Tải về</h3>
+        </div>
+        <div class="presto-grid">
+            <div class="col-6">{$this->fieldGroup('URL Trang chủ', $this->input('homepage_url', 'url', $data['homepage_url'] ?? ''))}</div>
+            <div class="col-6">{$this->fieldGroup('URL Tải về / Source', $this->input('download_url', 'url', $data['download_url'] ?? ''))}</div>
+        </div>
+
+        <div class="presto-form-section-head">
+            <div class="icon-wrap">💰</div>
+            <h3>Giá cả & Thương mại</h3>
+        </div>
+        <div class="presto-grid">
+            <div class="col-6">{$this->fieldGroup('Giá bán', $this->input('price', 'number', $data['price'] ?? 0))}</div>
+            <div class="col-6">{$this->fieldGroup('Tiền tệ', $this->select('currency', $currencyOpts, $data['currency'] ?? 'USD'))}</div>
+        </div>
+
+        <div style="margin-top: 48px; display: flex; justify-content: flex-end; gap: 16px; border-top: 1px solid var(--border); padding-top: 32px;">
+            <a href="/dashboard/catalog" class="presto-btn presto-btn-secondary">Hủy bỏ</a>
+            <button type="submit" class="presto-btn presto-btn-primary">Lưu Sản Phẩm</button>
+        </div>
+HTML;
+
+        return $this->formCard('Cấu hình Sản phẩm Số', $this->formOpen($action, $method) . $formContent . $this->formClose());
     }
 }

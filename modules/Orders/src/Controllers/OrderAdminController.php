@@ -174,10 +174,14 @@ HTML;
     /** GET /dashboard/orders/create */
     public function create(Request $request): Response
     {
-        $plans = $this->db()->select('id', 'name')->from('optilarity_hosting_plans')->run()->fetchAll();
-        $softwares = $this->db()->select('id', 'name', 'type')->from('optilarity_software_products')->run()->fetchAll();
+        $db = $this->db();
+        $plans       = $db->select('id', 'name')->from('optilarity_hosting_plans')->run()->fetchAll();
+        $softwares   = $db->select('id', 'name', 'type')->from('optilarity_software_products')->run()->fetchAll();
+        $customers   = $db->select('id', 'first_name', 'last_name', 'email')->from('optilarity_customers')->run()->fetchAll();
+        $sslPlans    = $db->select('id', 'domain', 'provider', 'type')->from('optilarity_ssl_certificates')->run()->fetchAll();
+        $memberPlans = $db->select('id', 'name')->from('optilarity_membership_plans')->run()->fetchAll();
         
-        $form = $this->renderForm([], '/dashboard/orders/create', 'POST', $plans, $softwares);
+        $form = $this->renderForm([], '/dashboard/orders/create', 'POST', $plans, $softwares, $customers, $sslPlans, $memberPlans);
         return $this->htmlResponse(
             $this->adminPage('New Order', $form, ['breadcrumbs' => ['Orders' => '/dashboard/orders', 'New Order' => '']])
         );
@@ -190,10 +194,15 @@ HTML;
         $db = $this->db();
         
         try {
+            $customer = null;
+            if (!empty($body['customer_id'])) {
+                $customer = $db->select('email')->from('optilarity_customers')->where('id', $body['customer_id'])->run()->fetch();
+            }
+
             // 1. Create Order
             $orderId = $db->insert('optilarity_orders')->values([
                 'order_number'   => 'ORD-' . strtoupper(uniqid()),
-                'customer_email' => $body['customer_email'] ?? '',
+                'customer_email' => $customer ? $customer['email'] : ($body['customer_email'] ?? ''),
                 'customer_id'    => $body['customer_id']    ? (int)$body['customer_id'] : null,
                 'status'         => $body['status']          ?? 'pending',
                 'payment_status' => $body['payment_status']  ?? 'pending',
@@ -234,11 +243,38 @@ HTML;
                 }
             }
 
+            // 4. Handle SSL attachment — link existing SSL cert to order
+            if (!empty($body['ssl_cert_id'])) {
+                $db->insert('optilarity_ssl_orders')->values([
+                    'ssl_id'     => (int)$body['ssl_cert_id'],
+                    'order_id'   => $orderId,
+                    'created_at' => date('Y-m-d H:i:s'),
+                ])->run();
+            }
+
+            // 5. Handle Membership attachment
+            if (!empty($body['membership_plan_id'])) {
+                $memId = $db->insert('optilarity_memberships')->values([
+                    'plan_id'     => (int)$body['membership_plan_id'],
+                    'customer_id' => $body['customer_id'] ? (int)$body['customer_id'] : 0,
+                    'status'      => 'pending',
+                    'created_at'  => date('Y-m-d H:i:s'),
+                ])->run()->lastInsertID();
+                $db->insert('optilarity_membership_orders')->values([
+                    'membership_id' => $memId,
+                    'order_id'      => $orderId,
+                    'created_at'    => date('Y-m-d H:i:s'),
+                ])->run();
+            }
+
             return $this->redirect('/dashboard/orders');
         } catch (\Throwable $e) {
-            $plans = $db->select('id', 'name')->from('optilarity_hosting_plans')->run()->fetchAll();
-            $softwares = $db->select('id', 'name', 'type')->from('optilarity_software_products')->run()->fetchAll();
-            $form = $this->notice("Error: {$e->getMessage()}", 'error') . $this->renderForm($body, '/dashboard/orders/create', 'POST', $plans, $softwares);
+            $plans       = $db->select('id', 'name')->from('optilarity_hosting_plans')->run()->fetchAll();
+            $softwares   = $db->select('id', 'name', 'type')->from('optilarity_software_products')->run()->fetchAll();
+            $customers   = $db->select('id', 'first_name', 'last_name', 'email')->from('optilarity_customers')->run()->fetchAll();
+            $sslPlans    = $db->select('id', 'domain', 'provider', 'type')->from('optilarity_ssl_certificates')->run()->fetchAll();
+            $memberPlans = $db->select('id', 'name')->from('optilarity_membership_plans')->run()->fetchAll();
+            $form = $this->notice("Error: {$e->getMessage()}", 'error') . $this->renderForm($body, '/dashboard/orders/create', 'POST', $plans, $softwares, $customers, $sslPlans, $memberPlans);
             return $this->htmlResponse($this->adminPage('New Order', $form, ['breadcrumbs' => ['Orders' => '/dashboard/orders', 'New Order' => '']]));
         }
     }
@@ -246,15 +282,19 @@ HTML;
     /** GET /dashboard/orders/{id}/edit */
     public function edit(Request $request, int $id): Response
     {
-        $row = $this->db()->select('*')->from('optilarity_orders')->where('id', $id)->run()->fetch();
+        $db = $this->db();
+        $row = $db->select('*')->from('optilarity_orders')->where('id', $id)->run()->fetch();
         if (!$row) {
             return $this->htmlResponse($this->adminPage('Not Found', $this->notice('Order not found.', 'error')), 404);
         }
         
-        $plans = $this->db()->select('id', 'name')->from('optilarity_hosting_plans')->run()->fetchAll();
-        $softwares = $this->db()->select('id', 'name', 'type')->from('optilarity_software_products')->run()->fetchAll();
+        $plans       = $db->select('id', 'name')->from('optilarity_hosting_plans')->run()->fetchAll();
+        $softwares   = $db->select('id', 'name', 'type')->from('optilarity_software_products')->run()->fetchAll();
+        $customers   = $db->select('id', 'first_name', 'last_name', 'email')->from('optilarity_customers')->run()->fetchAll();
+        $sslPlans    = $db->select('id', 'domain', 'provider', 'type')->from('optilarity_ssl_certificates')->run()->fetchAll();
+        $memberPlans = $db->select('id', 'name')->from('optilarity_membership_plans')->run()->fetchAll();
 
-        $form = $this->renderForm((array)$row, "/dashboard/orders/{$id}/edit", 'PUT', $plans, $softwares);
+        $form = $this->renderForm((array)$row, "/dashboard/orders/{$id}/edit", 'PUT', $plans, $softwares, $customers, $sslPlans, $memberPlans);
         return $this->htmlResponse(
             $this->adminPage('Edit Order #' . $row['order_number'], $form, ['breadcrumbs' => ['Orders' => '/dashboard/orders', 'Edit' => '']])
         );
@@ -264,8 +304,9 @@ HTML;
     public function update(Request $request, int $id): Response
     {
         $body = (array)$request->post();
+        $db = $this->db();
         try {
-            $this->db()->update('optilarity_orders', [
+            $db->update('optilarity_orders', [
                 'status'         => $body['status']          ?? 'pending',
                 'payment_status' => $body['payment_status']  ?? 'pending',
                 'payment_method' => $body['payment_method']  ?? null,
@@ -275,14 +316,17 @@ HTML;
             ], ['id' => $id]);
             return $this->redirect('/dashboard/orders');
         } catch (\Throwable $e) {
-            $plans = $this->db()->select('id', 'name')->from('optilarity_hosting_plans')->run()->fetchAll();
-            $softwares = $this->db()->select('id', 'name', 'type')->from('optilarity_software_products')->run()->fetchAll();
-            $form = $this->notice("Error: {$e->getMessage()}", 'error') . $this->renderForm($body, "/dashboard/orders/{$id}/edit", 'PUT', $plans, $softwares);
+            $plans       = $db->select('id', 'name')->from('optilarity_hosting_plans')->run()->fetchAll();
+            $softwares   = $db->select('id', 'name', 'type')->from('optilarity_software_products')->run()->fetchAll();
+            $customers   = $db->select('id', 'first_name', 'last_name', 'email')->from('optilarity_customers')->run()->fetchAll();
+            $sslPlans    = $db->select('id', 'domain', 'provider', 'type')->from('optilarity_ssl_certificates')->run()->fetchAll();
+            $memberPlans = $db->select('id', 'name')->from('optilarity_membership_plans')->run()->fetchAll();
+            $form = $this->notice("Error: {$e->getMessage()}", 'error') . $this->renderForm($body, "/dashboard/orders/{$id}/edit", 'PUT', $plans, $softwares, $customers, $sslPlans, $memberPlans);
             return $this->htmlResponse($this->adminPage('Edit Order', $form));
         }
     }
 
-    private function renderForm(array $data = [], string $action = '', string $method = 'POST', array $plans = [], array $softwares = []): string
+    private function renderForm(array $data = [], string $action = '', string $method = 'POST', array $plans = [], array $softwares = [], array $customers = [], array $sslPlans = [], array $memberPlans = []): string
     {
         $statusOptions  = ['pending' => 'Pending', 'processing' => 'Processing', 'completed' => 'Completed', 'cancelled' => 'Cancelled', 'refunded' => 'Refunded'];
         $payStatusOpts  = ['pending' => 'Pending', 'paid' => 'Paid', 'failed' => 'Failed', 'refunded' => 'Refunded'];
@@ -290,6 +334,17 @@ HTML;
 
         $planOpts = [];
         foreach ($plans as $p) $planOpts[] = ['value' => (string)$p['id'], 'label' => $p['name']];
+
+        $sslPlanOpts = [];
+        foreach ($sslPlans as $sp) $sslPlanOpts[] = ['value' => (string)$sp['id'], 'label' => "{$sp['domain']} — {$sp['provider']} ({$sp['type']})"];
+
+        $memberPlanOpts = [];
+        foreach ($memberPlans as $mp) $memberPlanOpts[] = ['value' => (string)$mp['id'], 'label' => $mp['name']];
+
+        $custOpts = [];
+        foreach ($customers as $c) {
+            $custOpts[] = ['value' => (string)$c['id'], 'label' => "{$c['first_name']} {$c['last_name']} ({$c['email']})"];
+        }
 
         $swListHtml = '<div class="presto-check-list">';
         foreach ($softwares as $s) {
@@ -310,8 +365,13 @@ HTML;
             <h3>Thông tin Đơn hàng & Khách hàng</h3>
         </div>
         <div class="presto-grid">
-            <div class="col-8">{$this->fieldGroup('Địa chỉ Email Khách hàng', $this->input('customer_email', 'email', $data['customer_email'] ?? '', 'client@example.com', true))}</div>
-            <div class="col-4">{$this->fieldGroup('ID Khách hàng (Nếu có)', $this->input('customer_id', 'number', $data['customer_id'] ?? ''))}</div>
+            <div class="col-8">
+                <label class="presto-field-label">Chọn Khách hàng</label>
+                {$this->searchableSelect('customer_id', $custOpts, $data['customer_id'] ?? '', 'Tìm kiếm khách hàng theo tên hoặc email...')}
+            </div>
+            <div class="col-4">
+                {$this->fieldGroup('Email khách (Nếu không chọn KH)', $this->input('customer_email', 'email', $data['customer_email'] ?? '', 'client@example.com'))}
+            </div>
             
             <div class="col-6">{$this->fieldGroup('Trạng thái Đơn hàng', $this->select('status', $statusOptions, $data['status'] ?? 'pending'))}</div>
             <div class="col-6">{$this->fieldGroup('Trạng thái Thanh toán', $this->select('payment_status', $payStatusOpts, $data['payment_status'] ?? 'pending'))}</div>
@@ -336,15 +396,21 @@ HTML;
         
         <div class="presto-grid">
             <div class="col-6">
-                <label class="presto-field-label">Gắn nhanh Hosting Plan</label>
-                {$this->searchableSelect('hosting_plan_id', $planOpts, $data['hosting_plan_id'] ?? '', 'Tìm kiếm gói hosting...')}
+                {$this->searchableFieldGroup('🖥️ Hosting Plan', 'hosting_plan_id', $planOpts, $data['hosting_plan_id'] ?? '', 'Tìm kiếm gói hosting...')}
             </div>
             <div class="col-6">
                 {$this->fieldGroup('Tên miền đi kèm Hosting', $this->input('hosting_domain', 'text', $data['hosting_domain'] ?? '', 'example.com'))}
             </div>
+
+            <div class="col-6">
+                {$this->searchableFieldGroup('🔒 SSL Certificate', 'ssl_cert_id', $sslPlanOpts, $data['ssl_cert_id'] ?? '', 'Chọn chứng chỉ SSL hiện có...')}
+            </div>
+            <div class="col-6">
+                {$this->searchableFieldGroup('🏅 Membership Plan', 'membership_plan_id', $memberPlanOpts, $data['membership_plan_id'] ?? '', 'Chọn gói thành viên...')}
+            </div>
+
             <div class="col-12">
-                <label class="presto-field-label">Chọn Phần mềm / Plugins / Themes</label>
-                {$swListHtml}
+                {$this->fieldGroup('💻 Phần mềm / Plugins / Themes', $swListHtml)}
             </div>
         </div>
 
@@ -355,13 +421,5 @@ HTML;
 HTML;
 
         return $this->formCard('Cấu hình Đơn hàng Chi tiết', $this->formOpen($action, $method) . $formContent . $this->formClose());
-    }
-
-    protected function searchableSelect(string $name, array $options, mixed $value = '', string $placeholder = 'Search...'): string
-    {
-        $jsonOptions = json_encode($options);
-        return <<<HTML
-        <div data-solid-component="ComboBox" data-config='{"name":"{$name}", "options":{$jsonOptions}, "value":"{$value}", "placeholder":"{$placeholder}"}'></div>
-HTML;
     }
 }

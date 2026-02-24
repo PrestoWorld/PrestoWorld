@@ -113,17 +113,39 @@ class CustomerAdminController extends AdminController
     private function renderForm(array $data = [], string $action = '', string $method = 'POST'): string
     {
         $statusOptions = ['active' => 'Active', 'suspended' => 'Suspended', 'banned' => 'Banned'];
-        $fields = $this->fieldGroup('First Name *',    $this->input('first_name', 'text', $data['first_name'] ?? '', 'John', true))
-                . $this->fieldGroup('Last Name *',     $this->input('last_name',  'text', $data['last_name']  ?? '', 'Doe',  true))
-                . $this->fieldGroup('Email Address *', $this->input('email',      'email',$data['email']      ?? '', 'john@example.com', true))
-                . $this->fieldGroup('Phone',           $this->input('phone',      'tel',  $data['phone']      ?? ''))
-                . $this->fieldGroup('Company',         $this->input('company',    'text', $data['company']    ?? ''))
-                . $this->fieldGroup('Country',         $this->input('country',    'text', $data['country']    ?? ''))
-                . $this->fieldGroup('Address',         $this->textarea('address', $data['address'] ?? '', '', 3))
-                . $this->fieldGroup('Status',          $this->select('status', $statusOptions, $data['status'] ?? 'active'))
-                . $this->fieldGroup('Notes',           $this->textarea('notes', $data['notes'] ?? ''))
-                . $this->submitBar('Save Customer', '/dashboard/customers');
+        
+        $formContent = <<<HTML
+        <div class="presto-form-section-head">
+            <div class="icon-wrap">🆔</div>
+            <h3>Danh tính & Trạng thái</h3>
+        </div>
+        <div class="presto-grid">
+            <div class="col-4">{$this->fieldGroup('Tên (First Name) *', $this->input('first_name', 'text', $data['first_name'] ?? '', 'John', true))}</div>
+            <div class="col-4">{$this->fieldGroup('Họ (Last Name) *', $this->input('last_name', 'text', $data['last_name'] ?? '', 'Doe', true))}</div>
+            <div class="col-4">{$this->fieldGroup('Trạng thái tài khoản', $this->select('status', $statusOptions, $data['status'] ?? 'active'))}</div>
+            
+            <div class="col-8">{$this->fieldGroup('Địa chỉ Email *', $this->input('email', 'email', $data['email'] ?? '', 'john@example.com', true))}</div>
+            <div class="col-4">{$this->fieldGroup('Số điện thoại', $this->input('phone', 'tel', $data['phone'] ?? '', '090...'))}</div>
+        </div>
 
-        return $this->formCard('Customer Details', $this->formOpen($action, $method) . $fields . $this->formClose());
+        <div class="presto-form-section-head">
+            <div class="icon-wrap">🏢</div>
+            <h3>Thông tin Công ty & Địa chỉ</h3>
+        </div>
+        <div class="presto-grid">
+            <div class="col-6">{$this->fieldGroup('Tên công ty', $this->input('company', 'text', $data['company'] ?? ''))}</div>
+            <div class="col-6">{$this->fieldGroup('Quốc gia', $this->input('country', 'text', $data['country'] ?? ''))}</div>
+            <div class="col-12">{$this->fieldGroup('Địa chỉ chi tiết', $this->textarea('address', $data['address'] ?? '', 'Số nhà, tên đường...', 2))}</div>
+            
+            <div class="col-12">{$this->fieldGroup('Ghi chú về khách hàng', $this->textarea('notes', $data['notes'] ?? ''))}</div>
+        </div>
+
+        <div style="margin-top: 48px; display: flex; justify-content: flex-end; gap: 16px; border-top: 1px solid var(--border); padding-top: 32px;">
+            <a href="/dashboard/customers" class="presto-btn presto-btn-secondary">Hủy bỏ</a>
+            <button type="submit" class="presto-btn presto-btn-primary">Lưu Thông Tin Khách Hàng</button>
+        </div>
+HTML;
+
+        return $this->formCard('Cấu hình Khách hàng', $this->formOpen($action, $method) . $formContent . $this->formClose());
     }
 }
