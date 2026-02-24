@@ -17,7 +17,8 @@ $app = require_once __DIR__ . '/bootstrap/app.php';
 
 $argv = $_SERVER['argv'];
 
-// Register core providers (this might already be done in registerConfiguredProviders)
+/** @var \Witals\Framework\Application $app */
+$app->boot();
 
 /** @var \Witals\Framework\Console\Kernel $kernel */
 $kernel = $app->make(\Witals\Framework\Console\Kernel::class);

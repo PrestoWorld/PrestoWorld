@@ -45,12 +45,13 @@ return [
         
         // WordPress Bridge (loads helpers early)
         PrestoWorld\Bridge\WordPress\Providers\WordPressServiceProvider::class,
+        // Modules
+        Modules\WebServices\WebServicesServiceProvider::class,
+        Modules\ReminderManager\ReminderManagerServiceProvider::class,
         
         App\Providers\RouteServiceProvider::class,
         App\Providers\ViewServiceProvider::class,
         PrestoWorld\Admin\Providers\AdminServiceProvider::class,
         App\Providers\ConsoleServiceProvider::class,
-        
-        // Add more providers here
     ],
 ];

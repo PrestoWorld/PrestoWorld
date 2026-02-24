@@ -1,0 +1,176 @@
+{
+    "version": "1.0.1",
+    "module": "web-services",
+    "description": "Web Services module for maintenance, speed optimization, and migrations.",
+    "tables": [
+        {
+            "name": "optilarity_web_services",
+            "comment": "Catalog of available web services (Maintenance, Optimization, Security, Migration, Conversion).",
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "primary"
+                },
+                {
+                    "name": "name",
+                    "type": "string",
+                    "size": 255,
+                    "nullable": false
+                },
+                {
+                    "name": "slug",
+                    "type": "string",
+                    "size": 255,
+                    "nullable": false
+                },
+                {
+                    "name": "category",
+                    "type": "enum",
+                    "values": [
+                        "maintenance",
+                        "optimization",
+                        "security",
+                        "migration",
+                        "conversion"
+                    ],
+                    "default": "maintenance"
+                },
+                {
+                    "name": "description",
+                    "type": "text",
+                    "nullable": true
+                },
+                {
+                    "name": "base_price",
+                    "type": "decimal",
+                    "precision": 10,
+                    "scale": 2,
+                    "default": 0
+                },
+                {
+                    "name": "warranty_days",
+                    "type": "integer",
+                    "default": 30,
+                    "comment": "Default warranty period in days"
+                },
+                {
+                    "name": "status",
+                    "type": "enum",
+                    "values": [
+                        "active",
+                        "draft",
+                        "inactive"
+                    ],
+                    "default": "active"
+                },
+                {
+                    "name": "created_at",
+                    "type": "datetime",
+                    "nullable": false
+                },
+                {
+                    "name": "updated_at",
+                    "type": "datetime",
+                    "nullable": true
+                }
+            ],
+            "indexes": [
+                {
+                    "name": "uq_service_slug",
+                    "columns": [
+                        "slug"
+                    ],
+                    "unique": true
+                }
+            ]
+        },
+        {
+            "name": "optilarity_web_service_items",
+            "comment": "Specific service instances assigned to customers, linked to orders and invoices.",
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "primary"
+                },
+                {
+                    "name": "customer_id",
+                    "type": "integer",
+                    "nullable": false
+                },
+                {
+                    "name": "service_id",
+                    "type": "integer",
+                    "nullable": false
+                },
+                {
+                    "name": "order_id",
+                    "type": "integer",
+                    "nullable": true
+                },
+                {
+                    "name": "invoice_id",
+                    "type": "integer",
+                    "nullable": true
+                },
+                {
+                    "name": "website_url",
+                    "type": "string",
+                    "size": 500,
+                    "nullable": true
+                },
+                {
+                    "name": "status",
+                    "type": "enum",
+                    "values": [
+                        "pending",
+                        "processing",
+                        "active",
+                        "completed",
+                        "cancelled"
+                    ],
+                    "default": "pending"
+                },
+                {
+                    "name": "warranty_until",
+                    "type": "datetime",
+                    "nullable": true
+                },
+                {
+                    "name": "notes",
+                    "type": "text",
+                    "nullable": true
+                },
+                {
+                    "name": "created_at",
+                    "type": "datetime",
+                    "nullable": false
+                },
+                {
+                    "name": "updated_at",
+                    "type": "datetime",
+                    "nullable": true
+                }
+            ],
+            "foreign_keys": [
+                {
+                    "column": "customer_id",
+                    "references": "optilarity_customers",
+                    "on": "id",
+                    "on_delete": "CASCADE"
+                },
+                {
+                    "column": "service_id",
+                    "references": "optilarity_web_services",
+                    "on": "id",
+                    "on_delete": "CASCADE"
+                },
+                {
+                    "column": "order_id",
+                    "references": "optilarity_orders",
+                    "on": "id",
+                    "on_delete": "SET NULL"
+                }
+            ]
+        }
+    ]
+}
