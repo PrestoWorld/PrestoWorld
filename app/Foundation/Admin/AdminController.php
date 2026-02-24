@@ -68,7 +68,7 @@ abstract class AdminController
         $this->assets->enqueueCss('admin-dashboard', 'css/admin-dashboard.css', ['admin-core']);
 
         // JS assets
-        $this->assets->enqueueJs('admin-core', 'js/admin-solid-core.js', [], ['defer' => true]);
+        $this->assets->enqueueJs('admin-core', 'js/admin-solid-core.js', [], ['defer' => true, 'type' => 'module']);
 
         return <<<HTML
         <!DOCTYPE html>
