@@ -244,9 +244,8 @@ abstract class TableList
         foreach ($filters as $i => $filter) {
             $active  = $filter->current ? ' class="current"' : '';
             $url     = $this->addQueryArg([$filter->queryVar => $filter->queryValue]);
-            $count   = $filter->count > 0 ? " <span class='count'>({$filter->count})</span>" : '';
-            $sep     = $i < count($filters) - 1 ? ' | ' : '';
-            $html   .= "<li><a href=\"{$url}\"{$active}>{$filter->label}{$count}</a>{$sep}</li>";
+            $count   = $filter->count > 0 ? " <span class='count'>{$filter->count}</span>" : '';
+            $html   .= "<li><a href=\"{$url}\"{$active}>{$filter->label}{$count}</a></li>";
         }
         $html .= '</ul>';
         return $html;
@@ -255,12 +254,14 @@ abstract class TableList
     protected function renderSearchBox(): string
     {
         $value = htmlspecialchars($this->search, ENT_QUOTES);
-        $label = "Search {$this->pluralName}";
+        $label = "Tìm kiếm {$this->pluralName}...";
         return <<<HTML
         <div class="presto-search-box">
-            <label class="screen-reader-text" for="presto-search-input">{$label}</label>
-            <input type="search" id="presto-search-input" name="s" value="{$value}" placeholder="{$label}…" />
-            <button type="submit" class="presto-btn presto-btn-secondary">Search</button>
+            <div class="search-input-wrap">
+                <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <input type="search" id="presto-search-input" name="s" value="{$value}" placeholder="{$label}" />
+            </div>
+            <button type="submit" class="presto-btn presto-btn-primary">Tìm kiếm</button>
         </div>
         HTML;
     }
@@ -269,11 +270,11 @@ abstract class TableList
     {
         $html  = '<div class="presto-table-wrap">';
         $html .= $this->renderBulkActionsBar('top');
-        $html .= '<table class="presto-list-table wp-list-table widefat fixed striped">';
+        $html .= '<div class="presto-list-table" role="grid">';
         $html .= $this->renderTableHead();
         $html .= $this->renderTableBody();
         $html .= $this->renderTableFoot();
-        $html .= '</table>';
+        $html .= '</div>';
         $html .= $this->renderBulkActionsBar('bottom');
         $html .= '</div>';
         return $html;
@@ -281,12 +282,12 @@ abstract class TableList
 
     protected function renderTableHead(): string
     {
-        $html = '<thead><tr>';
+        $html = '<div class="table-head" role="rowgroup"><div class="table-tr" role="row">';
         foreach ($this->getColumns() as $col) {
             if ($col->key === 'cb') {
-                $html .= '<td class="manage-column column-cb check-column">'
+                $html .= '<div class="table-th manage-column column-cb check-column" role="columnheader">'
                        . '<input type="checkbox" id="cb-select-all-1" />'
-                       . '</td>';
+                       . '</div>';
                 continue;
             }
 
@@ -298,53 +299,51 @@ abstract class TableList
                 $url     = $this->addQueryArg(['orderby' => $col->key, 'order' => strtolower($dir)]);
                 $arrow   = $this->orderBy === $col->key ? ($this->order === 'ASC' ? ' ↑' : ' ↓') : '';
                 $sortCss = $this->orderBy === $col->key ? ' sorted ' . strtolower($this->order) : ' sortable';
-                $html   .= "<th scope=\"col\" class=\"{$css}{$sortCss}\"{$width}>"
+                $html   .= "<div class=\"table-th {$css}{$sortCss}\" role=\"columnheader\"{$width}>"
                          . "<a href=\"{$url}\"><span>{$col->label}</span><span class='sorting-indicator'>{$arrow}</span></a>"
-                         . '</th>';
+                         . '</div>';
             } else {
-                $html .= "<th scope=\"col\" class=\"{$css}\"{$width}>{$col->label}</th>";
+                $html .= "<div class=\"table-th {$css}\" role=\"columnheader\"{$width}>{$col->label}</div>";
             }
         }
-        $html .= '</tr></thead>';
+        $html .= '</div></div>';
         return $html;
     }
 
     protected function renderTableBody(): string
     {
-        $html = '<tbody id="the-list">';
+        $html = '<div class="table-body" id="the-list" role="rowgroup">';
 
         if (empty($this->items)) {
-            $cols = count($this->getColumns());
-            $html .= "<tr class=\"no-items\"><td class=\"colspanchange\" colspan=\"{$cols}\">"
-                   . "No {$this->pluralName} found."
-                   . '</td></tr>';
-            return $html . '</tbody>';
+            $html .= "<div class=\"table-tr no-items\" role=\"row\">"
+                   . "<div class=\"table-td colspan-all\">No {$this->pluralName} found.</div>"
+                   . '</div>';
+            return $html . '</div>';
         }
 
         foreach ($this->items as $row) {
             $html .= $this->renderRow($row);
         }
 
-        $html .= '</tbody>';
+        $html .= '</div>';
         return $html;
     }
 
     protected function renderTableFoot(): string
     {
-        // Mirror the head for long tables
-        return str_replace('<thead>', '<tfoot>', str_replace('</thead>', '</tfoot>', $this->renderTableHead()));
+        return str_replace('table-head', 'table-foot', $this->renderTableHead());
     }
 
     protected function renderRow(array $row): string
     {
         $pk   = $row[$this->primaryKey] ?? '';
-        $html = "<tr id=\"{$this->singularName}-{$pk}\" data-id=\"{$pk}\">";
+        $html = "<div class=\"table-tr\" id=\"{$this->singularName}-{$pk}\" data-id=\"{$pk}\" role=\"row\">";
 
         foreach ($this->getColumns() as $col) {
             if ($col->key === 'cb') {
-                $html .= "<th scope=\"row\" class=\"check-column\">"
+                $html .= "<div class=\"table-td check-column\" role=\"gridcell\">"
                        . "<input type=\"checkbox\" name=\"item[]\" value=\"{$pk}\" />"
-                       . '</th>';
+                       . '</div>';
                 continue;
             }
 
@@ -355,10 +354,10 @@ abstract class TableList
                 $value .= $this->renderRowActions($row);
             }
 
-            $html .= "<td class=\"{$css}\" data-colname=\"{$col->label}\">{$value}</td>";
+            $html .= "<div class=\"table-td {$css}\" data-colname=\"{$col->label}\" role=\"gridcell\">{$value}</div>";
         }
 
-        $html .= '</tr>';
+        $html .= '</div>';
         return $html;
     }
 

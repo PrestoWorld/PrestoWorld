@@ -64,24 +64,66 @@ abstract class AdminController
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>{$title} — Optilarity Admin</title>
+            <title>{$title} — DigitalCore Admin</title>
             <style>
                 {$this->adminCss()}
             </style>
         </head>
         <body class="presto-admin">
-            {$this->adminNav()}
-            <div class="presto-admin-wrap">
-                <div class="presto-admin-header">
-                    {$breadcrumbHtml}
-                    <div class="presto-admin-title-bar">
-                        <h1 class="presto-admin-title">{$title}</h1>
-                        {$addBtn}
+            <div class="presto-admin-layout">
+                <aside class="presto-sidebar">
+                    <div class="presto-sidebar-brand">
+                        <svg width="24" height="24" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect width="32" height="32" rx="8" fill="#6366f1"/>
+                            <path d="M12 10H20C21.1046 10 22 10.8954 22 12V20C22 21.1046 21.1046 22 20 22H12C10.8954 22 10 21.1046 10 20V12C10 10.8954 10.8954 10 12 10Z" stroke="white" stroke-width="2"/>
+                        </svg>
+                        Digital<span>Core.</span>
                     </div>
-                </div>
-                <div class="presto-admin-content">
-                    {$content}
-                </div>
+                    {$this->adminNav()}
+                    <div class="sidebar-footer">
+                        <div class="nav-user-profile">
+                            <div class="avatar" style="background: linear-gradient(135deg, #6366f1, #a855f7);">AD</div>
+                            <div class="info">
+                                <span class="name">Alexander Dev</span>
+                                <span class="role">Super Admin</span>
+                            </div>
+                            <button class="logout-btn">
+                                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                </aside>
+                <main class="presto-main-wrapper">
+                    <header class="presto-main-header">
+                        <div class="header-breadcrumb">
+                            {$breadcrumbHtml}
+                        </div>
+                        <div class="header-actions">
+                            <div class="header-search">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                <input type="text" placeholder="Tìm kiếm License key, tên khách hàng...">
+                            </div>
+                            <div class="header-notif">
+                                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                <span class="pulse"></span>
+                            </div>
+                            {$addBtn}
+                        </div>
+                    </header>
+                    <div class="presto-content-area">
+                        <h1 class="page-title">{$title}</h1>
+                        {$content}
+                        
+                        <footer class="presto-admin-footer">
+                            <div class="footer-left">
+                                <strong>DigitalCore</strong> v2.4.0 — Premium Admin Experience
+                            </div>
+                            <div class="footer-right">
+                                Created with &hearts; by DeepMind & Optilarity Team
+                            </div>
+                        </footer>
+                    </div>
+                </main>
             </div>
             <script>{$this->adminJs()}</script>
         </body>
@@ -91,38 +133,39 @@ abstract class AdminController
 
     protected function adminNav(): string
     {
-        $links = [
-            ['label' => '🏠 Dashboard',       'url' => '/dashboard'],
-            ['label' => '👥 Customers',        'url' => '/dashboard/customers'],
-            ['label' => '📦 Orders',           'url' => '/dashboard/orders'],
-            ['label' => '🧾 Invoices',         'url' => '/dashboard/invoices'],
-            ['label' => '🔑 Licenses',         'url' => '/dashboard/licenses'],
-            ['label' => '💎 Memberships',      'url' => '/dashboard/memberships'],
-            ['label' => '🛍️ Catalog',          'url' => '/dashboard/catalog'],
-            ['label' => '🪝 Webhooks',         'url' => '/dashboard/webhooks'],
-            ['label' => '👤 Profile',          'url' => '/dashboard/profile'],
+        $groups = [
+            'Sản phẩm & License' => [
+                ['label' => 'Dashboard',    'url' => '/dashboard',          'icon' => '📊'],
+                ['label' => 'Themes Manager', 'url' => '/dashboard/catalog?type=theme', 'icon' => '🎨'],
+                ['label' => 'Plugins Repository', 'url' => '/dashboard/catalog?type=plugin', 'icon' => '🔌'],
+                ['label' => 'Software Licenses', 'url' => '/dashboard/licenses', 'icon' => '💻'],
+                ['label' => 'Gói Thành Viên', 'url' => '/dashboard/memberships', 'icon' => '💎'],
+            ],
+            'Kinh doanh' => [
+                ['label' => 'License Keys',  'url' => '/dashboard/licenses',   'icon' => '🔑'],
+                ['label' => 'Đơn hàng',      'url' => '/dashboard/orders',     'icon' => '🛒'],
+                ['label' => 'Khách hàng',    'url' => '/dashboard/customers',  'icon' => '👥'],
+                ['label' => 'Hóa đơn',       'url' => '/dashboard/invoices',   'icon' => '📄'],
+            ],
+            'Hệ thống' => [
+                ['label' => 'API Keys (Updater)', 'url' => '/dashboard/profile', 'icon' => '⚡'],
+                ['label' => 'Webhooks',      'url' => '/dashboard/webhooks',   'icon' => '🪝'],
+            ]
         ];
 
         $current = $_SERVER['REQUEST_URI'] ?? '';
-        $items   = '';
-        foreach ($links as $link) {
-            $active = ($current === $link['url'] || str_starts_with($current, $link['url'] . '/')) ? ' active' : '';
-            $items .= "<a href=\"{$link['url']}\" class=\"presto-nav-item{$active}\">{$link['label']}</a>";
+        $html = '<div class="presto-nav-groups">';
+        foreach ($groups as $groupLabel => $links) {
+            $html .= "<div class='nav-group-title'>{$groupLabel}</div>";
+            foreach ($links as $link) {
+                $active = ($current === $link['url'] || str_starts_with($current, $link['url'] . '?')) ? ' active' : '';
+                $html .= "<a href=\"{$link['url']}\" class=\"presto-nav-item{$active}\">";
+                $html .= "<span class='nav-icon'>{$link['icon']}</span> <span class='nav-label'>{$link['label']}</span>";
+                $html .= "</a>";
+            }
         }
-
-        return <<<HTML
-        <nav class="presto-admin-nav">
-            <div class="presto-nav-brand">Digital<span>Core.</span></div>
-            <div class="presto-nav-links">{$items}</div>
-            <div class="presto-nav-user">
-                <div class="user-avatar" style="background: linear-gradient(135deg, #6366f1, #a855f7);">AD</div>
-                <div class="user-info">
-                    <span class="user-name">Alexander Dev</span>
-                    <span class="user-role">Super Admin</span>
-                </div>
-            </div>
-        </nav>
-HTML;
+        $html .= '</div>';
+        return $html;
     }
 
     // =========================================================================
@@ -268,118 +311,212 @@ HTML;
     protected function adminCss(): string
     {
         return <<<CSS
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         :root {
-            --bg-body: #0a0c10;
-            --bg-card: #12151c;
-            --bg-nav: #0d0f14;
-            --border: rgba(255,255,255,0.08);
-            --text-main: #f8fafc;
-            --text-dim: #94a3b8;
+            --bg-deep: #06080c;
+            --bg-side: #0b0e14;
+            --bg-card: rgba(18, 22, 31, 0.85);
+            --bg-card-hover: rgba(26, 31, 46, 0.95);
             --primary: #6366f1;
-            --primary-light: #818cf8;
+            --primary-700: #4f46e5;
+            --primary-glow: rgba(99, 102, 241, 0.25);
+            --border: rgba(255, 255, 255, 0.08);
+            --border-light: rgba(255, 255, 255, 0.15);
+            --text-main: #f1f5f9;
+            --text-dim: #94a3b8;
+            --text-muted: #64748b;
             --success: #10b981;
             --danger: #ef4444;
             --warning: #f59e0b;
+            --sidebar-width: 260px;
+            --radius-xl: 32px;
+            --radius-lg: 18px;
+            --radius-md: 12px;
         }
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        body.presto-admin { font-family: 'Inter', sans-serif; font-size: 14px; background: var(--bg-body); color: var(--text-main); min-height: 100vh; }
-
-        /* Nav */
-        .presto-admin-nav { background: var(--bg-nav); color: var(--text-main); display: flex; align-items: center; padding: 0 32px; height: 64px; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid var(--border); gap: 40px; }
-        .presto-nav-brand { font-size: 20px; font-weight: 800; color: #fff; white-space: nowrap; }
-        .presto-nav-brand span { color: var(--primary); }
-        .presto-nav-links { display: flex; align-items: center; gap: 4px; flex: 1; overflow-x: auto; }
-        .presto-nav-item { color: var(--text-dim); text-decoration: none; padding: 8px 16px; border-radius: 10px; font-size: 13px; font-weight: 500; white-space: nowrap; transition: 0.2s; }
-        .presto-nav-item:hover, .presto-nav-item.active { background: rgba(99,102,241,0.12); color: var(--primary-light); }
-        .presto-nav-user { display: flex; align-items: center; gap: 12px; padding-left: 20px; border-left: 1px solid var(--border); }
-        .user-avatar { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; color: #fff; }
-        .user-info { display: flex; flex-direction: column; }
-        .user-name { font-size: 13px; font-weight: 600; }
-        .user-role { font-size: 11px; color: var(--text-dim); }
-
-        /* Wrap / header */
-        .presto-admin-wrap { max-width: 1600px; margin: 0 auto; padding: 32px 40px; }
-        .presto-admin-header { margin-bottom: 32px; }
-        .presto-breadcrumbs { font-size: 12px; color: var(--text-dim); margin-bottom: 12px; }
-        .presto-breadcrumbs a { color: var(--primary); text-decoration: none; }
-        .presto-admin-title-bar { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
-        .presto-admin-title { font-size: 28px; font-weight: 800; letter-spacing: -0.02em; }
-        .section-title { font-size: 18px; font-weight: 700; margin: 40px 0 20px; color: var(--text-main); display: flex; align-items: center; gap: 10px; }
-
-        /* Buttons */
-        .presto-btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 12px; font-size: 13px; font-weight: 600; border: 1px solid transparent; cursor: pointer; text-decoration: none; transition: 0.2s; }
-        .presto-btn-primary { background: var(--primary); color: #fff; }
-        .presto-btn-primary:hover { background: #4f46e5; transform: translateY(-1px); }
-        .presto-btn-secondary { background: rgba(255,255,255,0.05); color: var(--text-main); border-color: var(--border); }
-        .presto-btn-secondary:hover { background: rgba(255,255,255,0.1); }
-        .btn-ghost-sm { background: none; border: none; color: var(--text-dim); font-size: 12px; font-weight: 500; cursor: pointer; transition: 0.2s; padding: 4px 0; }
-        .btn-ghost-sm:hover { color: var(--primary-light); }
-
-        /* Card */
-        .presto-card { background: var(--bg-card); border-radius: 20px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.2); margin-bottom: 24px; overflow: hidden; }
-        .presto-card-header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
-        .presto-card-title { font-size: 16px; font-weight: 700; }
-        .presto-card-body { padding: 24px; }
-        .p-0 { padding: 0 !important; }
-
-        /* Premium Stat Card */
-        .presto-dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
-        .stat-card-premium { display: flex; align-items: center; justify-content: space-between; padding: 24px; }
-        .stat-main { display: flex; flex-direction: column; }
-        .stat-label { font-size: 13px; color: var(--text-dim); font-weight: 500; margin-bottom: 8px; }
-        .stat-value { font-size: 32px; font-weight: 800; line-height: 1; margin-bottom: 8px; }
-        .stat-trend { font-size: 12px; font-weight: 600; }
-        .trend-up { color: var(--success); }
-        .stat-icon-wrap { width: 48px; height: 48px; border-radius: 12px; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; font-size: 20px; }
-        .stat-card-premium.danger { border-left: 4px solid var(--danger); }
-
-        /* Category Card */
-        .presto-category-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; }
-        .category-card .cat-header { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
-        .cat-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
-        .cat-title-group h3 { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
-        .cat-stats { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
-        .cat-stat { display: flex; justify-content: space-between; font-size: 13px; color: var(--text-dim); }
-        .cat-stat strong { color: var(--text-main); }
-        .cat-progress { margin-top: 16px; }
-        .progress-label { display: flex; justify-content: space-between; font-size: 11px; font-weight: 600; text-transform: uppercase; margin-bottom: 6px; color: var(--text-dim); }
-        .progress-bar { height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; overflow: hidden; }
-        .progress-fill { height: 100%; background: var(--primary); border-radius: 3px; }
-        .cat-footer { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
-
-        /* List Table */
-        .presto-list-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        .presto-list-table th { text-align: left; padding: 16px 24px; font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-dim); border-bottom: 1px solid var(--border); letter-spacing: 0.05em; }
-        .presto-list-table td { padding: 16px 24px; border-bottom: 1px solid var(--border); color: var(--text-main); }
-        .presto-list-table tr:hover { background: rgba(255,255,255,0.02); }
-        code { background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-family: monospace; color: var(--primary-light); }
-
-        /* Badge Custom */
-        .badge { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
-        .badge-active { background: rgba(16,185,129,0.15); color: var(--success); }
-        .badge-software { background: rgba(99,102,241,0.15); color: var(--primary-light); }
-        .badge-plugin { background: rgba(59,130,246,0.15); color: #60a5fa; }
-        .badge-membership { background: rgba(245,158,11,0.15); color: var(--warning); }
-
-        /* Dashboard Bottom Layout */
-        .dashboard-bottom-row { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-top: 24px; }
-        .card-tabs { display: flex; gap: 8px; }
-        .tab-btn { background: rgba(255,255,255,0.05); border: none; color: var(--text-dim); padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; }
-        .tab-btn.active { background: var(--primary); color: #fff; }
-
-        /* Donut Mock */
-        .donut-chart-mock { width: 150px; height: 150px; border-radius: 50%; border: 15px solid var(--primary); margin: 20px auto; position: relative; display: flex; align-items: center; justify-content: center; border-left-color: var(--success); border-bottom-color: var(--warning); border-right-color: #ec4899; }
-        .donut-inner { font-size: 20px; font-weight: 800; }
-        .chart-legend { list-style: none; margin-top: 20px; display: flex; flex-direction: column; gap: 10px; }
-        .chart-legend li { display: flex; align-items: center; justify-content: space-between; font-size: 13px; color: var(--text-dim); }
-        .dot { width: 8px; height: 8px; border-radius: 50%; margin-right: 10px; display: inline-block; }
+        body.presto-admin { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg-deep); color: var(--text-main); font-size: 14px; -webkit-font-smoothing: antialiased; letter-spacing: -0.01em; }
         
-        /* Form Overrides for Dark Theme */
-        .presto-input, .presto-select { background: rgba(0,0,0,0.2); border-color: var(--border); color: var(--text-main); }
-        .presto-input:focus { border-color: var(--primary); background: rgba(0,0,0,0.3); }
-        .presto-field-label { color: var(--text-main); }
-        CSS;
+        .presto-admin a { color: var(--primary); text-decoration: none; transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
+        .presto-admin a:hover { color: #818cf8; }
+
+        /* Layout Structure */
+        .presto-admin-layout { display: flex; min-height: 100vh; background: radial-gradient(circle at 10% 10%, rgba(99, 102, 241, 0.08) 0%, transparent 40%), radial-gradient(circle at 90% 90%, rgba(168, 85, 247, 0.08) 0%, transparent 40%); }
+        
+        /* Sidebar Design */
+        .presto-sidebar { width: var(--sidebar-width); background: var(--bg-side); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: fixed; height: 100vh; z-index: 1000; box-shadow: 10px 0 40px rgba(0,0,0,0.4); }
+        .presto-sidebar-brand { padding: 48px 24px; font-size: 24px; font-weight: 800; display: flex; align-items: center; gap: 14px; letter-spacing: -0.04em; }
+        .presto-sidebar-brand span { color: var(--primary); }
+        
+        .presto-nav-groups { padding: 0 14px; flex: 1; overflow-y: auto; scrollbar-width: none; }
+        .presto-nav-groups::-webkit-scrollbar { display: none; }
+        .nav-group-title { padding: 40px 14px 14px; font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.15em; opacity: 0.8; }
+        .presto-nav-item { display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-radius: 16px; color: var(--text-dim); text-decoration: none; font-weight: 600; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); margin-bottom: 6px; }
+        .presto-nav-item:hover { background: rgba(255,255,255,0.04); color: var(--text-main); transform: translateX(5px); }
+        .presto-nav-item.active { background: linear-gradient(135deg, rgba(99, 102, 241, 0.18) 0%, rgba(99, 102, 241, 0.06) 100%); color: var(--primary); box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.25); position: relative; }
+        .presto-nav-item.active::after { content: ''; position: absolute; left: 0; top: 14px; bottom: 14px; width: 4px; background: var(--primary); border-radius: 0 4px 4px 0; box-shadow: 0 0 15px var(--primary-glow); }
+        .nav-icon { font-size: 18px; opacity: 0.7; transition: 0.3s; }
+        .presto-nav-item.active .nav-icon { opacity: 1; filter: drop-shadow(0 0 8px var(--primary-glow)); }
+        
+        .sidebar-footer { padding: 32px 14px; border-top: 1px solid var(--border); }
+        .nav-user-profile { display: flex; align-items: center; gap: 14px; padding: 16px; background: rgba(0,0,0,0.3); border-radius: 20px; border: 1px solid var(--border); box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+        .nav-user-profile .avatar { width: 38px; height: 38px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; color: #fff; background: linear-gradient(135deg, #6366f1, #a855f7); box-shadow: 0 5px 15px rgba(99, 102, 241, 0.3); }
+        .nav-user-profile .info { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+        .nav-user-profile .name { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #fff; }
+        .nav-user-profile .role { font-size: 11px; color: var(--text-muted); font-weight: 600; }
+        .logout-btn { background: rgba(255,255,255,0.04); border: none; color: var(--text-muted); cursor: pointer; padding: 8px; border-radius: 10px; transition: 0.25s; }
+        .logout-btn:hover { background: rgba(239, 68, 68, 0.15); color: var(--danger); transform: scale(1.1); }
+
+        /* Main Content Wrapper */
+        .presto-main-wrapper { flex: 1; margin-left: var(--sidebar-width); display: flex; flex-direction: column; }
+        .presto-main-header { padding: 24px 48px; border-bottom: 1px solid var(--border); background: rgba(6, 8, 12, 0.85); backdrop-filter: blur(25px); position: sticky; top: 0; z-index: 900; display: flex; align-items: center; justify-content: space-between; gap: 40px; }
+        
+        .header-search { flex: 1; max-width: 500px; position: relative; display: flex; align-items: center; }
+        .header-search svg { position: absolute; left: 18px; color: var(--text-muted); pointer-events: none; }
+        .header-search input { width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 14px 20px 14px 50px; color: var(--text-main); outline: none; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); font-weight: 600; }
+        .header-search input:focus { border-color: var(--primary); box-shadow: 0 0 0 5px var(--primary-glow); background: rgba(0,0,0,0.45); }
+        
+        .header-actions { display: flex; align-items: center; gap: 32px; }
+        .header-notif { position: relative; color: var(--text-muted); cursor: pointer; transition: 0.25s; }
+        .header-notif:hover { color: var(--text-main); transform: translateY(-2px); }
+        .header-notif .pulse { position: absolute; top: -2px; right: -2px; width: 10px; height: 10px; background: var(--danger); border-radius: 50%; border: 3px solid #06080c; }
+
+        .presto-content-area { padding: 48px 64px; }
+        .page-title { font-size: 38px; font-weight: 800; margin-bottom: 48px; letter-spacing: -0.05em; background: linear-gradient(to right, #fff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .section-title { font-size: 24px; font-weight: 800; margin: 64px 0 32px; display: flex; align-items: center; gap: 20px; letter-spacing: -0.02em; }
+
+        /* Premium Buttons */
+        .presto-btn { display: inline-flex; align-items: center; gap: 10px; padding: 14px 32px; border-radius: var(--radius-lg); font-size: 14px; font-weight: 800; cursor: pointer; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); border: none; letter-spacing: -0.01em; }
+        .presto-btn-primary { background: linear-gradient(135deg, var(--primary) 0%, #4f46e5 100%); color: #fff; box-shadow: 0 10px 25px rgba(99, 102, 241, 0.35); }
+        .presto-btn-primary:hover { transform: translateY(-4px); box-shadow: 0 15px 35px rgba(99, 102, 241, 0.45); filter: brightness(1.1); }
+        .presto-btn-secondary { background: rgba(255,255,255,0.06); color: var(--text-main); border: 1px solid var(--border); backdrop-filter: blur(10px); }
+        .presto-btn-secondary:hover { background: rgba(255,255,255,0.1); border-color: var(--border-light); transform: translateY(-2px); }
+
+        /* Luxury Cards */
+        .presto-card { background: var(--bg-card); border-radius: var(--radius-xl); border: 1px solid var(--border); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; backdrop-filter: blur(25px); }
+        .presto-card:hover { border-color: var(--border-light); background: var(--bg-card-hover); transform: translateY(-8px); box-shadow: 0 40px 80px rgba(0,0,0,0.5); }
+        .presto-card-header { padding: 28px 40px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.02); }
+        .presto-card-title { font-size: 20px; font-weight: 800; letter-spacing: -0.02em; }
+        .presto-card-body { padding: 40px; }
+
+        /* Advanced Stat Cards */
+        .presto-dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 32px; }
+        .stat-card-premium { padding: 40px; display: flex; align-items: flex-start; justify-content: space-between; }
+        .stat-label { font-size: 13px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 18px; display: block; opacity: 0.8; }
+        .stat-value { font-size: 48px; font-weight: 800; line-height: 1; margin-bottom: 18px; display: block; color: #fff; background: linear-gradient(to bottom, #fff 40%, #94a3b8 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -0.05em; }
+        .stat-trend { font-size: 12px; font-weight: 800; background: rgba(16, 185, 129, 0.15); color: var(--success); padding: 6px 14px; border-radius: 12px; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.1); }
+        .stat-trend.trend-neutral { background: rgba(255,255,255,0.08); color: var(--text-dim); }
+        .stat-icon-wrap { width: 68px; height: 68px; border-radius: 22px; background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%); display: flex; align-items: center; justify-content: center; font-size: 30px; box-shadow: inset 0 0 25px rgba(255,255,255,0.03); }
+
+        /* Data Tables Design */
+        .presto-table-topbar { display: flex; align-items: center; justify-content: space-between; gap: 32px; margin-bottom: 48px; width: 100%; }
+        .presto-table-topbar-actions { display: flex; align-items: center; }
+        
+        .presto-search-box { display: flex; gap: 12px; align-items: center; }
+        .search-input-wrap { position: relative; display: flex; align-items: center; flex: 1; min-width: 320px; }
+        .search-icon { position: absolute; left: 18px; color: var(--text-muted); pointer-events: none; z-index: 10; }
+        .search-input-wrap input { width: 100%; height: 52px; background: rgba(0,0,0,0.25); border: 1px solid var(--border); border-radius: 16px; padding: 0 20px 0 52px; color: #fff; font-size: 14px; font-weight: 600; outline: none; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); backdrop-filter: blur(10px); }
+        .search-input-wrap input:focus { border-color: var(--primary); box-shadow: 0 0 0 5px var(--primary-glow); background: rgba(0,0,0,0.4); }
+        .presto-search-box .presto-btn { height: 52px; padding: 0 32px; white-space: nowrap; }
+
+        .presto-table-wrap { background: var(--bg-card); border-radius: var(--radius-xl); border: 1px solid var(--border); overflow: hidden; backdrop-filter: blur(25px); box-shadow: 0 25px 50px rgba(0,0,0,0.4); margin-bottom: 40px; }
+        .presto-list-table { width: 100%; display: flex; flex-direction: column; }
+        .table-tr { display: flex; align-items: center; border-bottom: 1px solid var(--border); transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+        .table-head .table-tr { background: rgba(0,0,0,0.2); }
+        .table-body .table-tr:hover { background: rgba(255,255,255,0.035); }
+        .table-body .table-tr:last-child { border-bottom: none; }
+        
+        .table-th, .table-td { padding: 28px 48px; flex: 1; min-width: 0; position: relative; }
+        .table-th { font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.15em; }
+        .table-td { font-size: 15px; color: var(--text-main); font-weight: 600; }
+        .table-td strong { color: #fff; font-weight: 800; }
+        
+        .column-primary { flex: 2; }
+        .check-column { flex: 0 0 100px; padding: 28px 0 !important; display: flex; align-items: center; justify-content: center; }
+        .check-column input[type="checkbox"] { width: 18px; height: 18px; border-radius: 6px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); appearance: none; cursor: pointer; position: relative; transition: 0.3s; }
+        .check-column input[type="checkbox"]:checked { background: var(--primary); border-color: var(--primary); }
+        .check-column input[type="checkbox"]:checked::after { content: "✓"; position: absolute; color: #fff; font-size: 11px; font-weight: 900; left: 50%; top: 50%; transform: translate(-50%, -50%); }
+        
+        /* Modern Filter Tabs */
+        .presto-subsubsub { display: flex; list-style: none; gap: 8px; background: rgba(0,0,0,0.25); padding: 8px; border-radius: 18px; border: 1px solid var(--border); margin-bottom: 0px; width: fit-content; box-shadow: 0 10px 30px rgba(0,0,0,0.2); height: 52px; align-items: center; }
+        .presto-subsubsub li a { display: block; padding: 10px 24px; border-radius: 12px; font-size: 14px; font-weight: 800; color: var(--text-muted); text-decoration: none; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .presto-subsubsub li a:hover { color: #fff; background: rgba(255,255,255,0.05); }
+        .presto-subsubsub li a.current { background: var(--primary); color: #fff; box-shadow: 0 8px 20px var(--primary-glow); }
+        .presto-subsubsub .count { opacity: 0.7; font-size: 11px; margin-left: 8px; font-weight: 800; background: rgba(255,255,255,0.15); padding: 2px 8px; border-radius: 8px; color: #fff; }
+
+        /* Pagination Flow */
+        .tablenav { display: flex; align-items: center; justify-content: space-between; padding: 28px 40px; background: rgba(0,0,0,0.15); }
+        .tablenav.top { border-bottom: 1px solid var(--border); }
+        .tablenav.bottom { border-top: 1px solid var(--border); }
+        .tablenav select { background: rgba(0,0,0,0.4); border: 1px solid var(--border); border-radius: 14px; padding: 12px 20px; color: #fff; font-weight: 700; outline: none; margin-right: 20px; cursor: pointer; font-size: 13px; }
+        
+        .tablenav-pages { display: flex; align-items: center; gap: 24px; font-weight: 800; color: var(--text-muted); font-size: 14px; }
+        .pagination-links { display: flex; gap: 8px; }
+        .pagination-links .button { min-width: 44px; height: 44px; background: rgba(255,255,255,0.06); border: 1px solid var(--border); border-radius: 15px; display: inline-flex; align-items: center; justify-content: center; color: #fff; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); font-size: 22px; }
+        .pagination-links .button:hover { background: var(--primary); border-color: var(--primary); transform: translateY(-4px); box-shadow: 0 10px 20px var(--primary-glow); }
+
+        /* Interactive Row Actions */
+        .row-actions { opacity: 0; transition: 0.3s; margin-top: 12px; font-size: 12px; display: flex; gap: 16px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
+        .table-tr:hover .row-actions { opacity: 0.95; }
+        .row-actions a { color: var(--text-muted); text-decoration: none; }
+        .row-actions a:hover { color: var(--primary); text-shadow: 0 0 10px var(--primary-glow); }
+        .row-actions .action-delete a:hover { color: var(--danger); text-shadow: 0 0 10px rgba(239, 68, 68, 0.3); }
+
+        /* Custom UI Components */
+        .badge { display: inline-flex; align-items: center; padding: 6px 14px; border-radius: 12px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .badge-active { background: rgba(16, 185, 129, 0.18); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.1); }
+        .badge-software { background: rgba(99, 102, 241, 0.18); color: var(--primary); border: 1px solid rgba(99, 102, 241, 0.1); }
+        .badge-membership { background: rgba(245, 158, 11, 0.18); color: var(--warning); border: 1px solid rgba(245, 158, 11, 0.1); }
+        
+        .presto-notice { padding: 18px 24px; border-radius: 18px; margin-bottom: 32px; font-weight: 700; display: flex; align-items: center; gap: 14px; border: 1px solid var(--border); backdrop-filter: blur(10px); }
+        .presto-notice-info { background: rgba(99, 102, 241, 0.1); color: var(--primary); border-color: rgba(99, 102, 241, 0.2); }
+        .presto-notice-success { background: rgba(16, 185, 129, 0.1); color: var(--success); border-color: rgba(16, 185, 129, 0.2); }
+
+        /* Dynamic Visuals */
+        .donut-chart-mock { width: 220px; height: 220px; border-radius: 50%; background: conic-gradient(var(--primary) 0% 45%, var(--success) 45% 75%, var(--warning) 75% 92%, #ec4899 92% 100%); margin: 48px auto; position: relative; display: flex; align-items: center; justify-content: center; box-shadow: 0 30px 60px rgba(0,0,0,0.6); }
+        .donut-chart-mock::before { content: ""; width: 160px; height: 160px; background: #0b0e14; border-radius: 50%; position: absolute; box-shadow: inset 0 0 30px rgba(0,0,0,0.5); }
+        .donut-inner { position: relative; font-size: 32px; font-weight: 800; color: #fff; letter-spacing: -0.06em; }
+
+        /* Product Categories Grid & Cards */
+        .presto-category-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 32px; margin: 40px 0 64px; }
+        .category-card { padding: 32px; display: flex; flex-direction: column; height: 100%; border-radius: 28px; }
+        .category-card:hover { transform: translateY(-6px); }
+        
+        .cat-header { display: flex; align-items: center; gap: 20px; margin-bottom: 28px; }
+        .cat-icon { width: 56px; height: 56px; border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 26px; box-shadow: 0 10px 20px rgba(0,0,0,0.3); flex-shrink: 0; }
+        .cat-title-group h3 { font-size: 18px; font-weight: 800; margin-bottom: 4px; color: #fff; letter-spacing: -0.02em; }
+        
+        .cat-stats { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; flex: 1; }
+        .cat-stat { display: flex; justify-content: space-between; font-size: 14px; color: var(--text-dim); font-weight: 600; }
+        .cat-stat strong { color: #fff; font-weight: 700; }
+        
+        .cat-progress { margin-top: auto; padding-top: 20px; }
+        .progress-label { display: flex; justify-content: space-between; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px; color: var(--text-muted); }
+        .progress-bar { height: 8px; background: rgba(0,0,0,0.3); border-radius: 4px; overflow: hidden; }
+        .progress-fill { height: 100%; border-radius: 4px; background: linear-gradient(to right, var(--primary), #a855f7); box-shadow: 0 0 15px var(--primary-glow); }
+        
+        .cat-footer { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); }
+        .btn-ghost-sm { background: rgba(255,255,255,0.03); border: 1px solid var(--border); color: var(--text-dim); font-size: 13px; font-weight: 700; cursor: pointer; transition: 0.2s; padding: 10px 16px; border-radius: 12px; width: 100%; text-align: center; }
+        .btn-ghost-sm:hover { background: rgba(255,255,255,0.08); color: #fff; border-color: var(--border-light); }
+
+        /* Dashboard Bottom Row & Components */
+        .dashboard-bottom-row { display: grid; grid-template-columns: 2fr 1fr; gap: 40px; margin-top: 80px; }
+        .card-tabs { display: flex; gap: 10px; background: rgba(0,0,0,0.35); padding: 8px; border-radius: 18px; border: 1px solid var(--border); }
+        .tab-btn { background: none; border: none; color: var(--text-muted); padding: 10px 24px; border-radius: 12px; font-size: 13px; font-weight: 800; cursor: pointer; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .tab-btn:hover { color: var(--text-main); background: rgba(255,255,255,0.08); }
+        .tab-btn.active { background: linear-gradient(135deg, var(--primary) 0%, #4f46e5 100%); color: #fff; box-shadow: 0 8px 20px var(--primary-glow); }
+        
+        .chart-legend { list-style: none; padding: 40px 0 0; display: flex; flex-direction: column; gap: 20px; }
+        .chart-legend li { display: flex; align-items: center; justify-content: space-between; font-size: 15px; font-weight: 700; color: var(--text-dim); }
+        .chart-legend .dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; margin-right: 16px; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
+        .chart-legend span { display: flex; align-items: center; }
+        
+        /* Utility Classes */
+        .p-0 { padding: 0 !important; }
+        .mt-64 { margin-top: 64px; }
+
+        /* Footer */
+        .presto-admin-footer { margin-top: 80px; padding-top: 32px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; color: var(--text-muted); font-size: 13px; font-weight: 600; }
+        .presto-admin-footer strong { color: var(--text-dim); }
         CSS;
     }
 
