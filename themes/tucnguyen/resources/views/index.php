@@ -118,7 +118,6 @@
                 <h2 style="font-size: 36px; font-weight: 800;">Enterprise Performance. Accessible Pricing.</h2>
             </div>
             <div class="pricing-grid">
-            <div class="pricing-grid">
                 <div class="price-card">
                     <div class="price-name">Essentials</div>
                     <div class="price-amt">$3.99 <span>/ month</span></div>

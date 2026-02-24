@@ -91,7 +91,7 @@
             left: 0;
             transform: translateY(10px);
             background: white;
-            min-width: 600px;
+            min-width: 850px;
             border-radius: 20px;
             box-shadow: 0 30px 60px rgba(0,0,0,0.12);
             border: 1px solid #f1f5f9;
@@ -102,9 +102,9 @@
             z-index: 1000;
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 25px;
+            gap: 30px;
         }
-        .nav-dropdown.wide-2col { min-width: 500px; grid-template-columns: repeat(2, 1fr); }
+        .nav-dropdown.wide-2col { min-width: 650px; grid-template-columns: repeat(2, 1fr); }
 
         .nav-dropdown.single-col { min-width: 250px; grid-template-columns: 1fr; }
         
@@ -113,6 +113,83 @@
             visibility: visible;
             transform: translateY(0);
         }
+
+        /* User Avatar & Dropdown */
+        .user-profile-nav {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 99px;
+            transition: 0.3s;
+        }
+        .user-profile-nav:hover { background: #f1f5f9; }
+        
+        .user-avatar-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+            border: 2px solid white;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        
+        .user-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            width: 240px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            border: 1px solid #f1f5f9;
+            padding: 10px;
+            margin-top: 10px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(10px);
+            transition: 0.3s;
+            z-index: 1001;
+        }
+        
+        .user-profile-nav:hover .user-dropdown {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        
+        .user-dropdown-header {
+            padding: 15px;
+            border-bottom: 1px solid #f1f5f9;
+            margin-bottom: 10px;
+        }
+        .user-dropdown-header .name { display: block; font-weight: 700; color: var(--dark); font-size: 14px; }
+        .user-dropdown-header .email { display: block; font-size: 12px; color: var(--gray); }
+        
+        .user-dropdown-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 15px;
+            border-radius: 10px;
+            text-decoration: none;
+            color: var(--dark);
+            font-size: 14px;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+        .user-dropdown-link:hover { background: #f8fafc; color: var(--primary); }
+        .user-dropdown-link i { font-size: 16px; }
+        .user-dropdown-link.logout { color: #ef4444; }
+        .user-dropdown-link.logout:hover { background: #fef2f2; color: #dc2626; }
 
         .dropdown-group-title {
             grid-column: span 1;
@@ -144,8 +221,8 @@
             flex-shrink: 0;
         }
         .dropdown-link .text { display: flex; flex-direction: column; }
-        .dropdown-link .title { font-weight: 700; font-size: 14px; margin-bottom: 2px; }
-        .dropdown-link .desc { font-size: 12px; color: var(--gray); font-weight: 400; line-height: 1.4; }
+        .dropdown-link .title { font-weight: 700; font-size: 14px; margin-bottom: 2px; white-space: nowrap; }
+        .dropdown-link .desc { font-size: 12px; color: var(--gray); font-weight: 400; line-height: 1.4; display: block; }
         .nav-arrow { font-size: 9px; margin-left: 6px; vertical-align: middle; }
     </style>
 </head>
@@ -213,6 +290,15 @@
                                         <span class="desc"><?php echo __('Extend site features'); ?></span>
                                     </div>
                                 </a>
+                                <?php if (is_vietnam()): ?>
+                                <a href="/web-mau" class="dropdown-link">
+                                    <div class="icon">🍱</div>
+                                    <div class="text">
+                                        <span class="title"><?php echo __('Website Templates'); ?></span>
+                                        <span class="desc"><?php echo __('Pre-made professional sites'); ?></span>
+                                    </div>
+                                </a>
+                                <?php endif; ?>
                             </div>
                             <div>
                                 <div class="dropdown-group-title"><?php echo __('Software & Tools'); ?></div>
@@ -296,8 +382,41 @@
             </nav>
             <div class="header-actions">
                 <?php include __DIR__ . '/lang-switcher.php'; ?>
-                <a href="/auth/login" class="btn-login"><?php echo __('Sign In'); ?></a>
-                <a href="/auth/register" class="btn-primary"><?php echo __('Get Started'); ?></a>
+                
+                <?php if (is_authenticated()): 
+                    $user = auth_user();
+                    $initials = strtoupper(substr($user['name'] ?? $user['email'] ?? 'U', 0, 2));
+                ?>
+                    <div class="user-profile-nav">
+                        <div class="user-avatar-circle">
+                            <?php echo $initials; ?>
+                        </div>
+                        <span class="nav-arrow" style="margin-left: -5px; color: var(--gray);">▼</span>
+                        
+                        <div class="user-dropdown">
+                            <div class="user-dropdown-header">
+                                <span class="name"><?php echo htmlspecialchars($user['name'] ?? 'User'); ?></span>
+                                <span class="email"><?php echo htmlspecialchars($user['email'] ?? ''); ?></span>
+                            </div>
+                            <a href="/portal" class="user-dropdown-link">
+                                <span>🏠</span> <?php echo __('Bảng điều khiển'); ?>
+                            </a>
+                            <a href="/portal/services" class="user-dropdown-link">
+                                <span>📦</span> <?php echo __('Dịch vụ của tôi'); ?>
+                            </a>
+                            <a href="/portal/profile" class="user-dropdown-link">
+                                <span>⚙️</span> <?php echo __('Cài đặt'); ?>
+                            </a>
+                            <div style="height: 1px; background: #f1f5f9; margin: 8px 0;"></div>
+                            <a href="/logout" class="user-dropdown-link logout">
+                                <span>🚪</span> <?php echo __('Đăng xuất'); ?>
+                            </a>
+                        </div>
+                    </div>
+                <?php else: ?>
+                    <a href="/login" class="btn-login"><?php echo __('Sign In'); ?></a>
+                    <a href="/register" class="btn-primary"><?php echo __('Get Started'); ?></a>
+                <?php endif; ?>
             </div>
         </div>
     </header>

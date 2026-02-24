@@ -1,0 +1,69 @@
+{
+    "tables": {
+        "optilarity_templates": {
+            "columns": {
+                "id": {
+                    "type": "primary",
+                    "increment": true
+                },
+                "name": {
+                    "type": "string",
+                    "size": 255
+                },
+                "slug": {
+                    "type": "string",
+                    "size": 255
+                },
+                "description": {
+                    "type": "text",
+                    "nullable": true
+                },
+                "category": {
+                    "type": "string",
+                    "size": 100,
+                    "nullable": true
+                },
+                "price": {
+                    "type": "decimal",
+                    "precision": 10,
+                    "scale": 2,
+                    "default": 0
+                },
+                "image_url": {
+                    "type": "string",
+                    "size": 500,
+                    "nullable": true
+                },
+                "demo_url": {
+                    "type": "string",
+                    "size": 500,
+                    "nullable": true
+                },
+                "features": {
+                    "type": "json",
+                    "nullable": true
+                },
+                "status": {
+                    "type": "string",
+                    "size": 20,
+                    "default": "active"
+                },
+                "created_at": {
+                    "type": "datetime"
+                },
+                "updated_at": {
+                    "type": "datetime",
+                    "nullable": true
+                }
+            },
+            "indexes": {
+                "idx_template_slug": {
+                    "columns": [
+                        "slug"
+                    ],
+                    "unique": true
+                }
+            }
+        }
+    }
+}

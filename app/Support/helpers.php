@@ -168,3 +168,46 @@ if (!function_exists('current_url_with_lang')) {
         return $url;
     }
 }
+
+if (!function_exists('is_vietnam')) {
+    /**
+     * Check if the current locale is Vietnamese.
+     */
+    function is_vietnam(): bool
+    {
+        return app()->translator()->getLocale() === 'vi';
+    }
+}
+
+if (!function_exists('current_locale')) {
+    /**
+     * Get the current application locale.
+     */
+    function current_locale(): string
+    {
+        return app()->translator()->getLocale();
+    }
+}
+
+if (!function_exists('auth_user')) {
+    /**
+     * Get the currently authenticated user.
+     */
+    function auth_user(): ?array
+    {
+        $auth = app(\Witals\Framework\Contracts\Auth\AuthContextInterface::class);
+        $token = $auth->getToken();
+        
+        return $token ? $token->getPayload() : null;
+    }
+}
+
+if (!function_exists('is_authenticated')) {
+    /**
+     * Check if the current user is authenticated.
+     */
+    function is_authenticated(): bool
+    {
+        return auth_user() !== null;
+    }
+}
