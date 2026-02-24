@@ -7,6 +7,7 @@ namespace Modules\SoftwareCatalog\Controllers;
 use Witals\Framework\Http\Request;
 use Witals\Framework\Http\Response;
 use Cycle\Database\DatabaseProviderInterface;
+use Cake\Chronos\Chronos;
 
 class SoftwareCatalogController
 {
@@ -34,7 +35,7 @@ class SoftwareCatalogController
     {
         $data = (array)$request->post();
         $id = $this->dbal->database()->insert('optilarity_software_products')->values(array_merge($data, [
-            'created_at' => date('Y-m-d H:i:s')
+            'created_at' => Chronos::now()
         ]))->run();
         return Response::json(['id' => $id, 'success' => true]);
     }
@@ -43,7 +44,7 @@ class SoftwareCatalogController
     {
         $data = (array)$request->post();
         $this->dbal->database()->update('optilarity_software_products', array_merge($data, [
-            'updated_at' => date('Y-m-d H:i:s')
+            'updated_at' => Chronos::now()
         ]), ['id' => $id]);
         return Response::json(['success' => true]);
     }

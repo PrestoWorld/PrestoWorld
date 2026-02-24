@@ -7,6 +7,7 @@ namespace Modules\Webhooks\Controllers;
 use Witals\Framework\Http\Request;
 use Witals\Framework\Http\Response;
 use Cycle\Database\DatabaseProviderInterface;
+use Cake\Chronos\Chronos;
 
 class WebhookController
 {
@@ -42,7 +43,8 @@ class WebhookController
             'url'        => $data['url'] ?? '',
             'events'     => json_encode($data['events'] ?? []),
             'is_active'  => $data['is_active'] ?? 1,
-            'created_at' => date('Y-m-d H:i:s'),
+            'created_at' => Chronos::now(),
+            'updated_at' => Chronos::now(),
         ])->run();
 
         return Response::json(['id' => $id, 'success' => true]);
@@ -56,7 +58,7 @@ class WebhookController
             'url'        => $data['url'] ?? '',
             'events'     => json_encode($data['events'] ?? []),
             'is_active'  => $data['is_active'] ?? 1,
-            'updated_at' => date('Y-m-d H:i:s'),
+            'updated_at' => Chronos::now(),
         ], ['id' => $id]);
 
         return Response::json(['success' => true]);

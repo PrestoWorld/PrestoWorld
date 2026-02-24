@@ -90,3 +90,12 @@ if (!function_exists('path_join')) {
         return preg_replace('#/+#', '/', implode('/', array_filter($paths)));
     }
 }
+if (!function_exists('now')) {
+    /**
+     * Get a new Chronos instance for the current time
+     */
+    function now(): \Cake\Chronos\Chronos
+    {
+        return \Cake\Chronos\Chronos::now();
+    }
+}

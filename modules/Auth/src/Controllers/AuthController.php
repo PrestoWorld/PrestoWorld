@@ -7,6 +7,7 @@ namespace Modules\Auth\Controllers;
 use App\Http\Controllers\AuthController as BaseAuthController;
 use Witals\Framework\Http\Request;
 use Witals\Framework\Http\Response;
+use Cake\Chronos\Chronos;
 
 class AuthController extends BaseAuthController
 {
@@ -243,8 +244,8 @@ class AuthController extends BaseAuthController
                 'email'    => $email,
                 'password' => password_hash($password, PASSWORD_DEFAULT),
                 'role'     => 'admin', // Default for now
-                'created_at' => date('Y-m-d H:i:s'),
-                'updated_at' => date('Y-m-d H:i:s'),
+                'created_at' => Chronos::now(),
+                'updated_at' => Chronos::now(),
             ])->run();
 
             return Response::html('', 302, [

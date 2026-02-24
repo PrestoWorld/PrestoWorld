@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use Witals\Framework\Application;
 use Witals\Framework\Http\Request;
 use Witals\Framework\Http\Response;
+use Cake\Chronos\Chronos;
 use Witals\Framework\Contracts\Auth\AuthContextInterface;
 use Witals\Framework\Contracts\Auth\TokenStorageInterface;
 use Witals\Framework\Contracts\Auth\HttpTransportInterface;
@@ -326,8 +327,8 @@ class AuthController
         $authContext = $this->app->make(AuthContextInterface::class);
 
         $expiresAt = $remember
-            ? new \DateTimeImmutable('+30 days')
-            : new \DateTimeImmutable('+8 hours');
+            ? Chronos::now()->addDays(30)
+            : Chronos::now()->addHours(8);
 
         $token = $tokenStorage->create([
             'user_id' => $user['id'],
