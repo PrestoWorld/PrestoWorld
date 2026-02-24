@@ -39,38 +39,38 @@ class OrderAdminController extends AdminController
         }
 
         // 1. Fetch Related Hosting
-        $hostings = $db->select('h.*', 'p.name as plan_name')
-            ->from('optilarity_hosting_orders', 'ho')
-            ->innerJoin('optilarity_hostings', 'h')->on('ho.hosting_id', 'h.id')
-            ->leftJoin('optilarity_hosting_plans', 'p')->on('h.plan_id', 'p.id')
+        $hostings = $db->select('h.*', 'p.name AS plan_name')
+            ->from('optilarity_hosting_orders AS ho')
+            ->innerJoin('optilarity_hostings AS h')->on('ho.hosting_id', 'h.id')
+            ->leftJoin('optilarity_hosting_plans AS p')->on('h.plan_id', 'p.id')
             ->where('ho.order_id', $id)
             ->run()->fetchAll();
 
         // 2. Fetch Related Domains
         $domains = $db->select('d.*')
-            ->from('optilarity_domain_orders', 'do')
-            ->innerJoin('optilarity_domains', 'd')->on('do.domain_id', 'd.id')
+            ->from('optilarity_domain_orders AS do')
+            ->innerJoin('optilarity_domains AS d')->on('do.domain_id', 'd.id')
             ->where('do.order_id', $id)
             ->run()->fetchAll();
 
         // 3. Fetch Related SSL
         $ssls = $db->select('s.*')
-            ->from('optilarity_ssl_orders', 'so')
-            ->innerJoin('optilarity_ssl_certificates', 's')->on('so.ssl_id', 's.id')
+            ->from('optilarity_ssl_orders AS so')
+            ->innerJoin('optilarity_ssl_certificates AS s')->on('so.ssl_id', 's.id')
             ->where('so.order_id', $id)
             ->run()->fetchAll();
 
         // 4. Fetch Related Email
         $emails = $db->select('e.*')
-            ->from('optilarity_email_orders', 'eo')
-            ->innerJoin('optilarity_email_hosting', 'e')->on('eo.email_id', 'e.id')
+            ->from('optilarity_email_orders AS eo')
+            ->innerJoin('optilarity_email_hosting AS e')->on('eo.email_id', 'e.id')
             ->where('eo.order_id', $id)
             ->run()->fetchAll();
 
         // 5. Fetch Related Software
         $softwares = $db->select('s.*', 'so.license_key')
-            ->from('optilarity_software_orders', 'so')
-            ->innerJoin('optilarity_software_products', 's')->on('so.product_id', 's.id')
+            ->from('optilarity_software_orders AS so')
+            ->innerJoin('optilarity_software_products AS s')->on('so.product_id', 's.id')
             ->where('so.order_id', $id)
             ->run()->fetchAll();
 
