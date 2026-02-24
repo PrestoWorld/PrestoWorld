@@ -153,6 +153,7 @@ abstract class AdminController
                     ['label' => 'Đơn hàng',      'url' => '/dashboard/orders',     'icon' => '🛒'],
                     ['label' => 'Khách hàng',    'url' => '/dashboard/customers',  'icon' => '👥'],
                     ['label' => 'Hóa đơn',       'url' => '/dashboard/invoices',   'icon' => '📄'],
+                    ['label' => 'Cộng tác viên', 'url' => '/dashboard/affiliates', 'icon' => '🤝'],
                 ]
             ],
             'Sản phẩm Số' => [
@@ -162,6 +163,7 @@ abstract class AdminController
                     ['label' => 'Software Licenses', 'url' => '/dashboard/licenses', 'icon' => '💻'],
                     ['label' => 'Themes Manager', 'url' => '/dashboard/catalog?type=theme', 'icon' => '🎨'],
                     ['label' => 'Plugins Repository', 'url' => '/dashboard/catalog?type=plugin', 'icon' => '🔌'],
+                    ['label' => 'Quản lý Dịch vụ', 'url' => '/dashboard/web-services', 'icon' => '🛠️'],
                 ]
             ],
             'Dịch vụ Hạ tầng' => [

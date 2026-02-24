@@ -204,6 +204,22 @@ class Kernel implements KernelContract
             $postsError = 'ORM Error: ' . $e->getMessage();
         }
 
+        // Fetch Web Services
+        $webServices = [];
+        try {
+            if ($this->app->has(\Cycle\Database\DatabaseProviderInterface::class)) {
+                $db = $this->app->make(\Cycle\Database\DatabaseProviderInterface::class)->database();
+                $webServices = $db->select('*')
+                    ->from('optilarity_web_services')
+                    ->where('status', 'active')
+                    ->limit(4)
+                    ->run()
+                    ->fetchAll();
+            }
+        } catch (\Throwable $e) {
+            error_log("Home WebServices Error: " . $e->getMessage());
+        }
+
         // Use Theme Engine to render if not a JSON request
         if (str_contains($request->header('accept', ''), 'text/html') || !$request->header('accept')) {
             $themeManager = $this->app->make(\PrestoWorld\Theme\ThemeManager::class);
@@ -225,6 +241,7 @@ class Kernel implements KernelContract
             $html = $themeManager->render('index', [
                 'title' => $pageTitle, // Used filtered title
                 'posts' => $postsData,
+                'web_services' => $webServices,
                 'posts_error' => $postsError,
                 'themes' => $themeManager->all()
             ]);
