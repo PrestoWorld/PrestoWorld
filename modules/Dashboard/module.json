@@ -4,6 +4,9 @@
     "description": "Admin Dashboard Module",
     "priority": 5,
     "enabled": true,
+    "depends": [
+        "auth"
+    ],
     "autoload": {
         "psr-4": {
             "Modules\\Dashboard\\": "src/"
