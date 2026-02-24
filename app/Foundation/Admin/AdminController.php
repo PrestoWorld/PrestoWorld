@@ -78,6 +78,7 @@ abstract class AdminController
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>{$title} — DigitalCore Admin</title>
             {$this->assets->renderCss()}
+            <style>{$this->adminCss()}</style>
         </head>
         <body class="presto-admin">
             <div class="presto-admin-layout">
@@ -136,6 +137,7 @@ abstract class AdminController
                 </main>
             </div>
             {$this->assets->renderJs()}
+            <script>{$this->adminJs()}</script>
         </body>
         </html>
         HTML;
@@ -424,12 +426,51 @@ abstract class AdminController
         .nav-chevron { margin-left: auto; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); opacity: 0.4; }
         .is-open .nav-chevron { transform: rotate(180deg); opacity: 1; color: var(--primary); }
 
-        .presto-submenu { max-height: 0; overflow: hidden; transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1); padding-left: 12px; }
-        .is-open .presto-submenu { max-height: 500px; padding-bottom: 12px; }
-        .presto-submenu-item { display: flex; align-items: center; gap: 10px; padding: 10px 18px; border-radius: 12px; color: var(--text-muted); font-size: 13px; font-weight: 600; transition: 0.25s; margin-bottom: 2px; }
-        .presto-submenu-item:hover { color: var(--text-main); background: rgba(255,255,255,0.03); padding-left: 22px; }
-        .presto-submenu-item.active { color: var(--primary); font-weight: 700; background: rgba(99, 102, 241, 0.05); }
-        .sub-icon { font-size: 14px; opacity: 0.6; }
+        .presto-submenu { 
+            max-height: 0; 
+            overflow: hidden; 
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
+            padding-left: 14px;
+            display: flex;
+            flex-direction: column;
+            margin-top: -4px;
+            margin-bottom: 4px;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .is-open .presto-submenu { 
+            max-height: 800px; 
+            padding-bottom: 8px;
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .presto-submenu-item { 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+            padding: 12px 18px; 
+            border-radius: 12px; 
+            color: var(--text-muted); 
+            font-size: 13.5px; 
+            font-weight: 600; 
+            transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1); 
+            margin-bottom: 2px;
+            border-left: 2px solid transparent;
+        }
+        .presto-submenu-item:hover { 
+            color: var(--text-main); 
+            background: rgba(255,255,255,0.04); 
+            padding-left: 22px; 
+            border-left-color: rgba(99, 102, 241, 0.3);
+        }
+        .presto-submenu-item.active { 
+            color: var(--primary); 
+            font-weight: 700; 
+            background: rgba(99, 102, 241, 0.08); 
+            border-left-color: var(--primary);
+        }
+        .sub-icon { font-size: 14px; opacity: 0.5; width: 20px; text-align: center; }
+        .presto-submenu-item.active .sub-icon { opacity: 1; filter: drop-shadow(0 0 5px var(--primary-glow)); }
         
         .sidebar-footer { padding: 32px 14px; border-top: 1px solid var(--border); }
         .nav-user-profile { display: flex; align-items: center; gap: 14px; padding: 16px; background: rgba(0,0,0,0.3); border-radius: 20px; border: 1px solid var(--border); box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
