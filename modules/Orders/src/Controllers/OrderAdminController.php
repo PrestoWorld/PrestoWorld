@@ -174,7 +174,10 @@ HTML;
     /** GET /dashboard/orders/create */
     public function create(Request $request): Response
     {
-        $form = $this->renderForm([], '/dashboard/orders/create');
+        $plans = $this->db()->select('id', 'name')->from('optilarity_hosting_plans')->run()->fetchAll();
+        $softwares = $this->db()->select('id', 'name', 'type')->from('optilarity_software_products')->run()->fetchAll();
+        
+        $form = $this->renderForm([], '/dashboard/orders/create', 'POST', $plans, $softwares);
         return $this->htmlResponse(
             $this->adminPage('New Order', $form, ['breadcrumbs' => ['Orders' => '/dashboard/orders', 'New Order' => '']])
         );
@@ -184,8 +187,11 @@ HTML;
     public function store(Request $request): Response
     {
         $body = (array)$request->post();
+        $db = $this->db();
+        
         try {
-            $this->db()->insert('optilarity_orders')->values([
+            // 1. Create Order
+            $orderId = $db->insert('optilarity_orders')->values([
                 'order_number'   => 'ORD-' . strtoupper(uniqid()),
                 'customer_email' => $body['customer_email'] ?? '',
                 'customer_id'    => $body['customer_id']    ? (int)$body['customer_id'] : null,
@@ -198,10 +204,41 @@ HTML;
                 'currency'       => $body['currency']         ?? 'USD',
                 'notes'          => $body['notes']            ?? null,
                 'created_at'     => date('Y-m-d H:i:s'),
-            ])->run();
+            ])->run()->lastInsertID();
+
+            // 2. Handle Hosting Attachment
+            if (!empty($body['hosting_plan_id']) && !empty($body['hosting_domain'])) {
+                $hostingId = $db->insert('optilarity_hostings')->values([
+                    'customer_id' => $body['customer_id'] ? (int)$body['customer_id'] : 0,
+                    'plan_id'     => (int)$body['hosting_plan_id'],
+                    'domain'      => $body['hosting_domain'],
+                    'status'      => 'pending',
+                    'created_at'  => date('Y-m-d H:i:s'),
+                ])->run()->lastInsertID();
+
+                $db->insert('optilarity_hosting_orders')->values([
+                    'hosting_id' => $hostingId,
+                    'order_id'   => $orderId,
+                    'created_at' => date('Y-m-d H:i:s'),
+                ])->run();
+            }
+
+            // 3. Handle Software products attachment
+            if (!empty($body['software_ids']) && is_array($body['software_ids'])) {
+                foreach ($body['software_ids'] as $pid) {
+                    $db->insert('optilarity_software_orders')->values([
+                        'product_id' => (int)$pid,
+                        'order_id'   => $orderId,
+                        'created_at' => date('Y-m-d H:i:s'),
+                    ])->run();
+                }
+            }
+
             return $this->redirect('/dashboard/orders');
         } catch (\Throwable $e) {
-            $form = $this->notice("Error: {$e->getMessage()}", 'error') . $this->renderForm($body, '/dashboard/orders/create');
+            $plans = $db->select('id', 'name')->from('optilarity_hosting_plans')->run()->fetchAll();
+            $softwares = $db->select('id', 'name', 'type')->from('optilarity_software_products')->run()->fetchAll();
+            $form = $this->notice("Error: {$e->getMessage()}", 'error') . $this->renderForm($body, '/dashboard/orders/create', 'POST', $plans, $softwares);
             return $this->htmlResponse($this->adminPage('New Order', $form, ['breadcrumbs' => ['Orders' => '/dashboard/orders', 'New Order' => '']]));
         }
     }
@@ -213,7 +250,11 @@ HTML;
         if (!$row) {
             return $this->htmlResponse($this->adminPage('Not Found', $this->notice('Order not found.', 'error')), 404);
         }
-        $form = $this->renderForm((array)$row, "/dashboard/orders/{$id}/edit", 'PUT');
+        
+        $plans = $this->db()->select('id', 'name')->from('optilarity_hosting_plans')->run()->fetchAll();
+        $softwares = $this->db()->select('id', 'name', 'type')->from('optilarity_software_products')->run()->fetchAll();
+
+        $form = $this->renderForm((array)$row, "/dashboard/orders/{$id}/edit", 'PUT', $plans, $softwares);
         return $this->htmlResponse(
             $this->adminPage('Edit Order #' . $row['order_number'], $form, ['breadcrumbs' => ['Orders' => '/dashboard/orders', 'Edit' => '']])
         );
@@ -234,29 +275,43 @@ HTML;
             ], ['id' => $id]);
             return $this->redirect('/dashboard/orders');
         } catch (\Throwable $e) {
-            $form = $this->notice("Error: {$e->getMessage()}", 'error') . $this->renderForm($body, "/dashboard/orders/{$id}/edit", 'PUT');
+            $plans = $this->db()->select('id', 'name')->from('optilarity_hosting_plans')->run()->fetchAll();
+            $softwares = $this->db()->select('id', 'name', 'type')->from('optilarity_software_products')->run()->fetchAll();
+            $form = $this->notice("Error: {$e->getMessage()}", 'error') . $this->renderForm($body, "/dashboard/orders/{$id}/edit", 'PUT', $plans, $softwares);
             return $this->htmlResponse($this->adminPage('Edit Order', $form));
         }
     }
 
-    private function renderForm(array $data = [], string $action = '', string $method = 'POST'): string
+    private function renderForm(array $data = [], string $action = '', string $method = 'POST', array $plans = [], array $softwares = []): string
     {
         $statusOptions  = ['pending' => 'Pending', 'processing' => 'Processing', 'completed' => 'Completed', 'cancelled' => 'Cancelled', 'refunded' => 'Refunded'];
         $payStatusOpts  = ['pending' => 'Pending', 'paid' => 'Paid', 'failed' => 'Failed', 'refunded' => 'Refunded'];
         $currencyOpts   = ['USD' => 'USD', 'EUR' => 'EUR', 'GBP' => 'GBP', 'VND' => 'VND'];
 
-        $fields = $this->fieldGroup('Customer Email', $this->input('customer_email', 'email', $data['customer_email'] ?? ''))
+        $planOpts = ['' => '-- Không chọn --'];
+        foreach ($plans as $p) $planOpts[$p['id']] = $p['name'];
+
+        $swListHtml = '<div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">';
+        foreach ($softwares as $s) {
+            $checked = (isset($data['software_ids']) && in_array($s['id'], (array)$data['software_ids'])) ? 'checked' : '';
+            $swListHtml .= "<div><label><input type='checkbox' name='software_ids[]' value='{$s['id']}' {$checked}> {$s['name']} <small style='opacity:0.6'>({$s['type']})</small></label></div>";
+        }
+        $swListHtml .= '</div>';
+
+        $basicFields = $this->fieldGroup('Customer Email', $this->input('customer_email', 'email', $data['customer_email'] ?? ''))
                 . $this->fieldGroup('Status',          $this->select('status',         $statusOptions,  $data['status']          ?? 'pending'))
                 . $this->fieldGroup('Payment Status',  $this->select('payment_status', $payStatusOpts,  $data['payment_status']  ?? 'pending'))
-                . $this->fieldGroup('Payment Method',  $this->input('payment_method',  'text', $data['payment_method'] ?? ''))
-                . $this->fieldGroup('Transaction ID',  $this->input('transaction_id',  'text', $data['transaction_id'] ?? ''))
-                . $this->fieldGroup('Subtotal',        $this->input('subtotal', 'number', $data['subtotal'] ?? 0))
-                . $this->fieldGroup('Tax',             $this->input('tax',      'number', $data['tax']      ?? 0))
-                . $this->fieldGroup('Total',           $this->input('total',    'number', $data['total']    ?? 0))
+                . $this->fieldGroup('Total Payment',   $this->input('total',    'number', $data['total']    ?? 0))
                 . $this->fieldGroup('Currency',        $this->select('currency', $currencyOpts, $data['currency'] ?? 'USD'))
-                . $this->fieldGroup('Notes',           $this->textarea('notes', $data['notes'] ?? ''))
-                . $this->submitBar('Save Order', '/dashboard/orders');
+                . $this->fieldGroup('Internal Notes',  $this->textarea('notes', $data['notes'] ?? ''));
 
-        return $this->formCard('Order Details', $this->formOpen($action, $method) . $fields . $this->formClose());
+        $attachedFields = '<h3 class="section-title" style="margin-top:20px; font-size:18px;">Gắn dịch vụ & phần mềm</h3>'
+                . $this->fieldGroup('Chọn Hosting Plan', $this->select('hosting_plan_id', $planOpts, $data['hosting_plan_id'] ?? ''))
+                . $this->fieldGroup('Domain nạp Hosting', $this->input('hosting_domain', 'text', $data['hosting_domain'] ?? '', 'example.com'))
+                . '<div style="margin-top:15px;"><label style="font-weight:700; display:block; margin-bottom:10px;">Chọn Software/Plugins/Themes</label>' . $swListHtml . '</div>';
+
+        $footer = $this->submitBar('Save Order', '/dashboard/orders');
+
+        return $this->formCard('Order Information', $this->formOpen($action, $method) . $basicFields . $attachedFields . $footer . $this->formClose());
     }
 }
