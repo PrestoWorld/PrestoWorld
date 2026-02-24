@@ -71,7 +71,8 @@ class DashboardController extends AdminController
                     </div>
                 </div>
                 <div class="cat-stats">
-                    <div class="cat-stat"><span>Sản phẩm</span> <strong>15 Themes</strong></div>
+                    <div class="cat-stat"><span>Tổng sản phẩm</span> <strong>15 Themes</strong></div>
+                    <div class="cat-stat"><span>Phổ biến nhất</span> <strong>EcomBuilder</strong></div>
                     <div class="cat-stat"><span>Lượt tải</span> <strong>2.3k</strong></div>
                 </div>
                 <div class="cat-progress">
@@ -89,10 +90,11 @@ class DashboardController extends AdminController
                 </div>
                 <div class="cat-stats">
                     <div class="cat-stat"><span>Đang hoạt động</span> <strong>8 Plugins</strong></div>
-                    <div class="cat-stat"><span>Phiên bản mới nhất</span> <strong>v2.4.0</strong></div>
+                    <div class="cat-stat"><span>Lượt cài đặt</span> <strong>1.5k</strong></div>
+                    <div class="cat-stat"><span>Phiên bản v2.4.0</span> <strong>Ổn định</strong></div>
                 </div>
                 <div class="cat-footer">
-                    <button class="btn-ghost-sm">🔔 Đẩy bản cập nhật</button>
+                    <button class="btn-ghost-sm">📡 Đẩy bản cập nhật</button>
                 </div>
             </div>
             <div class="presto-card category-card">
@@ -106,9 +108,10 @@ class DashboardController extends AdminController
                 <div class="cat-stats">
                     <div class="cat-stat"><span>License vĩnh viễn</span> <strong>400</strong></div>
                     <div class="cat-stat"><span>License theo năm</span> <strong>1.2k</strong></div>
+                    <div class="cat-stat"><span>Phát hành mới</span> <strong>3 bản (tháng này)</strong></div>
                 </div>
                 <div class="cat-footer">
-                    <button class="btn-ghost-sm">+ Quản lý versions</button>
+                    <button class="btn-ghost-sm">🚀 Quản lý versions</button>
                 </div>
             </div>
             <div class="presto-card category-card">
@@ -120,12 +123,12 @@ class DashboardController extends AdminController
                     </div>
                 </div>
                 <div class="cat-stats">
-                    <div class="cat-stat"><span>Starter</span> <strong>100 users</strong></div>
-                    <div class="cat-stat"><span>Pro</span> <strong>500 users</strong></div>
-                    <div class="cat-stat"><span>Agency</span> <strong>200 users</strong></div>
+                    <div class="cat-stat"><span>Cá nhân (Starter)</span> <strong>100</strong></div>
+                    <div class="cat-stat"><span>Doanh nghiệp (Pro)</span> <strong>500</strong></div>
+                    <div class="cat-stat"><span>Đại lý (Agency)</span> <strong>200</strong></div>
                 </div>
                 <div class="cat-footer">
-                    <button class="btn-ghost-sm">⚙️ Cấu hình gói</button>
+                    <button class="btn-ghost-sm">⚙️ Cấu hình Membership</button>
                 </div>
             </div>
         </div>
