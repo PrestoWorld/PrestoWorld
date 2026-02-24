@@ -34,7 +34,10 @@ class AuthController
 
         $redirect = htmlspecialchars($request->query('redirect', '/dashboard'), ENT_QUOTES);
         $error = $request->query('error', '');
+        $success = $request->query('success', '');
+        
         $errorHtml = $error ? '<div class="alert-error">' . htmlspecialchars($error, ENT_QUOTES) . '</div>' : '';
+        $successHtml = $success ? '<div class="alert-success">' . htmlspecialchars($success, ENT_QUOTES) . '</div>' : '';
 
         $html = <<<HTML
         <!DOCTYPE html>
@@ -213,6 +216,16 @@ class AuthController
                     font-weight: 600;
                     margin-bottom: 24px;
                 }
+                .alert-success {
+                    background: rgba(16, 185, 129, 0.12);
+                    border: 1px solid rgba(16, 185, 129, 0.25);
+                    color: #6ee7b7;
+                    padding: 14px 20px;
+                    border-radius: 14px;
+                    font-size: 14px;
+                    font-weight: 600;
+                    margin-bottom: 24px;
+                }
                 .footer-text {
                     text-align: center;
                     margin-top: 32px;
@@ -241,6 +254,7 @@ class AuthController
                     <h1>Đăng nhập</h1>
                     <p class="subtitle">Truy cập bảng điều khiển quản trị của bạn</p>
 
+                    {$successHtml}
                     {$errorHtml}
 
                     <form method="POST" action="/login">
