@@ -44,7 +44,9 @@ class AdminAuthMiddleware
 
         // Check if user has admin role
         $actor = $this->auth->getActor();
-        if ($actor === null || !$this->isAdmin($actor)) {
+        $token = $this->auth->getToken();
+
+        if (!$this->isAdmin($actor, $token)) {
             return $this->forbidden();
         }
 
@@ -55,38 +57,35 @@ class AdminAuthMiddleware
     /**
      * Check if the actor has admin privileges
      */
-    protected function isAdmin(object $actor): bool
+    protected function isAdmin(?object $actor, ?\Witals\Framework\Contracts\Auth\TokenInterface $token = null): bool
     {
-        // Support multiple ways to check admin role
-        // 1. Method-based: $actor->isAdmin() or $actor->hasRole('admin')
-        if (method_exists($actor, 'isAdmin')) {
-            return $actor->isAdmin();
+        // 1. Check actor if available
+        if ($actor !== null) {
+            if (method_exists($actor, 'isAdmin')) {
+                return $actor->isAdmin();
+            }
+            if (method_exists($actor, 'hasRole')) {
+                return $actor->hasRole('admin') || $actor->hasRole('super_admin') || $actor->hasRole('administrator');
+            }
+            if (property_exists($actor, 'role')) {
+                return in_array($actor->role, ['admin', 'super_admin', 'administrator', 'editor'], true);
+            }
+            if ($actor instanceof \ArrayAccess && isset($actor['role'])) {
+                return in_array($actor['role'], ['admin', 'super_admin', 'administrator', 'editor'], true);
+            }
         }
 
-        if (method_exists($actor, 'hasRole')) {
-            return $actor->hasRole('admin') || $actor->hasRole('super_admin');
-        }
-
-        // 2. Property-based: $actor->role === 'admin'
-        if (property_exists($actor, 'role')) {
-            return in_array($actor->role, ['admin', 'super_admin', 'administrator'], true);
-        }
-
-        // 3. Array-access: $actor['role']
-        if ($actor instanceof \ArrayAccess && isset($actor['role'])) {
-            return in_array($actor['role'], ['admin', 'super_admin', 'administrator'], true);
-        }
-
-        // 4. Payload-based (from token)
-        $token = $this->auth->getToken();
+        // 2. Check token payload (Fallback or Direct)
         if ($token !== null) {
             $payload = $token->getPayload();
             $role = $payload['role'] ?? $payload['roles'] ?? null;
+            
             if (is_string($role)) {
-                return in_array($role, ['admin', 'super_admin', 'administrator'], true);
+                return in_array(strtolower($role), ['admin', 'super_admin', 'administrator', 'editor'], true);
             }
             if (is_array($role)) {
-                return !empty(array_intersect($role, ['admin', 'super_admin', 'administrator']));
+                $check = array_map('strtolower', $role);
+                return !empty(array_intersect($check, ['admin', 'super_admin', 'administrator', 'editor']));
             }
         }
 
