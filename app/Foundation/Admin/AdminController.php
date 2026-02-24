@@ -302,7 +302,7 @@ abstract class AdminController
         $req   = $required ? ' required' : '';
         $ph    = $placeholder ? " placeholder=\"{$placeholder}\"" : '';
         $val   = htmlspecialchars((string)$value, ENT_QUOTES);
-        return "<input type=\"{$type}\" name=\"{$name}\" id=\"field-{$name}\" value=\"{$val}\" class=\"presto-input\"{$ph}{$req}>";
+        return "<input type=\"{$type}\" name=\"{$name}\" id=\"field-{$name}\" value=\"{$val}\" class=\"presto-input\" autocomplete=\"off\"{$ph}{$req}>";
     }
 
     protected function textarea(string $name, mixed $value = '', string $placeholder = '', int $rows = 4): string
@@ -527,6 +527,50 @@ abstract class AdminController
         .presto-card-header { padding: 28px 40px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.02); }
         .presto-card-title { font-size: 20px; font-weight: 800; letter-spacing: -0.02em; }
         .presto-card-body { padding: 40px; }
+
+        /* Premium Form Controls */
+        .presto-form { display: flex; flex-direction: column; gap: 32px; }
+        .presto-field-group { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+        .presto-field-label { font-size: 13px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.1em; }
+        .presto-field-hint { font-size: 12px; color: var(--text-muted); margin-top: 6px; font-style: italic; }
+        
+        .presto-input, .presto-select, .presto-textarea {
+            width: 100%; background: rgba(0,0,0,0.2); border: 1px solid var(--border);
+            border-radius: 14px; padding: 16px 20px; color: #fff; font-size: 15px;
+            font-weight: 600; outline: none; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(5px);
+        }
+        .presto-input:focus, .presto-select:focus, .presto-textarea:focus {
+            border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-glow);
+            background: rgba(0,0,0,0.35);
+        }
+        .presto-input::placeholder { color: var(--text-muted); opacity: 0.5; }
+        
+        .presto-select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 20px center; padding-right: 50px; }
+        
+        .presto-textarea { min-height: 120px; resize: vertical; line-height: 1.6; }
+
+        .presto-form-section-head { margin: 48px 0 24px; padding-bottom: 16px; border-bottom: 2px solid var(--primary); display: flex; align-items: center; gap: 15px; }
+        .presto-form-section-head h3 { font-size: 20px; font-weight: 800; color: #fff; letter-spacing: -0.02em; }
+        .presto-form-section-head .icon-wrap { width: 36px; height: 36px; border-radius: 10px; background: var(--primary-glow); display: flex; align-items: center; justify-content: center; font-size: 18px; }
+
+        /* Grid System Utility */
+        .presto-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 32px; }
+        .col-12 { grid-column: span 12; }
+        .col-6 { grid-column: span 6; }
+        .col-4 { grid-column: span 4; }
+        .col-8 { grid-column: span 8; }
+
+        /* Modern Checkbox list */
+        .presto-check-list { background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 18px; padding: 24px; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; margin-top: 10px; }
+        .presto-check-item { display: flex; align-items: center; gap: 12px; cursor: pointer; padding: 12px; border-radius: 12px; transition: 0.25s; }
+        .presto-check-item:hover { background: rgba(255,255,255,0.05); }
+        .presto-check-item input[type="checkbox"] { width: 18px; height: 18px; border-radius: 6px; appearance: none; background: rgba(0,0,0,0.3); border: 1px solid var(--border); cursor: pointer; position: relative; transition: 0.3s; }
+        .presto-check-item input[type="checkbox"]:checked { background: var(--primary); border-color: var(--primary); }
+        .presto-check-item input[type="checkbox"]:checked::after { content: "✓"; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); color: #fff; font-weight: 900; font-size: 11px; }
+        .presto-check-label { font-size: 14px; font-weight: 600; color: var(--text-dim); flex: 1; }
+        .presto-check-item:hover .presto-check-label { color: #fff; }
+        .presto-check-badge { font-size: 10px; background: rgba(255,255,255,0.1); padding: 2px 7px; border-radius: 6px; color: var(--text-muted); text-transform: uppercase; margin-left: auto; }
 
         /* Advanced Stat Cards */
         .presto-dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 32px; }

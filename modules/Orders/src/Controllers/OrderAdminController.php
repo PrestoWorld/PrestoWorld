@@ -288,30 +288,71 @@ HTML;
         $payStatusOpts  = ['pending' => 'Pending', 'paid' => 'Paid', 'failed' => 'Failed', 'refunded' => 'Refunded'];
         $currencyOpts   = ['USD' => 'USD', 'EUR' => 'EUR', 'GBP' => 'GBP', 'VND' => 'VND'];
 
-        $planOpts = ['' => '-- Không chọn --'];
+        $planOpts = ['' => '-- Không gán hosting --'];
         foreach ($plans as $p) $planOpts[$p['id']] = $p['name'];
 
-        $swListHtml = '<div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">';
+        $swListHtml = '<div class="presto-check-list">';
         foreach ($softwares as $s) {
             $checked = (isset($data['software_ids']) && in_array($s['id'], (array)$data['software_ids'])) ? 'checked' : '';
-            $swListHtml .= "<div><label><input type='checkbox' name='software_ids[]' value='{$s['id']}' {$checked}> {$s['name']} <small style='opacity:0.6'>({$s['type']})</small></label></div>";
+            $swListHtml .= <<<HTML
+            <label class="presto-check-item">
+                <input type='checkbox' name='software_ids[]' value='{$s['id']}' {$checked}>
+                <span class="presto-check-label">{$s['name']}</span>
+                <span class="presto-check-badge">{$s['type']}</span>
+            </label>
+HTML;
         }
         $swListHtml .= '</div>';
 
-        $basicFields = $this->fieldGroup('Customer Email', $this->input('customer_email', 'email', $data['customer_email'] ?? ''))
-                . $this->fieldGroup('Status',          $this->select('status',         $statusOptions,  $data['status']          ?? 'pending'))
-                . $this->fieldGroup('Payment Status',  $this->select('payment_status', $payStatusOpts,  $data['payment_status']  ?? 'pending'))
-                . $this->fieldGroup('Total Payment',   $this->input('total',    'number', $data['total']    ?? 0))
-                . $this->fieldGroup('Currency',        $this->select('currency', $currencyOpts, $data['currency'] ?? 'USD'))
-                . $this->fieldGroup('Internal Notes',  $this->textarea('notes', $data['notes'] ?? ''));
+        $formContent = <<<HTML
+        <div class="presto-form-section-head">
+            <div class="icon-wrap">👤</div>
+            <h3>Thông tin Đơn hàng & Khách hàng</h3>
+        </div>
+        <div class="presto-grid">
+            <div class="col-8">{$this->fieldGroup('Địa chỉ Email Khách hàng', $this->input('customer_email', 'email', $data['customer_email'] ?? '', 'client@example.com', true))}</div>
+            <div class="col-4">{$this->fieldGroup('ID Khách hàng (Nếu có)', $this->input('customer_id', 'number', $data['customer_id'] ?? ''))}</div>
+            
+            <div class="col-6">{$this->fieldGroup('Trạng thái Đơn hàng', $this->select('status', $statusOptions, $data['status'] ?? 'pending'))}</div>
+            <div class="col-6">{$this->fieldGroup('Trạng thái Thanh toán', $this->select('payment_status', $payStatusOpts, $data['payment_status'] ?? 'pending'))}</div>
+        </div>
 
-        $attachedFields = '<h3 class="section-title" style="margin-top:20px; font-size:18px;">Gắn dịch vụ & phần mềm</h3>'
-                . $this->fieldGroup('Chọn Hosting Plan', $this->select('hosting_plan_id', $planOpts, $data['hosting_plan_id'] ?? ''))
-                . $this->fieldGroup('Domain nạp Hosting', $this->input('hosting_domain', 'text', $data['hosting_domain'] ?? '', 'example.com'))
-                . '<div style="margin-top:15px;"><label style="font-weight:700; display:block; margin-bottom:10px;">Chọn Software/Plugins/Themes</label>' . $swListHtml . '</div>';
+        <div class="presto-form-section-head">
+            <div class="icon-wrap">💰</div>
+            <h3>Tài chính & Ghi chú</h3>
+        </div>
+        <div class="presto-grid">
+            <div class="col-4">{$this->fieldGroup('Tổng tiền thanh toán', $this->input('total', 'number', $data['total'] ?? 0))}</div>
+            <div class="col-4">{$this->fieldGroup('Đơn vị tiền tệ', $this->select('currency', $currencyOpts, $data['currency'] ?? 'USD'))}</div>
+            <div class="col-4">{$this->fieldGroup('Phương thức TT', $this->input('payment_method', 'text', $data['payment_method'] ?? '', 'PayPal, Bank Transfer...'))}</div>
+            
+            <div class="col-12">{$this->fieldGroup('Ghi chú nội bộ (Chỉ Admin thấy)', $this->textarea('notes', $data['notes'] ?? '', 'Ghi chú về đơn hàng, lý do giảm giá...'))}</div>
+        </div>
 
-        $footer = $this->submitBar('Save Order', '/dashboard/orders');
+        <div class="presto-form-section-head">
+            <div class="icon-wrap">🔌</div>
+            <h3>Gắn Sản phẩm & Dịch vụ đi kèm</h3>
+        </div>
+        
+        <div class="presto-grid">
+            <div class="col-6">
+                {$this->fieldGroup('Gắn nhanh Hosting Plan', $this->select('hosting_plan_id', $planOpts, $data['hosting_plan_id'] ?? ''))}
+            </div>
+            <div class="col-6">
+                {$this->fieldGroup('Tên miền đi kèm Hosting', $this->input('hosting_domain', 'text', $data['hosting_domain'] ?? '', 'example.com'))}
+            </div>
+            <div class="col-12">
+                <label class="presto-field-label">Chọn Phần mềm / Plugins / Themes</label>
+                {$swListHtml}
+            </div>
+        </div>
 
-        return $this->formCard('Order Information', $this->formOpen($action, $method) . $basicFields . $attachedFields . $footer . $this->formClose());
+        <div style="margin-top: 48px; display: flex; justify-content: flex-end; gap: 16px; border-top: 1px solid var(--border); padding-top: 32px;">
+            <a href="/dashboard/orders" class="presto-btn presto-btn-secondary">Hủy bỏ</a>
+            <button type="submit" class="presto-btn presto-btn-primary">Lưu Đơn Hàng Ngay</button>
+        </div>
+HTML;
+
+        return $this->formCard('Cấu hình Đơn hàng Chi tiết', $this->formOpen($action, $method) . $formContent . $this->formClose());
     }
 }
