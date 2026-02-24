@@ -268,6 +268,9 @@ class AuthController
                     </form>
                 </div>
                 <p class="footer-text">
+                    Chưa có tài khoản? <a href="/register">Đăng ký ngay</a>
+                </p>
+                <p class="footer-text">
                     <a href="/">← Về trang chủ</a>
                 </p>
             </div>
