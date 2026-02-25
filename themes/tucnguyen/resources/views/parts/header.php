@@ -19,7 +19,7 @@
             --cyan: #06B6D4;
         }
         body { font-family: 'Inter', sans-serif; margin: 0; color: var(--dark); background: #fff; }
-        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 0 20px; }
         
         header { background: rgba(255, 255, 255, 0.88); backdrop-filter: blur(12px); position: sticky; top: 0; z-index: 9999; border-bottom: 1px solid #f1f5f9; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); }
         .header-inner { height: 80px; display: flex; align-items: center; justify-content: space-between; }
@@ -224,19 +224,35 @@
         .dropdown-link .title { font-weight: 700; font-size: 14px; margin-bottom: 2px; white-space: nowrap; }
         .dropdown-link .desc { font-size: 12px; color: var(--gray); font-weight: 400; line-height: 1.4; display: block; }
         .nav-arrow { font-size: 9px; margin-left: 6px; vertical-align: middle; }
+
+        /* PRO badge */
+        .pro-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #f59e0b, #ef4444);
+            color: white;
+            font-size: 10px;
+            font-weight: 800;
+            padding: 2px 7px;
+            border-radius: 6px;
+            letter-spacing: 0.5px;
+            vertical-align: middle;
+            margin-left: 5px;
+            box-shadow: 0 2px 6px rgba(245, 158, 11, 0.4);
+            text-transform: uppercase;
+        }
     </style>
 </head>
 <body>
     <header>
         <div class="container header-inner">
-            <a href="/" class="logo">
+            <a href="<?php echo locale_url('/', current_locale()); ?>" class="logo">
                 <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <rect width="32" height="32" rx="8" fill="#3B82F6"/>
                     <path d="M12 10H20C21.1046 10 22 10.8954 22 12V20C22 21.1046 21.1046 22 20 22H12C10.8954 22 10 21.1046 10 20V12C10 10.8954 10.8954 10 12 10Z" stroke="white" stroke-width="2"/>
                     <path d="M16 14V18" stroke="white" stroke-width="2" stroke-linecap="round"/>
                     <path d="M14 16H18" stroke="white" stroke-width="2" stroke-linecap="round"/>
                 </svg>
-                Digital<span>Core.</span>
+                <?php echo __('Digital'); ?><span><?php echo __('Core.'); ?></span>
             </a>
             <nav>
                 <ul>
@@ -245,28 +261,28 @@
                         <div class="nav-dropdown">
                             <div>
                                 <div class="dropdown-group-title"><?php echo __('Cloud & Infrastructure'); ?></div>
-                                <a href="/hosting" class="dropdown-link">
+                                <a href="<?php echo locale_url('/hosting', current_locale()); ?>" class="dropdown-link">
                                     <div class="icon">☁️</div>
                                     <div class="text">
                                         <span class="title"><?php echo __('Hosting'); ?></span>
                                         <span class="desc"><?php echo __('High-speed web hosting'); ?></span>
                                     </div>
                                 </a>
-                                <a href="/vps" class="dropdown-link">
+                                <a href="<?php echo locale_url('/vps', current_locale()); ?>" class="dropdown-link">
                                     <div class="icon">⚡</div>
                                     <div class="text">
                                         <span class="title"><?php echo __('VPS Server'); ?></span>
                                         <span class="desc"><?php echo __('Powerful virtual servers'); ?></span>
                                     </div>
                                 </a>
-                                <a href="/domains" class="dropdown-link">
+                                <a href="<?php echo locale_url('/domains', current_locale()); ?>" class="dropdown-link">
                                     <div class="icon">🌐</div>
                                     <div class="text">
                                         <span class="title"><?php echo __('Domains'); ?></span>
                                         <span class="desc"><?php echo __('Register your brand'); ?></span>
                                     </div>
                                 </a>
-                                <a href="/ssl" class="dropdown-link">
+                                <a href="<?php echo locale_url('/ssl', current_locale()); ?>" class="dropdown-link">
                                     <div class="icon">🔒</div>
                                     <div class="text">
                                         <span class="title"><?php echo __('SSL Certificates'); ?></span>
@@ -276,21 +292,21 @@
                             </div>
                             <div>
                                 <div class="dropdown-group-title"><?php echo __('Digital Assets'); ?></div>
-                                <a href="/code/themes" class="dropdown-link">
+                                <a href="<?php echo locale_url('/code/themes', current_locale()); ?>" class="dropdown-link">
                                     <div class="icon">🎨</div>
                                     <div class="text">
                                         <span class="title"><?php echo __('Premium Themes'); ?></span>
                                         <span class="desc"><?php echo __('Beautiful web designs'); ?></span>
                                     </div>
                                 </a>
-                                <a href="/code/plugins" class="dropdown-link">
+                                <a href="<?php echo locale_url('/code/plugins', current_locale()); ?>" class="dropdown-link">
                                     <div class="icon">🔌</div>
                                     <div class="text">
                                         <span class="title"><?php echo __('Powerful Plugins'); ?></span>
                                         <span class="desc"><?php echo __('Extend site features'); ?></span>
                                     </div>
                                 </a>
-                                <a href="<?php echo route_url('web-templates'); ?>" class="dropdown-link">
+                                <a href="<?php echo locale_url(__('routes.web-templates', [], current_locale()), current_locale()); ?>" class="dropdown-link">
                                     <div class="icon">🍱</div>
                                     <div class="text">
                                         <span class="title"><?php echo __('Website Templates'); ?></span>
@@ -300,14 +316,14 @@
                             </div>
                             <div>
                                 <div class="dropdown-group-title"><?php echo __('Software & Tools'); ?></div>
-                                <a href="/software" class="dropdown-link">
+                                <a href="<?php echo locale_url('/software', current_locale()); ?>" class="dropdown-link">
                                     <div class="icon">💻</div>
                                     <div class="text">
                                         <span class="title"><?php echo __('Utility Software'); ?></span>
                                         <span class="desc"><?php echo __('Useful desktop apps'); ?></span>
                                     </div>
                                 </a>
-                                <a href="/tools" class="dropdown-link">
+                                <a href="<?php echo locale_url('/tools', current_locale()); ?>" class="dropdown-link">
                                     <div class="icon">💰</div>
                                     <div class="text">
                                         <span class="title"><?php echo __('MMO Tools'); ?></span>
@@ -318,18 +334,18 @@
                         </div>
                     </li>
                     <li class="nav-item-has-dropdown">
-                        <a href="#"><?php echo __('Pro Services'); ?> <span class="nav-arrow">▼</span></a>
+                        <a href="#"><?php echo __('Services'); ?> <span class="pro-badge">PRO</span> <span class="nav-arrow">▼</span></a>
                         <div class="nav-dropdown wide-2col">
                             <div>
                                 <div class="dropdown-group-title"><?php echo __('Speed & Performance'); ?></div>
-                                <a href="/services/speed" class="dropdown-link">
+                                <a href="<?php echo locale_url('/services/speed', current_locale()); ?>" class="dropdown-link">
                                     <div class="icon">🚀</div>
                                     <div class="text">
                                         <span class="title"><?php echo __('Speed Optimization'); ?></span>
                                         <span class="desc"><?php echo __('Lightning fast loading'); ?></span>
                                     </div>
                                 </a>
-                                <a href="/services/pagespeed" class="dropdown-link">
+                                <a href="<?php echo locale_url('/services/pagespeed', current_locale()); ?>" class="dropdown-link">
                                     <div class="icon">📈</div>
                                     <div class="text">
                                         <span class="title"><?php echo __('Google PageSpeed'); ?></span>
@@ -339,14 +355,14 @@
                             </div>
                             <div>
                                 <div class="dropdown-group-title"><?php echo __('Cyber Security'); ?></div>
-                                <a href="/services/security" class="dropdown-link">
+                                <a href="<?php echo locale_url('/services/security', current_locale()); ?>" class="dropdown-link">
                                     <div class="icon">🛡️</div>
                                     <div class="text">
                                         <span class="title"><?php echo __('Web Security'); ?></span>
                                         <span class="desc"><?php echo __('Full site protection'); ?></span>
                                     </div>
                                 </a>
-                                <a href="/services/malware" class="dropdown-link">
+                                <a href="<?php echo locale_url('/services/malware', current_locale()); ?>" class="dropdown-link">
                                     <div class="icon">🦠</div>
                                     <div class="text">
                                         <span class="title"><?php echo __('Malware Removal'); ?></span>
@@ -359,14 +375,14 @@
                     <li class="nav-item-has-dropdown">
                         <a href="#"><?php echo __('Partner'); ?> <span class="nav-arrow">▼</span></a>
                         <div class="nav-dropdown single-col">
-                            <a href="/memberships" class="dropdown-link">
+                            <a href="<?php echo locale_url('/memberships', current_locale()); ?>" class="dropdown-link">
                                 <div class="icon">💎</div>
                                 <div class="text">
                                     <span class="title"><?php echo __('VIP Membership'); ?></span>
                                     <span class="desc"><?php echo __('Exclusive privileges'); ?></span>
                                 </div>
                             </a>
-                            <a href="/affiliates" class="dropdown-link">
+                            <a href="<?php echo locale_url('/affiliates', current_locale()); ?>" class="dropdown-link">
                                 <div class="icon">🤝</div>
                                 <div class="text">
                                     <span class="title"><?php echo __('Affiliate Program'); ?></span>
@@ -375,8 +391,8 @@
                             </a>
                         </div>
                     </li>
-                    <li><a href="<?php echo route_url('web-templates'); ?>"><?php echo __('Website Templates'); ?></a></li>
-                    <li><a href="/blog"><?php echo __('Blog'); ?></a></li>
+                    <li><a href="<?php echo locale_url('/web-templates', current_locale()); ?>"><?php echo __('Website Templates'); ?></a></li>
+                    <li><a href="<?php echo locale_url('/blog', current_locale()); ?>"><?php echo __('Blog'); ?></a></li>
                 </ul>
             </nav>
             <div class="header-actions">
@@ -398,23 +414,23 @@
                                 <span class="email"><?php echo htmlspecialchars($user['email'] ?? ''); ?></span>
                             </div>
                             <a href="/portal" class="user-dropdown-link">
-                                <span>🏠</span> <?php echo __('Bảng điều khiển'); ?>
+                                <span>🏠</span> <?php echo __('Dashboard'); ?>
                             </a>
-                            <a href="/portal/services" class="user-dropdown-link">
-                                <span>📦</span> <?php echo __('Dịch vụ của tôi'); ?>
+                            <a href="<?php echo locale_url('/portal/services', current_locale()); ?>" class="user-dropdown-link">
+                                <span>📦</span> <?php echo __('My Services'); ?>
                             </a>
-                            <a href="/portal/profile" class="user-dropdown-link">
-                                <span>⚙️</span> <?php echo __('Cài đặt'); ?>
+                            <a href="<?php echo locale_url('/portal/profile', current_locale()); ?>" class="user-dropdown-link">
+                                <span>⚙️</span> <?php echo __('Settings'); ?>
                             </a>
                             <div style="height: 1px; background: #f1f5f9; margin: 8px 0;"></div>
                             <a href="/logout" class="user-dropdown-link logout">
-                                <span>🚪</span> <?php echo __('Đăng xuất'); ?>
+                                <span>🚪</span> <?php echo __('Sign Out'); ?>
                             </a>
                         </div>
                     </div>
                 <?php else: ?>
-                    <a href="/login" class="btn-login"><?php echo __('Sign In'); ?></a>
-                    <a href="/register" class="btn-primary"><?php echo __('Get Started'); ?></a>
+                    <a href="<?php echo locale_url('/login', current_locale()); ?>" class="btn-login"><?php echo __('Sign In'); ?></a>
+                    <a href="<?php echo locale_url('/register', current_locale()); ?>" class="btn-primary"><?php echo __('Get Started'); ?></a>
                 <?php endif; ?>
             </div>
         </div>

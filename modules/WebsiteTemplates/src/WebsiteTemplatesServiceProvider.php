@@ -29,5 +29,13 @@ class WebsiteTemplatesServiceProvider extends ServiceProvider
             $router->get($path, [TemplateController::class, 'index']);
             $router->get($path . '/{slug}', [TemplateController::class, 'resolve']);
         }
+
+        // Register with Ecommerce registry
+        if ($this->app->has('ecommerce.registry')) {
+            $this->app->make('ecommerce.registry')->register('template', TemplateController::class, [
+                'name' => __('Website Templates'),
+                'icon' => 'layout'
+            ]);
+        }
     }
 }

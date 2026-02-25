@@ -8,114 +8,59 @@ use Witals\Framework\Http\Request;
 use Witals\Framework\Http\Response;
 use Cycle\Database\DatabaseProviderInterface;
 use PrestoWorld\Theme\ThemeManager;
+use Witals\Framework\Database\Crud\CrudController;
+use PrestoWorld\Ecommerce\Traits\HasPurchaseAction;
 
-class TemplateController
+class TemplateController extends CrudController
 {
-    protected DatabaseProviderInterface $dbal;
+    use HasPurchaseAction;
+
     protected ThemeManager $theme;
+    protected string $table = 'optilarity_templates';
+    protected ?string $translationTable = 'optilarity_translations_templates';
+    protected array $translatableFields = ['name', 'description', 'category'];
+    protected bool $isSeoable = true;
+    protected string $buyableType = 'template';
 
     public function __construct(DatabaseProviderInterface $dbal, ThemeManager $theme)
     {
-        $this->dbal = $dbal;
+        parent::__construct($dbal);
         $this->theme = $theme;
     }
 
+    /**
+     * Overriding index to return HTML view instead of JSON.
+     */
     public function index(Request $request): Response
     {
         $category = $request->query('category');
         $search = $request->query('search');
 
-        $query = $this->dbal->database()->select('*')
-            ->from('optilarity_templates')
-            ->where('status', 'active');
-
-        if ($category) {
-            // Check if this is a legacy query param request and redirect to SEO slug if possible
-            $tp = $this->dbal->database()->select('category_slug')
-                ->from('optilarity_templates')
+        // Redirect legacy category query to slug if needed
+        if ($category && !$request->query('category_slug')) {
+             $tp = $this->dbal->database()->select('category_slug')
+                ->from($this->table)
                 ->where('category', $category)
-                ->limit(1)
-                ->run()
-                ->fetch();
+                ->limit(1)->run()->fetch();
             
             if ($tp) {
-                $url = route_url('web-templates') . '/' . $tp['category_slug'];
-                if ($search) {
-                    $url .= '?search=' . urlencode($search);
-                }
-                return Response::redirect($url);
+                return $this->redirect(route_url('web-templates') . '/' . $tp['category_slug'] . ($search ? '?search=' . urlencode($search) : ''));
             }
-            
-            $query->where('category', $category);
         }
 
-        if ($search) {
-            $query->where('name', 'LIKE', '%' . $search . '%')
-                  ->orWhere('description', 'LIKE', '%' . $search . '%');
-        }
-
-        $templates = $query->fetchAll();
-
-        // Get unique categories for filter
-        $categories = $this->dbal->database()->select('category', 'category_slug')
-            ->from('optilarity_templates')
-            ->where('status', 'active')
-            ->distinct()
-            ->fetchAll();
-
-        // If DB is empty, provide some mockup data for immediate show-off
-        if (empty($templates) && !$category && !$search) {
-            $templates = [
-                [
-                    'name' => 'E-Commerce Elite',
-                    'slug' => 'ecommerce-elite',
-                    'description' => 'Giao diện bán hàng chuyên nghiệp tối ưu chuyển đổi.',
-                    'price' => 199.00,
-                    'image_url' => 'https://images.unsplash.com/photo-1472851294608-062f824d29cc?auto=format&fit=crop&q=80&w=800',
-                    'category' => 'Ecommerce'
-                ],
-                [
-                    'name' => 'TechSaaS Landing',
-                    'slug' => 'techsaas-landing',
-                    'description' => 'Landing page giới thiệu dịch vụ phần mềm hiện đại.',
-                    'price' => 149.00,
-                    'image_url' => 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=800',
-                    'category' => 'Technology'
-                ],
-                [
-                    'name' => 'Real Estate Pro',
-                    'slug' => 'real-estate-pro',
-                    'description' => 'Hệ thống quản lý và giới thiệu bất động sản cao cấp.',
-                    'price' => 299.00,
-                    'image_url' => 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&q=80&w=800',
-                    'category' => 'Real Estate'
-                ],
-                [
-                    'name' => 'Fitness Studio',
-                    'slug' => 'fitness-studio',
-                    'description' => 'Mẫu website cho phòng tập gym và yoga chuyên nghiệp.',
-                    'price' => 129.00,
-                    'image_url' => 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&q=80&w=800',
-                    'category' => 'Health'
-                ],
-                [
-                    'name' => 'Restaurant Master',
-                    'slug' => 'restaurant-master',
-                    'description' => 'Giao diện đặt món và giới thiệu thực đơn sang trọng.',
-                    'price' => 159.00,
-                    'image_url' => 'https://images.unsplash.com/photo-1517248135467-4c7ed9d42339?auto=format&fit=crop&q=80&w=800',
-                    'category' => 'Food'
-                ]
-            ];
-            
-            // Re-populate categories from mock if DB empty
-            $categories = array_map(fn($c) => ['category' => $c], array_unique(array_column($templates, 'category')));
-        }
+        // Use parent index logic's JSON response to get items (or duplicate logic for HTML)
+        // Since we want HTML, we manually fetch using some parent helpers if possible, 
+        // but here it's cleaner to just fetch.
+        
+        $query = $this->getInitialQuery($request);
+        $this->applyFilters($query, $request);
+        
+        $templates = array_map([$this, 'processItem'], $query->fetchAll());
 
         $html = $this->theme->render('templates-list', [
             'title' => __('Website Templates'),
             'templates' => $templates,
-            'categories' => $categories,
+            'categories' => $this->getCategories($request),
             'current_category' => $category,
             'search_query' => $search
         ]);
@@ -125,64 +70,136 @@ class TemplateController
 
     public function resolve(Request $request, string $slug): Response
     {
-        // 1. Try to find if it's a template
-        $template = $this->dbal->database()->select('*')
-            ->from('optilarity_templates')
-            ->where('slug', $slug)
-            ->run()
-            ->fetch();
+        // 1. Try template slug
+        $query = $this->getInitialQuery($request);
+        $query->where('slug', $slug);
+        
+        $template = $query->run()->fetch();
 
         if ($template) {
+            $item = $this->processItem($template);
             $html = $this->theme->render('template-single', [
-                'title' => $template['name'],
-                'template' => $template
+                'title' => $item['name'], // Using translated name
+                'template' => $item
             ]);
             return Response::html($html);
         }
 
-        // 2. Try to find if it's a category
-        $search = $request->query('search');
-        $query = $this->dbal->database()->select('*')
-            ->from('optilarity_templates')
-            ->where('category_slug', $slug)
-            ->where('status', 'active');
-
-        if ($search) {
-            $query->where('name', 'LIKE', '%' . $search . '%')
-                  ->orWhere('description', 'LIKE', '%' . $search . '%');
-        }
-
-        $categoryTemplates = $query->fetchAll();
-
-        // Check if the slug actually exists as a category even if no templates match the search
+        // 2. Try category slug
         $categoryExists = $this->dbal->database()->select('category')
-            ->from('optilarity_templates')
+            ->from($this->table)
             ->where('category_slug', $slug)
-            ->limit(1)
-            ->run()
-            ->fetch();
+            ->limit(1)->run()->fetch();
 
         if ($categoryExists) {
-            $categoryName = $categoryExists['category'];
+            $request = $request->withAttribute('category_slug', $slug);
+            $query = $this->getInitialQuery($request);
+            $query->where('category_slug', $slug);
             
-            // Re-use index logic but filtered by category
-            $categories = $this->dbal->database()->select('category', 'category_slug')
-                ->from('optilarity_templates')
-                ->where('status', 'active')
-                ->distinct()
-                ->fetchAll();
+            $this->applyFilters($query, $request);
 
             $html = $this->theme->render('templates-list', [
-                'title' => __('Website Templates') . ' - ' . $categoryName,
-                'templates' => $categoryTemplates,
-                'categories' => $categories,
-                'current_category' => $categoryName,
+                'title' => __('Website Templates') . ' - ' . $categoryExists['category'],
+                'templates' => array_map([$this, 'processItem'], $query->fetchAll()),
+                'categories' => $this->getCategories($request),
+                'current_category' => $categoryExists['category'],
                 'current_category_slug' => $slug,
-                'search_query' => $search
+                'search_query' => $request->query('search')
             ]);
             return Response::html($html);
         }
 
         return Response::html('Content not found', 404);
+    }
+
+    protected function getInitialQuery(Request $request)
+    {
+        $locale = $request->getAttribute('locale') ?: app()->translator()->getLocale();
+        $defaultLocale = config('app.locale', 'en');
+
+        if ($this->translationTable && $locale !== $defaultLocale) {
+            $foreignKey = 'template_id';
+            $fields = ['p.*'];
+            foreach ($this->translatableFields as $field) {
+                $fields[] = "t.{$field} as {$field}_translated";
+            }
+            
+            return $this->dbal->database()->select($fields)
+                ->from($this->table . ' as p')
+                ->leftJoin($this->translationTable . ' as t')
+                ->on('t.' . $foreignKey, 'p.id')
+                ->where('t.language', $locale);
+        }
+
+        return $this->dbal->database()->select('*')->from($this->table);
+    }
+
+    protected function applyFilters($query, Request $request): void
+    {
+        $alias = ($query->getType() === 'select' && str_contains((string)$query, ' as p')) ? 'p.' : '';
+        
+        $query->where($alias . 'status', 'active');
+
+        if ($search = $request->query('search')) {
+            $query->where($alias . 'name', 'LIKE', '%' . $search . '%')
+                  ->orWhere($alias . 'description', 'LIKE', '%' . $search . '%');
+        }
+    }
+
+    protected function getCategories(Request $request): array
+    {
+        $locale      = $request->getAttribute('locale') ?: app()->translator()->getLocale();
+        $defaultLocale = config('app.locale', 'en');
+
+        if ($this->translationTable && $locale !== $defaultLocale) {
+            // Fetch translated category names from translation table
+            $rows = $this->dbal->database()
+                ->select(['p.category_slug', 't.category as category'])
+                ->from($this->table . ' as p')
+                ->leftJoin($this->translationTable . ' as t')
+                ->on('t.template_id', 'p.id')
+                ->where('t.language', $locale)
+                ->where('p.status', 'active')
+                ->distinct()
+                ->fetchAll();
+
+            // Deduplicate by category_slug
+            $seen = [];
+            $result = [];
+            foreach ($rows as $row) {
+                if (!isset($seen[$row['category_slug']])) {
+                    $seen[$row['category_slug']] = true;
+                    $result[] = $row;
+                }
+            }
+            return $result;
+        }
+
+        return $this->dbal->database()->select(['category', 'category_slug'])
+            ->from($this->table)
+            ->where('status', 'active')
+            ->distinct()
+            ->fetchAll();
+    }
+
+    protected function resolveItem(string $id)
+    {
+        $item = $this->dbal->database()->select('*')
+            ->from($this->table)
+            ->where('id', $id)
+            ->run()
+            ->fetch();
+
+        if (!$item) {
+            return null;
+        }
+
+        return new class($item, $this) implements \PrestoWorld\Ecommerce\Contracts\BuyableInterface {
+            public function __construct(private array $data, private $controller) {}
+            public function getBuyableId(): string|int { return $this->data['id']; }
+            public function getBuyableTitle(): string { return $this->controller->translate($this->data['name']); }
+            public function getBuyablePrice(): int|float { return (float)($this->data['price'] ?? 0); }
+            public function getBuyableType(): string { return 'template'; }
+        };
     }
 }

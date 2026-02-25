@@ -6,52 +6,28 @@ namespace Modules\Orders\Controllers;
 
 use Witals\Framework\Http\Request;
 use Witals\Framework\Http\Response;
+use Witals\Framework\Database\Crud\CrudController;
+use PrestoWorld\Ecommerce\OrderManager;
 use Cycle\Database\DatabaseProviderInterface;
-use Cake\Chronos\Chronos;
 
-class OrderController
+class OrderController extends CrudController
 {
-    protected DatabaseProviderInterface $dbal;
+    protected string $table = 'orders';
+    protected OrderManager $orderManager;
 
-    public function __construct(mixed $app)
+    public function __construct(DatabaseProviderInterface $dbal, OrderManager $orderManager)
     {
-        $this->dbal = $app->make(DatabaseProviderInterface::class);
-    }
-
-    public function index(Request $request): Response
-    {
-        $items = $this->dbal->database()->select('*')->from('optilarity_orders')->fetchAll();
-        return Response::json($items);
-    }
-
-    public function show(Request $request, int $id): Response
-    {
-        $item = $this->dbal->database()->select('*')->from('optilarity_orders')->where('id', $id)->run()->fetch();
-        if (!$item) return Response::json(['error' => 'Not found'], 404);
-        return Response::json($item);
+        parent::__construct($dbal);
+        $this->orderManager = $orderManager;
     }
 
     public function store(Request $request): Response
     {
         $data = (array)$request->post();
-        $id = $this->dbal->database()->insert('optilarity_orders')->values(array_merge($data, [
-            'created_at' => Chronos::now()
-        ]))->run();
-        return Response::json(['id' => $id, 'success' => true]);
+        $id = $this->orderManager->createOrder($data);
+        
+        return $this->json(['id' => $id, 'success' => true]);
     }
 
-    public function update(Request $request, int $id): Response
-    {
-        $data = (array)$request->post();
-        $this->dbal->database()->update('optilarity_orders', array_merge($data, [
-            'updated_at' => Chronos::now()
-        ]), ['id' => $id]);
-        return Response::json(['success' => true]);
-    }
-
-    public function destroy(Request $request, int $id): Response
-    {
-        $this->dbal->database()->delete('optilarity_orders')->where('id', $id)->run();
-        return Response::json(['success' => true]);
-    }
+    // index, show are inherited from CrudController
 }

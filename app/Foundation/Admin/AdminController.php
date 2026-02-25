@@ -24,7 +24,7 @@ abstract class AdminController
     protected mixed $app;
     protected \Witals\Framework\Support\AssetManager $assets;
 
-    public function __construct(mixed $app)
+    public function __construct(\Witals\Framework\Application $app)
     {
         $this->app = $app;
         $this->assets = $app->make(\Witals\Framework\Support\AssetManager::class);
