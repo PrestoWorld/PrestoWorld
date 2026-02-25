@@ -245,9 +245,9 @@
         <?php if (empty($templates)): ?>
             <div class="empty-state">
                 <span class="icon">🔍</span>
-                <h2>Không tìm thấy mẫu nào phù hợp</h2>
-                <p>Thử tìm kiếm với từ khóa khác hoặc xóa bộ lọc danh mục.</p>
-                <a href="?" class="btn-buy-tp" style="margin-top: 25px; display: inline-block;">Xem tất cả giao diện</a>
+                <h2><?php echo __('No matching templates found'); ?></h2>
+                <p><?php echo __('Try searching with different keywords or clear the category filter.'); ?></p>
+                <a href="?" class="btn-buy-tp" style="margin-top: 25px; display: inline-block;"><?php echo __('View all templates'); ?></a>
             </div>
         <?php else: ?>
             <div class="templates-grid">

@@ -28,7 +28,7 @@
                     <li><a href="#"><?php echo __('Domain Search'); ?></a></li>
                     <li><a href="#"><?php echo __('Premium Themes'); ?></a></li>
                     <li><a href="<?php echo locale_url(__('routes.web-templates', [], $locale), $locale); ?>"><?php echo __('Website Templates'); ?></a></li>
-                    <li><a href="#"><?php echo __('Pro Software'); ?></a></li>
+                    <li><a href="#"><?php echo __('Software'); ?> <span class="pro-badge">PRO</span></a></li>
                     <li><a href="<?php echo locale_url('/portal', $locale); ?>"><?php echo __('Client Dashboard'); ?></a></li>
                 </ul>
             </div>

@@ -7,30 +7,32 @@ namespace Modules\Blog\Controllers;
 use Witals\Framework\Http\Response;
 use Witals\Framework\Http\Request;
 use Cycle\Database\DatabaseProviderInterface;
-use Cake\Chronos\Chronos;
-use Witals\Framework\Container\Container;
+use Witals\Framework\Database\Crud\CrudController;
+use PrestoWorld\Theme\ThemeManager;
 
-class BlogController
+class BlogController extends CrudController
 {
-    protected DatabaseProviderInterface $dbal;
-    protected Container $app;
+    protected ThemeManager $theme;
+    protected string $table = 'optilarity_blog_posts';
+    protected array $translatableFields = ['title', 'content', 'excerpt'];
+    protected bool $isSeoable = true;
 
-    public function __construct(Container $app)
+    public function __construct(DatabaseProviderInterface $dbal, ThemeManager $theme)
     {
-        $this->app = $app;
-        $this->dbal = $app->make(DatabaseProviderInterface::class);
+        parent::__construct($dbal);
+        $this->theme = $theme;
     }
 
     public function index(Request $request): Response
     {
-        $posts = $this->dbal->database()->select('p.*', 'c.name as category_name', 'c.slug as category_slug')
+        $query = $this->dbal->database()->select('p.*', 'c.name as category_name', 'c.slug as category_slug')
             ->from('optilarity_blog_posts as p')
             ->leftJoin('optilarity_blog_categories as c')->on('p.category_id', 'c.id')
             ->where('p.status', 'publish')
             ->orderBy('p.is_featured', 'DESC')
-            ->orderBy('p.published_at', 'DESC')
-            ->run()
-            ->fetchAll();
+            ->orderBy('p.published_at', 'DESC');
+
+        $posts = array_map([$this, 'processItem'], $query->fetchAll());
 
         $categories = $this->dbal->database()->select('c.*', 'COUNT(p.id) as post_count')
             ->from('optilarity_blog_categories as c')
@@ -52,18 +54,20 @@ class BlogController
         ]);
     }
 
-    public function show(string $slug): Response
+    public function show(Request $request, $slug): Response
     {
-        $post = $this->dbal->database()->select('p.*', 'c.name as category_name', 'c.slug as category_slug')
+        $postRaw = $this->dbal->database()->select('p.*', 'c.name as category_name', 'c.slug as category_slug')
             ->from('optilarity_blog_posts as p')
             ->leftJoin('optilarity_blog_categories as c')->on('p.category_id', 'c.id')
             ->where('p.slug', $slug)
             ->run()
             ->fetch();
 
-        if (!$post) {
+        if (!$postRaw) {
             return Response::json(['error' => 'Post not found'], 404);
         }
+
+        $post = $this->processItem($postRaw);
 
         // Increment views
         $this->dbal->database()->update('optilarity_blog_posts', [
@@ -85,14 +89,14 @@ class BlogController
             ->run()
             ->fetchAll();
 
-        $relatedPosts = $this->dbal->database()->select('p.*', 'c.name as category_name')
+        $relatedPosts = array_map([$this, 'processItem'], $this->dbal->database()->select('p.*', 'c.name as category_name')
             ->from('optilarity_blog_posts as p')
             ->leftJoin('optilarity_blog_categories as c')->on('p.category_id', 'c.id')
             ->where('p.category_id', $post['category_id'])
             ->where('p.id', '!=', $post['id'])
             ->limit(3)
             ->run()
-            ->fetchAll();
+            ->fetchAll());
 
         return $this->render('blog/show', [
             'post' => $post,
@@ -115,14 +119,14 @@ class BlogController
             return Response::json(['error' => 'Category not found'], 404);
         }
 
-        $posts = $this->dbal->database()->select('p.*', 'c.name as category_name')
+        $posts = array_map([$this, 'processItem'], $this->dbal->database()->select('p.*', 'c.name as category_name')
             ->from('optilarity_blog_posts as p')
             ->leftJoin('optilarity_blog_categories as c')->on('p.category_id', 'c.id')
             ->where('p.category_id', $category['id'])
             ->where('p.status', 'publish')
             ->orderBy('p.published_at', 'DESC')
             ->run()
-            ->fetchAll();
+            ->fetchAll());
 
         $categories = $this->dbal->database()->select('c.*', 'COUNT(p.id) as post_count')
             ->from('optilarity_blog_categories as c')
@@ -151,14 +155,14 @@ class BlogController
             return Response::json(['error' => 'Tag not found'], 404);
         }
 
-        $posts = $this->dbal->database()->select('p.*', 'c.name as category_name')
+        $posts = array_map([$this, 'processItem'], $this->dbal->database()->select('p.*', 'c.name as category_name')
             ->from('optilarity_blog_posts as p')
             ->join('optilarity_blog_post_tags as pt')->on('p.id', 'pt.post_id')
             ->leftJoin('optilarity_blog_categories as c')->on('p.category_id', 'c.id')
             ->where('pt.tag_id', $tag['id'])
             ->where('p.status', 'publish')
             ->run()
-            ->fetchAll();
+            ->fetchAll());
 
         $categories = $this->dbal->database()->select('c.*', 'COUNT(p.id) as post_count')
             ->from('optilarity_blog_categories as c')
@@ -177,11 +181,11 @@ class BlogController
 
     public function apiIndex(): Response
     {
-        $posts = $this->dbal->database()->select('*')
+        $posts = array_map([$this, 'processItem'], $this->dbal->database()->select('*')
             ->from('optilarity_blog_posts')
             ->where('status', 'publish')
             ->run()
-            ->fetchAll();
+            ->fetchAll());
         
         return Response::json(['success' => true, 'data' => $posts]);
     }
@@ -195,99 +199,12 @@ class BlogController
             ->fetch();
         
         if (!$post) return Response::json(['success' => false, 'message' => 'Not found'], 404);
-        return Response::json(['success' => true, 'data' => $post]);
+        return Response::json(['success' => true, 'data' => $this->processItem($post)]);
     }
 
     protected function render(string $view, array $data = []): Response
     {
-        $themeManager = $this->app->make(\PrestoWorld\Theme\ThemeManager::class);
-        $html = $themeManager->render($view, $data);
+        $html = $this->theme->render($view, $data);
         return Response::html($html);
-    }
-
-    public function seed(): Response
-    {
-        $db = $this->dbal->database();
-
-        // Clear existing
-        $db->delete('optilarity_blog_comments')->run();
-        $db->delete('optilarity_blog_post_tags')->run();
-        $db->delete('optilarity_blog_posts')->run();
-        $db->delete('optilarity_blog_tags')->run();
-        $db->delete('optilarity_blog_categories')->run();
-
-        // Categories
-        $cats = [
-            ['name' => 'WordPress', 'slug' => 'wordpress'],
-            ['name' => 'Hosting & VPS', 'slug' => 'hosting-vps'],
-            ['name' => 'Tutorials', 'slug' => 'tutorials'],
-            ['name' => 'Reviews', 'slug' => 'reviews'],
-            ['name' => 'Technology', 'slug' => 'technology'],
-            ['name' => 'Marketing', 'slug' => 'marketing'],
-        ];
-        foreach ($cats as $cat) {
-            $db->insert('optilarity_blog_categories')->values($cat + ['created_at' => now()])->run();
-        }
-
-        $wpCatId = $db->select('id')->from('optilarity_blog_categories')->where('slug', 'wordpress')->run()->fetchColumn();
-        $hostingCatId = $db->select('id')->from('optilarity_blog_categories')->where('slug', 'hosting-vps')->run()->fetchColumn();
-        $techCatId = $db->select('id')->from('optilarity_blog_categories')->where('slug', 'technology')->run()->fetchColumn();
-
-        // Tags
-        $tags = [
-            ['name' => 'SEO', 'slug' => 'seo'],
-            ['name' => 'Web Vitals', 'slug' => 'web-vitals'],
-            ['name' => 'Optimization', 'slug' => 'optimization'],
-            ['name' => 'Google', 'slug' => 'google'],
-        ];
-        foreach ($tags as $tag) {
-            $db->insert('optilarity_blog_tags')->values($tag)->run();
-        }
-
-        // Posts
-        $posts = [
-            [
-                'category_id' => $techCatId,
-                'title' => 'Khám phá hệ sinh thái DigitalCore: Giải pháp toàn diện cho Developers',
-                'slug' => 'kham-pha-he-sinh-thai-digitalcore',
-                'excerpt' => 'DigitalCore không chỉ là nơi cung cấp tài nguyên, mà là người bạn đồng hành tin cậy trên con đường phát triển sự nghiệp của bạn.',
-                'content' => 'Full content here...',
-                'is_featured' => true,
-                'reading_time' => 10,
-                'status' => 'publish',
-                'published_at' => now(),
-                'created_at' => now(),
-            ],
-            [
-                'category_id' => $wpCatId,
-                'title' => 'Top 10 WordPress Themes tốt nhất cho Website bán hàng',
-                'slug' => 'top-10-wordpress-themes-tot-nhat',
-                'excerpt' => 'Tổng hợp danh sách các theme tối ưu SEO, tốc độ tải trang nhanh và giao diện đẹp.',
-                'content' => 'Full content here...',
-                'is_featured' => false,
-                'reading_time' => 8,
-                'status' => 'publish',
-                'published_at' => now()->subHours(5),
-                'created_at' => now(),
-            ],
-            [
-                'category_id' => $hostingCatId,
-                'title' => 'Hướng dẫn cài đặt VPS Ubuntu 22.04 từ A đến Z',
-                'slug' => 'huong-dan-cai-dat-vps-ubuntu',
-                'excerpt' => 'Chi tiết các bước thiết lập server, cài đặt LEMP Stack và bảo mật cơ bản.',
-                'content' => 'Full content here...',
-                'is_featured' => false,
-                'reading_time' => 12,
-                'status' => 'publish',
-                'published_at' => now()->subDays(1),
-                'created_at' => now(),
-            ],
-        ];
-
-        foreach ($posts as $post) {
-            $db->insert('optilarity_blog_posts')->values($post)->run();
-        }
-
-        return Response::json(['message' => 'Blog seeded successfully']);
     }
 }

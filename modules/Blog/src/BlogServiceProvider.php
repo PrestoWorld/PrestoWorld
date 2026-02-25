@@ -11,7 +11,7 @@ class BlogServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->singleton(Controllers\BlogController::class, fn($app) => new Controllers\BlogController($app));
+        $this->app->singleton(Controllers\BlogController::class);
     }
 
     public function boot(): void

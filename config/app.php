@@ -48,12 +48,17 @@ return [
         App\Providers\HookServiceProvider::class,
         App\Providers\DatabaseServiceProvider::class,
         PrestoWorld\Theme\ThemeServiceProvider::class,
+        PrestoWorld\Context\ContextServiceProvider::class,
         App\Foundation\Debug\DebugServiceProvider::class,
         Witals\Framework\Auth\AuthServiceProvider::class,
+        Witals\Framework\Database\Crud\CrudServiceProvider::class,
+        Witals\Framework\Seo\SeoServiceProvider::class,
+        // Core Framework Services (Ecommerce, Payments)
+        PrestoWorld\Ecommerce\EcommerceServiceProvider::class,
+        PrestoWorld\Payments\PaymentServiceProvider::class,
         
         // WordPress Bridge (loads helpers early)
         PrestoWorld\Bridge\WordPress\Providers\WordPressServiceProvider::class,
-        // Modules
         Modules\WebServices\WebServicesServiceProvider::class,
         Modules\ReminderManager\ReminderManagerServiceProvider::class,
         Modules\WebsiteTemplates\WebsiteTemplatesServiceProvider::class,

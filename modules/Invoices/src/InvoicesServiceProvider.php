@@ -11,8 +11,8 @@ class InvoicesServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->singleton(Controllers\InvoiceController::class, fn($app) => new Controllers\InvoiceController($app));
-        $this->singleton(Controllers\InvoiceAdminController::class, fn($app) => new Controllers\InvoiceAdminController($app));
+        $this->app->singleton(Controllers\InvoiceController::class);
+        $this->app->singleton(Controllers\InvoiceAdminController::class);
     }
 
     public function boot(): void
