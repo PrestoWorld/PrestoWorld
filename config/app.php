@@ -48,6 +48,7 @@ return [
         App\Providers\HookServiceProvider::class,
         App\Providers\DatabaseServiceProvider::class,
         PrestoWorld\Theme\ThemeServiceProvider::class,
+        PrestoWorld\Context\ContextServiceProvider::class,
         App\Foundation\Debug\DebugServiceProvider::class,
         Witals\Framework\Auth\AuthServiceProvider::class,
         Witals\Framework\Database\Crud\CrudServiceProvider::class,

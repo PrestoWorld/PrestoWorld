@@ -14,54 +14,75 @@ class DashboardController extends AdminController
     public function index(Request $request): Response
     {
         $stats = $this->fetchStats();
-        
+        $contexts = $this->app->make('contexts');
+
+        // Register Stats Widgets
+        if ($contexts->context('dashboard.widgets')->isEmpty()) {
+            $contexts->register('dashboard.widgets', new \PrestoWorld\Context\Items\WidgetContext(
+                id: 'stat_revenue',
+                label: 'Tổng Doanh Thu',
+                value: '$' . $stats['revenue'],
+                trend: '+12% vs tháng trước',
+                trendClass: 'trend-up',
+                icon: '💰',
+                priority: 10
+            ));
+            
+            $contexts->register('dashboard.widgets', new \PrestoWorld\Context\Items\WidgetContext(
+                id: 'stat_licenses',
+                label: 'Active Licenses',
+                value: $stats['licenses'],
+                trend: 'Đang kích hoạt trên 1.5k domains',
+                icon: '🛡️',
+                priority: 20
+            ));
+
+            $contexts->register('dashboard.widgets', new \PrestoWorld\Context\Items\WidgetContext(
+                id: 'stat_vip',
+                label: 'Thành Viên VIP',
+                value: '1,205',
+                trend: 'Active Members (Recurring)',
+                icon: '👑',
+                priority: 30
+            ));
+
+            $contexts->register('dashboard.widgets', new \PrestoWorld\Context\Items\WidgetContext(
+                id: 'stat_expiring',
+                label: 'Sắp hết hạn (30 ngày)',
+                value: '45',
+                trend: 'Cần gia hạn gấp',
+                icon: '⏳',
+                cssClass: 'danger',
+                priority: 40
+            ));
+        }
+
+        // Render Widgets
+        $widgetsHtml = '';
+        foreach ($contexts->context('dashboard.widgets')->resolve() as $widget) {
+            $w = $widget->resolve();
+            $cssClass = $w['css_class'] ? ' ' . $w['css_class'] : '';
+            $widgetsHtml .= "
+            <div class=\"presto-card stat-card-premium{$cssClass}\">
+                <div class=\"stat-main\">
+                    <span class=\"stat-label\">{$w['label']}</span>
+                    <span class=\"stat-value\">{$w['value']}</span>
+                    <span class=\"stat-trend\">{$w['trend']}</span>
+                </div>
+                <div class=\"stat-visual\">
+                    <div class=\"stat-icon-wrap\"><span class=\"stat-icon\">{$w['icon']}</span></div>
+                </div>
+            </div>";
+        }
+
         $content = <<<HTML
         <div class="presto-dashboard-grid">
-            <!-- Top Stats -->
-            <div class="presto-card stat-card-premium">
-                <div class="stat-main">
-                    <span class="stat-label">Tổng Doanh Thu</span>
-                    <span class="stat-value">\${$stats['revenue']}</span>
-                    <span class="stat-trend trend-up">+12% vs tháng trước</span>
-                </div>
-                <div class="stat-visual">
-                    <div class="stat-icon-wrap"><span class="stat-icon">💰</span></div>
-                </div>
-            </div>
-            <div class="presto-card stat-card-premium">
-                <div class="stat-main">
-                    <span class="stat-label">Active Licenses</span>
-                    <span class="stat-value">{$stats['licenses']}</span>
-                    <span class="stat-trend">Đang kích hoạt trên 1.5k domains</span>
-                </div>
-                <div class="stat-visual">
-                    <div class="stat-icon-wrap"><span class="stat-icon">🛡️</span></div>
-                </div>
-            </div>
-            <div class="presto-card stat-card-premium">
-                <div class="stat-main">
-                    <span class="stat-label">Thành Viên VIP</span>
-                    <span class="stat-value">1,205</span>
-                    <span class="stat-trend">Active Members (Recurring)</span>
-                </div>
-                <div class="stat-visual">
-                    <div class="stat-icon-wrap"><span class="stat-icon">👑</span></div>
-                </div>
-            </div>
-            <div class="presto-card stat-card-premium danger">
-                <div class="stat-main">
-                    <span class="stat-label">Sắp hết hạn (30 ngày)</span>
-                    <span class="stat-value">45</span>
-                    <span class="stat-trend">Cần gia hạn gấp</span>
-                </div>
-                <div class="stat-visual">
-                    <div class="stat-icon-wrap"><span class="stat-icon">⏳</span></div>
-                </div>
-            </div>
+            {$widgetsHtml}
         </div>
 
         <h2 class="section-title">Danh mục Sản phẩm</h2>
         <div class="presto-category-grid">
+            <!-- Categories could also be migrated to a 'dashboard.categories' context later -->
             <div class="presto-card category-card">
                 <div class="cat-header">
                     <div class="cat-icon" style="background: linear-gradient(135deg, #6366f1, #a855f7);">🎨</div>

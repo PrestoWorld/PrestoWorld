@@ -21,56 +21,37 @@ class HomeController
      */
     public function index(Request $request): Response
     {
-        $hooks = $this->app->make('hooks');
+        $contexts = $this->app->make('contexts');
         
-        // Pre-fetch posts for themes that expect 'posts' variable (like tucnguyen)
-        $postsData = $this->fetchPosts();
-        
-        // 1. Get all sections defined by modules/themes
-        $sections = $hooks->applyFilters('home_sections', [
-            'hero' => [
-                'priority' => 10,
-                'callback' => [$this, 'renderHero'],
-                'enabled' => true,
-            ],
-            'features' => [
-                'priority' => 20,
-                'callback' => [$this, 'renderFeatures'],
-                'enabled' => true,
-            ],
-            'recent_posts' => [
-                'priority' => 30,
-                'callback' => [$this, 'renderRecentPosts'],
-                'enabled' => true,
-                'data' => $postsData
-            ],
-        ]);
-        
-        // 2. Sort sections by priority
-        uasort($sections, function($a, $b) {
-            return ($a['priority'] ?? 50) <=> ($b['priority'] ?? 50);
-        });
-        
-        // 3. Render sections
-        $content = '';
-        foreach ($sections as $name => $section) {
-            if (!($section['enabled'] ?? true)) {
-                continue;
-            }
+        // Ensure default sections are registered
+        if ($contexts->context('home.sections')->isEmpty()) {
+            $contexts->register('home.sections', new \PrestoWorld\Context\Items\SectionContext(
+                id: 'hero',
+                label: 'Hero Section',
+                priority: 10,
+                callback: [$this, 'renderHero']
+            ));
 
-            $sectionOutput = (string) $this->app->call($section['callback'], [
-                'request' => $request, 
-                'section' => $section,
-                'name' => $name,
-                'posts' => $postsData
-            ]);
+            $contexts->register('home.sections', new \PrestoWorld\Context\Items\SectionContext(
+                id: 'features',
+                label: 'Features Section',
+                priority: 20,
+                callback: [$this, 'renderFeatures']
+            ));
 
-            $content .= $hooks->applyFilters("home_section_{$name}_output", $sectionOutput, $section);
+            $postsData = $this->fetchPosts();
+            $contexts->register('home.sections', new \PrestoWorld\Context\Items\SectionContext(
+                id: 'recent_posts',
+                label: 'Recent Posts',
+                priority: 30,
+                callback: fn(array $posts = [], array $section = []) => $this->renderRecentPosts($request, $section, $posts),
+                data: ['posts' => $postsData]
+            ));
         }
         
-        $pageTitle = $hooks->applyFilters('home_page_title', 'Experience the power of Native Theme Engine');
+        $content = $contexts->render('home.sections', ['request' => $request]);
+        $pageTitle = $this->app->make('hooks')->applyFilters('home_page_title', 'Experience the power of Native Theme Engine');
         
-        // 4. Use theme engine if available
         if ($this->app->has(\PrestoWorld\Theme\ThemeManager::class)) {
             $themeManager = $this->app->make(\PrestoWorld\Theme\ThemeManager::class);
             $themeManager->loadActiveTheme();
