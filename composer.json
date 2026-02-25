@@ -47,7 +47,8 @@
         "league/omnipay": "^3.2@dev",
         "omnipay/paypal": "^3.0@dev",
         "omnipay/stripe": "^3.2@dev",
-        "symfony/http-client": "6.4.x-dev"
+        "symfony/http-client": "6.4.x-dev",
+        "prestoworld/search-engine": "dev-master"
     },
     "require-dev": {
         "spiral/roadrunner-cli": "^2.6"
