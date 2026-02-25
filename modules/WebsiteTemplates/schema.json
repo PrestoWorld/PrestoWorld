@@ -1,69 +1,144 @@
 {
-    "tables": {
-        "optilarity_templates": {
-            "columns": {
-                "id": {
+    "tables": [
+        {
+            "name": "optilarity_templates",
+            "columns": [
+                {
+                    "name": "id",
                     "type": "primary",
                     "increment": true
                 },
-                "name": {
+                {
+                    "name": "name",
                     "type": "string",
                     "size": 255
                 },
-                "slug": {
+                {
+                    "name": "slug",
                     "type": "string",
                     "size": 255
                 },
-                "description": {
+                {
+                    "name": "description",
                     "type": "text",
                     "nullable": true
                 },
-                "category": {
+                {
+                    "name": "category",
                     "type": "string",
                     "size": 100,
                     "nullable": true
                 },
-                "price": {
+                {
+                    "name": "category_slug",
+                    "type": "string",
+                    "size": 100,
+                    "nullable": true
+                },
+                {
+                    "name": "price",
                     "type": "decimal",
                     "precision": 10,
                     "scale": 2,
                     "default": 0
                 },
-                "image_url": {
+                {
+                    "name": "image_url",
                     "type": "string",
                     "size": 500,
                     "nullable": true
                 },
-                "demo_url": {
+                {
+                    "name": "demo_url",
                     "type": "string",
                     "size": 500,
                     "nullable": true
                 },
-                "features": {
+                {
+                    "name": "features",
                     "type": "json",
                     "nullable": true
                 },
-                "status": {
+                {
+                    "name": "status",
                     "type": "string",
                     "size": 20,
                     "default": "active"
                 },
-                "created_at": {
+                {
+                    "name": "created_at",
                     "type": "datetime"
                 },
-                "updated_at": {
+                {
+                    "name": "updated_at",
                     "type": "datetime",
                     "nullable": true
                 }
-            },
-            "indexes": {
-                "idx_template_slug": {
+            ],
+            "indexes": [
+                {
+                    "name": "idx_template_slug",
                     "columns": [
                         "slug"
                     ],
                     "unique": true
                 }
-            }
+            ]
+        },
+        {
+            "name": "optilarity_translations_templates",
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "primary",
+                    "increment": true
+                },
+                {
+                    "name": "template_id",
+                    "type": "integer"
+                },
+                {
+                    "name": "language",
+                    "type": "string",
+                    "size": 10
+                },
+                {
+                    "name": "name",
+                    "type": "string",
+                    "size": 255,
+                    "nullable": true
+                },
+                {
+                    "name": "description",
+                    "type": "text",
+                    "nullable": true
+                },
+                {
+                    "name": "category",
+                    "type": "string",
+                    "size": 255,
+                    "nullable": true
+                }
+            ],
+            "indexes": [
+                {
+                    "name": "idx_tpl_trans_lookup",
+                    "columns": [
+                        "template_id",
+                        "language"
+                    ],
+                    "unique": true
+                }
+            ],
+            "foreign_keys": [
+                {
+                    "name": "fk_tpl_trans_obj",
+                    "column": "template_id",
+                    "references": "optilarity_templates",
+                    "on": "id",
+                    "on_delete": "CASCADE"
+                }
+            ]
         }
-    }
+    ]
 }

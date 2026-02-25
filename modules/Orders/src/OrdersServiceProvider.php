@@ -11,8 +11,8 @@ class OrdersServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->singleton(Controllers\OrderController::class, fn($app) => new Controllers\OrderController($app));
-        $this->singleton(Controllers\OrderAdminController::class, fn($app) => new Controllers\OrderAdminController($app));
+        $this->app->singleton(Controllers\OrderController::class);
+        $this->app->singleton(Controllers\OrderAdminController::class);
     }
 
     public function boot(): void

@@ -8,7 +8,8 @@
             "columns": [
                 {
                     "name": "id",
-                    "type": "primary"
+                    "type": "primary",
+                    "increment": true
                 },
                 {
                     "name": "title",
@@ -23,12 +24,6 @@
                 {
                     "name": "content",
                     "type": "longText"
-                },
-                {
-                    "name": "meta_description",
-                    "type": "string",
-                    "size": 255,
-                    "nullable": true
                 },
                 {
                     "name": "status",
@@ -51,10 +46,72 @@
             ],
             "indexes": [
                 {
+                    "name": "idx_page_slug",
                     "columns": [
                         "slug"
                     ],
                     "unique": true
+                }
+            ]
+        },
+        {
+            "name": "optilarity_translations_static_pages",
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "primary",
+                    "increment": true
+                },
+                {
+                    "name": "static_page_id",
+                    "type": "integer"
+                },
+                {
+                    "name": "language",
+                    "type": "string",
+                    "size": 10
+                },
+                {
+                    "name": "title",
+                    "type": "string",
+                    "size": 255,
+                    "nullable": true
+                },
+                {
+                    "name": "content",
+                    "type": "longText",
+                    "nullable": true
+                },
+                {
+                    "name": "seo_title",
+                    "type": "string",
+                    "size": 255,
+                    "nullable": true
+                },
+                {
+                    "name": "seo_description",
+                    "type": "string",
+                    "size": 500,
+                    "nullable": true
+                }
+            ],
+            "indexes": [
+                {
+                    "name": "idx_page_trans_lookup",
+                    "columns": [
+                        "static_page_id",
+                        "language"
+                    ],
+                    "unique": true
+                }
+            ],
+            "foreign_keys": [
+                {
+                    "name": "fk_page_trans_obj",
+                    "column": "static_page_id",
+                    "references": "optilarity_static_pages",
+                    "on": "id",
+                    "on_delete": "CASCADE"
                 }
             ]
         }
