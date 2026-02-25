@@ -10,6 +10,7 @@
             "Modules\\ReminderManager\\": "modules/ReminderManager/src/",
             "Modules\\Blog\\": "modules/Blog/src/",
             "Modules\\StaticPages\\": "modules/StaticPages/src/",
+            "Modules\\WebsiteTemplates\\": "modules/WebsiteTemplates/src/",
             "Modules\\": "modules/"
         },
         "files": [

@@ -27,6 +27,8 @@ class RouterFactory
         $defaultLocale  = config('app.locale', env('APP_LOCALE', 'en'));
         $isMultilingual = count($locales) > 1;
 
+        error_log("RouterFactory: locales=" . implode(',', $locales) . " isMultilingual=" . ($isMultilingual ? 'YES' : 'NO'));
+
         if ($isMultilingual) {
             return new LocalizedRouter($app, $logger, $locales, $defaultLocale);
         }

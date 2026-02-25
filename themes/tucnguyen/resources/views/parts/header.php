@@ -21,7 +21,7 @@
         body { font-family: 'Inter', sans-serif; margin: 0; color: var(--dark); background: #fff; }
         .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
         
-        header { background: rgba(255, 255, 255, 0.82); backdrop-filter: blur(10px); sticky; top: 0; z-index: 100; border-bottom: 1px solid #f1f5f9; }
+        header { background: rgba(255, 255, 255, 0.88); backdrop-filter: blur(12px); position: sticky; top: 0; z-index: 9999; border-bottom: 1px solid #f1f5f9; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); }
         .header-inner { height: 80px; display: flex; align-items: center; justify-content: space-between; }
         .logo { font-size: 24px; font-weight: 800; display: flex; align-items: center; gap: 10px; color: var(--dark); text-decoration: none; }
         .logo span { color: var(--primary); }
@@ -50,7 +50,7 @@
         .footer-bottom a { color: #94a3b8; text-decoration: none; }
         
         /* Blog Specific Styles */
-        .blog-header { text-align: center; padding: 60px 0; }
+        .blog-header { text-align: center; padding: 100px 0 60px; position: relative; z-index: 1; }
         .blog-header h1 { font-size: 48px; font-weight: 800; margin-bottom: 15px; }
         .blog-header p { color: var(--gray); max-width: 600px; margin: 0 auto; line-height: 1.6; }
         
@@ -99,7 +99,7 @@
             opacity: 0;
             visibility: hidden;
             transition: 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
-            z-index: 1000;
+            z-index: 10000;
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 30px;
@@ -157,7 +157,7 @@
             visibility: hidden;
             transform: translateY(10px);
             transition: 0.3s;
-            z-index: 1001;
+            z-index: 10001;
         }
         
         .user-profile-nav:hover .user-dropdown {
@@ -290,15 +290,13 @@
                                         <span class="desc"><?php echo __('Extend site features'); ?></span>
                                     </div>
                                 </a>
-                                <?php if (is_vietnam()): ?>
-                                <a href="/web-mau" class="dropdown-link">
+                                <a href="<?php echo route_url('web-templates'); ?>" class="dropdown-link">
                                     <div class="icon">🍱</div>
                                     <div class="text">
                                         <span class="title"><?php echo __('Website Templates'); ?></span>
                                         <span class="desc"><?php echo __('Pre-made professional sites'); ?></span>
                                     </div>
                                 </a>
-                                <?php endif; ?>
                             </div>
                             <div>
                                 <div class="dropdown-group-title"><?php echo __('Software & Tools'); ?></div>
@@ -377,6 +375,7 @@
                             </a>
                         </div>
                     </li>
+                    <li><a href="<?php echo route_url('web-templates'); ?>"><?php echo __('Website Templates'); ?></a></li>
                     <li><a href="/blog"><?php echo __('Blog'); ?></a></li>
                 </ul>
             </nav>

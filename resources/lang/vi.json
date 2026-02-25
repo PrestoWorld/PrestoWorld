@@ -43,6 +43,16 @@
     "Payment Methods": "Phương thức thanh toán",
     "Safe & secure transactions for all your digital needs.": "Giao dịch an toàn và bảo mật cho mọi nhu cầu số của bạn.",
     "The leading digital resource platform for developers and creative businesses worldwide.": "Nền tảng tài nguyên số hàng đầu cho nhà phát triển và doanh nghiệp sáng tạo trên toàn thế giới.",
+    "Solutions": "Giải pháp",
+    "Company": "Công ty",
+    "Domain Search": "Tìm tên miền",
+    "Pro Software": "Phần mềm Pro",
+    "Client Dashboard": "Bảng điều khiển",
+    "About Us": "Về chúng tôi",
+    "Contact Support": "Hỗ trợ khách hàng",
+    "Security": "Bảo mật",
+    "Terms of Service": "Điều khoản dịch vụ",
+    "Privacy Policy": "Chính sách bảo mật",
     "Bảng điều khiển": "Bảng điều khiển",
     "Sản phẩm đã mua": "Dịch vụ của tôi",
     "Thanh toán": "Hóa đơn & Thanh toán",
@@ -52,5 +62,6 @@
     "Đăng xuất": "Đăng xuất",
     "Hoạt động tuần này": "Hoạt động trong tuần",
     "Nạp tiền": "Nạp tiền vào tài khoản",
-    "Hồ sơ": "Xem hồ sơ"
+    "Hồ sơ": "Xem hồ sơ",
+    "routes.web-templates": "web-mau"
 }

@@ -131,11 +131,34 @@ if (!function_exists('locale_url')) {
         
         $path = '/' . ltrim($path, '/');
         
+        // Don't prefix if it's already prefixed
+        if (preg_match('#^/([a-z]{2})(/.*)?$#', $path, $matches)) {
+            $supportedLocales = config('app.locales', ['en', 'vi']);
+            if (in_array($matches[1], $supportedLocales, true)) {
+                return $path;
+            }
+        }
+
         if ($locale === $defaultLocale) {
             return $path;
         }
         
         return '/' . $locale . $path;
+    }
+}
+
+if (!function_exists('route_url')) {
+    /**
+     * Get a localized URL for a route key.
+     */
+    function route_url(string $key, ?string $locale = null): string
+    {
+        $path = __('routes.' . $key, [], $locale);
+        if ($path === 'routes.' . $key) {
+            $path = $key; // Fallback to key if no translation
+        }
+        
+        return locale_url($path, $locale);
     }
 }
 

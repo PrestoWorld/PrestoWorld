@@ -12,10 +12,22 @@ class WebsiteTemplatesServiceProvider extends ServiceProvider
 {
     public function boot(): void
     {
+        error_log("WebsiteTemplates: Booting...");
         $router = $this->app->make(Router::class);
+        $locales = config('app.locales', ['en']);
 
-        // Public Routes
-        $router->get('/web-mau', [TemplateController::class, 'index']);
-        $router->get('/web-mau/{slug}', [TemplateController::class, 'show']);
+        foreach ($locales as $locale) {
+            $path = __('routes.web-templates', [], $locale);
+            // If translation is missing OR it returned the key, use a default fallback
+            if ($path === 'routes.web-templates' || empty($path)) {
+                $path = 'web-templates';
+            }
+            
+            error_log("WebsiteTemplates: Registering path '{$path}' for locale '{$locale}'");
+            
+            // Register the clean path. LocalizedRouter will match it after stripping the /vi, /ja prefix.
+            $router->get($path, [TemplateController::class, 'index']);
+            $router->get($path . '/{slug}', [TemplateController::class, 'show']);
+        }
     }
 }

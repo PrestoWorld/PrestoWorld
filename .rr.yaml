@@ -39,7 +39,7 @@ reload:
   services:
     http:
       recursive: true
-      dirs: ["app", "bootstrap", "vendor/witals/framework/src"]
+      dirs: ["app", "bootstrap", "modules", "resources", "vendor/witals/framework/src"]
       ignore: ["vendor", "tests"]
 
 metrics:

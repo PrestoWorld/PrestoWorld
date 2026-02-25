@@ -60,6 +60,7 @@ class Router implements RouterInterface
     public function dispatch(Request $request): mixed
     {
         $path = $request->path();
+        error_log("Router: dispatching {$_SERVER['REQUEST_METHOD']} {$path}");
         
         foreach ($this->routes as $route) {
             if ($route->matches($request)) {

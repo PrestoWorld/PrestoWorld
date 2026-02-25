@@ -38,7 +38,18 @@
     "Blog": "ブログ",
     "Sign In": "ログイン",
     "Get Started": "今すぐ開始",
+    "Website Templates": "ウェブサイトテンプレート",
+    "Pre-made professional sites": "プロフェッショナルな既製サイト",
     "Payment Methods": "お支払い方法",
     "Safe & secure transactions for all your digital needs.": "すべてのデジタルニーズに対応する安全な取引。",
-    "The leading digital resource platform for developers and creative businesses worldwide.": "世界中の開発者やクリエイティブ企業のための主要なデジタルプラットフォーム。"
+    "The leading digital resource platform for developers and creative businesses worldwide.": "世界中の開発者やクリエイティブ企業のための主要なデジタルプラットフォーム。",
+    "Solutions": "ソリューション",
+    "Company": "会社情報",
+    "Domain Search": "ドメイン検索",
+    "Pro Software": "プロソフトウェア",
+    "Client Dashboard": "クライアントダッシュボード",
+    "About Us": "会社概要",
+    "Contact Support": "お問い合わせ",
+    "Security": "セキュリティ",
+    "routes.web-templates": "website-templates"
 }

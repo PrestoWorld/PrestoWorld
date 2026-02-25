@@ -60,6 +60,8 @@ class LocalizedRouter extends Router implements RouterInterface
             $path   = ($m[2] ?? '/');
         }
 
+        error_log("LocalizedRouter: rawPath='{$rawPath}', locale='{$locale}', cleanPath='{$path}'");
+
         // Set locale ONCE per request — O(1)
         app()->translator()->setLocale($locale);
         app()->view()->share('current_locale', $locale);

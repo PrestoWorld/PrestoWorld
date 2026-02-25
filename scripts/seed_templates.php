@@ -37,6 +37,78 @@ try {
             'features' => json_encode(['Inventory Sync', 'Discount System', 'High Performance']),
             'status' => 'active',
             'created_at' => Chronos::now()
+        ],
+        [
+            'name' => 'TechSaaS Pro',
+            'slug' => 'techsaas-pro',
+            'description' => 'Landing page chuyên nghiệp cho các công ty phần mềm và startup.',
+            'category' => 'Công nghệ',
+            'price' => 129.00,
+            'image_url' => 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=800',
+            'demo_url' => 'https://demo.optilarity.top/tech-saas',
+            'features' => json_encode(['Pricing Tables', 'User Dashboard', 'API Ready']),
+            'status' => 'active',
+            'created_at' => Chronos::now()
+        ],
+        [
+            'name' => 'Real Estate Elite',
+            'slug' => 'real-estate-elite',
+            'description' => 'Hệ thống quản lý bất động sản với bộ lọc tìm kiếm thông minh.',
+            'category' => 'Bất động sản',
+            'price' => 299.00,
+            'image_url' => 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&q=80&w=800',
+            'demo_url' => 'https://demo.optilarity.top/real-estate',
+            'features' => json_encode(['Map Integration', 'Advanced Filter', 'Agent Portal']),
+            'status' => 'active',
+            'created_at' => Chronos::now()
+        ],
+        [
+            'name' => 'Healthy Fit Studio',
+            'slug' => 'healthy-fit-studio',
+            'description' => 'Giao diện sôi động cho các phòng tập Gym, Yoga và Fitness.',
+            'category' => 'Sức khỏe',
+            'price' => 149.00,
+            'image_url' => 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&q=80&w=800',
+            'demo_url' => 'https://demo.optilarity.top/fitness',
+            'features' => json_encode(['Class Schedule', 'Member Login', 'Workout Video Support']),
+            'status' => 'active',
+            'created_at' => Chronos::now()
+        ],
+        [
+            'name' => 'Delicious Bistro',
+            'slug' => 'delicious-bistro',
+            'description' => 'Mẫu web sang trọng cho nhà hàng với tính năng đặt bàn trực tuyến.',
+            'category' => 'Ẩm thực',
+            'price' => 169.00,
+            'image_url' => 'https://images.unsplash.com/photo-1517248135467-4c7ed9d42339?auto=format&fit=crop&q=80&w=800',
+            'demo_url' => 'https://demo.optilarity.top/restaurant',
+            'features' => json_encode(['Reservation System', 'Digital Menu', 'Review Slider']),
+            'status' => 'active',
+            'created_at' => Chronos::now()
+        ],
+        [
+            'name' => 'Creative Agency Flux',
+            'slug' => 'creative-agency-flux',
+            'description' => 'Portfolio hiện đại cho các Agency sáng tạo và Designer.',
+            'category' => 'Sáng tạo',
+            'price' => 119.00,
+            'image_url' => 'https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&q=80&w=800',
+            'demo_url' => 'https://demo.optilarity.top/creative-agency',
+            'features' => json_encode(['Smooth Transitions', 'Masonry Gallery', 'Case Studies']),
+            'status' => 'active',
+            'created_at' => Chronos::now()
+        ],
+        [
+            'name' => 'Education Master',
+            'slug' => 'education-master',
+            'description' => 'Nền tảng học trực tuyến chuyên nghiệp với quản lý khóa học.',
+            'category' => 'Giáo dục',
+            'price' => 219.00,
+            'image_url' => 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&q=80&w=800',
+            'demo_url' => 'https://demo.optilarity.top/education',
+            'features' => json_encode(['LMS Ready', 'Student Profile', 'Certificate System']),
+            'status' => 'active',
+            'created_at' => Chronos::now()
         ]
     ];
 

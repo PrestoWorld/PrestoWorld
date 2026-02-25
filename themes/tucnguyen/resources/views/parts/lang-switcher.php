@@ -68,7 +68,7 @@ $locales = [
         border: 1px solid #f1f5f9;
         min-width: 160px;
         display: none;
-        z-index: 1000;
+        z-index: 10002;
         overflow: hidden;
         animation: slideDown 0.2s ease-out;
     }

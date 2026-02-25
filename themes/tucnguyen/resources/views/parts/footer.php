@@ -23,22 +23,21 @@
                 </div>
             </div>
             <div class="footer-col">
-                <h4>Solutions</h4>
+                <h4><?php echo __('Solutions'); ?></h4>
                 <ul>
-                    <li><a href="#">Domain Search</a></li>
-                    <li><a href="#">Premium Themes</a></li>
-                    <li><a href="#">Utility Plugins</a></li>
-                    <li><a href="#">Pro Software</a></li>
-                    <li><a href="/portal">Client Dashboard</a></li>
+                    <li><a href="#"><?php echo __('Domain Search'); ?></a></li>
+                    <li><a href="#"><?php echo __('Premium Themes'); ?></a></li>
+                    <li><a href="/web-mau"><?php echo __('Website Templates'); ?></a></li>
+                    <li><a href="#"><?php echo __('Pro Software'); ?></a></li>
+                    <li><a href="/portal"><?php echo __('Client Dashboard'); ?></a></li>
                 </ul>
             </div>
             <div class="footer-col">
-                <h4>Company</h4>
+                <h4><?php echo __('Company'); ?></h4>
                 <ul>
-                    <li><a href="/about-us">About Us</a></li>
-                    <li><a href="/careers">Careers</a></li>
-                    <li><a href="/contact">Contact Support</a></li>
-                    <li><a href="/privacy-policy">Security</a></li>
+                    <li><a href="/about-us"><?php echo __('About Us'); ?></a></li>
+                    <li><a href="/contact"><?php echo __('Contact Support'); ?></a></li>
+                    <li><a href="/privacy-policy"><?php echo __('Security'); ?></a></li>
                 </ul>
             </div>
             <div class="footer-col">

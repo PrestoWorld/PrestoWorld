@@ -14,21 +14,41 @@ class TemplateController
     protected DatabaseProviderInterface $dbal;
     protected ThemeManager $theme;
 
-    public function __construct(mixed $app)
+    public function __construct(DatabaseProviderInterface $dbal, ThemeManager $theme)
     {
-        $this->dbal = $app->make(DatabaseProviderInterface::class);
-        $this->theme = $app->make(ThemeManager::class);
+        $this->dbal = $dbal;
+        $this->theme = $theme;
     }
 
     public function index(Request $request): Response
     {
-        $templates = $this->dbal->database()->select('*')
+        $category = $request->query('category');
+        $search = $request->query('search');
+
+        $query = $this->dbal->database()->select('*')
+            ->from('optilarity_templates')
+            ->where('status', 'active');
+
+        if ($category) {
+            $query->where('category', $category);
+        }
+
+        if ($search) {
+            $query->where('name', 'LIKE', '%' . $search . '%')
+                  ->orWhere('description', 'LIKE', '%' . $search . '%');
+        }
+
+        $templates = $query->fetchAll();
+
+        // Get unique categories for filter
+        $categories = $this->dbal->database()->select('category')
             ->from('optilarity_templates')
             ->where('status', 'active')
+            ->distinct()
             ->fetchAll();
 
         // If DB is empty, provide some mockup data for immediate show-off
-        if (empty($templates)) {
+        if (empty($templates) && !$category && !$search) {
             $templates = [
                 [
                     'name' => 'E-Commerce Elite',
@@ -36,7 +56,7 @@ class TemplateController
                     'description' => 'Giao diện bán hàng chuyên nghiệp tối ưu chuyển đổi.',
                     'price' => 199.00,
                     'image_url' => 'https://images.unsplash.com/photo-1472851294608-062f824d29cc?auto=format&fit=crop&q=80&w=800',
-                    'category' => 'Bán hàng'
+                    'category' => 'Ecommerce'
                 ],
                 [
                     'name' => 'TechSaaS Landing',
@@ -44,7 +64,7 @@ class TemplateController
                     'description' => 'Landing page giới thiệu dịch vụ phần mềm hiện đại.',
                     'price' => 149.00,
                     'image_url' => 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=800',
-                    'category' => 'Công nghệ'
+                    'category' => 'Technology'
                 ],
                 [
                     'name' => 'Real Estate Pro',
@@ -52,14 +72,36 @@ class TemplateController
                     'description' => 'Hệ thống quản lý và giới thiệu bất động sản cao cấp.',
                     'price' => 299.00,
                     'image_url' => 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&q=80&w=800',
-                    'category' => 'Bất động sản'
+                    'category' => 'Real Estate'
+                ],
+                [
+                    'name' => 'Fitness Studio',
+                    'slug' => 'fitness-studio',
+                    'description' => 'Mẫu website cho phòng tập gym và yoga chuyên nghiệp.',
+                    'price' => 129.00,
+                    'image_url' => 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&q=80&w=800',
+                    'category' => 'Health'
+                ],
+                [
+                    'name' => 'Restaurant Master',
+                    'slug' => 'restaurant-master',
+                    'description' => 'Giao diện đặt món và giới thiệu thực đơn sang trọng.',
+                    'price' => 159.00,
+                    'image_url' => 'https://images.unsplash.com/photo-1517248135467-4c7ed9d42339?auto=format&fit=crop&q=80&w=800',
+                    'category' => 'Food'
                 ]
             ];
+            
+            // Re-populate categories from mock if DB empty
+            $categories = array_map(fn($c) => ['category' => $c], array_unique(array_column($templates, 'category')));
         }
 
         $html = $this->theme->render('templates-list', [
             'title' => __('Website Templates'),
-            'templates' => $templates
+            'templates' => $templates,
+            'categories' => $categories,
+            'current_category' => $category,
+            'search_query' => $search
         ]);
 
         return Response::html($html);
