@@ -27,7 +27,7 @@ class WebsiteTemplatesServiceProvider extends ServiceProvider
             
             // Register the clean path. LocalizedRouter will match it after stripping the /vi, /ja prefix.
             $router->get($path, [TemplateController::class, 'index']);
-            $router->get($path . '/{slug}', [TemplateController::class, 'show']);
+            $router->get($path . '/{slug}', [TemplateController::class, 'resolve']);
         }
     }
 }

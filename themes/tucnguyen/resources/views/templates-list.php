@@ -219,9 +219,9 @@
         <div class="container">
             <form action="" method="GET" class="filter-inner">
                 <div class="category-shelf">
-                    <a href="?" class="cat-btn <?php echo !$current_category ? 'active' : ''; ?>">Tất cả</a>
+                    <a href="<?php echo route_url('web-templates'); ?>" class="cat-btn <?php echo !$current_category ? 'active' : ''; ?>">Tất cả</a>
                     <?php foreach($categories as $cat): ?>
-                    <a href="?category=<?php echo urlencode($cat['category']); ?><?php echo $search_query ? '&search='.urlencode($search_query) : ''; ?>" 
+                    <a href="<?php echo route_url('web-templates') . '/' . $cat['category_slug']; ?>" 
                        class="cat-btn <?php echo $current_category === $cat['category'] ? 'active' : ''; ?>">
                        <?php echo $cat['category']; ?>
                     </a>

@@ -30,6 +30,22 @@ class TemplateController
             ->where('status', 'active');
 
         if ($category) {
+            // Check if this is a legacy query param request and redirect to SEO slug if possible
+            $tp = $this->dbal->database()->select('category_slug')
+                ->from('optilarity_templates')
+                ->where('category', $category)
+                ->limit(1)
+                ->run()
+                ->fetch();
+            
+            if ($tp) {
+                $url = route_url('web-templates') . '/' . $tp['category_slug'];
+                if ($search) {
+                    $url .= '?search=' . urlencode($search);
+                }
+                return Response::redirect($url);
+            }
+            
             $query->where('category', $category);
         }
 
@@ -41,7 +57,7 @@ class TemplateController
         $templates = $query->fetchAll();
 
         // Get unique categories for filter
-        $categories = $this->dbal->database()->select('category')
+        $categories = $this->dbal->database()->select('category', 'category_slug')
             ->from('optilarity_templates')
             ->where('status', 'active')
             ->distinct()
@@ -107,23 +123,66 @@ class TemplateController
         return Response::html($html);
     }
 
-    public function show(Request $request, string $slug): Response
+    public function resolve(Request $request, string $slug): Response
     {
+        // 1. Try to find if it's a template
         $template = $this->dbal->database()->select('*')
             ->from('optilarity_templates')
             ->where('slug', $slug)
             ->run()
             ->fetch();
 
-        if (!$template) {
-            return Response::html('Template not found', 404);
+        if ($template) {
+            $html = $this->theme->render('template-single', [
+                'title' => $template['name'],
+                'template' => $template
+            ]);
+            return Response::html($html);
         }
 
-        $html = $this->theme->render('template-single', [
-            'title' => $template['name'],
-            'template' => $template
-        ]);
+        // 2. Try to find if it's a category
+        $search = $request->query('search');
+        $query = $this->dbal->database()->select('*')
+            ->from('optilarity_templates')
+            ->where('category_slug', $slug)
+            ->where('status', 'active');
 
-        return Response::html($html);
+        if ($search) {
+            $query->where('name', 'LIKE', '%' . $search . '%')
+                  ->orWhere('description', 'LIKE', '%' . $search . '%');
+        }
+
+        $categoryTemplates = $query->fetchAll();
+
+        // Check if the slug actually exists as a category even if no templates match the search
+        $categoryExists = $this->dbal->database()->select('category')
+            ->from('optilarity_templates')
+            ->where('category_slug', $slug)
+            ->limit(1)
+            ->run()
+            ->fetch();
+
+        if ($categoryExists) {
+            $categoryName = $categoryExists['category'];
+            
+            // Re-use index logic but filtered by category
+            $categories = $this->dbal->database()->select('category', 'category_slug')
+                ->from('optilarity_templates')
+                ->where('status', 'active')
+                ->distinct()
+                ->fetchAll();
+
+            $html = $this->theme->render('templates-list', [
+                'title' => __('Website Templates') . ' - ' . $categoryName,
+                'templates' => $categoryTemplates,
+                'categories' => $categories,
+                'current_category' => $categoryName,
+                'current_category_slug' => $slug,
+                'search_query' => $search
+            ]);
+            return Response::html($html);
+        }
+
+        return Response::html('Content not found', 404);
     }
 }
