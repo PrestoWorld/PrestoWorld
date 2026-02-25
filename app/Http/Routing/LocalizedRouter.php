@@ -66,6 +66,8 @@ class LocalizedRouter extends Router implements RouterInterface
         app()->translator()->setLocale($locale);
         app()->view()->share('current_locale', $locale);
 
+        $request = $request->withAttribute('locale', $locale);
+
         // Route matching against stripped path — NO Request mutation, NO Reflection
         $method = $request->method();
         foreach ($this->routes as $route) {

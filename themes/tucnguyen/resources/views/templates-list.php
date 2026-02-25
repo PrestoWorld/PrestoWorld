@@ -209,9 +209,9 @@
 <main style="background: #f8fafc;">
     <section class="templates-hero">
         <div class="container text-center">
-            <div class="hero-badge" style="margin: 0 auto 20px; background: rgba(59, 130, 246, 0.1); color: var(--primary); padding: 6px 16px; border-radius: 99px; display: inline-block; font-weight: 700; font-size: 12px;">🏠 KHO GIAO DIỆN CAO CẤP</div>
-            <h1>Khám Phá <span class="gradient-text">Website Mẫu</span> Chuyên Nghiệp</h1>
-            <p>Giải pháp tối ưu cho doanh nghiệp và cá nhân. Tích hợp sẵn mọi tính năng cần thiết, chuẩn SEO, chuẩn UI/UX và tốc độ vượt trội.</p>
+            <div class="hero-badge" style="margin: 0 auto 20px; background: rgba(59, 130, 246, 0.1); color: var(--primary); padding: 6px 16px; border-radius: 99px; display: inline-block; font-weight: 700; font-size: 12px;">🏠 <?php echo __('PREMIUM TEMPLATE LIBRARY'); ?></div>
+            <h1><?php echo __('Discover'); ?> <span class="gradient-text"><?php echo __('Professional Templates'); ?></span></h1>
+            <p><?php echo __('Optimal solutions for businesses and individuals. Built-in essential features, SEO-ready, UI/UX optimized, and outstanding performance.'); ?></p>
         </div>
     </section>
 
@@ -219,7 +219,7 @@
         <div class="container">
             <form action="" method="GET" class="filter-inner">
                 <div class="category-shelf">
-                    <a href="<?php echo route_url('web-templates'); ?>" class="cat-btn <?php echo !$current_category ? 'active' : ''; ?>">Tất cả</a>
+                    <a href="<?php echo route_url('web-templates'); ?>" class="cat-btn <?php echo !$current_category ? 'active' : ''; ?>"><?php echo __('All'); ?></a>
                     <?php foreach($categories as $cat): ?>
                     <a href="<?php echo route_url('web-templates') . '/' . $cat['category_slug']; ?>" 
                        class="cat-btn <?php echo $current_category === $cat['category'] ? 'active' : ''; ?>">
@@ -232,7 +232,7 @@
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                     </svg>
-                    <input type="text" name="search" placeholder="Tìm tên giao diện hoặc tính năng..." value="<?php echo htmlspecialchars($search_query ?? ''); ?>">
+                    <input type="text" name="search" placeholder="<?php echo __('Search templates or features...'); ?>" value="<?php echo htmlspecialchars($search_query ?? ''); ?>">
                     <?php if ($current_category): ?>
                     <input type="hidden" name="category" value="<?php echo htmlspecialchars($current_category); ?>">
                     <?php endif; ?>
@@ -262,7 +262,7 @@
                         <p><?php echo $tp['description']; ?></p>
                         <div class="tp-footer">
                             <div class="tp-price">$<?php echo number_format($tp['price'], 2); ?></div>
-                            <a href="/checkout/template/<?php echo $tp['slug']; ?>" class="btn-buy-tp">Mua Ngay</a>
+                            <a href="/checkout/template/<?php echo $tp['slug']; ?>" class="btn-buy-tp"><?php echo __('Buy Now'); ?></a>
                         </div>
                     </div>
                 </div>
