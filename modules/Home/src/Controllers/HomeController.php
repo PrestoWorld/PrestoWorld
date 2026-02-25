@@ -192,7 +192,7 @@ class HomeController
         
         $html = "
         <section id='features' class='features-section' style='padding: 100px 20px; background: #ffffff;'>
-            <div style='max-width: 1200px; margin: 0 auto;'>
+            <div style='max-width: 1400px; margin: 0 auto;'>
                 <div style='text-align: center; margin-bottom: 60px;'>
                     <h2 style='font-size: 2.5rem; font-weight: 700; color: #0f172a; margin-bottom: 16px;'>Built for Modern Development</h2>
                     <p style='color: #64748b; font-size: 1.125rem;'>High-quality infrastructure for your next enterprise application.</p>
@@ -221,7 +221,7 @@ class HomeController
         $heading = $this->app->make('hooks')->applyFilters('home_posts_heading', 'Latest Posts (from WordPress Database):');
         
         $html = "<section class='recent-posts' style='padding: 80px 20px; background: #f1f5f9;'>
-            <div style='max-width: 1200px; margin: 0 auto;'>
+            <div style='max-width: 1400px; margin: 0 auto;'>
                 <h3 style='font-size: 2rem; font-weight: 700; color: #0f172a; margin-bottom: 40px;'>{$heading}</h3>";
 
         if (empty($postsData)) {
