@@ -63,5 +63,8 @@
     "Hoạt động tuần này": "Hoạt động trong tuần",
     "Nạp tiền": "Nạp tiền vào tài khoản",
     "Hồ sơ": "Xem hồ sơ",
-    "routes.web-templates": "web-mau"
+    "routes.web-templates": "web-mau",
+    "No matching templates found": "Không tìm thấy mẫu nào phù hợp",
+    "Try searching with different keywords or clear the category filter.": "Thử tìm kiếm với từ khóa khác hoặc xóa bộ lọc danh mục.",
+    "View all templates": "Xem tất cả giao diện"
 }

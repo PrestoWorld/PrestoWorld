@@ -224,6 +224,22 @@
         .dropdown-link .title { font-weight: 700; font-size: 14px; margin-bottom: 2px; white-space: nowrap; }
         .dropdown-link .desc { font-size: 12px; color: var(--gray); font-weight: 400; line-height: 1.4; display: block; }
         .nav-arrow { font-size: 9px; margin-left: 6px; vertical-align: middle; }
+
+        /* PRO badge */
+        .pro-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #f59e0b, #ef4444);
+            color: white;
+            font-size: 10px;
+            font-weight: 800;
+            padding: 2px 7px;
+            border-radius: 6px;
+            letter-spacing: 0.5px;
+            vertical-align: middle;
+            margin-left: 5px;
+            box-shadow: 0 2px 6px rgba(245, 158, 11, 0.4);
+            text-transform: uppercase;
+        }
     </style>
 </head>
 <body>
@@ -318,7 +334,7 @@
                         </div>
                     </li>
                     <li class="nav-item-has-dropdown">
-                        <a href="#"><?php echo __('Pro Services'); ?> <span class="nav-arrow">▼</span></a>
+                        <a href="#"><?php echo __('Services'); ?> <span class="pro-badge">PRO</span> <span class="nav-arrow">▼</span></a>
                         <div class="nav-dropdown wide-2col">
                             <div>
                                 <div class="dropdown-group-title"><?php echo __('Speed & Performance'); ?></div>

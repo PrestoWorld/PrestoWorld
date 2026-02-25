@@ -51,5 +51,10 @@
     "About Us": "会社概要",
     "Contact Support": "お問い合わせ",
     "Security": "セキュリティ",
-    "routes.web-templates": "website-templates"
+    "routes.web-templates": "website-templates",
+    "Terms of Service": "利用規約",
+    "Privacy Policy": "プライバシーポリシー",
+    "No matching templates found": "テンプレートが見つかりませんでした",
+    "Try searching with different keywords or clear the category filter.": "別のキーワードで検索するか、カテゴリフィルターをリセットしてください。",
+    "View all templates": "すべてのテンプレートを見る"
 }

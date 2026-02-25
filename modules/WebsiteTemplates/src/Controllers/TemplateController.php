@@ -60,7 +60,7 @@ class TemplateController extends CrudController
         $html = $this->theme->render('templates-list', [
             'title' => __('Website Templates'),
             'templates' => $templates,
-            'categories' => $this->getCategories(),
+            'categories' => $this->getCategories($request),
             'current_category' => $category,
             'search_query' => $search
         ]);
@@ -101,7 +101,7 @@ class TemplateController extends CrudController
             $html = $this->theme->render('templates-list', [
                 'title' => __('Website Templates') . ' - ' . $categoryExists['category'],
                 'templates' => array_map([$this, 'processItem'], $query->fetchAll()),
-                'categories' => $this->getCategories(),
+                'categories' => $this->getCategories($request),
                 'current_category' => $categoryExists['category'],
                 'current_category_slug' => $slug,
                 'search_query' => $request->query('search')
@@ -146,11 +146,36 @@ class TemplateController extends CrudController
         }
     }
 
-    protected function getCategories(): array
+    protected function getCategories(Request $request): array
     {
-        // Categories also need translation if we want them in the filter shelf
-        // For now keep it simple or join there too.
-        return $this->dbal->database()->select('category', 'category_slug')
+        $locale      = $request->getAttribute('locale') ?: app()->translator()->getLocale();
+        $defaultLocale = config('app.locale', 'en');
+
+        if ($this->translationTable && $locale !== $defaultLocale) {
+            // Fetch translated category names from translation table
+            $rows = $this->dbal->database()
+                ->select(['p.category_slug', 't.category as category'])
+                ->from($this->table . ' as p')
+                ->leftJoin($this->translationTable . ' as t')
+                ->on('t.template_id', 'p.id')
+                ->where('t.language', $locale)
+                ->where('p.status', 'active')
+                ->distinct()
+                ->fetchAll();
+
+            // Deduplicate by category_slug
+            $seen = [];
+            $result = [];
+            foreach ($rows as $row) {
+                if (!isset($seen[$row['category_slug']])) {
+                    $seen[$row['category_slug']] = true;
+                    $result[] = $row;
+                }
+            }
+            return $result;
+        }
+
+        return $this->dbal->database()->select(['category', 'category_slug'])
             ->from($this->table)
             ->where('status', 'active')
             ->distinct()
