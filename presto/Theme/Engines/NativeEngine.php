@@ -28,40 +28,25 @@ class NativeEngine extends AbstractEngine
         $locale = $this->theme->getApp()->translator()->getLocale();
 
         // 2. Register theme locations to View Factory if not done already
-        // In PrestoWorld standardization, themes should use the core view factory
         $themeViewPath = $this->theme->getPath() . '/resources/views';
-        // (Usually done in ServiceProvider but we ensure it here for theme-engine isolation)
-        if (method_exists($viewFactory, 'addLocation')) {
-            $viewFactory->addLocation($themeViewPath);
+        if (is_dir($themeViewPath)) {
+            $viewFactory->prependLocation($themeViewPath);
+            foreach ($viewFactory->getEngines() as $engine) {
+                if (method_exists($engine, 'prependPath')) {
+                    $engine->prependPath($themeViewPath);
+                }
+            }
         }
 
         // 3. Detect view file type
-        // Check for locale specific .stempler.php first, then .stempler.php, then .php
-        $extensions = ['.stempler.php', '.php'];
         $variants = ['.' . $locale, ''];
-
+        
+        // 3. Detect and render view using the Factory
         foreach ($variants as $variant) {
-            foreach ($extensions as $ext) {
-                $checkPath = $themeViewPath . '/' . $view . $variant . $ext;
-                if (file_exists($checkPath)) {
-                    // If it's a stempler file, use the engine
-                    if (str_ends_with($checkPath, '.stempler.php')) {
-                        $this->theme->getApp()->instance('view.rendered', true);
-                        return $viewFactory->make($view . $variant, $data)->render();
-                    }
-                    
-                    // Fallback to legacy include if it's plain .php but requested via NativeEngine
-                    extract($data);
-                    ob_start();
-                    $this->theme->getApp()->instance('view.rendered', true);
-                    try {
-                        include $checkPath;
-                        return ob_get_clean() ?: '';
-                    } catch (\Throwable $e) {
-                        if (ob_get_level() > 0) ob_end_clean();
-                        throw $e;
-                    }
-                }
+            $viewName = $view . $variant;
+            if ($viewFactory->exists($viewName)) {
+                $this->theme->getApp()->instance('view.rendered', true);
+                return $viewFactory->make($viewName, $data)->render();
             }
         }
 

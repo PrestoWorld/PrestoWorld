@@ -62,6 +62,22 @@ class ThemeManager
     {
         if (isset($this->themes[$name])) {
             $this->activeTheme = $this->themes[$name];
+            
+            // Register Theme View Paths
+            if ($this->app->has(\Witals\Framework\Contracts\View\Factory::class)) {
+                $view = $this->app->make(\Witals\Framework\Contracts\View\Factory::class);
+                $themeViews = $this->activeTheme->getPath() . '/resources/views';
+                
+                if (is_dir($themeViews)) {
+                    $view->prependLocation($themeViews);
+                    foreach ($view->getEngines() as $engine) {
+                        if (method_exists($engine, 'prependPath')) {
+                            $engine->prependPath($themeViews);
+                        }
+                    }
+                }
+            }
+            
             // Boot the theme (which boots its engine and helpers)
             $this->activeTheme->boot();
         } else {

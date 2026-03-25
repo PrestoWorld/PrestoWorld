@@ -25,7 +25,7 @@ class ViewServiceProvider extends ServiceProvider
             // Register Stempler Engine for .stempler.php and .dark.php files
             $stempler = new StemplerEngine($cachePath, [
                 $app->basePath('resources/views'),
-            ]);
+            ], ['.stempler.php', '.dark.php']);
             
             $view->registerEngine('stempler.php', $stempler);
             $view->registerEngine('dark.php', $stempler);
@@ -58,8 +58,8 @@ class ViewServiceProvider extends ServiceProvider
 
                 // Update engines searching paths
                 foreach ($view->getEngines() as $engine) {
-                    if (method_exists($engine, 'addPath')) {
-                        $engine->addPath($themeViews);
+                    if (method_exists($engine, 'prependPath')) {
+                        $engine->prependPath($themeViews);
                     }
                 }
             }
