@@ -13,8 +13,8 @@ use Witals\Framework\Database\Crud\CrudController;
 class PageController extends CrudController
 {
     protected ThemeManager $theme;
-    protected string $table = 'optilarity_static_pages';
-    protected ?string $translationTable = 'optilarity_translations_static_pages';
+    protected string $table = 'presto_static_pages';
+    protected ?string $translationTable = 'presto_translations_static_pages';
     protected array $translatableFields = ['title', 'content'];
     protected bool $isSeoable = true;
 

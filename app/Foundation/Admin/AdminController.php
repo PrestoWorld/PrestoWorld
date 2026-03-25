@@ -130,7 +130,7 @@ abstract class AdminController
                                 <strong>DigitalCore</strong> v2.4.0 — Premium Admin Experience
                             </div>
                             <div class="footer-right">
-                                Created with &hearts; by DeepMind & Optilarity Team
+                                Created with &hearts; by DeepMind & PrestoWorld Team
                             </div>
                         </footer>
                     </div>

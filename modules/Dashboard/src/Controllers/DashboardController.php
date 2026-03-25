@@ -223,11 +223,11 @@ HTML;
     {
         $db = $this->db();
         
-        $customers = (int)$db->select()->from('optilarity_customers')->count('id');
-        $orders    = (int)$db->select()->from('optilarity_orders')->count('id');
-        $licenses  = (int)$db->select()->from('optilarity_licenses')->count('id');
+        $customers = (int)$db->select()->from('presto_customers')->count('id');
+        $orders    = (int)$db->select()->from('presto_orders')->count('id');
+        $licenses  = (int)$db->select()->from('presto_licenses')->count('id');
         
-        $revenue   = $db->select(new Fragment('SUM(total) as total'))->from('optilarity_orders')->run()->fetch();
+        $revenue   = $db->select(new Fragment('SUM(total) as total'))->from('presto_orders')->run()->fetch();
         
         return [
             'customers' => number_format($customers),

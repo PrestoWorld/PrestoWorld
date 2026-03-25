@@ -4,7 +4,7 @@
     "description": "Static Pages Management (About, Contact, Privacy)",
     "tables": [
         {
-            "name": "optilarity_static_pages",
+            "name": "presto_static_pages",
             "columns": [
                 {
                     "name": "id",
@@ -55,7 +55,7 @@
             ]
         },
         {
-            "name": "optilarity_translations_static_pages",
+            "name": "presto_translations_static_pages",
             "columns": [
                 {
                     "name": "id",
@@ -109,7 +109,7 @@
                 {
                     "name": "fk_page_trans_obj",
                     "column": "static_page_id",
-                    "references": "optilarity_static_pages",
+                    "references": "presto_static_pages",
                     "on": "id",
                     "on_delete": "CASCADE"
                 }

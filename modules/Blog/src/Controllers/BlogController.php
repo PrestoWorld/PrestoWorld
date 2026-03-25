@@ -13,7 +13,7 @@ use PrestoWorld\Theme\ThemeManager;
 class BlogController extends CrudController
 {
     protected ThemeManager $theme;
-    protected string $table = 'optilarity_blog_posts';
+    protected string $table = 'presto_blog_posts';
     protected array $translatableFields = ['title', 'content', 'excerpt'];
     protected bool $isSeoable = true;
 
@@ -26,8 +26,8 @@ class BlogController extends CrudController
     public function index(Request $request): Response
     {
         $query = $this->dbal->database()->select('p.*', 'c.name as category_name', 'c.slug as category_slug')
-            ->from('optilarity_blog_posts as p')
-            ->leftJoin('optilarity_blog_categories as c')->on('p.category_id', 'c.id')
+            ->from('presto_blog_posts as p')
+            ->leftJoin('presto_blog_categories as c')->on('p.category_id', 'c.id')
             ->where('p.status', 'publish')
             ->orderBy('p.is_featured', 'DESC')
             ->orderBy('p.published_at', 'DESC');
@@ -35,8 +35,8 @@ class BlogController extends CrudController
         $posts = array_map([$this, 'processItem'], $query->fetchAll());
 
         $categories = $this->dbal->database()->select('c.*', 'COUNT(p.id) as post_count')
-            ->from('optilarity_blog_categories as c')
-            ->leftJoin('optilarity_blog_posts as p')->on('c.id', 'p.category_id')
+            ->from('presto_blog_categories as c')
+            ->leftJoin('presto_blog_posts as p')->on('c.id', 'p.category_id')
             ->groupBy('c.id')
             ->run()
             ->fetchAll();
@@ -57,8 +57,8 @@ class BlogController extends CrudController
     public function show(Request $request, $slug): Response
     {
         $postRaw = $this->dbal->database()->select('p.*', 'c.name as category_name', 'c.slug as category_slug')
-            ->from('optilarity_blog_posts as p')
-            ->leftJoin('optilarity_blog_categories as c')->on('p.category_id', 'c.id')
+            ->from('presto_blog_posts as p')
+            ->leftJoin('presto_blog_categories as c')->on('p.category_id', 'c.id')
             ->where('p.slug', $slug)
             ->run()
             ->fetch();
@@ -70,19 +70,19 @@ class BlogController extends CrudController
         $post = $this->processItem($postRaw);
 
         // Increment views
-        $this->dbal->database()->update('optilarity_blog_posts', [
+        $this->dbal->database()->update('presto_blog_posts', [
             'view_count' => (int)$post['view_count'] + 1
         ], ['id' => $post['id']])->run();
 
         $tags = $this->dbal->database()->select('t.*')
-            ->from('optilarity_blog_tags as t')
-            ->join('optilarity_blog_post_tags as pt')->on('t.id', 'pt.tag_id')
+            ->from('presto_blog_tags as t')
+            ->join('presto_blog_post_tags as pt')->on('t.id', 'pt.tag_id')
             ->where('pt.post_id', $post['id'])
             ->run()
             ->fetchAll();
 
         $comments = $this->dbal->database()->select('*')
-            ->from('optilarity_blog_comments')
+            ->from('presto_blog_comments')
             ->where('post_id', $post['id'])
             ->where('status', 'approved')
             ->orderBy('created_at', 'DESC')
@@ -90,8 +90,8 @@ class BlogController extends CrudController
             ->fetchAll();
 
         $relatedPosts = array_map([$this, 'processItem'], $this->dbal->database()->select('p.*', 'c.name as category_name')
-            ->from('optilarity_blog_posts as p')
-            ->leftJoin('optilarity_blog_categories as c')->on('p.category_id', 'c.id')
+            ->from('presto_blog_posts as p')
+            ->leftJoin('presto_blog_categories as c')->on('p.category_id', 'c.id')
             ->where('p.category_id', $post['category_id'])
             ->where('p.id', '!=', $post['id'])
             ->limit(3)
@@ -110,7 +110,7 @@ class BlogController extends CrudController
     public function category(string $slug): Response
     {
         $category = $this->dbal->database()->select('*')
-            ->from('optilarity_blog_categories')
+            ->from('presto_blog_categories')
             ->where('slug', $slug)
             ->run()
             ->fetch();
@@ -120,8 +120,8 @@ class BlogController extends CrudController
         }
 
         $posts = array_map([$this, 'processItem'], $this->dbal->database()->select('p.*', 'c.name as category_name')
-            ->from('optilarity_blog_posts as p')
-            ->leftJoin('optilarity_blog_categories as c')->on('p.category_id', 'c.id')
+            ->from('presto_blog_posts as p')
+            ->leftJoin('presto_blog_categories as c')->on('p.category_id', 'c.id')
             ->where('p.category_id', $category['id'])
             ->where('p.status', 'publish')
             ->orderBy('p.published_at', 'DESC')
@@ -129,8 +129,8 @@ class BlogController extends CrudController
             ->fetchAll());
 
         $categories = $this->dbal->database()->select('c.*', 'COUNT(p.id) as post_count')
-            ->from('optilarity_blog_categories as c')
-            ->leftJoin('optilarity_blog_posts as p')->on('c.id', 'p.category_id')
+            ->from('presto_blog_categories as c')
+            ->leftJoin('presto_blog_posts as p')->on('c.id', 'p.category_id')
             ->groupBy('c.id')
             ->run()
             ->fetchAll();
@@ -146,7 +146,7 @@ class BlogController extends CrudController
     public function tag(string $slug): Response
     {
         $tag = $this->dbal->database()->select('*')
-            ->from('optilarity_blog_tags')
+            ->from('presto_blog_tags')
             ->where('slug', $slug)
             ->run()
             ->fetch();
@@ -156,17 +156,17 @@ class BlogController extends CrudController
         }
 
         $posts = array_map([$this, 'processItem'], $this->dbal->database()->select('p.*', 'c.name as category_name')
-            ->from('optilarity_blog_posts as p')
-            ->join('optilarity_blog_post_tags as pt')->on('p.id', 'pt.post_id')
-            ->leftJoin('optilarity_blog_categories as c')->on('p.category_id', 'c.id')
+            ->from('presto_blog_posts as p')
+            ->join('presto_blog_post_tags as pt')->on('p.id', 'pt.post_id')
+            ->leftJoin('presto_blog_categories as c')->on('p.category_id', 'c.id')
             ->where('pt.tag_id', $tag['id'])
             ->where('p.status', 'publish')
             ->run()
             ->fetchAll());
 
         $categories = $this->dbal->database()->select('c.*', 'COUNT(p.id) as post_count')
-            ->from('optilarity_blog_categories as c')
-            ->leftJoin('optilarity_blog_posts as p')->on('c.id', 'p.category_id')
+            ->from('presto_blog_categories as c')
+            ->leftJoin('presto_blog_posts as p')->on('c.id', 'p.category_id')
             ->groupBy('c.id')
             ->run()
             ->fetchAll();
@@ -182,7 +182,7 @@ class BlogController extends CrudController
     public function apiIndex(): Response
     {
         $posts = array_map([$this, 'processItem'], $this->dbal->database()->select('*')
-            ->from('optilarity_blog_posts')
+            ->from('presto_blog_posts')
             ->where('status', 'publish')
             ->run()
             ->fetchAll());
@@ -193,7 +193,7 @@ class BlogController extends CrudController
     public function apiShow(string $slug): Response
     {
         $post = $this->dbal->database()->select('*')
-            ->from('optilarity_blog_posts')
+            ->from('presto_blog_posts')
             ->where('slug', $slug)
             ->run()
             ->fetch();

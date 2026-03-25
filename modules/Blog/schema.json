@@ -4,7 +4,7 @@
     "description": "Native Blog Module with Tags, Comments and Modern UI",
     "tables": [
         {
-            "name": "optilarity_blog_categories",
+            "name": "presto_blog_categories",
             "columns": [
                 {
                     "name": "id",
@@ -40,7 +40,7 @@
             ]
         },
         {
-            "name": "optilarity_blog_tags",
+            "name": "presto_blog_tags",
             "columns": [
                 {
                     "name": "id",
@@ -67,7 +67,7 @@
             ]
         },
         {
-            "name": "optilarity_blog_posts",
+            "name": "presto_blog_posts",
             "columns": [
                 {
                     "name": "id",
@@ -161,14 +161,14 @@
             "foreign_keys": [
                 {
                     "column": "category_id",
-                    "references": "optilarity_blog_categories",
+                    "references": "presto_blog_categories",
                     "on": "id",
                     "on_delete": "CASCADE"
                 }
             ]
         },
         {
-            "name": "optilarity_blog_post_tags",
+            "name": "presto_blog_post_tags",
             "columns": [
                 {
                     "name": "post_id",
@@ -191,20 +191,20 @@
             "foreign_keys": [
                 {
                     "column": "post_id",
-                    "references": "optilarity_blog_posts",
+                    "references": "presto_blog_posts",
                     "on": "id",
                     "on_delete": "CASCADE"
                 },
                 {
                     "column": "tag_id",
-                    "references": "optilarity_blog_tags",
+                    "references": "presto_blog_tags",
                     "on": "id",
                     "on_delete": "CASCADE"
                 }
             ]
         },
         {
-            "name": "optilarity_blog_comments",
+            "name": "presto_blog_comments",
             "columns": [
                 {
                     "name": "id",
@@ -251,7 +251,7 @@
             "foreign_keys": [
                 {
                     "column": "post_id",
-                    "references": "optilarity_blog_posts",
+                    "references": "presto_blog_posts",
                     "on": "id",
                     "on_delete": "CASCADE"
                 }

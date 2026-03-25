@@ -4,7 +4,7 @@
     "description": "Extended user profiles. Depends on nothing (uses user_id FK loosely).",
     "tables": [
         {
-            "name": "optilarity_profiles",
+            "name": "presto_profiles",
             "comment": "Extended profile data for users. Soft-linked to user_id (no strict FK — user table varies by auth driver).",
             "columns": [
                 {

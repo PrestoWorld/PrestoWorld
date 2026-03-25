@@ -211,7 +211,7 @@ class Kernel implements KernelContract
             if ($this->app->has(\Cycle\Database\DatabaseProviderInterface::class)) {
                 $db = $this->app->make(\Cycle\Database\DatabaseProviderInterface::class)->database();
                 $webServices = $db->select('*')
-                    ->from('optilarity_web_services')
+                    ->from('presto_web_services')
                     ->where('status', 'active')
                     ->limit(4)
                     ->run()

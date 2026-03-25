@@ -1,8 +1,0 @@
-{
-    "name": "WebsiteTemplates",
-    "version": "1.0.0",
-    "description": "Showcase and sell pre-made website layouts",
-    "providers": [
-        "Modules\\WebsiteTemplates\\WebsiteTemplatesServiceProvider"
-    ]
-}

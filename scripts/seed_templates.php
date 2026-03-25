@@ -23,7 +23,7 @@ try {
                 'category_slug' => 'travel',
                 'price' => 249.00,
                 'image_url' => 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&q=80&w=800',
-                'demo_url' => 'https://demo.optilarity.top/lux-hotel',
+                'demo_url' => 'https://demo.prestoworld.com/lux-hotel',
                 'features' => json_encode(['Booking System', 'Mobile Optimized', 'SEO Ready']),
                 'status' => 'active',
                 'created_at' => Chronos::now()
@@ -45,7 +45,7 @@ try {
                 'category_slug' => 'e-commerce',
                 'price' => 189.00,
                 'image_url' => 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=800',
-                'demo_url' => 'https://demo.optilarity.top/fashion-store',
+                'demo_url' => 'https://demo.prestoworld.com/fashion-store',
                 'features' => json_encode(['Inventory Sync', 'Discount System', 'High Performance']),
                 'status' => 'active',
                 'created_at' => Chronos::now()
@@ -67,7 +67,7 @@ try {
                 'category_slug' => 'technology',
                 'price' => 129.00,
                 'image_url' => 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=800',
-                'demo_url' => 'https://demo.optilarity.top/tech-saas',
+                'demo_url' => 'https://demo.prestoworld.com/tech-saas',
                 'features' => json_encode(['Pricing Tables', 'User Dashboard', 'API Ready']),
                 'status' => 'active',
                 'created_at' => Chronos::now()
@@ -84,14 +84,14 @@ try {
 
     foreach ($templates as $item) {
         $mainData = $item['main'];
-        $exists = $db->table('optilarity_templates')->where('slug', $mainData['slug'])->run()->fetch();
+        $exists = $db->table('presto_templates')->where('slug', $mainData['slug'])->run()->fetch();
         
         if (!$exists) {
-            $id = $db->insert('optilarity_templates')->values($mainData)->run();
+            $id = $db->insert('presto_templates')->values($mainData)->run();
             echo "Seeded: " . $mainData['name'] . "\n";
         } else {
             $id = $exists['id'];
-            $db->update('optilarity_templates', $mainData, ['id' => $id])->run();
+            $db->update('presto_templates', $mainData, ['id' => $id])->run();
             echo "Updated: " . $mainData['name'] . "\n";
         }
 
@@ -99,16 +99,16 @@ try {
             $transData['template_id'] = $id;
             $transData['language'] = $lang;
             
-            $transExists = $db->table('optilarity_translations_templates')
+            $transExists = $db->table('presto_translations_templates')
                 ->where('template_id', $id)
                 ->where('language', $lang)
                 ->count();
             
             if ($transExists === 0) {
-                $db->insert('optilarity_translations_templates')->values($transData)->run();
+                $db->insert('presto_translations_templates')->values($transData)->run();
                 echo "  -> Seeded translation ($lang) for " . $mainData['name'] . "\n";
             } else {
-                $db->update('optilarity_translations_templates', $transData, [
+                $db->update('presto_translations_templates', $transData, [
                     'template_id' => $id,
                     'language' => $lang
                 ])->run();

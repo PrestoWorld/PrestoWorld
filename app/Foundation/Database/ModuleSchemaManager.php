@@ -15,7 +15,7 @@ use Cycle\Database\Schema\AbstractColumn;
  * using Cycle DBAL's AbstractTable API. Inspired by Joomla's declarative
  * installer manifest approach — no raw SQL scripts needed.
  *
- * PERFORMANCE: A schema registry table (optilarity_schema_registry) tracks
+ * PERFORMANCE: A schema registry table (presto_schema_registry) tracks
  * the SHA-256 hash of each module's schema.json. Sync only runs when:
  *   - The hash changed (developer updated schema.json)
  *   - SCHEMA_FORCE_SYNC=true env var is set
@@ -26,7 +26,7 @@ use Cycle\Database\Schema\AbstractColumn;
  *   "version": "1.0.0",
  *   "tables": [
  *     {
- *       "name": "optilarity_customers",
+ *       "name": "presto_customers",
  *       "columns": [
  *         { "name": "id",         "type": "primary" },
  *         { "name": "email",      "type": "string",  "size": 255, "nullable": false },
@@ -40,7 +40,7 @@ use Cycle\Database\Schema\AbstractColumn;
  *       "foreign_keys": [
  *         {
  *           "column":     "customer_id",
- *           "references": "optilarity_customers",
+ *           "references": "presto_customers",
  *           "on":         "id",
  *           "on_delete":  "SET NULL",
  *           "on_update":  "CASCADE"
@@ -441,7 +441,7 @@ class ModuleSchemaManager
      *   "foreign_keys": [
      *     {
      *       "column"     : "customer_id",
-     *       "references" : "optilarity_customers",
+     *       "references" : "presto_customers",
      *       "on"         : "id",
      *       "on_delete"  : "SET NULL",   // CASCADE | SET NULL | NO ACTION | RESTRICT
      *       "on_update"  : "CASCADE"

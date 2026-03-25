@@ -63,7 +63,7 @@
             </div>
         </div>
         <div class="container footer-bottom">
-            <div>© <?php echo date('Y'); ?> Optilarity. All rights reserved.</div>
+            <div>© <?php echo date('Y'); ?> PrestoWorld. All rights reserved.</div>
             <div style="display: flex; gap: 20px;">
                 <a href="<?php echo locale_url('/privacy-policy', $locale); ?>"><?php echo __('Privacy Policy'); ?></a>
                 <a href="<?php echo locale_url('/contact', $locale); ?>"><?php echo __('Terms of Service'); ?></a>

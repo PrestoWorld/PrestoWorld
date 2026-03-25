@@ -11,7 +11,7 @@ try {
     $dbal = $app->make(DatabaseProviderInterface::class);
     $db = $dbal->database();
 
-    $sql = "CREATE TABLE IF NOT EXISTS optilarity_templates (
+    $sql = "CREATE TABLE IF NOT EXISTS presto_templates (
         id INT AUTO_INCREMENT PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
         slug VARCHAR(255) NOT NULL UNIQUE,
@@ -27,7 +27,7 @@ try {
     )";
 
     $db->execute($sql);
-    echo "Table 'optilarity_templates' created successfully.\n";
+    echo "Table 'presto_templates' created successfully.\n";
 
 } catch (\Throwable $e) {
     echo "Error: " . $e->getMessage() . "\n";

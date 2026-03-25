@@ -15,7 +15,7 @@ class ProfileAdminController extends AdminController
     {
         // In a real app, get $userId from auth session
         $userId = (int)($request->query()['user_id'] ?? 1);
-        $profile = $this->db()->select('*')->from('optilarity_profiles')->where('user_id', $userId)->run()->fetch();
+        $profile = $this->db()->select('*')->from('presto_profiles')->where('user_id', $userId)->run()->fetch();
         $form    = $this->renderForm($profile ? (array)$profile : ['user_id' => $userId], '/dashboard/profile', 'POST');
 
         return $this->htmlResponse(
@@ -30,7 +30,7 @@ class ProfileAdminController extends AdminController
         $userId = (int)($body['user_id'] ?? 1);
 
         try {
-            $exists = $this->db()->select('id')->from('optilarity_profiles')->where('user_id', $userId)->run()->fetch();
+            $exists = $this->db()->select('id')->from('presto_profiles')->where('user_id', $userId)->run()->fetch();
             $data   = [
                 'display_name' => $body['display_name'] ?? null,
                 'bio'          => $body['bio']          ?? null,
@@ -41,9 +41,9 @@ class ProfileAdminController extends AdminController
             ];
 
             if ($exists) {
-                $this->db()->update('optilarity_profiles', $data, ['user_id' => $userId]);
+                $this->db()->update('presto_profiles', $data, ['user_id' => $userId]);
             } else {
-                $this->db()->insert('optilarity_profiles')->values(array_merge($data, [
+                $this->db()->insert('presto_profiles')->values(array_merge($data, [
                     'user_id'    => $userId,
                     'created_at' => date('Y-m-d H:i:s'),
                 ]))->run();
