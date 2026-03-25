@@ -46,25 +46,21 @@ class ContextServiceProvider extends ServiceProvider
 
     protected function registerDefaultItems(ContextManager $contexts): void
     {
-        // 1. Header Navigation - Products Dropdown
-        $products = new \PrestoWorld\Context\Items\MenuItemContext('nav_products', 'Products', '#', priority: 10);
+        // 1. Dashboard Sidebar Menu (Generic CMS)
+        $contexts->register('dashboard.menu', new \PrestoWorld\Context\Items\MenuItemContext('menu_dashboard', 'Dashboard', '/dashboard', '📊', priority: 10));
         
-        $cloudGroup = new \PrestoWorld\Context\Items\DropdownGroupContext('group_cloud', 'Cloud & Infrastructure', priority: 10);
-        $cloudGroup->add(new \PrestoWorld\Context\Items\MenuItemContext('item_hosting', 'Hosting', '/hosting', '☁️', 'High-speed web hosting', priority: 10));
-        $cloudGroup->add(new \PrestoWorld\Context\Items\MenuItemContext('item_vps', 'VPS Server', '/vps', '⚡', 'Powerful virtual servers', priority: 20));
+        $systemGroup = new \PrestoWorld\Context\Items\DropdownGroupContext('group_system', 'System Settings', priority: 100);
+        $systemGroup->add(new \PrestoWorld\Context\Items\MenuItemContext('item_general', 'General', '/dashboard/settings', '🔧', priority: 10));
+        $systemGroup->add(new \PrestoWorld\Context\Items\MenuItemContext('item_modules', 'Modules', '/dashboard/modules', '📦', priority: 20));
         
-        $assetGroup = new \PrestoWorld\Context\Items\DropdownGroupContext('group_assets', 'Digital Assets', priority: 20);
-        $assetGroup->add(new \PrestoWorld\Context\Items\MenuItemContext('item_themes', 'Premium Themes', '/code/themes', '🎨', 'Beautiful web designs', priority: 10));
-        
-        $products->addGroup($cloudGroup);
-        $products->addGroup($assetGroup);
+        $contexts->register('dashboard.menu', $systemGroup);
+        $contexts->register('dashboard.menu', new \PrestoWorld\Context\Items\MenuItemContext('menu_users', 'User Management', '/dashboard/users', '👥', priority: 30));
 
-        $contexts->register('header.nav', $products);
-        $contexts->register('header.nav', new \PrestoWorld\Context\Items\MenuItemContext('nav_services', 'Services', '#', priority: 20, badge: 'PRO'));
-        $contexts->register('header.nav', new \PrestoWorld\Context\Items\MenuItemContext('nav_web_templates', 'Website Templates', '/web-templates', priority: 30));
-        $contexts->register('header.nav', new \PrestoWorld\Context\Items\MenuItemContext('nav_blog', 'Blog', '/blog', priority: 40));
+        // 2. Header Navigation (Generic Framework)
+        $contexts->register('header.nav', new \PrestoWorld\Context\Items\MenuItemContext('nav_home', 'Visit Site', '/', priority: 10));
+        $contexts->register('header.nav', new \PrestoWorld\Context\Items\MenuItemContext('nav_docs', 'Documentation', 'https://prestoworld.com/docs', priority: 20));
 
-        // 2. Header Actions - Avatar (Placeholder)
+        // 3. Header Actions - Avatar (Placeholder)
         $contexts->register('header.actions', new \PrestoWorld\Context\Items\AvatarContext(
             id: 'header_user_area',
             priority: 100

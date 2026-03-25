@@ -11,6 +11,7 @@
             "Modules\\Blog\\": "modules/Blog/src/",
             "Modules\\StaticPages\\": "modules/StaticPages/src/",
             "Modules\\WebsiteTemplates\\": "modules/WebsiteTemplates/src/",
+            "Modules\\Dashboard\\": "modules/Dashboard/src/",
             "Modules\\": "modules/"
         },
         "files": [

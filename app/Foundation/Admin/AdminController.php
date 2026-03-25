@@ -89,53 +89,17 @@ abstract class AdminController
 
     protected function adminNav(): string
     {
-        $groups = [
-            ['label' => 'Bảng điều khiển', 'url' => '/dashboard', 'icon' => '📊'],
-            'Kinh doanh' => [
-                'icon' => '🛍️',
-                'children' => [
-                    ['label' => 'Đơn hàng',      'url' => '/dashboard/orders',     'icon' => '🛒'],
-                    ['label' => 'Khách hàng',    'url' => '/dashboard/customers',  'icon' => '👥'],
-                    ['label' => 'Hóa đơn',       'url' => '/dashboard/invoices',   'icon' => '📄'],
-                    ['label' => 'Cộng tác viên', 'url' => '/dashboard/affiliates', 'icon' => '🤝'],
-                ]
-            ],
-            'Sản phẩm Số' => [
-                'icon' => '📦',
-                'children' => [
-                    ['label' => 'Gói Thành Viên', 'url' => '/dashboard/memberships', 'icon' => '💎'],
-                    ['label' => 'Software Licenses', 'url' => '/dashboard/licenses', 'icon' => '💻'],
-                    ['label' => 'Themes Manager', 'url' => '/dashboard/catalog?type=theme', 'icon' => '🎨'],
-                    ['label' => 'Plugins Repository', 'url' => '/dashboard/catalog?type=plugin', 'icon' => '🔌'],
-                    ['label' => 'Quản lý Dịch vụ', 'url' => '/dashboard/web-services', 'icon' => '🛠️'],
-                ]
-            ],
-            'Dịch vụ Hạ tầng' => [
-                'icon' => '☁️',
-                'children' => [
-                    ['label' => 'Quản lý Hosting',  'url' => '/dashboard/hosting',   'icon' => '🖥️'],
-                    ['label' => 'Quản lý Tên miền', 'url' => '/dashboard/domains',   'icon' => '🌐'],
-                    ['label' => 'Chứng chỉ SSL',    'url' => '/dashboard/infrastructure/ssl', 'icon' => '🔒'],
-                    ['label' => 'Email Hosting',    'url' => '/dashboard/infrastructure/email', 'icon' => '📧'],
-                ]
-            ],
-            'Hệ thống' => [
-                'icon' => '⚙️',
-                'children' => [
-                    ['label' => 'API Keys (Updater)', 'url' => '/dashboard/profile', 'icon' => '⚡'],
-                    ['label' => 'Webhooks',      'url' => '/dashboard/webhooks',   'icon' => '🪝'],
-                ]
-            ]
-        ];
-
         $current = $_SERVER['REQUEST_URI'] ?? '';
         $html = '<div class="presto-nav-groups">';
         
-        // Check if any submenu child is active
+        $groups = app('contexts')->resolve('dashboard.menu');
+        
+        // Pre-check for any active child to handle accordion opening
         $anySubmenuActive = false;
         foreach ($groups as $data) {
-            if (isset($data['children'])) {
-                foreach ($data['children'] as $child) {
+            if (!empty($data['children']) || !empty($data['groups'])) {
+                $allChildren = array_merge($data['children'], $data['groups']);
+                foreach ($allChildren as $child) {
                     if ($current === $child['url'] || str_starts_with($current, $child['url'] . '?')) {
                         $anySubmenuActive = true;
                         break 2;
@@ -144,9 +108,9 @@ abstract class AdminController
             }
         }
 
-        foreach ($groups as $groupLabel => $data) {
-            // Case 1: Simple Link (Indexed or has 'url')
-            if (isset($data['url'])) {
+        foreach ($groups as $index => $data) {
+            // Case 1: Simple Link
+            if (empty($data['children']) && empty($data['groups'])) {
                 $active = ($current === $data['url'] || str_starts_with($current, $data['url'] . '?')) ? ' active' : '';
                 $html .= "<a href=\"{$data['url']}\" class=\"presto-nav-item{$active}\">";
                 $html .= "  <span class='nav-icon'>{$data['icon']}</span> <span class='nav-label'>{$data['label']}</span>";
@@ -154,33 +118,31 @@ abstract class AdminController
                 continue;
             }
 
-            // Case 2: Named Group with Children
-            if (!isset($data['children']) || !is_array($data['children'])) {
-                continue;
-            }
-
+            // Case 2: Group with Children (DropdownGroup or MenuItem with children)
+            $allChildren = array_merge($data['children'], $data['groups']);
+            
             $hasActiveChild = false;
-            foreach ($data['children'] as $child) {
+            foreach ($allChildren as $child) {
                 if ($current === $child['url'] || str_starts_with($current, $child['url'] . '?')) {
                     $hasActiveChild = true;
                     break;
                 }
             }
 
-            // Default to open 'Kinh doanh' if no other submenu is active
-            $shouldOpen = $hasActiveChild || (!$anySubmenuActive && $groupLabel === 'Kinh doanh');
+            // Default to open first group if no other submenu is active
+            $shouldOpen = $hasActiveChild || (!$anySubmenuActive && $index === 0);
             $openClass = $shouldOpen ? ' is-open' : '';
             $activeParentClass = $hasActiveChild ? ' active-parent' : '';
             
             $html .= "<div class=\"presto-nav-group-wrapper{$openClass}\">";
             $html .= "  <div class=\"presto-nav-item has-children{$activeParentClass}\" data-toggle=\"submenu\">";
             $html .= "      <span class='nav-icon'>{$data['icon']}</span>";
-            $html .= "      <span class='nav-label'>{$groupLabel}</span>";
+            $html .= "      <span class='nav-label'>{$data['label']}</span>";
             $html .= "      <span class='nav-chevron'><svg width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9l6 6 6-6'/></svg></span>";
             $html .= "  </div>";
             $html .= "  <div class=\"presto-submenu\">";
             
-            foreach ($data['children'] as $child) {
+            foreach ($allChildren as $child) {
                 $childActive = ($current === $child['url'] || str_starts_with($current, $child['url'] . '?')) ? ' active' : '';
                 $html .= "      <a href=\"{$child['url']}\" class=\"presto-submenu-item{$childActive}\">";
                 $html .= "          <span class='sub-icon'>{$child['icon']}</span> <span class='sub-label'>{$child['label']}</span>";

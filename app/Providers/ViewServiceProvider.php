@@ -45,14 +45,22 @@ class ViewServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Automatically add Active Theme's views to location list
         $app = $this->app;
+        // Automatically add Active Theme's views to location list
         if ($app->has(\PrestoWorld\Theme\ThemeManager::class)) {
             $themeManager = $app->make(\PrestoWorld\Theme\ThemeManager::class);
             if ($theme = $themeManager->getActiveTheme()) {
                 $view = $app->make(ViewFactory::class);
-                if (method_exists($view, 'addLocation')) {
-                    $view->addLocation($theme->getPath() . '/resources/views');
+                $themeViews = $theme->getPath() . '/resources/views';
+                
+                // Prepend to prioritize theme over framework views
+                $view->prependLocation($themeViews);
+
+                // Update engines searching paths
+                foreach ($view->getEngines() as $engine) {
+                    if (method_exists($engine, 'addPath')) {
+                        $engine->addPath($themeViews);
+                    }
                 }
             }
         }

@@ -114,6 +114,16 @@ class Application extends BaseApplication
         // Initialize Module Manager
         $this->moduleManager = new ModuleManager($this);
         $this->instance(ModuleManager::class, $this->moduleManager);
+
+        // Bind 'config' for framework compatibility (e.g. Error Handler)
+        $this->singleton('config', function () {
+            return new class($this) {
+                public function __construct(private $app) {}
+                public function get(string $key, $default = null) {
+                    return $this->app->config($key, $default);
+                }
+            };
+        });
     }
 
     /**

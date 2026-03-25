@@ -53,7 +53,18 @@ class MenuItemContext extends AbstractContextItem
         return $sorted;
     }
 
-    // ... existing getChildren ...
+    /** @return MenuItemContext[] */
+    public function getChildren(): array
+    {
+        $sorted = array_values($this->children);
+        usort($sorted, fn(MenuItemContext $a, MenuItemContext $b) => $a->getPriority() <=> $b->getPriority());
+        return $sorted;
+    }
+
+    public function hasChildren(): bool
+    {
+        return !empty($this->children);
+    }
 
     public function resolve(): array
     {

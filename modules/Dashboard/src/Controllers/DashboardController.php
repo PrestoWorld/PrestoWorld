@@ -1,261 +1,105 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Modules\Dashboard\Controllers;
 
 use App\Foundation\Admin\AdminController;
-use Witals\Framework\Http\Request;
 use Witals\Framework\Http\Response;
-use Cycle\Database\Injection\Fragment;
 
 class DashboardController extends AdminController
 {
-    public function index(Request $request): Response
+    public function index()
     {
-        $stats = $this->fetchStats();
-        $contexts = $this->app->make('contexts');
+        // 1. Define default system-level stats
+        $defaultStats = [
+            [
+                'label' => 'Active Components',
+                'value' => '42',
+                'trend' => 'System up to date',
+                'icon'  => '🧩',
+                'color' => '#6366f1'
+            ],
+            [
+                'label' => 'Core Modules',
+                'value' => '12',
+                'trend' => 'All stable',
+                'icon'  => '📦',
+                'color' => '#10b981'
+            ],
+            [
+                'label' => 'Memory Usage',
+                'value' => '24MB',
+                'trend' => 'Peak: 31MB',
+                'icon'  => '⚡',
+                'color' => '#f59e0b'
+            ],
+            [
+                'label' => 'System Uptime',
+                'value' => '99.9%',
+                'trend' => 'Healthy',
+                'icon'  => '🛡️',
+                'color' => '#ef4444'
+            ]
+        ];
 
-        // Trigger action for modules to register their widgets
-        $this->app->make('hooks')->doAction('dashboard.init_widgets', $contexts, $stats);
+        // 2. Allow modules to filter/modify stats
+        $stats = apply_filters('dashboard.stats', $defaultStats);
 
-        // Fallback or default widgets if still empty
-        if ($contexts->context('dashboard.widgets')->isEmpty()) {
-            $contexts->register('dashboard.widgets', new \PrestoWorld\Context\Items\WidgetContext(
-                id: 'stat_revenue',
-                label: 'Tổng Doanh Thu',
-                value: '$' . $stats['revenue'],
-                trend: '+12% vs tháng trước',
-                trendClass: 'trend-up',
-                icon: '💰',
-                priority: 10
-            ));
-            
-            $contexts->register('dashboard.widgets', new \PrestoWorld\Context\Items\WidgetContext(
-                id: 'stat_licenses',
-                label: 'Active Licenses',
-                value: $stats['licenses'],
-                trend: 'Đang kích hoạt trên 1.5k domains',
-                icon: '🛡️',
-                priority: 20
-            ));
-
-            $contexts->register('dashboard.widgets', new \PrestoWorld\Context\Items\WidgetContext(
-                id: 'stat_vip',
-                label: 'Thành Viên VIP',
-                value: '1,205',
-                trend: 'Active Members (Recurring)',
-                icon: '👑',
-                priority: 30
-            ));
-
-            $contexts->register('dashboard.widgets', new \PrestoWorld\Context\Items\WidgetContext(
-                id: 'stat_expiring',
-                label: 'Sắp hết hạn (30 ngày)',
-                value: '45',
-                trend: 'Cần gia hạn gấp',
-                icon: '⏳',
-                cssClass: 'danger',
-                priority: 40
-            ));
-        }
-
-        // Render Widgets
-        $widgetsHtml = '';
-        foreach ($contexts->context('dashboard.widgets')->resolve() as $widget) {
-            $w = $widget->resolve();
-            $cssClass = $w['css_class'] ? ' ' . $w['css_class'] : '';
-            $widgetsHtml .= "
-            <div class=\"presto-card stat-card-premium{$cssClass}\">
-                <div class=\"stat-main\">
-                    <span class=\"stat-label\">{$w['label']}</span>
-                    <span class=\"stat-value\">{$w['value']}</span>
-                    <span class=\"stat-trend\">{$w['trend']}</span>
+        // Render stats HTML
+        $statsHtml = '<div class="presto-stats-row">';
+        foreach ($stats as $s) {
+            $statsHtml .= "
+            <div class=\"presto-card stat-card-premium\" style=\"--accent: {$s['color']}\">
+                <div class=\"stat-info\">
+                    <span class=\"stat-label\">{$s['label']}</span>
+                    <h3 class=\"stat-value\">{$s['value']}</h3>
+                    <span class=\"stat-trend\">{$s['trend']}</span>
                 </div>
                 <div class=\"stat-visual\">
-                    <div class=\"stat-icon-wrap\"><span class=\"stat-icon\">{$w['icon']}</span></div>
+                    <div class=\"stat-icon-wrap\"><span class=\"stat-icon\">{$s['icon']}</span></div>
                 </div>
             </div>";
         }
+        $statsHtml .= '</div>';
 
-        $content = <<<HTML
-        <div class="presto-dashboard-grid">
-            {$widgetsHtml}
-        </div>
-
-        <h2 class="section-title">Danh mục Sản phẩm</h2>
-        <div class="presto-category-grid">
-            <!-- Categories could also be migrated to a 'dashboard.categories' context later -->
-            <div class="presto-card category-card">
-                <div class="cat-header">
-                    <div class="cat-icon" style="background: linear-gradient(135deg, #6366f1, #a855f7);">🎨</div>
-                    <div class="cat-title-group">
-                        <h3>WordPress Themes</h3>
-                        <span class="badge badge-software">Theme</span>
-                    </div>
-                </div>
-                <div class="cat-stats">
-                    <div class="cat-stat"><span>Tổng sản phẩm</span> <strong>15 Themes</strong></div>
-                    <div class="cat-stat"><span>Phổ biến nhất</span> <strong>EcomBuilder</strong></div>
-                    <div class="cat-stat"><span>Lượt tải</span> <strong>2.3k</strong></div>
-                </div>
-                <div class="cat-progress">
-                    <div class="progress-label"><span>Tỷ lệ gia hạn</span> <span>78%</span></div>
-                    <div class="progress-bar"><div class="progress-fill" style="width: 78%"></div></div>
-                </div>
-            </div>
-            <div class="presto-card category-card">
-                <div class="cat-header">
-                    <div class="cat-icon" style="background: linear-gradient(135deg, #3b82f6, #2dd4bf);">🔌</div>
-                    <div class="cat-title-group">
-                        <h3>Plugins Repository</h3>
-                        <span class="badge badge-plugin">Plugin</span>
-                    </div>
-                </div>
-                <div class="cat-stats">
-                    <div class="cat-stat"><span>Đang hoạt động</span> <strong>8 Plugins</strong></div>
-                    <div class="cat-stat"><span>Lượt cài đặt</span> <strong>1.5k</strong></div>
-                    <div class="cat-stat"><span>Phiên bản v2.4.0</span> <strong>Ổn định</strong></div>
-                </div>
-                <div class="cat-footer">
-                    <button class="btn-ghost-sm">📡 Đẩy bản cập nhật</button>
-                </div>
-            </div>
-            <div class="presto-card category-card">
-                <div class="cat-header">
-                    <div class="cat-icon" style="background: linear-gradient(135deg, #8b5cf6, #ec4899);">💻</div>
-                    <div class="cat-title-group">
-                        <h3>Desktop Softwares</h3>
-                        <span class="badge badge-software">Software</span>
-                    </div>
-                </div>
-                <div class="cat-stats">
-                    <div class="cat-stat"><span>License vĩnh viễn</span> <strong>400</strong></div>
-                    <div class="cat-stat"><span>License theo năm</span> <strong>1.2k</strong></div>
-                    <div class="cat-stat"><span>Phát hành mới</span> <strong>3 bản (tháng này)</strong></div>
-                </div>
-                <div class="cat-footer">
-                    <button class="btn-ghost-sm">🚀 Quản lý versions</button>
-                </div>
-            </div>
-            <div class="presto-card category-card">
-                <div class="cat-header">
-                    <div class="cat-icon" style="background: linear-gradient(135deg, #f59e0b, #ef4444);">💎</div>
-                    <div class="cat-title-group">
-                        <h3>Gói Membership</h3>
-                        <span class="badge badge-membership">Membership</span>
-                    </div>
-                </div>
-                <div class="cat-stats">
-                    <div class="cat-stat"><span>Cá nhân (Starter)</span> <strong>100</strong></div>
-                    <div class="cat-stat"><span>Doanh nghiệp (Pro)</span> <strong>500</strong></div>
-                    <div class="cat-stat"><span>Đại lý (Agency)</span> <strong>200</strong></div>
-                </div>
-                <div class="cat-footer">
-                    <button class="btn-ghost-sm">⚙️ Cấu hình Membership</button>
-                </div>
-            </div>
-        </div>
-
-        <div class="dashboard-bottom-row">
-            <div class="presto-card">
-                <div class="presto-card-header">
-                    <h2 class="presto-card-title">Giao dịch License mới nhất</h2>
-                    <div class="card-tabs">
-                        <button class="tab-btn active">Tất cả</button>
-                        <button class="tab-btn">Software</button>
-                        <button class="tab-btn">Theme</button>
-                        <button class="tab-btn">Plugin</button>
-                    </div>
-                </div>
-                <div class="presto-card-body p-0">
-                    <table class="presto-list-table">
-                        <thead>
-                            <tr>
-                                <th>Sản phẩm</th>
-                                <th>License Key</th>
-                                <th>Khách hàng</th>
-                                <th>Trạng thái</th>
-                                <th>Hết hạn</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td><strong>EcomBuilder Theme</strong></td>
-                                <td><code>7A8B-5CDD...</code></td>
-                                <td>Nguyen Van A</td>
-                                <td><span class="badge badge-active">Active</span></td>
-                                <td>24/10/2024</td>
-                            </tr>
-                            <tr>
-                                <td><strong>SEO Pro Plugin</strong></td>
-                                <td><code>3F4Y-5Z6A...</code></td>
-                                <td>Sarah Smith</td>
-                                <td><span class="badge badge-active">Active</span></td>
-                                <td>15/11/2024</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            <div class="presto-card">
-                <div class="presto-card-header"><h2 class="presto-card-title">Nguồn doanh thu</h2></div>
-                <div class="presto-card-body" style="text-align: center;">
-                    <div class="donut-chart-mock">
-                        <div class="donut-inner">
-                            <span class="donut-total">100%</span>
-                        </div>
-                    </div>
-                    <ul class="chart-legend">
-                        <li><span><span class="dot" style="background: #6366f1"></span> Membership</span> <span>40%</span></li>
-                        <li><span><span class="dot" style="background: #10b981"></span> Themes</span> <span>30%</span></li>
-                        <li><span><span class="dot" style="background: #f59e0b"></span> Plugins</span> <span>20%</span></li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-HTML;
-
-        return Response::html($this->adminPage('Tổng quan kinh doanh', $content, [
-            'new_label' => '+ Tạo License Mới',
-            'new_url' => '/dashboard/licenses/create'
-        ]));
-    }
-
-    private function fetchStats(): array
-    {
-        $db = $this->db();
-        $hooks = $this->app->make('hooks');
+        // 3. Register Widgets (Hooks-based)
+        $widgetsHtml = '';
+        $registry = app(\PrestoWorld\Context\ContextRegistry::class);
+        $context = $registry->get('dashboard.widgets');
         
-        // Default base stats
-        $stats = [
-            'customers' => 0,
-            'orders'    => 0,
-            'licenses'  => 0,
-            'revenue'   => 0.0,
-        ];
+        do_action('dashboard.init_widgets', $context);
 
-        // Try to fetch base stats if tables exist
-        try {
-            $stats['customers'] = (int)$db->select()->from('presto_customers')->count('id');
-            $stats['orders']    = (int)$db->select()->from('presto_orders')->count('id');
-            $stats['licenses']  = (int)$db->select()->from('presto_licenses')->count('id');
-            
-            $revenue = $db->select(new Fragment('SUM(total) as total'))->from('presto_orders')->run()->fetch();
-            $stats['revenue'] = (float)($revenue['total'] ?? 0);
-        } catch (\Throwable $e) {
-            // Silence if tables don't exist yet, modules will fill in
+        if (!$context->isEmpty()) {
+            foreach ($context->resolve() as $item) {
+                $w = $item->resolve();
+                // Special handling for WidgetContexts
+                $widgetsHtml .= "
+                <div class=\"presto-card stat-card-premium\" style=\"--accent: #6366f1\">
+                    <div class=\"stat-info\">
+                        <span class=\"stat-label\">{$w['label']}</span>
+                        <h3 class=\"stat-value\">{$w['value']}</h3>
+                        <span class=\"stat-trend\">{$w['trend']}</span>
+                    </div>
+                    <div class=\"stat-visual\">
+                        <div class=\"stat-icon-wrap\"><span class=\"stat-icon\">{$w['icon']}</span></div>
+                    </div>
+                </div>";
+            }
+        } else {
+            // Generic Empty State / Quick Start
+            $widgetsHtml = '
+            <div class="presto-card" style="margin-top: 2rem; padding: 4rem; text-align: center; background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.1);">
+                <div style="font-size: 4rem; margin-bottom: 1.5rem;">🌌</div>
+                <h2 style="font-size: 1.75rem; font-weight: 700;">Welcome to PrestoWorld</h2>
+                <p style="color: var(--text-muted); max-width: 600px; margin: 0.5rem auto 2.5rem; font-size: 1.1rem; line-height: 1.6;">
+                    The system is ready. You can now start building your custom dashboard by registering widgets via the <code>dashboard.init_widgets</code> hook.
+                </p>
+                <div style="display: flex; gap: 1.25rem; justify-content: center;">
+                    <a href="https://prestoworld.com/docs" class="btn-primary" style="padding: 0.8rem 2rem;">Read Documentation</a>
+                    <a href="/" class="btn-ghost" style="padding: 0.8rem 2rem;">Visit Site</a>
+                </div>
+            </div>';
         }
 
-        // Standardize: Allow modules to inject or modify stats
-        $stats = $hooks->applyFilters('dashboard.stats', $stats);
-        
-        // Format for display
-        return [
-            'customers' => number_format($stats['customers'] ?? 0),
-            'orders'    => number_format($stats['orders'] ?? 0),
-            'licenses'  => number_format($stats['licenses'] ?? 0),
-            'revenue'   => number_format((float)($stats['revenue'] ?? 0), 2),
-        ];
+        return $this->adminPage('System Dashboard', $statsHtml . $widgetsHtml);
     }
 }
