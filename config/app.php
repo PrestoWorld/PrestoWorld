@@ -59,9 +59,6 @@ return [
         
         // WordPress Bridge (loads helpers early)
         PrestoWorld\Bridge\WordPress\Providers\WordPressServiceProvider::class,
-        Modules\WebServices\WebServicesServiceProvider::class,
-        Modules\ReminderManager\ReminderManagerServiceProvider::class,
-        Modules\WebsiteTemplates\WebsiteTemplatesServiceProvider::class,
         
         App\Providers\RouteServiceProvider::class,
         App\Providers\ViewServiceProvider::class,

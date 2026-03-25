@@ -39,3 +39,7 @@ $router->get('/health', function(\Witals\Framework\Http\Request $request) {
 $router->get('/info', function(\Witals\Framework\Http\Request $request) {
     return app(\Witals\Framework\Contracts\Http\Kernel::class)->handleInfo($request);
 });
+
+// System Component Management
+$router->get('/system/scan', [\App\Http\Controllers\SystemController::class, 'scan']);
+$router->get('/system/clear-cache', [\App\Http\Controllers\SystemController::class, 'clearCache']);
