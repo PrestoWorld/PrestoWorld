@@ -6,6 +6,7 @@ namespace PrestoWorld\Theme\Engines;
 
 use PrestoWorld\Theme\Native\ContextBuilder;
 use PrestoWorld\Theme\Native\ContextLoader;
+use Witals\Framework\Contracts\View\Factory as ViewFactory;
 
 class NativeEngine extends AbstractEngine
 {
@@ -22,53 +23,54 @@ class NativeEngine extends AbstractEngine
 
     public function render(string $view, array $data = []): string
     {
-        // Support template hierarchy and multi-language - try multiple paths
+        // 1. Get View Factory
+        $viewFactory = $this->theme->getApp()->make(ViewFactory::class);
         $locale = $this->theme->getApp()->translator()->getLocale();
-        
-        $possiblePaths = [
-            $this->theme->getPath() . '/resources/views/' . $view . '.' . $locale . '.php',
-            $this->theme->getPath() . '/' . $view . '.' . $locale . '.php',
-            $this->theme->getPath() . '/resources/views/' . $view . '.php',
-            $this->theme->getPath() . '/' . $view . '.php',
-        ];
 
-        // Find the first existing template
-        $viewPath = null;
-        clearstatcache();
-        foreach ($possiblePaths as $path) {
-            // error_log("NativeEngine: Checking path: {$path}");
-            if (file_exists($path)) {
-                $viewPath = $path;
-                break;
-            }
+        // 2. Register theme locations to View Factory if not done already
+        // In PrestoWorld standardization, themes should use the core view factory
+        $themeViewPath = $this->theme->getPath() . '/resources/views';
+        // (Usually done in ServiceProvider but we ensure it here for theme-engine isolation)
+        if (method_exists($viewFactory, 'addLocation')) {
+            $viewFactory->addLocation($themeViewPath);
         }
 
-        if (!$viewPath) {
-            error_log("NativeEngine: View not found '{$view}' in " . $this->theme->getPath() . ". Checked: " . implode(', ', $possiblePaths));
-        }
+        // 3. Detect view file type
+        // Check for locale specific .stempler.php first, then .stempler.php, then .php
+        $extensions = ['.stempler.php', '.php'];
+        $variants = ['.' . $locale, ''];
 
-        if ($viewPath && file_exists($viewPath)) {
-            extract($data);
-            
-            ob_start();
-            try {
-                include $viewPath;
-                return ob_get_clean() ?: '';
-            } catch (\Throwable $e) {
-                if (ob_get_level() > 0) {
-                    ob_end_clean();
+        foreach ($variants as $variant) {
+            foreach ($extensions as $ext) {
+                $checkPath = $themeViewPath . '/' . $view . $variant . $ext;
+                if (file_exists($checkPath)) {
+                    // If it's a stempler file, use the engine
+                    if (str_ends_with($checkPath, '.stempler.php')) {
+                        $this->theme->getApp()->instance('view.rendered', true);
+                        return $viewFactory->make($view . $variant, $data)->render();
+                    }
+                    
+                    // Fallback to legacy include if it's plain .php but requested via NativeEngine
+                    extract($data);
+                    ob_start();
+                    $this->theme->getApp()->instance('view.rendered', true);
+                    try {
+                        include $checkPath;
+                        return ob_get_clean() ?: '';
+                    } catch (\Throwable $e) {
+                        if (ob_get_level() > 0) ob_end_clean();
+                        throw $e;
+                    }
                 }
-                throw $e;
             }
         }
 
-
-        throw new \RuntimeException("Native View Not Found: " . $view);
+        throw new \RuntimeException("Native Engine: View Not Found: " . $view);
     }
 
     public function getTemplateEngineName(): string
     {
-        return 'PHP';
+        return 'Stempler/PHP Hybrid';
     }
 
     protected function bootEngineHelpers(): void

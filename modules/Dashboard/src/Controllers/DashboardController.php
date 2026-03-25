@@ -16,7 +16,10 @@ class DashboardController extends AdminController
         $stats = $this->fetchStats();
         $contexts = $this->app->make('contexts');
 
-        // Register Stats Widgets
+        // Trigger action for modules to register their widgets
+        $this->app->make('hooks')->doAction('dashboard.init_widgets', $contexts, $stats);
+
+        // Fallback or default widgets if still empty
         if ($contexts->context('dashboard.widgets')->isEmpty()) {
             $contexts->register('dashboard.widgets', new \PrestoWorld\Context\Items\WidgetContext(
                 id: 'stat_revenue',
@@ -222,18 +225,37 @@ HTML;
     private function fetchStats(): array
     {
         $db = $this->db();
+        $hooks = $this->app->make('hooks');
         
-        $customers = (int)$db->select()->from('presto_customers')->count('id');
-        $orders    = (int)$db->select()->from('presto_orders')->count('id');
-        $licenses  = (int)$db->select()->from('presto_licenses')->count('id');
+        // Default base stats
+        $stats = [
+            'customers' => 0,
+            'orders'    => 0,
+            'licenses'  => 0,
+            'revenue'   => 0.0,
+        ];
+
+        // Try to fetch base stats if tables exist
+        try {
+            $stats['customers'] = (int)$db->select()->from('presto_customers')->count('id');
+            $stats['orders']    = (int)$db->select()->from('presto_orders')->count('id');
+            $stats['licenses']  = (int)$db->select()->from('presto_licenses')->count('id');
+            
+            $revenue = $db->select(new Fragment('SUM(total) as total'))->from('presto_orders')->run()->fetch();
+            $stats['revenue'] = (float)($revenue['total'] ?? 0);
+        } catch (\Throwable $e) {
+            // Silence if tables don't exist yet, modules will fill in
+        }
+
+        // Standardize: Allow modules to inject or modify stats
+        $stats = $hooks->applyFilters('dashboard.stats', $stats);
         
-        $revenue   = $db->select(new Fragment('SUM(total) as total'))->from('presto_orders')->run()->fetch();
-        
+        // Format for display
         return [
-            'customers' => number_format($customers),
-            'orders'    => number_format($orders),
-            'licenses'  => number_format($licenses),
-            'revenue'   => number_format((float)($revenue['total'] ?? 0), 2),
+            'customers' => number_format($stats['customers'] ?? 0),
+            'orders'    => number_format($stats['orders'] ?? 0),
+            'licenses'  => number_format($stats['licenses'] ?? 0),
+            'revenue'   => number_format((float)($stats['revenue'] ?? 0), 2),
         ];
     }
 }

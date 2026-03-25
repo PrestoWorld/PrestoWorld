@@ -1,90 +1,111 @@
-# 🚀 Witals Framework
+# 💎 PrestoWorld: DigitalCore
+### Premium Enterprise Management & Licensing Framework
 
-A modern, high-performance PHP framework designed for **dual runtime support**. Witals seamlessly adapts between **Traditional Web Servers** (PHP-FPM, Apache, Nginx) and **Long-Running Runtimes** (RoadRunner, ReactPHP, Swoole, OpenSwoole).
+PrestoWorld **DigitalCore** is a high-performance, standardized admin dashboard and core management system built on the **Witals Framework**. It is designed to bridge legacy WordPress ecosystems with modern, scalable PHP architectures, providing a premium "Software-as-a-Service" (SaaS) experience for managing licenses, products, and customers.
 
 ---
 
-## ✨ Key Features
+## ✨ Architectural Pillars
 
-- 🎭 **Unified Entry Point**: One command to rule them all with `php witals serve`.
-- 🔄 **Ambient Runtime Detection**: Automatically detects and adapts to its environment.
-- 🏗️ **Architected for Scale**: Built-in IoC container with advanced request-isolation scopes.
-- 🔒 **Stateless & Stateful Support**: Fine-grained state management tailored for each runtime.
-- ⚡ **Turbocharged Performance**: Optimized for async, coroutines, and event loops.
-- 📝 **Enterprise Logging**: High-performance PSR-3 logging with memory buffering and JSON support.
-- 🛠️ **Developer Experience**: Modern PHP 8.1+ features with strict typing.
+### 1. Unified Stempler Rendering
+DigitalCore enforces a **Strict View Engine Standard**. All web responses (Admin & Frontend) must be rendered through a registered template engine (default: **Spiral Stempler**). 
+- **Enforcement**: Direct string/HTML returns from controllers are blocked by the `Http\Kernel` to maintain architecture purity.
+- **Flexibility**: Supports any engine registered in the `ViewFactory` (Stempler, Native PHP, etc.).
 
-## 📦 Requirements
+### 2. Radical Modularization (Dashboard)
+The dashboard is no longer a monolithic file. It is a **Dynamic Widget Hub**:
+- **Statistics Injection**: Modules inject business metrics via the `dashboard.stats` filter.
+- **Widget Registration**: Modules register interactive widgets via `dashboard.init_widgets` action using the `PrestoWorld\Context` system.
+- **Plugin Integration**: Supports both native Witals modules and WordPress MU-Plugins (auto-scanned and synchronized).
 
-- **PHP 8.1+**
-- **Composer**
-- (Optional) Extensions for high-performance runtimes: `ext-swoole`, `ext-openswoole`, or `ext-roadrunner`.
+### 3. WP-Bridge & Component Scanning
+Seamless integration with WordPress components:
+- **Scanner**: `php witals components:scan` automatically identifies Plugins, Themes, and MU-Plugins.
+- **MU-Plugins Support**: Specialized handling for Must-Use plugins to ensure critical business logic is always active.
 
-## 🚀 Quick Start
+---
 
-### 1. Installation
+## 🛠️ Technology Stack
 
+- **Core**: PHP 8.1+ (Strict Typing)
+- **Framework**: [Witals Framework](https://github.com/witals/framework)
+- **Engine**: Spiral Stempler (with HTML, PHP, and Dynamic grammars)
+- **Database**: Layered ORM (Cycle ORM & Native MySQL support)
+- **Server**: Multi-runtime (RoadRunner 3.x, Swoole, or Traditional FPM)
+- **Frontend**: Vanilla CSS Design System (Glassmorphism, Dark Mode, Inter Typography)
+
+---
+
+## 🚀 Installation & Setup
+
+### 1. Clone & Install
 ```bash
-composer require witals/framework
+git clone https://github.com/puleeno/prestoworld.com.git
+composer install
 ```
 
-### 2. Traditional Serving (FPM/CGI)
-
-Point your web server (Nginx/Apache) to `public/index.php`. Witals automatically detects the traditional runtime and handles request/response in a stateless manner.
-
-### 3. High-Performance Serving
-
-Witals comes with a unified binary to launch high-performance servers:
-
-```bash
-# Start with auto-detected runtime (RoadRunner > Swoole > OpenSwoole > ReactPHP)
-php witals serve
-
-# Force a specific runtime
-php witals serve --swoole
-php witals serve --reactphp --port=9000
+### 2. Environment Configuration
+Copy `.env.example` to `.env` and configure your local domain:
+```env
+APP_NAME="PrestoWorld DigitalCore"
+APP_URL=http://prestoworld.localhost
+DB_DATABASE=prestoworld
+DB_USERNAME=root
+DB_PASSWORD=root
 ```
 
-## 🛠️ Core Concepts
+### 3. Server Initialization (RoadRunner)
+```bash
+# Download RoadRunner binary
+composer rr:download
 
-### Request Lifecycle Management
-Witals manages the request lifecycle through specific phases: **Init → Execute → Respond → Shutdown**.
+# Start the dev server
+php witals serve --roadrunner
+```
 
-- **Stateless**: The entire app boots and shuts down for every request.
-- **Stateful**: The app boots once, handles multiple requests in an isolation scope, and cleans up after each request to prevent memory leaks.
+### 4. Sync Components
+```bash
+php witals components:scan
+```
 
-### Dependency Injection & Scoping
-The framework ensures that services resolved during a request are automatically cleaned up when the request ends.
+---
+
+## 🏗️ Development Guidelines
+
+### Creating a New Dashboard Widget
+Widgets are injected using Hooks. Example in a module's `boot()` method:
 
 ```php
-// Services resolved within handle() are request-scoped
-$response = $app->handle($request); 
+add_action('dashboard.init_widgets', function($context) {
+    if ($context->getName() === 'admin.dashboard') {
+        $context->register('my-plugin-widget', [
+            'label' => 'Sales Chart',
+            'render' => function() {
+                return view('my-plugin::widget')->render();
+            }
+        ]);
+    }
+});
 ```
 
-## 📚 Documentation
+### Standard Web Responses
+Always use the `ViewFactory` to render pages:
 
-- [**QUICKSTART.md**](./QUICKSTART.md) - Get up and running in minutes.
-- [**ARCHITECTURE.md**](./ARCHITECTURE.md) - Deep dive into the framework internals.
-- [**RUNTIME.md**](./RUNTIME.md) - Detailed guide on supported runtimes.
-- [**LIFECYCLE.md**](./LIFECYCLE.md) - Understanding the execution flow.
+```php
+public function index() {
+    return $this->view->make('my-module/index', [
+        'data' => $myData
+    ])->render();
+}
+```
 
-## 🤝 Contributing
+---
 
-We welcome contributions! Please follow the PSR-12 coding standard and ensure all tests pass before submitting a PR.
+## 🤝 Contribution & Support
 
-## 📄 License
-
-The Witals Framework is open-sourced software licensed under the [MIT license](LICENSE).
-
-
-## 💖 Support PrestoWorld
-
-PrestoWorld is an ambitious open-source project aimed at redefining the CMS landscape. If you find value in what we are building, please consider supporting the development:
+PrestoWorld is an ambitious project aimed at redefining the CMS landscape. If you find value in what we are building, please consider supporting the development:
 
 - **Sponsor on GitHub**: [github.com/sponsors/puleeno](https://github.com/sponsors/puleeno)
 - **Buy Me a Coffee**: [buymeacoffee.com/puleeno](https://buymeacoffee.com/puleeno)
-- **Ko-fi**: [ko-fi.com/puleeno](https://ko-fi.com/puleeno)
 
-Your support helps us maintain the core framework and develop more specialized industry modules.
-
-Created with ❤️ by **Puleeno Nguyen** (puleeno@gmail.com)
+Created with ❤️ by **Puleeno Nguyen** and the PrestoWorld Team.

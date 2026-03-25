@@ -105,17 +105,26 @@ class Kernel implements KernelContract
             $result = $router->dispatch($request);
 
             if ($result instanceof Response) {
-                return $this->injectDebugBar($request, $result);
+                $response = $result;
+            } else {
+                $response = Response::html((string)$result);
             }
 
-            return Response::html((string)$result);
+            // Enforce Template Engine rendering for HTML web responses (standardization)
+            if ($this->shouldEnforceTemplateEngine($request, $response)) {
+                if (!$this->app->has('view.rendered') || $this->app->make('view.rendered') !== true) {
+                    throw new \RuntimeException("PrestoWorld Standards Error: Web response must be rendered via a registered template engine (Stempler).");
+                }
+            }
+
+            return $this->injectDebugBar($request, $response);
 
         } catch (\Throwable $e) {
             $this->logger->error("Request error: " . $e->getMessage(), ['exception' => $e]);
-            return Response::json([
-                'error' => 'Internal Server Error',
-                'message' => $e->getMessage(),
-            ], 500);
+            
+            // Standardize: Use Witals' framework exception handler for rendering
+            $handler = $this->app->make(\Witals\Framework\Contracts\Exceptions\ExceptionHandlerInterface::class);
+            return $handler->render($e, $request);
         }
     }
 
@@ -148,6 +157,30 @@ class Kernel implements KernelContract
         }
 
         return new Response($content, $response->getStatusCode(), $response->getHeaders());
+    }
+
+    /**
+     * Check if the current response should be enforced to use a template engine.
+     */
+    protected function shouldEnforceTemplateEngine(Request $request, Response $response): bool
+    {
+        // 1. Only enforce for HTML responses
+        if (!str_contains($response->getHeader('Content-Type', ''), 'text/html')) {
+            return false;
+        }
+
+        // 2. Skip for AJAX/JSON requests (using header check since isAjax is not in core Request)
+        $isAjax = $request->header('X-Requested-With') === 'XMLHttpRequest';
+        if ($isAjax || str_contains($request->header('Accept', ''), 'application/json')) {
+            return false;
+        }
+
+        // 3. Skip for redirects
+        if ($response->getStatusCode() >= 300 && $response->getStatusCode() < 400) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -238,7 +271,7 @@ class Kernel implements KernelContract
                 $themeManager->setActiveTheme($targetTheme);
             }
             $themeManager->loadActiveTheme();
-
+            $this->app->instance('view.rendered', true);
             $html = $themeManager->render('index', [
                 'title' => $pageTitle, // Used filtered title
                 'posts' => $postsData,

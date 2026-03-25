@@ -27,12 +27,14 @@ class SystemController
         try {
             $results = $this->scanner->scan($force);
             
-            return Response::json([
-                'status' => 'success',
-                'message' => 'System components scanned successfully',
-                'timestamp' => time(),
-                'data' => $results
-            ]);
+            // Render via Stempler
+            $view = app(\Witals\Framework\Contracts\View\Factory::class);
+            $app = app();
+            $app->instance('view.rendered', true);
+            $html = $view->make('system/scan', $results)->render();
+            
+            return Response::html($html);
+
         } catch (\Throwable $e) {
             return Response::json([
                 'status' => 'error',

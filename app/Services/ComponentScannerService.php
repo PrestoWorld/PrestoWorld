@@ -30,6 +30,7 @@ class ComponentScannerService
         }
 
         $results = [
+            'mu-plugins' => $this->scanMuPlugins(),
             'plugins' => $this->scanPlugins(),
             'themes' => $this->scanThemes(),
             'modules' => $this->scanModules(),
@@ -43,6 +44,46 @@ class ComponentScannerService
         file_put_contents($cacheFile, $content);
 
         return $results;
+    }
+
+    private function scanMuPlugins(): array
+    {
+        $path = base_path('mu-plugins');
+        if (!is_dir($path)) return [];
+
+        $repo = $this->orm->getRepository(Plugin::class);
+        $scanned = [];
+
+        foreach (scandir($path) as $file) {
+            if ($file === '.' || $file === '..') continue;
+            
+            $fullPath = $path . '/' . $file;
+            if (is_dir($fullPath)) continue;
+            if (!str_ends_with($file, '.php')) continue;
+
+            $isWordpress = true; // MU-plugins are inherently WordPress patterns
+            $metadata = ['path' => $fullPath, 'type' => 'mu-plugin'];
+
+            $content = file_get_contents($fullPath);
+            if (preg_match('/Plugin Name:\s*(.*)$/m', $content, $matches)) {
+                $metadata['plugin_name'] = trim($matches[1]);
+            }
+
+            $plugin = $repo->findOne(['path' => 'mu/' . $file]) ?? new Plugin();
+            $plugin->path = 'mu/' . $file;
+            $plugin->name = $metadata['plugin_name'] ?? $file;
+            $plugin->is_wordpress = $isWordpress;
+            $plugin->metadata = $metadata;
+
+            $this->entityManager->persist($plugin);
+            $scanned[] = [
+                'name' => $plugin->name,
+                'is_wordpress' => $isWordpress,
+                'type' => 'mu-plugin'
+            ];
+        }
+
+        return $scanned;
     }
 
     private function scanPlugins(): array

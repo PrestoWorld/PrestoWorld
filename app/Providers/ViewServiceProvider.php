@@ -22,8 +22,6 @@ class ViewServiceProvider extends ServiceProvider
         $this->app->extend(ViewFactory::class, function (ViewFactory $view, $app) {
             $cachePath = $app->basePath('storage/framework/views');
             
-            // Native PHP engine is already registered by ViewManager
-            
             // Register Stempler Engine for .stempler.php and .dark.php files
             $stempler = new StemplerEngine($cachePath, [
                 $app->basePath('resources/views'),
@@ -31,6 +29,12 @@ class ViewServiceProvider extends ServiceProvider
             
             $view->registerEngine('stempler.php', $stempler);
             $view->registerEngine('dark.php', $stempler);
+            
+            // Add global views location
+            $view->addLocation($app->basePath('resources/views'));
+
+            // Initialize rendering state
+            $app->instance('view.rendered', false);
             
             return $view;
         });
@@ -41,10 +45,16 @@ class ViewServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Logic for adding theme paths can go here
-        // $themeManager = $this->app->make(ThemeManager::class);
-        // if ($theme = $themeManager->getActiveTheme()) {
-        //     $this->app->view()->addLocation($theme->getPath() . '/views');
-        // }
+        // Automatically add Active Theme's views to location list
+        $app = $this->app;
+        if ($app->has(\PrestoWorld\Theme\ThemeManager::class)) {
+            $themeManager = $app->make(\PrestoWorld\Theme\ThemeManager::class);
+            if ($theme = $themeManager->getActiveTheme()) {
+                $view = $app->make(ViewFactory::class);
+                if (method_exists($view, 'addLocation')) {
+                    $view->addLocation($theme->getPath() . '/resources/views');
+                }
+            }
+        }
     }
 }

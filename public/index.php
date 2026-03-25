@@ -141,6 +141,13 @@ if (!file_exists(__DIR__ . '/../vendor/autoload.php')) {
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
+// Check for .env or remarkably small .env (nearly empty)
+$envPath = __DIR__ . '/../.env';
+if (!file_exists($envPath) || (file_exists($envPath) && filesize($envPath) < 10)) {
+    require_once __DIR__ . '/setup.php';
+    exit;
+}
+
 // Bootstrap the application
 $app = require_once __DIR__ . '/../bootstrap/app.php';
 
