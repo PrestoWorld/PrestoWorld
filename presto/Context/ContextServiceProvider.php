@@ -54,9 +54,33 @@ class ContextServiceProvider extends ServiceProvider
         $systemGroup->add(new \PrestoWorld\Context\Items\MenuItemContext('item_modules', 'Modules', '/dashboard/modules', '📦', priority: 20));
         
         $contexts->register('dashboard.menu', $systemGroup);
-        $contexts->register('dashboard.menu', new \PrestoWorld\Context\Items\MenuItemContext('menu_users', 'User Management', '/dashboard/users', '👥', priority: 30));
+        $contexts->register('dashboard.menu', new \PrestoWorld\Context\Items\MenuItemContext('menu_users', 'Users', '/dashboard/users', '👥', priority: 60));
 
-        // 2. Header Navigation (Generic Framework)
+        // 2. Content Management (Blog, Static Pages)
+        $contentGroup = new \PrestoWorld\Context\Items\DropdownGroupContext('group_content', 'Content', '📝', priority: 15);
+        $contentGroup->add(new \PrestoWorld\Context\Items\MenuItemContext('item_blog', 'Blog Posts', '/dashboard/blog', '✒️', priority: 10));
+        $contentGroup->add(new \PrestoWorld\Context\Items\MenuItemContext('item_categories', 'Categories', '/dashboard/blog/categories', '📁', priority: 20));
+        $contentGroup->add(new \PrestoWorld\Context\Items\MenuItemContext('item_pages', 'Static Pages', '/dashboard/pages', '📄', priority: 30));
+        $contexts->register('dashboard.menu', $contentGroup);
+
+        // 3. Marketplace & Extensions (Theme/Plugin Store)
+        $appearanceGroup = new \PrestoWorld\Context\Items\DropdownGroupContext('group_appearance', 'Appearance', '🎨', priority: 20);
+        $appearanceGroup->add(new \PrestoWorld\Context\Items\MenuItemContext('item_themes', 'Themes', '/dashboard/themes', '🖼️', priority: 10));
+        $appearanceGroup->add(new \PrestoWorld\Context\Items\MenuItemContext('item_customize', 'Customize', '/dashboard/customize', '✨', priority: 20));
+        $contexts->register('dashboard.menu', $appearanceGroup);
+
+        $pluginGroup = new \PrestoWorld\Context\Items\DropdownGroupContext('group_plugins', 'Plugins', '🔌', priority: 30);
+        $pluginGroup->add(new \PrestoWorld\Context\Items\MenuItemContext('item_plugins_installed', 'Installed Plugins', '/dashboard/plugins', '🛠️', priority: 10));
+        $pluginGroup->add(new \PrestoWorld\Context\Items\MenuItemContext('item_plugins_add', 'Add New', '/dashboard/plugins/install', '➕', priority: 20));
+        $contexts->register('dashboard.menu', $pluginGroup);
+
+        // 4. Personal Account
+        $accountGroup = new \PrestoWorld\Context\Items\DropdownGroupContext('group_account', 'Account', '👤', priority: 70);
+        $accountGroup->add(new \PrestoWorld\Context\Items\MenuItemContext('item_profile', 'My Profile', '/dashboard/profile', '🆔', priority: 10));
+        $accountGroup->add(new \PrestoWorld\Context\Items\MenuItemContext('item_security', 'Security', '/dashboard/profile/security', '🔒', priority: 20));
+        $contexts->register('dashboard.menu', $accountGroup);
+
+        // 3. Header Navigation (Generic Framework)
         $contexts->register('header.nav', new \PrestoWorld\Context\Items\MenuItemContext('nav_home', 'Visit Site', '/', priority: 10));
         $contexts->register('header.nav', new \PrestoWorld\Context\Items\MenuItemContext('nav_docs', 'Documentation', 'https://prestoworld.com/docs', priority: 20));
 

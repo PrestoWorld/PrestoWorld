@@ -20,7 +20,8 @@ class DashboardServiceProvider extends ServiceProvider
     {
         $router = $this->app->make(Router::class);
         
-        // Register admin dashboard route
+        // Register admin dashboard routes
         $router->get('/dashboard', [Controllers\DashboardController::class, 'index']);
+        $router->get('/dashboard/users', [Controllers\UserController::class, 'index']);
     }
 }

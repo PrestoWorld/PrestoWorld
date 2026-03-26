@@ -43,3 +43,13 @@ $router->get('/info', function(\Witals\Framework\Http\Request $request) {
 // System Component Management
 $router->get('/system/scan', [\App\Http\Controllers\SystemController::class, 'scan']);
 $router->get('/system/clear-cache', [\App\Http\Controllers\SystemController::class, 'clearCache']);
+
+// --- Marketplace & Extensions Admin UI ---
+$router->get('/dashboard/plugins/install', [\App\Foundation\Admin\Controllers\MarketplaceController::class, 'plugins']);
+$router->get('/dashboard/themes', [\App\Foundation\Admin\Controllers\MarketplaceController::class, 'themes']);
+$router->get('/dashboard/themes/install', [\App\Foundation\Admin\Controllers\MarketplaceController::class, 'installThemes']);
+
+// Aliases for legacy-style access
+$router->get('/admin/plugins/install', [\App\Foundation\Admin\Controllers\MarketplaceController::class, 'plugins']);
+$router->get('/admin/themes', [\App\Foundation\Admin\Controllers\MarketplaceController::class, 'themes']);
+$router->get('/admin/themes/install', [\App\Foundation\Admin\Controllers\MarketplaceController::class, 'installThemes']);

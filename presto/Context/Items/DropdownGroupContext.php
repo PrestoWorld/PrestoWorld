@@ -18,6 +18,7 @@ class DropdownGroupContext extends AbstractContextItem
     public function __construct(
         string           $id,
         protected string $title,
+        protected string $icon     = '',
         int              $priority = 10,
         bool             $visible  = true,
     ) {
@@ -42,8 +43,10 @@ class DropdownGroupContext extends AbstractContextItem
     {
         $items = $this->getItems();
         return array_merge($this->baseResolve(), [
+            'id'           => $this->getId(),
             'title'        => $this->title,
             'label'        => $this->title, // Compatibility with MenuItemContext
+            'icon'         => $this->icon,
             'url'          => '#',
             'items'        => array_map(fn(MenuItemContext $i) => $i->resolve(), $items),
             'children'     => array_map(fn(MenuItemContext $i) => $i->resolve(), $items), // Alias for consistency

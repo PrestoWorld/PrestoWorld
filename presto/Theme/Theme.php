@@ -148,6 +148,18 @@ class Theme implements ThemeInterface
         return $this->app->make(ThemeManager::class)->getActiveTheme() === $this;
     }
 
+    public function getScreenshot(): string
+    {
+        $extensions = ['png', 'jpg', 'jpeg', 'webp'];
+        foreach ($extensions as $ext) {
+            if (file_exists($this->path . '/screenshot.' . $ext)) {
+                // Return a relative path or a URL (assuming public access or a specific route)
+                return '/themes/' . basename($this->path) . '/screenshot.' . $ext;
+            }
+        }
+        return 'https://placehold.co/600x450/12151c/6366f1?text=' . urlencode($this->getTitle());
+    }
+
     public function getApp(): Application
     {
         return $this->app;
