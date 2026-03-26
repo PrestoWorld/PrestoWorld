@@ -1,4 +1,4 @@
-<extends:layout.app title="Experience Performance"/>
+<extends:layout/app title="Experience Performance"/>
 
 <block:content>
     {!! $content !!}

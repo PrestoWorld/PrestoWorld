@@ -61,11 +61,21 @@
             <nav>
                 <ul>
                     <?php 
-                    $nav_items = app('contexts')->resolve('header.nav');
-                    foreach ($nav_items as $item): 
+                    try {
+                        $nav_items = app('contexts')->resolve('header.nav');
+                        foreach ($nav_items as $item): 
                     ?>
                         <li><a href="{{ $item['url'] }}">{{ $item['label'] }}</a></li>
-                    <?php endforeach; ?>
+                    <?php 
+                        endforeach; 
+                    } catch (Exception $e) {
+                        // Fallback navigation items
+                    ?>
+                        <li><a href="/">Home</a></li>
+                        <li><a href="/docs">Documentation</a></li>
+                        <li><a href="/modules">Modules</a></li>
+                        <li><a href="/community">Community</a></li>
+                    <?php } ?>
                 </ul>
             </nav>
             <div class="header-actions">

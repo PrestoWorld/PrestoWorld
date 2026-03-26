@@ -24,7 +24,7 @@
                 </div>
                 <div class="plugin-title-area">
                     <h3 class="plugin-title">{{ $plugin['name'] }}</h3>
-                    <div class="plugin-author">By <a href="{{ $plugin['author']['url'] }}">{{ $plugin['author']['name'] }}</a></div>
+                    <div class="plugin-author">By <a href="{{ $plugin['author']['url'] ?? '#' }}">{{ $plugin['author']['name'] }}</a></div>
                     <div class="plugin-rating">
                         @for($i = 0; $i < 5; $i++)
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="{{ $i < floor($plugin['stats']['rating'] / 20) ? '#fbbf24' : 'rgba(255,255,255,0.1)' }}"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>

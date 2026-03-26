@@ -65,7 +65,8 @@ abstract class AdminController
         
         // admin-dashboard depends on admin-core.css
         $this->assets->enqueueCss('admin-core', 'css/admin-core.css');
-        $this->assets->enqueueCss('admin-dashboard', 'css/admin-dashboard.css', ['admin-core']);
+        $this->assets->enqueueCss('admin-dashboard', '/css/admin-dashboard.css', ['presto-ui']);
+        $this->assets->enqueueCss('marketplace', '/css/marketplace.css', ['admin-dashboard']);
 
         // JS assets
         $this->assets->enqueueJs('admin-core', 'js/admin-solid-core.js', [], ['defer' => true, 'type' => 'module']);
