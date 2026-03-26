@@ -94,13 +94,35 @@ abstract class AdminController
         
         $groups = app('contexts')->resolve('dashboard.menu');
         
+        // Normalize groups to ensure all required keys exist
+        $normalizedGroups = array_map(function ($item) {
+            $children = $item['children'] ?? [];
+            $subGroups = $item['groups'] ?? [];
+            $groupItems = $item['items'] ?? [];
+            
+            // Avoid duplication if they are same items
+            $rawChildren = array_merge($children, $subGroups, $groupItems);
+            $uniqueChildren = [];
+            foreach ($rawChildren as $child) {
+                $uniqueChildren[$child['id'] ?? uniqid()] = $child;
+            }
+            
+            $item['children'] = array_values($uniqueChildren);
+            $item['groups'] = [];
+            $item['url'] = $item['url'] ?? '#';
+            $item['label'] = $item['label'] ?? ($item['title'] ?? 'Untitled');
+            $item['icon'] = $item['icon'] ?? '📁';
+            
+            return $item;
+        }, $groups);
+
         // Pre-check for any active child to handle accordion opening
         $anySubmenuActive = false;
-        foreach ($groups as $data) {
-            if (!empty($data['children']) || !empty($data['groups'])) {
-                $allChildren = array_merge($data['children'], $data['groups']);
-                foreach ($allChildren as $child) {
-                    if ($current === $child['url'] || str_starts_with($current, $child['url'] . '?')) {
+        foreach ($normalizedGroups as $data) {
+            if (!empty($data['children'])) {
+                foreach ($data['children'] as $child) {
+                    $childUrl = $child['url'] ?? '#';
+                    if ($current === $childUrl || str_starts_with($current, $childUrl . '?')) {
                         $anySubmenuActive = true;
                         break 2;
                     }
@@ -108,9 +130,9 @@ abstract class AdminController
             }
         }
 
-        foreach ($groups as $index => $data) {
+        foreach ($normalizedGroups as $index => $data) {
             // Case 1: Simple Link
-            if (empty($data['children']) && empty($data['groups'])) {
+            if (empty($data['children'])) {
                 $active = ($current === $data['url'] || str_starts_with($current, $data['url'] . '?')) ? ' active' : '';
                 $html .= "<a href=\"{$data['url']}\" class=\"presto-nav-item{$active}\">";
                 $html .= "  <span class='nav-icon'>{$data['icon']}</span> <span class='nav-label'>{$data['label']}</span>";
@@ -118,12 +140,13 @@ abstract class AdminController
                 continue;
             }
 
-            // Case 2: Group with Children (DropdownGroup or MenuItem with children)
-            $allChildren = array_merge($data['children'], $data['groups']);
+            // Case 2: Group with Children
+            $allChildren = $data['children'];
             
             $hasActiveChild = false;
             foreach ($allChildren as $child) {
-                if ($current === $child['url'] || str_starts_with($current, $child['url'] . '?')) {
+                $childUrl = $child['url'] ?? '#';
+                if ($current === $childUrl || str_starts_with($current, $childUrl . '?')) {
                     $hasActiveChild = true;
                     break;
                 }
@@ -143,9 +166,12 @@ abstract class AdminController
             $html .= "  <div class=\"presto-submenu\">";
             
             foreach ($allChildren as $child) {
-                $childActive = ($current === $child['url'] || str_starts_with($current, $child['url'] . '?')) ? ' active' : '';
-                $html .= "      <a href=\"{$child['url']}\" class=\"presto-submenu-item{$childActive}\">";
-                $html .= "          <span class='sub-icon'>{$child['icon']}</span> <span class='sub-label'>{$child['label']}</span>";
+                $childUrl = $child['url'] ?? '#';
+                $childLabel = $child['label'] ?? ($child['title'] ?? 'Untitled');
+                $childIcon = $child['icon'] ?? '';
+                $childActive = ($current === $childUrl || str_starts_with($current, $childUrl . '?')) ? ' active' : '';
+                $html .= "      <a href=\"{$childUrl}\" class=\"presto-submenu-item{$childActive}\">";
+                $html .= "          <span class='sub-icon'>{$childIcon}</span> <span class='sub-label'>{$childLabel}</span>";
                 $html .= "      </a>";
             }
             
@@ -321,186 +347,8 @@ HTML;
 
     protected function adminCss(): string
     {
+        // Conserving dynamic overrides if needed, but core layout is now in public/css/admin-dashboard.css
         return <<<CSS
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-        :root {
-            --bg-deep: #06080c;
-            --bg-side: #0b0e14;
-            --bg-card: rgba(18, 22, 31, 0.85);
-            --bg-card-hover: rgba(26, 31, 46, 0.95);
-            --primary: #6366f1;
-            --primary-700: #4f46e5;
-            --primary-glow: rgba(99, 102, 241, 0.25);
-            --border: rgba(255, 255, 255, 0.08);
-            --border-light: rgba(255, 255, 255, 0.15);
-            --text-main: #f1f5f9;
-            --text-dim: #94a3b8;
-            --text-muted: #64748b;
-            --success: #10b981;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --sidebar-width: 260px;
-            --radius-xl: 32px;
-            --radius-lg: 18px;
-            --radius-md: 12px;
-        }
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        body.presto-admin { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg-deep); color: var(--text-main); font-size: 14px; -webkit-font-smoothing: antialiased; letter-spacing: -0.01em; }
-        
-        .presto-admin a { color: var(--primary); text-decoration: none; transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
-        .presto-admin a:hover { color: #818cf8; }
-
-        /* Layout Structure */
-        .presto-admin-layout { display: flex; min-height: 100vh; background: radial-gradient(circle at 10% 10%, rgba(99, 102, 241, 0.08) 0%, transparent 40%), radial-gradient(circle at 90% 90%, rgba(168, 85, 247, 0.08) 0%, transparent 40%); }
-        
-        /* Sidebar Design */
-        .presto-sidebar { width: var(--sidebar-width); background: var(--bg-side); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: fixed; height: 100vh; z-index: 1000; box-shadow: 10px 0 40px rgba(0,0,0,0.4); }
-        .presto-sidebar-brand { padding: 48px 24px; font-size: 24px; font-weight: 800; display: flex; align-items: center; gap: 14px; letter-spacing: -0.04em; }
-        .presto-sidebar-brand span { color: var(--primary); }
-        
-        .presto-nav-groups { padding: 24px 14px; flex: 1; overflow-y: auto; scrollbar-width: none; }
-        .presto-nav-groups::-webkit-scrollbar { display: none; }
-        .presto-nav-item { display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-radius: 16px; color: var(--text-dim); text-decoration: none; font-weight: 600; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); margin-bottom: 6px; cursor: pointer; position: relative; }
-        .presto-nav-item:hover { background: rgba(255,255,255,0.04); color: var(--text-main); transform: translateX(5px); }
-        .presto-nav-item.active { background: linear-gradient(135deg, rgba(99, 102, 241, 0.18) 0%, rgba(99, 102, 241, 0.06) 100%); color: var(--primary); box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.25); }
-        .presto-nav-item.active::after { content: ''; position: absolute; left: 0; top: 14px; bottom: 14px; width: 4px; background: var(--primary); border-radius: 0 4px 4px 0; box-shadow: 0 0 15px var(--primary-glow); }
-        
-        .active-parent { color: #fff !important; }
-        .nav-icon { font-size: 18px; opacity: 0.7; transition: 0.3s; }
-        .presto-nav-item.active .nav-icon { opacity: 1; filter: drop-shadow(0 0 8px var(--primary-glow)); }
-        .nav-chevron { margin-left: auto; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); opacity: 0.4; }
-        .is-open .nav-chevron { transform: rotate(180deg); opacity: 1; color: var(--primary); }
-
-        .presto-submenu { 
-            max-height: 0; 
-            overflow: hidden; 
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
-            padding-left: 14px;
-            display: flex;
-            flex-direction: column;
-            margin-top: -4px;
-            margin-bottom: 4px;
-            opacity: 0;
-            pointer-events: none;
-        }
-        .is-open .presto-submenu { 
-            max-height: 800px; 
-            padding-bottom: 8px;
-            opacity: 1;
-            pointer-events: auto;
-        }
-        .presto-submenu-item { 
-            display: flex; 
-            align-items: center; 
-            gap: 12px; 
-            padding: 12px 18px; 
-            border-radius: 12px; 
-            color: var(--text-muted); 
-            font-size: 13.5px; 
-            font-weight: 600; 
-            transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1); 
-            margin-bottom: 2px;
-            border-left: 2px solid transparent;
-        }
-        .presto-submenu-item:hover { 
-            color: var(--text-main); 
-            background: rgba(255,255,255,0.04); 
-            padding-left: 22px; 
-            border-left-color: rgba(99, 102, 241, 0.3);
-        }
-        .presto-submenu-item.active { 
-            color: var(--primary); 
-            font-weight: 700; 
-            background: rgba(99, 102, 241, 0.08); 
-            border-left-color: var(--primary);
-        }
-        .sub-icon { font-size: 14px; opacity: 0.5; width: 20px; text-align: center; }
-        .presto-submenu-item.active .sub-icon { opacity: 1; filter: drop-shadow(0 0 5px var(--primary-glow)); }
-        
-        .sidebar-footer { padding: 32px 14px; border-top: 1px solid var(--border); }
-        .nav-user-profile { display: flex; align-items: center; gap: 14px; padding: 16px; background: rgba(0,0,0,0.3); border-radius: 20px; border: 1px solid var(--border); box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
-        .nav-user-profile .avatar { width: 38px; height: 38px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; color: #fff; background: linear-gradient(135deg, #6366f1, #a855f7); box-shadow: 0 5px 15px rgba(99, 102, 241, 0.3); }
-        .nav-user-profile .info { flex: 1; display: flex; flex-direction: column; min-width: 0; }
-        .nav-user-profile .name { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #fff; }
-        .nav-user-profile .role { font-size: 11px; color: var(--text-muted); font-weight: 600; }
-        .logout-btn { background: rgba(255,255,255,0.04); border: none; color: var(--text-muted); cursor: pointer; padding: 8px; border-radius: 10px; transition: 0.25s; }
-        .logout-btn:hover { background: rgba(239, 68, 68, 0.15); color: var(--danger); transform: scale(1.1); }
-
-        /* Main Content Wrapper */
-        .presto-main-wrapper { flex: 1; margin-left: var(--sidebar-width); display: flex; flex-direction: column; }
-        .presto-main-header { padding: 24px 48px; border-bottom: 1px solid var(--border); background: rgba(6, 8, 12, 0.85); backdrop-filter: blur(25px); position: sticky; top: 0; z-index: 900; display: flex; align-items: center; justify-content: space-between; gap: 40px; }
-        
-        .header-search { flex: 1; max-width: 500px; position: relative; display: flex; align-items: center; }
-        .header-search svg { position: absolute; left: 18px; color: var(--text-muted); pointer-events: none; }
-        .header-search input { width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 14px 20px 14px 50px; color: var(--text-main); outline: none; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); font-weight: 600; }
-        .header-search input:focus { border-color: var(--primary); box-shadow: 0 0 0 5px var(--primary-glow); background: rgba(0,0,0,0.45); }
-        
-        .header-actions { display: flex; align-items: center; gap: 32px; }
-        .header-notif { position: relative; color: var(--text-muted); cursor: pointer; transition: 0.25s; }
-        .header-notif:hover { color: var(--text-main); transform: translateY(-2px); }
-        .header-notif .pulse { position: absolute; top: -2px; right: -2px; width: 10px; height: 10px; background: var(--danger); border-radius: 50%; border: 3px solid #06080c; }
-
-        .presto-content-area { padding: 48px 64px; }
-        .page-title { font-size: 38px; font-weight: 800; margin-bottom: 48px; letter-spacing: -0.05em; background: linear-gradient(to right, #fff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .section-title { font-size: 24px; font-weight: 800; margin: 64px 0 32px; display: flex; align-items: center; gap: 20px; letter-spacing: -0.02em; }
-
-        /* Premium Buttons */
-        .presto-btn { display: inline-flex; align-items: center; gap: 10px; padding: 14px 32px; border-radius: var(--radius-lg); font-size: 14px; font-weight: 800; cursor: pointer; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); border: none; letter-spacing: -0.01em; }
-        .presto-btn-primary { background: linear-gradient(135deg, var(--primary) 0%, #4f46e5 100%); color: #fff; box-shadow: 0 10px 25px rgba(99, 102, 241, 0.35); }
-        .presto-btn-primary:hover { transform: translateY(-4px); box-shadow: 0 15px 35px rgba(99, 102, 241, 0.45); filter: brightness(1.1); }
-        .presto-btn-secondary { background: rgba(255,255,255,0.06); color: var(--text-main); border: 1px solid var(--border); backdrop-filter: blur(10px); }
-        .presto-btn-secondary:hover { background: rgba(255,255,255,0.1); border-color: var(--border-light); transform: translateY(-2px); }
-
-        /* Luxury Cards */
-        .presto-card { background: var(--bg-card); border-radius: var(--radius-xl); border: 1px solid var(--border); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; backdrop-filter: blur(25px); }
-        .presto-card:hover { border-color: var(--border-light); background: var(--bg-card-hover); transform: translateY(-8px); box-shadow: 0 40px 80px rgba(0,0,0,0.5); }
-        .presto-card-header { padding: 28px 40px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.02); }
-        .presto-card-title { font-size: 20px; font-weight: 800; letter-spacing: -0.02em; }
-        .presto-card-body { padding: 40px; }
-
-        /* Premium Form Controls */
-        .presto-form { display: flex; flex-direction: column; gap: 32px; }
-        .presto-field-group { display: flex; flex-direction: column; gap: 10px; width: 100%; }
-        .presto-field-label { font-size: 13px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.1em; }
-        .presto-field-hint { font-size: 12px; color: var(--text-muted); margin-top: 6px; font-style: italic; }
-        
-        .presto-input, .presto-select, .presto-textarea {
-            width: 100%; background: rgba(0,0,0,0.2); border: 1px solid var(--border);
-            border-radius: 14px; padding: 16px 20px; color: #fff; font-size: 15px;
-            font-weight: 600; outline: none; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            backdrop-filter: blur(5px);
-        }
-        .presto-input:focus, .presto-select:focus, .presto-textarea:focus {
-            border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-glow);
-            background: rgba(0,0,0,0.35);
-        }
-        .presto-input::placeholder { color: var(--text-muted); opacity: 0.5; }
-        
-        .presto-select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 20px center; padding-right: 50px; }
-        
-        .presto-textarea { min-height: 120px; resize: vertical; line-height: 1.6; }
-
-        .presto-form-section-head { margin: 48px 0 24px; padding-bottom: 16px; border-bottom: 2px solid var(--primary); display: flex; align-items: center; gap: 15px; }
-        .presto-form-section-head h3 { font-size: 20px; font-weight: 800; color: #fff; letter-spacing: -0.02em; }
-        .presto-form-section-head .icon-wrap { width: 36px; height: 36px; border-radius: 10px; background: var(--primary-glow); display: flex; align-items: center; justify-content: center; font-size: 18px; }
-
-        /* Grid System Utility */
-        .presto-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 32px; }
-        .col-12 { grid-column: span 12; }
-        .col-6 { grid-column: span 6; }
-        .col-4 { grid-column: span 4; }
-        .col-8 { grid-column: span 8; }
-
-        /* Modern Checkbox list */
-        .presto-check-list { background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 18px; padding: 24px; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; margin-top: 10px; }
-        .presto-check-item { display: flex; align-items: center; gap: 12px; cursor: pointer; padding: 12px; border-radius: 12px; transition: 0.25s; }
-        .presto-check-item:hover { background: rgba(255,255,255,0.05); }
-        .presto-check-item input[type="checkbox"] { width: 18px; height: 18px; border-radius: 6px; appearance: none; background: rgba(0,0,0,0.3); border: 1px solid var(--border); cursor: pointer; position: relative; transition: 0.3s; }
-        .presto-check-item input[type="checkbox"]:checked { background: var(--primary); border-color: var(--primary); }
-        .presto-check-item input[type="checkbox"]:checked::after { content: "✓"; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); color: #fff; font-weight: 900; font-size: 11px; }
-        .presto-check-label { font-size: 14px; font-weight: 600; color: var(--text-dim); flex: 1; }
-        .presto-check-item:hover .presto-check-label { color: #fff; }
-        .presto-check-badge { font-size: 10px; background: rgba(255,255,255,0.1); padding: 2px 7px; border-radius: 6px; color: var(--text-muted); text-transform: uppercase; margin-left: auto; }
 
         /* Advanced Stat Cards */
         .presto-dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 32px; }

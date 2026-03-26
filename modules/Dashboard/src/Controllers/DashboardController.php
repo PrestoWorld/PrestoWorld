@@ -9,59 +9,7 @@ class DashboardController extends AdminController
 {
     public function index()
     {
-        // 1. Define default system-level stats
-        $defaultStats = [
-            [
-                'label' => 'Active Components',
-                'value' => '42',
-                'trend' => 'System up to date',
-                'icon'  => '🧩',
-                'color' => '#6366f1'
-            ],
-            [
-                'label' => 'Core Modules',
-                'value' => '12',
-                'trend' => 'All stable',
-                'icon'  => '📦',
-                'color' => '#10b981'
-            ],
-            [
-                'label' => 'Memory Usage',
-                'value' => '24MB',
-                'trend' => 'Peak: 31MB',
-                'icon'  => '⚡',
-                'color' => '#f59e0b'
-            ],
-            [
-                'label' => 'System Uptime',
-                'value' => '99.9%',
-                'trend' => 'Healthy',
-                'icon'  => '🛡️',
-                'color' => '#ef4444'
-            ]
-        ];
-
-        // 2. Allow modules to filter/modify stats
-        $stats = apply_filters('dashboard.stats', $defaultStats);
-
-        // Render stats HTML
-        $statsHtml = '<div class="presto-stats-row">';
-        foreach ($stats as $s) {
-            $statsHtml .= "
-            <div class=\"presto-card stat-card-premium\" style=\"--accent: {$s['color']}\">
-                <div class=\"stat-info\">
-                    <span class=\"stat-label\">{$s['label']}</span>
-                    <h3 class=\"stat-value\">{$s['value']}</h3>
-                    <span class=\"stat-trend\">{$s['trend']}</span>
-                </div>
-                <div class=\"stat-visual\">
-                    <div class=\"stat-icon-wrap\"><span class=\"stat-icon\">{$s['icon']}</span></div>
-                </div>
-            </div>";
-        }
-        $statsHtml .= '</div>';
-
-        // 3. Register Widgets (Hooks-based)
+        // 1. Register Widgets (Hooks-based)
         $widgetsHtml = '';
         $registry = app(\PrestoWorld\Context\ContextRegistry::class);
         $context = $registry->get('dashboard.widgets');
@@ -87,19 +35,19 @@ class DashboardController extends AdminController
         } else {
             // Generic Empty State / Quick Start
             $widgetsHtml = '
-            <div class="presto-card" style="margin-top: 2rem; padding: 4rem; text-align: center; background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.1);">
-                <div style="font-size: 4rem; margin-bottom: 1.5rem;">🌌</div>
-                <h2 style="font-size: 1.75rem; font-weight: 700;">Welcome to PrestoWorld</h2>
-                <p style="color: var(--text-muted); max-width: 600px; margin: 0.5rem auto 2.5rem; font-size: 1.1rem; line-height: 1.6;">
-                    The system is ready. You can now start building your custom dashboard by registering widgets via the <code>dashboard.init_widgets</code> hook.
+            <div class="presto-card" style="margin-top: 1rem; padding: 5rem 2rem; text-align: center; background: rgba(255,255,255,0.015); border: 1px dashed rgba(255,255,255,0.08); border-radius: 40px;">
+                <img src="https://ui-avatars.com/api/?name=PW&background=6366f1&color=fff&size=128" style="width: 80px; height: 80px; border-radius: 24px; margin-bottom: 2rem; box-shadow: 0 20px 40px rgba(99, 102, 241, 0.3);">
+                <h2 style="font-size: 2.2rem; font-weight: 800; letter-spacing: -0.04em; margin-bottom: 1rem;">Welcome to PrestoWorld</h2>
+                <p style="color: var(--text-muted); max-width: 580px; margin: 0 auto 3rem; font-size: 1.15rem; line-height: 1.7; opacity: 0.8;">
+                    The system core is activated. You can now start building your custom experience by registering adaptive widgets.
                 </p>
-                <div style="display: flex; gap: 1.25rem; justify-content: center;">
-                    <a href="https://prestoworld.com/docs" class="btn-primary" style="padding: 0.8rem 2rem;">Read Documentation</a>
-                    <a href="/" class="btn-ghost" style="padding: 0.8rem 2rem;">Visit Site</a>
+                <div style="display: flex; gap: 1.5rem; justify-content: center; align-items: center;">
+                    <a href="https://prestoworld.com/docs" class="presto-btn presto-btn-primary">Explore Documentation</a>
+                    <a href="/" class="presto-btn presto-btn-secondary">Visit Frontend</a>
                 </div>
             </div>';
         }
 
-        return $this->adminPage('System Dashboard', $statsHtml . $widgetsHtml);
+        return $this->adminPage('System Dashboard', $widgetsHtml);
     }
 }

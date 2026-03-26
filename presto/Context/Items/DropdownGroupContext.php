@@ -40,9 +40,14 @@ class DropdownGroupContext extends AbstractContextItem
 
     public function resolve(): array
     {
+        $items = $this->getItems();
         return array_merge($this->baseResolve(), [
-            'title' => $this->title,
-            'items' => array_map(fn(MenuItemContext $i) => $i->resolve(), $this->getItems()),
+            'title'        => $this->title,
+            'label'        => $this->title, // Compatibility with MenuItemContext
+            'url'          => '#',
+            'items'        => array_map(fn(MenuItemContext $i) => $i->resolve(), $items),
+            'children'     => array_map(fn(MenuItemContext $i) => $i->resolve(), $items), // Alias for consistency
+            'has_children' => !empty($items),
         ]);
     }
 }
