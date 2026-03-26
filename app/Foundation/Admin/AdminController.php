@@ -130,6 +130,10 @@ abstract class AdminController
             }
         }
 
+        ob_start();
+        do_action('admin.nav.before');
+        $html .= ob_get_clean();
+        
         foreach ($normalizedGroups as $index => $data) {
             // Case 1: Simple Link
             if (empty($data['children'])) {
@@ -178,6 +182,10 @@ abstract class AdminController
             $html .= "  </div>";
             $html .= "</div>";
         }
+
+        ob_start();
+        do_action('admin.nav.after');
+        $html .= ob_get_clean();
         
         $html .= '</div>';
         return $html;
@@ -347,129 +355,7 @@ HTML;
 
     protected function adminCss(): string
     {
-        // Conserving dynamic overrides if needed, but core layout is now in public/css/admin-dashboard.css
-        return <<<CSS
-
-        /* Advanced Stat Cards */
-        .presto-dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 32px; }
-        .stat-card-premium { padding: 40px; display: flex; align-items: flex-start; justify-content: space-between; }
-        .stat-label { font-size: 13px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 18px; display: block; opacity: 0.8; }
-        .stat-value { font-size: 48px; font-weight: 800; line-height: 1; margin-bottom: 18px; display: block; color: #fff; background: linear-gradient(to bottom, #fff 40%, #94a3b8 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -0.05em; }
-        .stat-trend { font-size: 12px; font-weight: 800; background: rgba(16, 185, 129, 0.15); color: var(--success); padding: 6px 14px; border-radius: 12px; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.1); }
-        .stat-trend.trend-neutral { background: rgba(255,255,255,0.08); color: var(--text-dim); }
-        .stat-icon-wrap { width: 68px; height: 68px; border-radius: 22px; background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%); display: flex; align-items: center; justify-content: center; font-size: 30px; box-shadow: inset 0 0 25px rgba(255,255,255,0.03); }
-
-        /* Data Tables Design */
-        .presto-table-topbar { display: flex; align-items: center; justify-content: space-between; gap: 32px; margin-bottom: 48px; width: 100%; }
-        .presto-table-topbar-actions { display: flex; align-items: center; }
-        
-        .presto-search-box { display: flex; gap: 12px; align-items: center; }
-        .search-input-wrap { position: relative; display: flex; align-items: center; flex: 1; min-width: 320px; }
-        .search-icon { position: absolute; left: 18px; color: var(--text-muted); pointer-events: none; z-index: 10; }
-        .search-input-wrap input { width: 100%; height: 52px; background: rgba(0,0,0,0.25); border: 1px solid var(--border); border-radius: 16px; padding: 0 20px 0 52px; color: #fff; font-size: 14px; font-weight: 600; outline: none; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); backdrop-filter: blur(10px); }
-        .search-input-wrap input:focus { border-color: var(--primary); box-shadow: 0 0 0 5px var(--primary-glow); background: rgba(0,0,0,0.4); }
-        .presto-search-box .presto-btn { height: 52px; padding: 0 32px; white-space: nowrap; }
-
-        .presto-table-wrap { background: var(--bg-card); border-radius: var(--radius-xl); border: 1px solid var(--border); overflow: hidden; backdrop-filter: blur(25px); box-shadow: 0 25px 50px rgba(0,0,0,0.4); margin-bottom: 40px; }
-        .presto-list-table { width: 100%; display: flex; flex-direction: column; }
-        .table-tr { display: flex; align-items: center; border-bottom: 1px solid var(--border); transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
-        .table-head .table-tr { background: rgba(0,0,0,0.2); }
-        .table-body .table-tr:hover { background: rgba(255,255,255,0.035); }
-        .table-body .table-tr:last-child { border-bottom: none; }
-        
-        .table-th, .table-td { padding: 28px 48px; flex: 1; min-width: 0; position: relative; }
-        .table-th { font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.15em; }
-        .table-td { font-size: 15px; color: var(--text-main); font-weight: 600; }
-        .table-td strong { color: #fff; font-weight: 800; }
-        
-        .column-primary { flex: 2; }
-        .check-column { flex: 0 0 100px; padding: 28px 0 !important; display: flex; align-items: center; justify-content: center; }
-        .check-column input[type="checkbox"] { width: 18px; height: 18px; border-radius: 6px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); appearance: none; cursor: pointer; position: relative; transition: 0.3s; }
-        .check-column input[type="checkbox"]:checked { background: var(--primary); border-color: var(--primary); }
-        .check-column input[type="checkbox"]:checked::after { content: "✓"; position: absolute; color: #fff; font-size: 11px; font-weight: 900; left: 50%; top: 50%; transform: translate(-50%, -50%); }
-        
-        /* Modern Filter Tabs */
-        .presto-subsubsub { display: flex; list-style: none; gap: 8px; background: rgba(0,0,0,0.25); padding: 8px; border-radius: 18px; border: 1px solid var(--border); margin-bottom: 0px; width: fit-content; box-shadow: 0 10px 30px rgba(0,0,0,0.2); height: 52px; align-items: center; }
-        .presto-subsubsub li a { display: block; padding: 10px 24px; border-radius: 12px; font-size: 14px; font-weight: 800; color: var(--text-muted); text-decoration: none; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .presto-subsubsub li a:hover { color: #fff; background: rgba(255,255,255,0.05); }
-        .presto-subsubsub li a.current { background: var(--primary); color: #fff; box-shadow: 0 8px 20px var(--primary-glow); }
-        .presto-subsubsub .count { opacity: 0.7; font-size: 11px; margin-left: 8px; font-weight: 800; background: rgba(255,255,255,0.15); padding: 2px 8px; border-radius: 8px; color: #fff; }
-
-        /* Pagination Flow */
-        .tablenav { display: flex; align-items: center; justify-content: space-between; padding: 28px 40px; background: rgba(0,0,0,0.15); }
-        .tablenav.top { border-bottom: 1px solid var(--border); }
-        .tablenav.bottom { border-top: 1px solid var(--border); }
-        .tablenav select { background: rgba(0,0,0,0.4); border: 1px solid var(--border); border-radius: 14px; padding: 12px 20px; color: #fff; font-weight: 700; outline: none; margin-right: 20px; cursor: pointer; font-size: 13px; }
-        
-        .tablenav-pages { display: flex; align-items: center; gap: 24px; font-weight: 800; color: var(--text-muted); font-size: 14px; }
-        .pagination-links { display: flex; gap: 8px; }
-        .pagination-links .button { min-width: 44px; height: 44px; background: rgba(255,255,255,0.06); border: 1px solid var(--border); border-radius: 15px; display: inline-flex; align-items: center; justify-content: center; color: #fff; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); font-size: 22px; }
-        .pagination-links .button:hover { background: var(--primary); border-color: var(--primary); transform: translateY(-4px); box-shadow: 0 10px 20px var(--primary-glow); }
-
-        /* Interactive Row Actions */
-        .row-actions { opacity: 0; transition: 0.3s; margin-top: 12px; font-size: 12px; display: flex; gap: 16px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
-        .table-tr:hover .row-actions { opacity: 0.95; }
-        .row-actions a { color: var(--text-muted); text-decoration: none; }
-        .row-actions a:hover { color: var(--primary); text-shadow: 0 0 10px var(--primary-glow); }
-        .row-actions .action-delete a:hover { color: var(--danger); text-shadow: 0 0 10px rgba(239, 68, 68, 0.3); }
-
-        /* Custom UI Components */
-        .badge { display: inline-flex; align-items: center; padding: 6px 14px; border-radius: 12px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-        .badge-active { background: rgba(16, 185, 129, 0.18); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.1); }
-        .badge-software { background: rgba(99, 102, 241, 0.18); color: var(--primary); border: 1px solid rgba(99, 102, 241, 0.1); }
-        .badge-membership { background: rgba(245, 158, 11, 0.18); color: var(--warning); border: 1px solid rgba(245, 158, 11, 0.1); }
-        
-        .presto-notice { padding: 18px 24px; border-radius: 18px; margin-bottom: 32px; font-weight: 700; display: flex; align-items: center; gap: 14px; border: 1px solid var(--border); backdrop-filter: blur(10px); }
-        .presto-notice-info { background: rgba(99, 102, 241, 0.1); color: var(--primary); border-color: rgba(99, 102, 241, 0.2); }
-        .presto-notice-success { background: rgba(16, 185, 129, 0.1); color: var(--success); border-color: rgba(16, 185, 129, 0.2); }
-
-        /* Dynamic Visuals */
-        .donut-chart-mock { width: 220px; height: 220px; border-radius: 50%; background: conic-gradient(var(--primary) 0% 45%, var(--success) 45% 75%, var(--warning) 75% 92%, #ec4899 92% 100%); margin: 48px auto; position: relative; display: flex; align-items: center; justify-content: center; box-shadow: 0 30px 60px rgba(0,0,0,0.6); }
-        .donut-chart-mock::before { content: ""; width: 160px; height: 160px; background: #0b0e14; border-radius: 50%; position: absolute; box-shadow: inset 0 0 30px rgba(0,0,0,0.5); }
-        .donut-inner { position: relative; font-size: 32px; font-weight: 800; color: #fff; letter-spacing: -0.06em; }
-
-        /* Product Categories Grid & Cards */
-        .presto-category-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 32px; margin: 40px 0 64px; }
-        .category-card { padding: 32px; display: flex; flex-direction: column; height: 100%; border-radius: 28px; }
-        .category-card:hover { transform: translateY(-6px); }
-        
-        .cat-header { display: flex; align-items: center; gap: 20px; margin-bottom: 28px; }
-        .cat-icon { width: 56px; height: 56px; border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 26px; box-shadow: 0 10px 20px rgba(0,0,0,0.3); flex-shrink: 0; }
-        .cat-title-group h3 { font-size: 18px; font-weight: 800; margin-bottom: 4px; color: #fff; letter-spacing: -0.02em; }
-        
-        .cat-stats { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; flex: 1; }
-        .cat-stat { display: flex; justify-content: space-between; font-size: 14px; color: var(--text-dim); font-weight: 600; }
-        .cat-stat strong { color: #fff; font-weight: 700; }
-        
-        .cat-progress { margin-top: auto; padding-top: 20px; }
-        .progress-label { display: flex; justify-content: space-between; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px; color: var(--text-muted); }
-        .progress-bar { height: 8px; background: rgba(0,0,0,0.3); border-radius: 4px; overflow: hidden; }
-        .progress-fill { height: 100%; border-radius: 4px; background: linear-gradient(to right, var(--primary), #a855f7); box-shadow: 0 0 15px var(--primary-glow); }
-        
-        .cat-footer { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); }
-        .btn-ghost-sm { background: rgba(255,255,255,0.03); border: 1px solid var(--border); color: var(--text-dim); font-size: 13px; font-weight: 700; cursor: pointer; transition: 0.2s; padding: 10px 16px; border-radius: 12px; width: 100%; text-align: center; }
-        .btn-ghost-sm:hover { background: rgba(255,255,255,0.08); color: #fff; border-color: var(--border-light); }
-
-        /* Dashboard Bottom Row & Components */
-        .dashboard-bottom-row { display: grid; grid-template-columns: 2fr 1fr; gap: 40px; margin-top: 80px; }
-        .card-tabs { display: flex; gap: 10px; background: rgba(0,0,0,0.35); padding: 8px; border-radius: 18px; border: 1px solid var(--border); }
-        .tab-btn { background: none; border: none; color: var(--text-muted); padding: 10px 24px; border-radius: 12px; font-size: 13px; font-weight: 800; cursor: pointer; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .tab-btn:hover { color: var(--text-main); background: rgba(255,255,255,0.08); }
-        .tab-btn.active { background: linear-gradient(135deg, var(--primary) 0%, #4f46e5 100%); color: #fff; box-shadow: 0 8px 20px var(--primary-glow); }
-        
-        .chart-legend { list-style: none; padding: 40px 0 0; display: flex; flex-direction: column; gap: 20px; }
-        .chart-legend li { display: flex; align-items: center; justify-content: space-between; font-size: 15px; font-weight: 700; color: var(--text-dim); }
-        .chart-legend .dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; margin-right: 16px; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
-        .chart-legend span { display: flex; align-items: center; }
-        
-        /* Utility Classes */
-        .p-0 { padding: 0 !important; }
-        .mt-64 { margin-top: 64px; }
-
-        /* Footer */
-        .presto-admin-footer { margin-top: 80px; padding-top: 32px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; color: var(--text-muted); font-size: 13px; font-weight: 600; }
-        .presto-admin-footer strong { color: var(--text-dim); }
-        CSS;
+        return '';
     }
 
     protected function adminJs(): string

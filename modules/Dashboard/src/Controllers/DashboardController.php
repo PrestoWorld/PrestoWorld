@@ -48,6 +48,23 @@ class DashboardController extends AdminController
             </div>';
         }
 
-        return $this->adminPage('System Dashboard', $widgetsHtml);
+        // Add hooks for content injection
+        ob_start();
+        do_action('admin.dashboard.top');
+        $topContent = ob_get_clean();
+
+        ob_start();
+        do_action('admin.dashboard.widgets.before');
+        $beforeWidgets = ob_get_clean();
+
+        ob_start();
+        do_action('admin.dashboard.widgets.after');
+        $afterWidgets = ob_get_clean();
+
+        ob_start();
+        do_action('admin.dashboard.bottom');
+        $bottomContent = ob_get_clean();
+
+        return $this->adminPage('System Dashboard', $topContent . $beforeWidgets . $widgetsHtml . $afterWidgets . $bottomContent);
     }
 }

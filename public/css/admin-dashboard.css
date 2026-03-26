@@ -17,9 +17,6 @@
     --danger: #ef4444;
     --warning: #f59e0b;
     --sidebar-width: 260px;
-    --radius-xl: 32px;
-    --radius-lg: 18px;
-    --radius-md: 12px;
 }
 
 *,
@@ -36,28 +33,25 @@ body.presto-admin {
     color: var(--text-main);
     font-size: 14px;
     -webkit-font-smoothing: antialiased;
-    letter-spacing: -0.01em;
 }
 
 .presto-admin a {
     color: var(--primary);
     text-decoration: none;
-    transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: 0.25s;
 }
 
 .presto-admin a:hover {
     color: #818cf8;
 }
 
-/* Layout Structure */
+/* Layout */
 .presto-admin-layout {
     display: flex;
     min-height: 100vh;
-    background: radial-gradient(circle at 10% 10%, rgba(99, 102, 241, 0.05) 0%, transparent 40%),
-        radial-gradient(circle at 90% 90%, rgba(168, 85, 247, 0.05) 0%, transparent 40%);
 }
 
-/* Sidebar Design */
+/* Sidebar */
 .presto-sidebar {
     width: var(--sidebar-width);
     background: var(--bg-side);
@@ -67,7 +61,6 @@ body.presto-admin {
     position: fixed;
     height: 100vh;
     z-index: 1000;
-    box-shadow: 10px 0 40px rgba(0, 0, 0, 0.4);
 }
 
 .presto-sidebar-brand {
@@ -76,8 +69,7 @@ body.presto-admin {
     font-weight: 800;
     display: flex;
     align-items: center;
-    gap: 14px;
-    letter-spacing: -0.04em;
+    gap: 12px;
 }
 
 .presto-sidebar-brand span {
@@ -91,10 +83,6 @@ body.presto-admin {
     scrollbar-width: none;
 }
 
-.presto-nav-groups::-webkit-scrollbar {
-    display: none;
-}
-
 .presto-nav-item {
     display: flex;
     align-items: center;
@@ -102,49 +90,28 @@ body.presto-admin {
     padding: 14px 18px;
     border-radius: 16px;
     color: var(--text-dim);
-    text-decoration: none;
     font-weight: 600;
-    transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     margin-bottom: 6px;
+    transition: 0.3s;
     cursor: pointer;
-    position: relative;
 }
 
 .presto-nav-item:hover {
     background: rgba(255, 255, 255, 0.04);
-    color: var(--text-main);
+    color: #fff;
     transform: translateX(5px);
 }
 
 .presto-nav-item.active {
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(99, 102, 241, 0.05) 100%);
+    background: rgba(99, 102, 241, 0.1);
     color: #fff;
     box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.2);
 }
 
-.presto-nav-item.active::after {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 14px;
-    bottom: 14px;
-    width: 4px;
-    background: var(--primary);
-    border-radius: 0 4px 4px 0;
-    box-shadow: 0 0 15px var(--primary-glow);
-}
-
 .nav-icon {
     font-size: 20px;
-    opacity: 0.7;
-    transition: 0.3s;
     width: 24px;
     text-align: center;
-}
-
-.presto-nav-item.active .nav-icon {
-    opacity: 1;
-    filter: drop-shadow(0 0 8px var(--primary-glow));
 }
 
 .nav-chevron {
@@ -156,30 +123,17 @@ body.presto-admin {
 .is-open .nav-chevron {
     transform: rotate(180deg);
     opacity: 1;
-    color: var(--primary);
 }
 
-/* Submenu FIX */
 .presto-submenu {
     display: none;
     flex-direction: column;
     padding-left: 32px;
     margin-bottom: 10px;
-    position: relative;
 }
 
 .is-open .presto-submenu {
     display: flex;
-}
-
-.presto-submenu::before {
-    content: '';
-    position: absolute;
-    left: 21px;
-    top: 0;
-    bottom: 0;
-    width: 1px;
-    background: var(--border);
 }
 
 .presto-submenu-item {
@@ -190,74 +144,59 @@ body.presto-admin {
     border-radius: 12px;
     color: var(--text-muted);
     font-size: 13.5px;
-    font-weight: 600;
-    transition: 0.25s;
-    text-decoration: none;
+    transition: 0.2s;
 }
 
 .presto-submenu-item:hover {
     color: #fff;
     background: rgba(255, 255, 255, 0.04);
-    transform: translateX(5px);
 }
 
-.presto-submenu-item.active {
-    color: var(--primary);
-    font-weight: 700;
-    background: rgba(99, 102, 241, 0.08);
-}
-
-/* User Info Sidebar */
 .sidebar-footer {
-    padding: 32px 14px;
+    padding: 24px 14px;
     border-top: 1px solid var(--border);
+    margin-top: auto;
 }
 
 .nav-user-profile {
     display: flex;
     align-items: center;
-    gap: 14px;
-    padding: 16px;
-    background: rgba(0, 0, 0, 0.3);
-    border-radius: 20px;
+    gap: 12px;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 16px;
     border: 1px solid var(--border);
 }
 
 .nav-user-profile .avatar {
-    width: 38px;
-    height: 38px;
+    width: 40px;
+    height: 40px;
     border-radius: 12px;
+    background: linear-gradient(135deg, #6366f1, #a855f7);
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 800;
-    font-size: 14px;
     color: #fff;
 }
 
 .nav-user-profile .info {
-    flex: 1;
     display: flex;
     flex-direction: column;
-    min-width: 0;
 }
 
 .nav-user-profile .name {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 700;
     color: #fff;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
 .nav-user-profile .role {
     font-size: 11px;
     color: var(--text-muted);
-    font-weight: 600;
 }
 
-/* Main Wrapper & Header */
+/* Main Section */
 .presto-main-wrapper {
     flex: 1;
     margin-left: var(--sidebar-width);
@@ -266,141 +205,197 @@ body.presto-admin {
 }
 
 .presto-main-header {
-    padding: 24px 48px;
+    padding: 20px 48px;
     border-bottom: 1px solid var(--border);
     background: rgba(6, 8, 12, 0.8);
     backdrop-filter: blur(20px);
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 40px;
     position: sticky;
     top: 0;
     z-index: 900;
 }
 
 .header-search {
-    flex: 1;
-    max-width: 500px;
     position: relative;
     display: flex;
     align-items: center;
+    max-width: 400px;
+    flex: 1;
 }
 
 .header-search svg {
     position: absolute;
-    left: 18px;
+    left: 16px;
     color: var(--text-muted);
 }
 
 .header-search input {
     width: 100%;
+    height: 44px;
     background: rgba(0, 0, 0, 0.3);
     border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 14px 20px 14px 50px;
+    border-radius: 12px;
+    padding: 0 16px 0 46px;
     color: #fff;
     outline: none;
+    transition: 0.3s;
 }
 
 .header-search input:focus {
     border-color: var(--primary);
-    box-shadow: 0 0 0 5px var(--primary-glow);
+    background: rgba(0, 0, 0, 0.4);
 }
 
 .header-actions {
     display: flex;
     align-items: center;
-    gap: 32px;
+    gap: 24px;
 }
 
 .header-notif {
     color: var(--text-muted);
     cursor: pointer;
+    transition: 0.2s;
 }
 
-/* Content Area */
+.header-notif:hover {
+    color: #fff;
+}
+
 .presto-content-area {
-    padding: 48px 64px;
+    padding: 40px 48px;
+    flex: 1;
 }
 
 .page-title {
-    font-size: 38px;
+    font-size: 32px;
     font-weight: 800;
-    margin-bottom: 48px;
-    letter-spacing: -0.05em;
-    background: linear-gradient(to right, #fff, #94a3b8);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
+    margin-bottom: 32px;
+    color: #fff;
 }
 
-/* Base Cards */
+/* Buttons */
+.presto-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.3s;
+    border: none;
+}
+
+.presto-btn-primary {
+    background: var(--primary);
+    color: #fff;
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+}
+
+.presto-btn-primary:hover {
+    background: var(--primary-700);
+    transform: translateY(-2px);
+}
+
+.presto-btn-secondary {
+    background: rgba(255, 255, 255, 0.06);
+    color: #fff;
+    border: 1px solid var(--border);
+}
+
+.presto-btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Cards */
 .presto-card {
     background: var(--bg-card);
-    border-radius: var(--radius-xl);
+    border-radius: 24px;
     border: 1px solid var(--border);
-    transition: 0.4s;
     backdrop-filter: blur(20px);
     overflow: hidden;
+    transition: 0.3s;
 }
 
 .presto-card:hover {
-    border-color: var(--border-light);
     transform: translateY(-5px);
+    border-color: var(--border-light);
 }
 
-.presto-card-header {
-    padding: 28px 40px;
-    border-bottom: 1px solid var(--border);
-}
-
-.presto-card-body {
-    padding: 40px;
-}
-
-/* Footer */
-.presto-admin-footer {
-    margin-top: 80px;
-    padding: 32px 0;
-    border-top: 1px solid var(--border);
-    display: flex;
-    justify-content: space-between;
-    color: var(--text-muted);
-    font-size: 13px;
-}
-
-.presto-admin-footer strong {
-    color: var(--text-dim);
-}
-
-/* Dashboard Widgets */
-.presto-dashboard-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    gap: 32px;
-}
-
+/* Stats Widgets */
 .stat-card-premium {
-    padding: 40px;
+    padding: 32px;
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
 }
 
+.stat-info {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.stat-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
 .stat-value {
-    font-size: 48px;
+    font-size: 36px;
     font-weight: 800;
     color: #fff;
+    line-height: 1;
+}
+
+.stat-trend {
+    font-size: 12px;
+    color: var(--success);
+    font-weight: 600;
 }
 
 .stat-icon-wrap {
-    width: 68px;
-    height: 68px;
-    border-radius: 22px;
+    width: 60px;
+    height: 60px;
+    border-radius: 18px;
     background: rgba(255, 255, 255, 0.05);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 32px;
+    font-size: 28px;
+}
+
+/* Footer */
+.presto-admin-footer {
+    margin-top: 60px;
+    padding: 32px 0;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+/* Placeholder/Hook Debug Style (Only if specifically requested or for visualization) */
+.presto-hook-zone {
+    border: 1px dashed rgba(255, 255, 255, 0.1);
+    padding: 4px;
+    border-radius: 4px;
+    margin: 2px;
+    position: relative;
+}
+
+.presto-hook-zone::after {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.2);
+    position: absolute;
+    top: -14px;
+    right: 0;
 }
