@@ -3,8 +3,7 @@
         <div class="plugin-tabs">
             <a href="?tab=featured" class="plugin-tab {{ $tab === 'featured' ? 'active' : '' }}">Featured</a>
             <a href="?tab=popular" class="plugin-tab {{ $tab === 'popular' ? 'active' : '' }}">Popular</a>
-            <a href="?tab=recommended" class="plugin-tab {{ $tab === 'recommended' ? 'active' : '' }}">Recommended</a>
-            <a href="?tab=favorites" class="plugin-tab {{ $tab === 'favorites' ? 'active' : '' }}">Favorites</a>
+            <a href="?tab=latest" class="plugin-tab {{ $tab === 'latest' ? 'active' : '' }}">Latest</a>
         </div>
         <div class="plugin-search-bar">
             <input type="text" class="presto-input" placeholder="Search plugins..." style="min-width: 300px;">
@@ -16,10 +15,20 @@
         <div class="plugin-card">
             <div class="plugin-card-top">
                 <div class="plugin-icon-wrap">
-                    @if(!empty($plugin['icon']['svg']))
-                    <img src="{{ $plugin['icon']['svg'] }}" alt="{{ $plugin['name'] }}">
+                    @php
+                        $iconUrl = '';
+                        if (!empty($plugin['icons'])) {
+                            $iconUrl = $plugin['icons']['2x'] ?? $plugin['icons']['1x'] ?? $plugin['icons']['svg'] ?? '';
+                        }
+                        if (empty($iconUrl)) {
+                            $iconUrl = 'https://s.w.org/plugins/geopattern-icon/' . ($plugin['slug'] ?? 'default') . '.svg';
+                        }
+                        $bgColor = substr(md5($plugin['name'] ?? ''), 0, 6);
+                    @endphp
+                    @if($iconUrl)
+                    <img src="{{ $iconUrl }}" alt="{{ $plugin['name'] }}">
                     @else
-                    <img src="https://ui-avatars.com/api/?name={{ urlencode($plugin['name']) }}&background={{ str_replace('#', '', $plugin['icon']['color']) }}&color=fff" alt="{{ $plugin['name'] }}">
+                    <img src="https://ui-avatars.com/api/?name={{ urlencode($plugin['name']) }}&background={{ $bgColor }}&color=fff" alt="{{ $plugin['name'] }}">
                     @endif
                 </div>
                 <div class="plugin-title-area">
@@ -56,4 +65,44 @@
         </div>
         @endforeach
     </div>
+
+    @if(($pagination['total_pages'] ?? 1) > 1)
+    <div class="pagination" style="display: flex; justify-content: center; align-items: center; gap: 0.25rem; margin-top: 2rem; flex-wrap: wrap;">
+        @php
+        $currentPage = $pagination['page'] ?? 1;
+        $totalPages = $pagination['total_pages'] ?? 1;
+        $range = 2;
+        @endphp
+
+        @if($currentPage > 1)
+        <a href="?tab={{ $tab }}&page={{ $currentPage - 1 }}" class="presto-btn presto-btn-secondary" style="padding: 0.5rem 1rem;">&laquo; Prev</a>
+        @endif
+
+        @if($currentPage > $range + 1)
+            <a href="?tab={{ $tab }}&page=1" class="presto-btn presto-btn-secondary" style="padding: 0.5rem 1rem;">1</a>
+            @if($currentPage > $range + 2)
+            <span style="padding: 0.5rem; color: var(--text-muted);">...</span>
+            @endif
+        @endif
+
+        @for($i = max(1, $currentPage - $range); $i <= min($totalPages, $currentPage + $range); $i++)
+            @if($i == $currentPage)
+            <span class="presto-btn" style="background: var(--primary); color: white; cursor: default; padding: 0.5rem 1rem;">{{ $i }}</span>
+            @else
+            <a href="?tab={{ $tab }}&page={{ $i }}" class="presto-btn presto-btn-secondary" style="padding: 0.5rem 1rem;">{{ $i }}</a>
+            @endif
+        @endfor
+
+        @if($currentPage < $totalPages - $range)
+            @if($currentPage < $totalPages - $range - 1)
+            <span style="padding: 0.5rem; color: var(--text-muted);">...</span>
+            @endif
+            <a href="?tab={{ $tab }}&page={{ $totalPages }}" class="presto-btn presto-btn-secondary" style="padding: 0.5rem 1rem;">{{ $totalPages }}</a>
+        @endif
+
+        @if($currentPage < $totalPages)
+        <a href="?tab={{ $tab }}&page={{ $currentPage + 1 }}" class="presto-btn presto-btn-secondary" style="padding: 0.5rem 1rem;">Next &raquo;</a>
+        @endif
+    </div>
+    @endif
 </div>

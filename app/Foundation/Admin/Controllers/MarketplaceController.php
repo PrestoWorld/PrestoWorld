@@ -1,10 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Foundation\Admin\Controllers;
 
 use App\Foundation\Admin\AdminController;
-use PrestoWorld\Marketplace\WpOrg\WpOrgProvider;
-use Prestoworld\MarketplaceSdk\Platform\HubEngine;
+use App\Foundation\Marketplace\Providers\WordPressOrgProvider;
 
 /**
  * Class MarketplaceController
@@ -13,14 +14,36 @@ use Prestoworld\MarketplaceSdk\Platform\HubEngine;
  */
 class MarketplaceController extends AdminController
 {
-    protected HubEngine $hub;
+    protected WordPressOrgProvider $pluginProvider;
+    protected WordPressOrgProvider $themeProvider;
 
     public function __construct(\Witals\Framework\Application $app)
     {
         parent::__construct($app);
 
-        // Use WpOrg as the source for the marketplace UI
-        $this->hub = new HubEngine(new WpOrgProvider());
+        $this->pluginProvider = new WordPressOrgProvider('plugin');
+        $this->themeProvider = new WordPressOrgProvider('theme');
+    }
+
+    /**
+     * GET /dashboard/plugins
+     * List all installed plugins/modules.
+     */
+    public function installedPlugins()
+    {
+        $moduleManager = app(\App\Foundation\Module\ModuleManager::class);
+        $modules = $moduleManager->all();
+
+        return $this->adminPage('Installed Plugins', view('admin/marketplace/installed-plugins', [
+            'plugins' => $modules
+        ]), [
+            'new_url' => '/dashboard/plugins/install',
+            'new_label' => 'Add New Plugin',
+            'breadcrumbs' => [
+                'Dashboard' => '/dashboard',
+                'Plugins' => ''
+            ]
+        ]);
     }
 
     /**
@@ -29,17 +52,26 @@ class MarketplaceController extends AdminController
     public function plugins()
     {
         $tab = $_GET['tab'] ?? 'featured';
+        $page = (int)($_GET['page'] ?? 1);
         $params = [
             'type' => 'plugin',
-            'page' => $_GET['page'] ?? 1,
-            'per_page' => 12
+            'browse' => $tab,
+            'page' => $page,
+            'per_page' => 12,
+            '_t' => time(),
         ];
 
-        $catalog = $this->hub->getCatalog($params);
+        error_log('[Marketplace] Tab: ' . $tab);
+        
+        $result = $this->pluginProvider->fetchAll($params);
+        $plugins = $result['items'] ?? [];
+        $pagination = $result['pagination'] ?? ['page' => $page, 'per_page' => 12, 'total' => 0, 'total_pages' => 0];
+        
+        error_log('[Marketplace] Tab=' . $tab . ' | Count=' . count($plugins) . ' | Pages=' . $pagination['total_pages']);
         
         return $this->adminPage('Add Plugins', view('admin/marketplace/plugins', [
-            'plugins' => $catalog['data'],
-            'pagination' => $catalog['pagination'],
+            'plugins' => $plugins,
+            'pagination' => $pagination,
             'tab' => $tab
         ]));
     }
@@ -65,17 +97,26 @@ class MarketplaceController extends AdminController
     public function installThemes()
     {
         $tab = $_GET['tab'] ?? 'popular';
+        $page = (int)($_GET['page'] ?? 1);
         $params = [
             'type' => 'theme',
-            'page' => $_GET['page'] ?? 1,
-            'per_page' => 12
+            'browse' => $tab,
+            'page' => $page,
+            'per_page' => 12,
+            '_t' => time(),
         ];
 
-        $catalog = $this->hub->getCatalog($params);
+        error_log('[Marketplace] Tab: ' . $tab);
+        
+        $result = $this->themeProvider->fetchAll($params);
+        $themes = $result['items'] ?? [];
+        $pagination = $result['pagination'] ?? ['page' => $page, 'per_page' => 12, 'total' => 0, 'total_pages' => 0];
+        
+        error_log('[Marketplace] Tab=' . $tab . ' | Count=' . count($themes) . ' | Pages=' . $pagination['total_pages']);
         
         return $this->adminPage('Add Themes', view('admin/marketplace/themes', [
-            'themes' => $catalog['data'],
-            'pagination' => $catalog['pagination'],
+            'themes' => $themes,
+            'pagination' => $pagination,
             'tab' => $tab
         ]));
     }
