@@ -13,19 +13,148 @@ class PostFeaturedImageBlock extends AbstractBlock
     {
         $post = $context['post'] ?? [];
         
+        if (!isset($post['post_id']) && !isset($post['ID'])) {
+            return '';
+        }
+        
+        $postId = $post['post_id'] ?? $post['ID'];
+        
+        $isLink = $this->attrs['isLink'] ?? false;
+        $sizeSlug = $this->attrs['sizeSlug'] ?? 'post-thumbnail';
+        
+        // Build image attributes
+        $imgAttr = [];
+        
+        // Alt text - use post title if isLink
+        if ($isLink) {
+            $title = $post['post_title'] ?? '';
+            if ($title) {
+                $imgAttr['alt'] = trim(strip_tags($title));
+            } else {
+                $imgAttr['alt'] = "Untitled post {$postId}";
+            }
+        }
+        
+        // Extra styles for image
+        $extraStyles = '';
+        
+        // Aspect ratio with a height set needs to override the default width/height
+        if (!empty($this->attrs['aspectRatio'])) {
+            $extraStyles .= 'width:100%;height:100%;';
+        } elseif (!empty($this->attrs['height'])) {
+            $extraStyles .= "height:{$this->attrs['height']};";
+        }
+        
+        if (!empty($this->attrs['scale'])) {
+            $extraStyles .= "object-fit:{$this->attrs['scale']};";
+        }
+        
+        if (!empty($extraStyles)) {
+            $imgAttr['style'] = $extraStyles;
+        }
+        
+        // Get featured image URL
+        $imgUrl = $post['featured_image_url'] ?? '';
+        
+        // If useFirstImageFromPost is true and no featured image, try to get first image from content
+        if (($this->attrs['useFirstImageFromPost'] ?? false) && empty($imgUrl)) {
+            $content = $post['post_content'] ?? '';
+            if (preg_match('/<img[^>]+src=["\']([^"\']+)["\'][^>]*>/i', $content, $matches)) {
+                $imgUrl = $matches[1];
+            }
+        }
+        
+        if (empty($imgUrl)) {
+            return '';
+        }
+        
+        // Build img tag
+        $imgAttrStr = '';
+        foreach ($imgAttr as $key => $value) {
+            $imgAttrStr .= " {$key}=\"{$value}\"";
+        }
+        $img = "<img src=\"{$imgUrl}\"{$imgAttrStr} />";
+        
+        // Overlay markup
+        $overlayMarkup = $this->getOverlayMarkup();
+        
+        // Wrap in link if isLink
+        if ($isLink) {
+            $linkTarget = $this->attrs['linkTarget'] ?? '_self';
+            $rel = !empty($this->attrs['rel']) ? 'rel="' . htmlspecialchars($this->attrs['rel']) . '"' : '';
+            $height = !empty($this->attrs['height']) ? 'style="height:' . htmlspecialchars($this->attrs['height']) . '"' : '';
+            $url = $post['url'] ?? $post['link'] ?? '#';
+            $img = "<a href=\"{$url}\" target=\"{$linkTarget}\" {$rel} {$height}>{$img}{$overlayMarkup}</a>";
+        } else {
+            $img = $img . $overlayMarkup;
+        }
+        
+        // Wrapper styles
+        $aspectRatio = !empty($this->attrs['aspectRatio']) ? "aspect-ratio:{$this->attrs['aspectRatio']};" : '';
+        $width = !empty($this->attrs['width']) ? "width:{$this->attrs['width']};" : '';
+        $height = !empty($this->attrs['height']) ? "height:{$this->attrs['height']};" : '';
+        
+        $wrapperStyle = '';
+        if ($aspectRatio || $width || $height) {
+            $wrapperStyle = $aspectRatio . $width . $height;
+        }
+        
         // WordPress standard: always include wp-block-post-featured-image
         $classes = array_merge(['wp-block-post-featured-image'], $this->classes);
         $classAttr = ' class="' . implode(' ', array_unique($classes)) . '"';
-        $styleAttr = !empty($this->styles) ? ' style="' . implode(';', $this->styles) . '"' : '';
-        
-        $imgUrl = $post['featured_image_url'] ?? 'https://picsum.photos/1200/800';
-        $img = "<img src=\"{$imgUrl}\" alt=\"Sample Featured Image\" />";
-        
-        $url = $post['url'] ?? $post['link'] ?? '#';
-        if ($this->attrs['isLink'] ?? false) {
-            $img = "<a href=\"{$url}\">{$img}</a>";
+        $styleAttr = !empty($wrapperStyle) ? ' style="' . $wrapperStyle . '"' : '';
+        if (!empty($this->styles)) {
+            $styleAttr = ' style="' . $wrapperStyle . implode(';', $this->styles) . '"';
         }
         
         return "<figure{$classAttr}{$styleAttr}>{$img}</figure>";
+    }
+    
+    private function getOverlayMarkup(): string
+    {
+        $hasDimBackground = isset($this->attrs['dimRatio']) && $this->attrs['dimRatio'];
+        
+        if (!$hasDimBackground) {
+            return '';
+        }
+        
+        $classNames = ['wp-block-post-featured-image__overlay'];
+        $styles = [];
+        
+        // Apply dim background classes
+        $classNames[] = 'has-background-dim';
+        $classNames[] = "has-background-dim-{$this->attrs['dimRatio']}";
+        
+        // Apply overlay color
+        if (isset($this->attrs['overlayColor']) && $this->attrs['overlayColor']) {
+            $classNames[] = "has-{$this->attrs['overlayColor']}-background-color";
+        }
+        
+        // Apply gradient
+        $hasGradient = isset($this->attrs['gradient']) && $this->attrs['gradient'];
+        $hasCustomGradient = isset($this->attrs['customGradient']) && $this->attrs['customGradient'];
+        
+        if ($hasGradient || $hasCustomGradient) {
+            $classNames[] = 'has-background-gradient';
+        }
+        
+        if ($hasGradient) {
+            $classNames[] = "has-{$this->attrs['gradient']}-gradient-background";
+        }
+        
+        // Apply background styles
+        if ($hasCustomGradient) {
+            $styles[] = "background-image: {$this->attrs['customGradient']};";
+        }
+        
+        if (isset($this->attrs['customOverlayColor']) && $this->attrs['customOverlayColor']) {
+            $styles[] = "background-color: {$this->attrs['customOverlayColor']};";
+        }
+        
+        return sprintf(
+            '<span class="%s" style="%s" aria-hidden="true"></span>',
+            implode(' ', $classNames),
+            implode(' ', $styles)
+        );
     }
 }
