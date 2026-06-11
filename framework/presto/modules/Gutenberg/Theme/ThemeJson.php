@@ -22,36 +22,79 @@ class ThemeJson
         
         $settings = $this->data['settings'] ?? [];
 
-        // 1. Spacing
+        // 1. Spacing Variables
         if (isset($settings['spacing']['spacingSizes'])) {
             foreach ($settings['spacing']['spacingSizes'] as $size) {
                 $css .= "  --wp--preset--spacing--{$size['slug']}: {$size['size']};\n";
             }
         }
 
-        // 2. Colors
+        // 2. Color Variables & Utility Classes
+        $colorStyles = "";
         if (isset($settings['color']['palette'])) {
             foreach ($settings['color']['palette'] as $color) {
-                $css .= "  --wp--preset--color--{$color['slug']}: {$color['color']};\n";
+                $slug = $color['slug'];
+                $val = $color['color'];
+                $css .= "  --wp--preset--color--{$slug}: {$val};\n";
+                $colorStyles .= ".has-{$slug}-color { color: var(--wp--preset--color--{$slug}) !important; }\n";
+                $colorStyles .= ".has-{$slug}-background-color { background-color: var(--wp--preset--color--{$slug}) !important; }\n";
             }
         }
 
-        // 3. Typography
+        // 3. Typography Variables
         if (isset($settings['typography']['fontSizes'])) {
             foreach ($settings['typography']['fontSizes'] as $size) {
                 $css .= "  --wp--preset--font-size--{$size['slug']}: {$size['size']};\n";
             }
         }
 
-        // 4. Layout Sizes
-        if (isset($settings['layout'])) {
-            $contentSize = $settings['layout']['contentSize'] ?? '800px';
-            $wideSize = $settings['layout']['wideSize'] ?? '1200px';
-            $css .= "  --wp--style--global--content-size: {$contentSize};\n";
-            $css .= "  --wp--style--global--wide-size: {$wideSize};\n";
-        }
+        // 4. Layout Config
+        $contentSize = $settings['layout']['contentSize'] ?? '800px';
+        $wideSize = $settings['layout']['wideSize'] ?? '1200px';
+        $css .= "  --wp--style--global--content-size: {$contentSize};\n";
+        $css .= "  --wp--style--global--wide-size: {$wideSize};\n";
+        $css .= "}\n\n";
 
+        // 5. Layout Engine CSS (The "Guts" of Gutenberg layout)
+        $css .= "/* Layout Engine */\n";
+        $css .= ".is-layout-constrained > :where(:not(.alignleft):not(.alignright):not(.alignfull)) { \n";
+        $css .= "  max-width: var(--wp--style--global--content-size); \n";
+        $css .= "  margin-left: auto !important; \n";
+        $css .= "  margin-right: auto !important; \n";
         $css .= "}\n";
+        $css .= ".is-layout-constrained > .alignwide { max-width: var(--wp--style--global--wide-size); }\n";
+        $css .= ".is-layout-flow > :where(:not(.alignleft):not(.alignright):not(.alignfull)) { margin-left: auto; margin-right: auto; }\n";
+        $css .= ".has-global-padding { padding-left: var(--wp--preset--spacing--50, 2rem); padding-right: var(--wp--preset--spacing--50, 2rem); }\n";
+        
+        $css .= ".is-layout-flex { display: flex; gap: var(--wp--style--block-gap, 1.25rem); }\n";
+        $css .= ".is-vertical { flex-direction: column; }\n";
+        $css .= ".items-justified-space-between { justify-content: space-between; }\n";
+        $css .= ".items-justified-center { justify-content: center; }\n";
+        $css .= ".items-justified-right { justify-content: flex-end; }\n";
+
+        // 6. Block Specific Base Styles
+        $css .= "\n/* Block Specifics */\n";
+        $css .= ".wp-block-navigation ul { list-style: none; padding: 0; display: flex; gap: 1.5rem; }\n";
+        $css .= ".wp-block-navigation a { text-decoration: none; color: inherit; font-weight: 500; transition: opacity 0.2s; }\n";
+        $css .= ".wp-block-navigation a:hover { opacity: 0.7; }\n";
+        $css .= ".wp-block-navigation__responsive-container-open { display: none; }\n"; // Hidden by default
+        
+        $css .= ".wp-block-columns { display: flex; gap: 2rem; flex-wrap: wrap; }\n";
+        $css .= ".wp-block-column { flex: 1; min-width: 0; }\n";
+        
+        $css .= ".wp-block-post-template { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: var(--wp--preset--spacing--60, 3rem); }\n";
+        $css .= ".wp-block-post-featured-image img { width: 100%; height: auto; aspect-ratio: 16/9; object-fit: cover; border-radius: 12px; display: block; transition: transform 0.3s ease; }\n";
+        $css .= ".wp-block-post-featured-image a:hover img { transform: scale(1.02); }\n";
+        
+        $css .= ".wp-block-post-title { margin-top: 1rem; margin-bottom: 0.5rem; line-height: 1.2; }\n";
+        $css .= ".wp-block-post-title a { text-decoration: none; color: inherit; transition: color 0.2s; }\n";
+        $css .= ".wp-block-post-title a:hover { color: var(--wp--preset--color--accent-3, #503AA8); }\n";
+        
+        $css .= ".wp-block-site-title { font-size: var(--wp--preset--font-size--large, 1.5rem); font-weight: 800; text-transform: uppercase; letter-spacing: -0.02em; }\n";
+        $css .= ".wp-block-site-title a { text-decoration: none; color: inherit; }\n";
+
+        $css .= $colorStyles;
+
         return $css;
     }
 }

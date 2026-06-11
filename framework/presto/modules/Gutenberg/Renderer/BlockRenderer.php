@@ -6,9 +6,10 @@ namespace PrestoWorld\Modules\Gutenberg\Renderer;
 
 use PrestoWorld\Modules\Gutenberg\Pattern\PatternRegistry;
 use PrestoWorld\Modules\Gutenberg\Renderer\Decorators\BlockDecoratorInterface;
+use PrestoWorld\Modules\Gutenberg\Renderer\Blocks\BlockFactory;
 
 /**
- * Hyper-Optimized Block Renderer with Decorator Pattern support
+ * Hyper-Optimized Block Renderer with Context Support
  */
 class BlockRenderer
 {
@@ -46,102 +47,65 @@ class BlockRenderer
         return $output;
     }
 
-    public function renderBlock(array &$block): string
+    public function renderBlock(array &$block, array $localContext = []): string
     {
-        $name = $block['blockName'];
+        try {
+            $name = $block['blockName'];
 
-        if ($name === null) {
-            return $block['innerHTML'];
+            // Check for custom callback registry first
+            if ($name && isset($this->registry[$name])) {
+                $inner = '';
+                foreach ($block['innerBlocks'] as $innerData) {
+                    $inner .= $this->renderBlock($innerData, $localContext);
+                }
+                return ($this->registry[$name])($block['attrs'] ?? [], $inner);
+            }
+
+            if ($name === null) {
+                return $block['innerHTML'] ?? '';
+            }
+
+            // Recursively apply Decorators
+            $this->decorateRecursive($block);
+
+            // Create the block instance using the Factory
+            $instance = BlockFactory::create($block);
+            
+            // Merge global context with local context
+            $context = array_merge($this->context, $localContext, [
+                'pattern_registry' => $this->patternRegistry,
+                'renderer_callback' => function(string $html) {
+                    if (!isset($this->registry['__rerender'])) return $html;
+                    return ($this->registry['__rerender'])($html);
+                }
+            ]);
+
+            return $instance->render($context);
+        } catch (\Throwable $e) {
+            // Log or display error in dev mode
+            if (isset($_SERVER['WP_DEBUG']) && $_SERVER['WP_DEBUG']) {
+                return "<!-- Block Error ($name): " . htmlspecialchars($e->getMessage()) . " -->";
+            }
+            return $block['innerHTML'] ?? '';
         }
+    }
 
-        // Apply Decorators to set attributes like classes and styles
-        $block['classes'] = [];
-        $block['styles'] = [];
+    protected function decorateRecursive(array &$block): void
+    {
+        // Populate defaults
+        $block['classes'] = $block['classes'] ?? [];
+        $block['styles'] = $block['styles'] ?? [];
+
+        // Decorate current block
         foreach ($this->decorators as $decorator) {
             $decorator->decorate($block);
         }
 
-        $innerHtml = '';
+        // Recursively decorate inner blocks
         if (!empty($block['innerBlocks'])) {
             foreach ($block['innerBlocks'] as &$innerBlock) {
-                $innerHtml .= $this->renderBlock($innerBlock);
+                $this->decorateRecursive($innerBlock);
             }
-        }
-
-        if (isset($this->registry[$name])) {
-            return ($this->registry[$name])($block['attrs'], $innerHtml, $block);
-        }
-
-        return $this->renderCoreBlock($name, $block['attrs'], $innerHtml, $block);
-    }
-
-    protected function renderCoreBlock(string $name, array &$attrs, string &$inner, array &$block): string
-    {
-        // PERFORMANCE: If static and pre-rendered, return innerHTML directly
-        if (!empty($block['innerHTML']) && !in_array($name, ['core/template-part', 'core/pattern', 'core/query', 'core/post-template', 'core/group', 'core/columns', 'core/column'])) {
-            return $block['innerHTML'];
-        }
-
-        $classAttr = !empty($block['classes']) ? ' class="' . implode(' ', $block['classes']) . '"' : '';
-        $styleAttr = !empty($block['styles']) ? ' style="' . implode(';', $block['styles']) . '"' : '';
-
-        switch ($name) {
-            case 'core/group':
-                $tag = $attrs['tagName'] ?? 'div';
-                return "<{$tag}{$classAttr}{$styleAttr}>{$inner}</{$tag}>";
-
-            case 'core/template-part':
-                $slug = $attrs['slug'] ?? '';
-                $tagName = $attrs['tagName'] ?? 'div';
-                $path = ($this->context['theme_path'] ?? '') . "/parts/{$slug}.html";
-                if (!file_exists($path)) return '';
-                $content = ($this->registry['__rerender'])(file_get_contents($path));
-                return "<{$tagName} class=\"wp-block-template-part\">{$content}</{$tagName}>";
-
-            case 'core/pattern':
-                $slug = $attrs['slug'] ?? '';
-                $content = $this->patternRegistry->get($slug);
-                return $content ? ($this->registry['__rerender'])($content) : '';
-
-            case 'core/columns':
-                return "<div{$classAttr}{$styleAttr}>{$inner}</div>";
-
-            case 'core/column':
-                return "<div{$classAttr}{$styleAttr}>{$inner}</div>";
-
-            case 'core/site-title':
-                $title = $this->context['site_title'] ?? 'PrestoWorld';
-                $url   = $this->context['site_url'] ?? '/';
-                return ($attrs['level'] ?? 1) === 0 
-                    ? "<p{$classAttr}><a href=\"{$url}\" rel=\"home\">{$title}</a></p>"
-                    : "<h1{$classAttr}><a href=\"{$url}\" rel=\"home\">{$title}</a></h1>";
-
-            case 'core/navigation':
-                if (empty($inner)) {
-                    $inner = '<ul class="wp-block-navigation__container"><li class="wp-block-navigation-item"><a href="/">Home</a></li></ul>';
-                }
-                return "<nav{$classAttr}{$styleAttr}>{$inner}</nav>";
-
-            case 'core/query':
-                return "<div{$classAttr}{$styleAttr}>{$inner}</div>";
-
-            case 'core/post-template':
-                $output = "<ul{$classAttr}>";
-                for ($i = 0; $i < 3; $i++) {
-                    $output .= "<li class=\"wp-block-post\">{$inner}</li>";
-                }
-                $output .= "</ul>";
-                return $output;
-
-            case 'core/post-title':
-                $level = $attrs['level'] ?? 2;
-                return "<h{$level} class=\"wp-block-post-title\"><a href=\"#\">Sample Post Title</a></h{$level}>";
-
-            case 'core/spacer':
-                return "<div{$classAttr}{$styleAttr} aria-hidden=\"true\"></div>";
-
-            default:
-                return $block['innerHTML'] ?: $inner;
         }
     }
 }

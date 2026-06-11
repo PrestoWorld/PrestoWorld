@@ -9,6 +9,9 @@ use PrestoWorld\Modules\Gutenberg\Renderer\BlockRenderer;
 use PrestoWorld\Modules\Gutenberg\Pattern\PatternRegistry;
 use PrestoWorld\Modules\Gutenberg\Pattern\MemoryStorage;
 
+use PrestoWorld\Modules\Gutenberg\Renderer\Decorators\LayoutDecorator;
+use PrestoWorld\Modules\Gutenberg\Renderer\Decorators\StyleDecorator;
+
 class BlockRendererTest extends TestCase
 {
     private BlockRenderer $renderer;
@@ -16,6 +19,9 @@ class BlockRendererTest extends TestCase
     protected function setUp(): void
     {
         $this->renderer = new BlockRenderer();
+        $this->renderer->addDecorator(new LayoutDecorator());
+        $this->renderer->addDecorator(new StyleDecorator());
+        
         $this->renderer->setContext([
             'site_title' => 'Test Site',
             'site_url' => 'http://test.com',
@@ -122,5 +128,30 @@ class BlockRendererTest extends TestCase
         $html = $this->renderer->renderBlock($block);
         
         $this->assertEquals('CUSTOM: 123 - Inner', $html);
+    }
+
+    public function test_it_decorates_inner_blocks_recursively(): void
+    {
+        $block = [
+            'blockName' => 'core/group',
+            'attrs' => ['layout' => ['type' => 'constrained']],
+            'innerBlocks' => [
+                [
+                    'blockName' => 'core/group',
+                    'attrs' => ['align' => 'wide'],
+                    'innerBlocks' => [],
+                    'innerHTML' => 'Nested'
+                ]
+            ],
+            'innerHTML' => ''
+        ];
+
+        $html = $this->renderer->renderBlock($block);
+        
+        // Parent should have constrained classes
+        $this->assertStringContainsString('is-layout-constrained', $html);
+        // Child should have wide class
+        $this->assertStringContainsString('alignwide', $html);
+        $this->assertStringContainsString('wp-block-group', $html);
     }
 }

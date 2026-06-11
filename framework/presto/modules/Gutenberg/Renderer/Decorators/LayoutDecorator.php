@@ -46,13 +46,29 @@ class LayoutDecorator implements BlockDecoratorInterface
                 $block['classes'][] = 'has-global-padding';
             }
 
-            // Navigation specific justification
+            // Flex/Grid specific justifications
             if (!empty($layout['justifyContent'])) {
-                $block['classes'][] = 'is-content-justification-' . str_replace(' ', '-', $layout['justifyContent']);
+                $justification = str_replace(' ', '-', $layout['justifyContent']);
+                $block['classes'][] = 'is-content-justification-' . $justification;
+                
+                // Navigation specific justification
+                if ($name === 'core/navigation') {
+                    $block['classes'][] = 'items-justified-' . $justification;
+                }
             }
+
+            if (!empty($layout['flexWrap']) && $layout['flexWrap'] === 'nowrap') {
+                $block['classes'][] = 'is-nowrap';
+            }
+
             if (!empty($layout['orientation']) && $layout['orientation'] === 'vertical') {
                 $block['classes'][] = 'is-vertical';
             }
+        }
+
+        // Navigation responsive class
+        if ($name === 'core/navigation') {
+            $block['classes'][] = 'is-responsive';
         }
     }
 }

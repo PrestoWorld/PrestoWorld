@@ -13,6 +13,7 @@ use PrestoWorld\Modules\Gutenberg\Pattern\MemoryStorage;
 use PrestoWorld\Modules\Gutenberg\Pattern\FileCacheStorage;
 use PrestoWorld\Modules\Gutenberg\Renderer\Decorators\LayoutDecorator;
 use PrestoWorld\Modules\Gutenberg\Renderer\Decorators\StyleDecorator;
+use PrestoWorld\Modules\Schema\PostRepository;
 
 class Module extends WitalsModule
 {
@@ -43,7 +44,8 @@ class Module extends WitalsModule
             $renderer->setContext([
                 'theme_path' => $this->getThemePath($app),
                 'site_title' => 'PrestoWorld',
-                'site_url' => '/'
+                'site_url' => '/',
+                'post_repository' => $app->make(PostRepository::class)
             ]);
 
             // Register Decorators for attribute processing (Decorator Pattern)

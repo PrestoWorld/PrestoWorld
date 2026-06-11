@@ -39,9 +39,6 @@ class PatternRegistry
             $slug = $this->extractSlug($file);
             if ($slug !== null) {
                 $this->files[$slug] = $file;
-                
-                // If storage doesn't have it (cold start in FPM), we'll render it on first get
-                // If in RR, the boot warmup will call get() on all to pre-fill RAM
             }
         }
     }
@@ -52,11 +49,9 @@ class PatternRegistry
 
         if (!isset($this->files[$slug])) return null;
 
-        // Try storage (Memory or FileCache)
         $cached = $this->storage?->get($slug);
         if ($cached !== null) return $cached;
 
-        // Cold start: render, store, and return
         $content = $this->renderFile($this->files[$slug]);
         $this->storage?->set($slug, $content);
 
@@ -78,28 +73,30 @@ class PatternRegistry
         $raw = file_get_contents($file);
         // Strip the PHP doc-block header
         $raw = preg_replace('#<\?php\s*/\*.*?\*/\s*\?>\s*#s', '', $raw, 1);
+        $raw = preg_replace('#<\?php\s*/\*.*?\*/\s*#s', '', $raw, 1);
 
-        // Resolve common WP i18n inline PHP calls
-        return preg_replace_callback('#<\?php\s*(.+?)\s*;\s*\?>#s', function ($m) {
-            return $this->resolvePhpExpression(trim($m[1]));
+        // Resolve PHP blocks
+        return preg_replace_callback('#<\?php\s*(.+?)\s*\?>#s', function ($m) {
+            return $this->resolvePhpExpression(trim($m[1], " \n\r\t;"));
         }, $raw);
     }
 
     protected function resolvePhpExpression(string $expr): string
     {
-        if (preg_match("#^esc_html_e\s*\(\s*['\"](.+?)['\"]\s*(?:,\s*['\"][^'\"]*['\"]\s*)?\)#s", $expr, $m)) {
+        // Handle translate functions
+        if (preg_match("#(?:esc_html_e|esc_html__|esc_html_x)\s*\(\s*['\"](.+?)['\"]#s", $expr, $m)) {
             return htmlspecialchars($m[1], ENT_QUOTES, 'UTF-8');
         }
-        if (preg_match("#^esc_html__\s*\(\s*['\"](.+?)['\"]\s*(?:,\s*['\"][^'\"]*['\"]\s*)?\)#s", $expr, $m)) {
-            return htmlspecialchars($m[1], ENT_QUOTES, 'UTF-8');
+        
+        // Handle printf with Designed with WordPress
+        if (preg_match("#printf\s*\(\s*esc_html__\s*\(\s*['\"]Designed with %s['\"]#s", $expr)) {
+            return 'Designed with <a href="https://wordpress.org" rel="nofollow">WordPress</a>';
         }
-        if (preg_match("#^esc_html_x\s*\(\s*['\"](.+?)['\"]#s", $expr, $m)) {
-            return htmlspecialchars($m[1], ENT_QUOTES, 'UTF-8');
-        }
-        if (preg_match("#^printf\s*\(\s*esc_html__\s*\(\s*['\"](.+?)['\"]#s", $expr, $m)) {
-            $text = htmlspecialchars($m[1], ENT_QUOTES, 'UTF-8');
-            return str_replace('%s', '<a href="https://wordpress.org" rel="nofollow">WordPress</a>', $text);
-        }
+
+        // Handle Site Title/URL
+        if (str_contains($expr, 'get_bloginfo')) return 'PrestoWorld';
+        if (str_contains($expr, 'home_url')) return '/';
+
         return '';
     }
 }
