@@ -54,24 +54,45 @@ if (!function_exists('esc_attr__')) {
     }
 }
 
+if (!function_exists('wp_stubs_translate')) {
+    function wp_stubs_translate(string $text, string $domain = ''): string
+    {
+        return $text;
+    }
+}
+
+if (!function_exists('wp_stubs_translate_echo')) {
+    function wp_stubs_translate_echo(string $text, string $domain = ''): void
+    {
+        echo $text;
+    }
+}
+
+if (!function_exists('wp_stubs_translate_context')) {
+    function wp_stubs_translate_context(string $text, string $context, string $domain = ''): string
+    {
+        return $text;
+    }
+}
+
 if (!function_exists('__')) {
     function __(string $text, string $domain = ''): string
     {
-        return $text;
+        return wp_stubs_translate($text, $domain);
     }
 }
 
 if (!function_exists('_x')) {
     function _x(string $text, string $context, string $domain = ''): string
     {
-        return $text;
+        return wp_stubs_translate_context($text, $context, $domain);
     }
 }
 
 if (!function_exists('_e')) {
     function _e(string $text, string $domain = ''): void
     {
-        echo $text;
+        wp_stubs_translate_echo($text, $domain);
     }
 }
 

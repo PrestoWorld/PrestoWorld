@@ -67,5 +67,7 @@ class CoreBlocksTest extends TestCase
         $this->assertStringContainsString('wp-block-site-logo', $html);
         $this->assertStringContainsString('my-logo', $html);
         $this->assertStringContainsString('src="logo.png"', $html);
+        // is-default-size class when no width is specified
+        $this->assertStringContainsString('is-default-size', $html);
     }
 }

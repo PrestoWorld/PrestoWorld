@@ -71,32 +71,37 @@ class PatternRegistry
     protected function renderFile(string $file): string
     {
         $raw = file_get_contents($file);
+        
         // Strip the PHP doc-block header
         $raw = preg_replace('#<\?php\s*/\*.*?\*/\s*\?>\s*#s', '', $raw, 1);
         $raw = preg_replace('#<\?php\s*/\*.*?\*/\s*#s', '', $raw, 1);
 
-        // Resolve PHP blocks
+        // We use output buffering to capture the result of PHP execution
+        // While wp-stubs.php is already required in the constructor,
+        // we wrap each block's execution to return its output.
         return preg_replace_callback('#<\?php\s*(.+?)\s*\?>#s', function ($m) {
-            return $this->resolvePhpExpression(trim($m[1], " \n\r\t;"));
+            $code = trim($m[1]);
+
+            // WordPress compatibility: rename conflicting global functions to avoid
+            // clashes with framework helpers (like Witals' __ helper).
+            $code = preg_replace('/\b__(?=\s*\()/', 'wp_stubs_translate', $code);
+            $code = preg_replace('/\b_e(?=\s*\()/', 'wp_stubs_translate_echo', $code);
+            $code = preg_replace('/\b_x(?=\s*\()/', 'wp_stubs_translate_context', $code);
+
+            // If it's a simple return/expression, try to return it.
+            // If it's a statement with echo/printf, capture it.
+            ob_start();
+            try {
+                // Ensure the code ends with a semicolon if it's not a block
+                if (!str_ends_with($code, ';') && !str_ends_with($code, '}')) {
+                    $code .= ';';
+                }
+                eval($code);
+            } catch (\Throwable $e) {
+                ob_end_clean();
+                return "<!-- Error rendering PHP block: " . htmlspecialchars($e->getMessage()) . " -->";
+            }
+            return ob_get_clean();
         }, $raw);
-    }
-
-    protected function resolvePhpExpression(string $expr): string
-    {
-        // Handle translate functions
-        if (preg_match("#(?:esc_html_e|esc_html__|esc_html_x)\s*\(\s*['\"](.+?)['\"]#s", $expr, $m)) {
-            return htmlspecialchars($m[1], ENT_QUOTES, 'UTF-8');
-        }
-        
-        // Handle printf with Designed with WordPress
-        if (preg_match("#printf\s*\(\s*esc_html__\s*\(\s*['\"]Designed with %s['\"]#s", $expr)) {
-            return 'Designed with <a href="https://wordpress.org" rel="nofollow">WordPress</a>';
-        }
-
-        // Handle Site Title/URL
-        if (str_contains($expr, 'get_bloginfo')) return 'PrestoWorld';
-        if (str_contains($expr, 'home_url')) return '/';
-
-        return '';
     }
 }

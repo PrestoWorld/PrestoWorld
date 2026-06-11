@@ -11,19 +11,49 @@ class SiteLogoBlock extends AbstractBlock
 {
     public function render(array $context): string
     {
-        // WordPress standard: always include wp-block-site-logo
-        $classes = array_merge(['wp-block-site-logo'], $this->classes);
-        $classAttr = ' class="' . implode(' ', array_unique($classes)) . '"';
+        $logoUrl = $context['site_logo_url'] ?? '';
         
-        $logoUrl = $context['site_logo_url'] ?? 'https://picsum.photos/120/120';
+        // Return early if no logo is set
+        if (empty($logoUrl)) {
+            return '';
+        }
+        
         $isLink = $this->attrs['isLink'] ?? true;
         $siteUrl = $context['site_url'] ?? '/';
         
-        $img = "<img src=\"{$logoUrl}\" alt=\"Site Logo\" />";
-        
-        if ($isLink) {
-            $img = "<a href=\"{$siteUrl}\" rel=\"home\" aria-current=\"page\">{$img}</a>";
+        // Build img tag with width/height if specified
+        $imgAttr = '';
+        if (!empty($this->attrs['width'])) {
+            $imgAttr .= " width=\"{$this->attrs['width']}\"";
         }
+        if (!empty($this->attrs['height'])) {
+            $imgAttr .= " height=\"{$this->attrs['height']}\"";
+        }
+        $img = "<img src=\"{$logoUrl}\" alt=\"Site Logo\"{$imgAttr} />";
+        
+        // Wrap in link if isLink
+        if ($isLink) {
+            $linkTarget = $this->attrs['linkTarget'] ?? '_self';
+            $rel = 'rel="home"';
+            $ariaLabel = '';
+            
+            // Add target and aria-label if linkTarget is _blank
+            if ($linkTarget === '_blank') {
+                $ariaLabel = ' aria-label="(Home link, opens in a new tab)"';
+            }
+            
+            $img = "<a href=\"{$siteUrl}\" {$rel}{$ariaLabel} target=\"{$linkTarget}\">{$img}</a>";
+        }
+        
+        // Build wrapper classes
+        $classes = array_merge(['wp-block-site-logo'], $this->classes);
+        
+        // Add is-default-size class if no width is specified
+        if (empty($this->attrs['width'])) {
+            $classes[] = 'is-default-size';
+        }
+        
+        $classAttr = ' class="' . implode(' ', array_unique($classes)) . '"';
         
         return "<div{$classAttr}>{$img}</div>";
     }
