@@ -1,3 +1,6 @@
 [submodule "framework/witals"]
 	path = framework/witals
 	url = git@github.com:puleeno/witals-framework.git
+[submodule "content/themes/twentytwentyfive"]
+	path = content/themes/twentytwentyfive
+	url = git@github.com:WordPress/twentytwentyfive.git
