@@ -1,0 +1,32 @@
+# PrestoWorld CMS
+
+Premium Enterprise Management & Licensing Framework built on high-performance modern architecture.
+
+## Overview
+PrestoWorld is designed to be a high-performance CMS that provides a bridge between the traditional WordPress ecosystem and modern software architecture. It utilizes the Witals Framework as its core engine.
+
+A key feature is its **Gutenberg-like system**, which aims for full compatibility with the WordPress Gutenberg ecosystem, allowing for a seamless content editing experience while maintaining high performance.
+
+## Core Packages
+
+- **prestoworld/marketplace-sdk**: Foundation interfaces and DTOs for marketplace interactions.
+- **prestoworld/wporg-marketplace**: WordPress.org specific implementation of the Marketplace SDK.
+- **prestoworld/wp-bridge**: Compatibility layer allowing WordPress themes and plugins to run within PrestoWorld.
+- **witals/framework**: The underlying high-performance SaaS/CMS framework.
+
+## Project Structure
+
+- `app/`: Application specific logic.
+- `framework/`:
+    - `presto/`: Core PrestoWorld CMS foundation.
+    - `witals/`: Witals Framework (linked via path repository).
+- `vendor/prestoworld/`: Local development packages for PrestoWorld ecosystem.
+    - `marketplace-sdk/`
+    - `wporg-marketplace/`
+    - `wp-bridge/`
+- `public/`: Web server entry points.
+
+## Technical Stack
+- **Language**: PHP 8.1+
+- **Architecture**: Modular, Interface-driven, PSR compliant.
+- **Compatibility**: WordPress transition layer.
