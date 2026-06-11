@@ -11,26 +11,15 @@ use PrestoWorld\Modules\Gutenberg\Theme\ThemeJson;
 use PrestoWorld\Modules\Gutenberg\Pattern\PatternRegistry;
 use PrestoWorld\Modules\Gutenberg\Pattern\MemoryStorage;
 use PrestoWorld\Modules\Gutenberg\Pattern\FileCacheStorage;
+use PrestoWorld\Modules\Gutenberg\Renderer\Decorators\LayoutDecorator;
+use PrestoWorld\Modules\Gutenberg\Renderer\Decorators\StyleDecorator;
 
 class Module extends WitalsModule
 {
-    public function __construct($app)
-    {
-        parent::__construct($app, __DIR__, ['name' => 'gutenberg']);
-    }
-
-    public function getName(): string
-    {
-        return 'Gutenberg Native Engine';
-    }
-
     public function register(): void
     {
-        $this->app->singleton(BlockParser::class, fn() => new BlockParser());
-
-        $this->app->singleton(ThemeJson::class, function ($app) {
-            $themePath = $this->getThemePath($app);
-            return new ThemeJson($themePath);
+        $this->app->singleton(BlockParser::class, function () {
+            return new BlockParser();
         });
 
         $this->app->singleton(PatternRegistry::class, function ($app) {
@@ -53,70 +42,66 @@ class Module extends WitalsModule
             $renderer->setPatternRegistry($app->make(PatternRegistry::class));
             $renderer->setContext([
                 'theme_path' => $this->getThemePath($app),
-                'site_title' => $app->config('app.name', 'PrestoWorld'),
-                'site_tagline' => $app->config('app.tagline', 'High-Performance CMS'),
-                'site_url' => $app->config('app.url', '/'),
-                'site_logo' => $app->config('app.logo', ''),
+                'site_title' => 'PrestoWorld',
+                'site_url' => '/'
             ]);
 
-            // Register a __rerender callback so template-part and pattern
-            // can recursively parse+render raw Gutenberg HTML
-            $parser = $app->make(BlockParser::class);
-            $renderer->register('__rerender', function (string $html) use ($parser, $renderer): string {
-                $blocks = $parser->parse($html);
-                return $renderer->render($blocks);
-            });
-
+            // Register Decorators for attribute processing (Decorator Pattern)
+            $renderer->addDecorator(new LayoutDecorator());
+            $renderer->addDecorator(new StyleDecorator());
+            
             return $renderer;
+        });
+
+        $this->app->singleton(ThemeJson::class, function ($app) {
+            $themePath = $this->getThemePath($app);
+            return new ThemeJson($themePath . '/theme.json');
         });
     }
 
     public function boot(): void
     {
-        // For RoadRunner: Pre-warm the pattern registry to keep everything in RAM
-        /** @var PatternRegistry $patterns */
-        $patterns = $this->app->make(PatternRegistry::class);
-        $patterns->discover();
-    }
-
-    /**
-     * Render a full template by name (e.g. 'index', 'single', 'archive')
-     */
-    public function renderTemplate(string $templateName): string
-    {
-        $themePath = $this->getThemePath($this->app);
-        $path = "{$themePath}/templates/{$templateName}.html";
-
-        if (!file_exists($path)) {
-            return "<!-- Template not found: {$templateName} -->";
-        }
-
-        $content = file_get_contents($path);
-        return $this->rerender($content);
-    }
-
-    /**
-     * Get compiled theme CSS
-     */
-    public function getStyles(): string
-    {
-        return $this->app->make(ThemeJson::class)->compile();
-    }
-
-    /**
-     * Re-render raw Gutenberg HTML through the engine
-     */
-    public function rerender(string $html): string
-    {
         $parser   = $this->app->make(BlockParser::class);
         $renderer = $this->app->make(BlockRenderer::class);
-        $blocks   = $parser->parse($html);
+        $patterns = $this->app->make(PatternRegistry::class);
+
+        // Core Rerender logic for template parts and patterns
+        $renderer->register('__rerender', function (string $html) use ($parser, $renderer): string {
+            $blocks = $parser->parse($html);
+            return $renderer->render($blocks);
+        });
+
+        // Pre-warm patterns in persistent environments (RoadRunner)
+        if (isset($_SERVER['RR_MODE']) || isset($_SERVER['FRANKENPHP_WORKER'])) {
+            $patterns->discover();
+        }
+    }
+
+    public function renderTemplate(string $template): string
+    {
+        $themePath = $this->getThemePath($this->app);
+        $path = $themePath . "/templates/{$template}.html";
+        
+        if (!file_exists($path)) {
+            throw new \Exception("Template not found: {$template}");
+        }
+
+        $html = file_get_contents($path);
+        $parser = $this->app->make(BlockParser::class);
+        $renderer = $this->app->make(BlockRenderer::class);
+
+        $blocks = $parser->parse($html);
         return $renderer->render($blocks);
+    }
+
+    public function getStyles(): string
+    {
+        $themeJson = $this->app->make(ThemeJson::class);
+        return $themeJson->compile();
     }
 
     protected function getThemePath($app): string
     {
-        $activeTheme = $app->config('theme.active', 'twentytwentyfive');
-        return $app->basePath("content/themes/{$activeTheme}");
+        return $app->basePath() . '/content/themes/twentytwentyfive';
     }
 }

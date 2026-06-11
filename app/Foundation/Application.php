@@ -48,9 +48,13 @@ class Application extends BaseApplication
 
     protected function registerModule(string $moduleClass): void
     {
-        $module = new $moduleClass($this);
+        // Resolve path from class name as a fallback for core modules
+        $path = $this->basePath() . '/framework/presto/Modules/' . basename(str_replace('\\', '/', $moduleClass));
+        $module = new $moduleClass($this, $path);
+        
         $module->register();
         $module->boot();
+        
         // Bind into container so it can be resolved anywhere
         $this->instance($moduleClass, $module);
     }

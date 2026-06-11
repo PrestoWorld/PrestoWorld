@@ -5,12 +5,7 @@ declare(strict_types=1);
 namespace PrestoWorld\Modules\Gutenberg\Parser;
 
 /**
- * Ultra-High-Performance Gutenberg Parser
- * 
- * Optimized for speed:
- * - Minimal regex usage (only for attributes)
- * - Single-pass scanning with strpos
- * - Reference-based tree construction
+ * Clean & Ultra-High-Performance Gutenberg Parser
  */
 class BlockParser
 {
@@ -23,77 +18,75 @@ class BlockParser
 
         while ($cursor < $length) {
             $start = strpos($html, '<!--', $cursor);
+            
             if ($start === false) {
                 $this->addText(substr($html, $cursor), $stack, $blocks);
                 break;
             }
 
-            // Capture text before tag
+            // Capture text/content between tags
             if ($start > $cursor) {
                 $this->addText(substr($html, $cursor, $start - $cursor), $stack, $blocks);
             }
 
             $end = strpos($html, '-->', $start);
-            if ($end === false) break;
+            if ($end === false) {
+                $this->addText(substr($html, $start), $stack, $blocks);
+                break;
+            }
 
-            // Extract and trim the tag content (wp:... or /wp:...)
-            $tag = trim(substr($html, $start + 4, $end - ($start + 4)));
+            $tagContent = trim(substr($html, $start + 4, $end - ($start + 4)));
             $cursor = $end + 3;
 
-            // Detect block type
-            $isClosing = str_starts_with($tag, '/wp:');
-            $isOpening = str_starts_with($tag, 'wp:');
-
-            if (!$isClosing && !$isOpening) {
-                // Not a Gutenberg tag, treat as text
-                $this->addText(substr($html, $start, $cursor - $start), $stack, $blocks);
+            if (str_starts_with($tagContent, '/wp:')) {
+                // Closing Tag
+                if (!empty($stack)) {
+                    $parent = array_pop($stack);
+                    // Standardize: if innerBlocks is empty, use the captured text as innerHTML
+                    // This is handled during addText but ensured here.
+                }
                 continue;
             }
 
-            if ($isClosing) {
-                array_pop($stack);
+            if (str_starts_with($tagContent, 'wp:')) {
+                // Opening or Void Tag
+                $tagBody = substr($tagContent, 3);
+                $isVoid  = str_ends_with($tagBody, '/');
+                $cleanBody = $isVoid ? rtrim($tagBody, ' /') : $tagBody;
+
+                $spacePos = strpos($cleanBody, ' ');
+                if ($spacePos !== false) {
+                    $name  = substr($cleanBody, 0, $spacePos);
+                    $attrs = json_decode(substr($cleanBody, $spacePos + 1), true) ?: [];
+                } else {
+                    $name  = $cleanBody;
+                    $attrs = [];
+                }
+
+                if (strpos($name, '/') === false) $name = 'core/' . $name;
+
+                $block = [
+                    'blockName'   => $name,
+                    'attrs'       => $attrs,
+                    'innerBlocks' => [],
+                    'innerHTML'   => '',
+                ];
+
+                if (empty($stack)) {
+                    $blocks[] = &$block;
+                } else {
+                    $stack[count($stack) - 1]['innerBlocks'][] = &$block;
+                }
+
+                if (!$isVoid) {
+                    $stack[] = &$block;
+                }
+                unset($block);
                 continue;
             }
 
-            // Process Opening Tag (wp:...)
-            $tagContent = substr($tag, 3);
-            $isVoid = substr($tagContent, -1) === '/';
-            $cleanedTag = $isVoid ? rtrim($tagContent, ' /') : $tagContent;
-
-            // Efficiently split name and attributes
-            $spacePos = strpos($cleanedTag, ' ');
-            if ($spacePos !== false) {
-                $name  = substr($cleanedTag, 0, $spacePos);
-                $attrs = json_decode(substr($cleanedTag, $spacePos + 1), true) ?: [];
-            } else {
-                $name  = $cleanedTag;
-                $attrs = [];
-            }
-
-            // Ensure core namespace if missing
-            if (strpos($name, '/') === false) {
-                $name = 'core/' . $name;
-            }
-
-            $block = [
-                'blockName'   => $name,
-                'attrs'       => $attrs,
-                'innerBlocks' => [],
-                'innerHTML'   => '',
-            ];
-
-            // Attach block
-            if (empty($stack)) {
-                $blocks[] = &$block;
-            } else {
-                $stack[count($stack) - 1]['innerBlocks'][] = &$block;
-            }
-
-            if (!$isVoid) {
-                $stack[] = &$block;
-            }
-            
-            unset($block); // Clear reference for next iteration
+            // Not a Gutenberg tag, treat as text
+            $this->addText(substr($html, $start, $cursor - $start), $stack, $blocks);
         }
 
         return $blocks;
@@ -101,8 +94,10 @@ class BlockParser
 
     protected function addText(string $text, array &$stack, array &$root): void
     {
-        if ($text === '') return;
-        
+        // PERFORMANCE: Ignore whitespace fragments between blocks at root level
+        $isWhitespace = trim($text) === '';
+        if ($isWhitespace && empty($stack)) return;
+
         if (empty($stack)) {
             $root[] = [
                 'blockName'   => null,
@@ -111,7 +106,23 @@ class BlockParser
                 'innerHTML'   => $text,
             ];
         } else {
-            $stack[count($stack) - 1]['innerHTML'] .= $text;
+            $parent = &$stack[count($stack) - 1];
+            
+            // CLEANUP: If this text looks like an opening/closing HTML tag of the PARENT block,
+            // we store it in innerHTML but DONT add it to innerBlocks.
+            // This prevents double-tagging when the renderer wraps the block.
+            $isWrappingTag = preg_match('/^<\/?([a-z0-9]+)[^>]*>$/i', trim($text));
+            
+            if ($isWrappingTag) {
+                $parent['innerHTML'] .= $text;
+            } else {
+                $parent['innerBlocks'][] = [
+                    'blockName'   => null,
+                    'attrs'       => [],
+                    'innerBlocks' => [],
+                    'innerHTML'   => $text,
+                ];
+            }
         }
     }
 }
