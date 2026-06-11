@@ -24,7 +24,10 @@ $runtime = RuntimeType::detect();
 // 3. Initialize Application
 $app = new Application(dirname(__DIR__), $runtime);
 
-// 4. Create and Start Server
+// 4. Specify Config Path
+$app->setConfigPaths('config');
+
+// 5. Create and Start Server
 // ServerFactory will return the appropriate server instance based on $runtime
 $server = ServerFactory::create($runtime, $app);
 
