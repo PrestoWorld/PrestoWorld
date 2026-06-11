@@ -39,23 +39,17 @@ class BlockParser
             $cursor = $end + 3;
 
             if (str_starts_with($tagContent, '/wp:')) {
-                // Closing Tag
+                // Closing Tag — just pop; block was added by reference at open time
                 if (!empty($stack)) {
-                    $finished = array_pop($stack);
-                    // Attach finished block to parent or root
-                    if (!empty($stack)) {
-                        $stack[count($stack) - 1]['innerBlocks'][] = $finished;
-                    } else {
-                        $blocks[] = $finished;
-                    }
+                    array_pop($stack);
                 }
                 continue;
             }
 
             if (str_starts_with($tagContent, 'wp:')) {
                 // Opening or Void Tag
-                $tagBody = substr($tagContent, 3);
-                $isVoid  = str_ends_with($tagBody, '/');
+                $tagBody   = substr($tagContent, 3);
+                $isVoid    = str_ends_with($tagBody, '/');
                 $cleanBody = $isVoid ? rtrim($tagBody, ' /') : $tagBody;
 
                 $spacePos = strpos($cleanBody, ' ');
@@ -76,16 +70,17 @@ class BlockParser
                     'innerHTML'   => '',
                 ];
 
-                if (!$isVoid) {
-                    $stack[] = $block;
+                // Register in correct place via reference
+                if (empty($stack)) {
+                    $blocks[] = &$block;
                 } else {
-                    // Void block: add to parent stack or root directly
-                    if (empty($stack)) {
-                        $blocks[] = $block;
-                    } else {
-                        $stack[count($stack) - 1]['innerBlocks'][] = $block;
-                    }
+                    $stack[count($stack) - 1]['innerBlocks'][] = &$block;
                 }
+
+                if (!$isVoid) {
+                    $stack[] = &$block;
+                }
+                unset($block);
                 continue;
             }
 
@@ -98,9 +93,8 @@ class BlockParser
 
     protected function addText(string $text, array &$stack, array &$root): void
     {
-        // PERFORMANCE: Ignore whitespace fragments between blocks at root level
-        $isWhitespace = trim($text) === '';
-        if ($isWhitespace && empty($stack)) return;
+        // Ignore pure whitespace at root level
+        if (trim($text) === '' && empty($stack)) return;
 
         if (empty($stack)) {
             $root[] = [
@@ -109,18 +103,28 @@ class BlockParser
                 'innerBlocks' => [],
                 'innerHTML'   => $text,
             ];
-        } else {
-            $parent = &$stack[count($stack) - 1];
-            $parent['innerHTML'] .= $text;
-            // Also add as a null innerBlock so renderers can iterate it
-            if (trim($text) !== '') {
-                $parent['innerBlocks'][] = [
-                    'blockName'   => null,
-                    'attrs'       => [],
-                    'innerBlocks' => [],
-                    'innerHTML'   => $text,
-                ];
-            }
+            return;
+        }
+
+        $parent = &$stack[count($stack) - 1];
+        // Always accumulate into innerHTML (for blocks that use it directly)
+        $parent['innerHTML'] .= $text;
+
+        // Determine if this is an outer wrapping HTML tag (like <div class="..."> or </div>)
+        // vs actual content (like <p>text</p>) that should be an innerBlock.
+        // Rule: a wrapping tag is a SINGLE opening or closing HTML tag with no text content.
+        $trimmed = trim($text);
+        $isSingleOpenTag  = (bool) preg_match('/^<(\w+)(\s[^>]*)?\s*>$/', $trimmed); // <div class="...">
+        $isSingleCloseTag = (bool) preg_match('/^<\/\w+>$/', $trimmed);              // </div>
+
+        if (!$isSingleOpenTag && !$isSingleCloseTag && $trimmed !== '') {
+            // Content worth rendering as an inner block
+            $parent['innerBlocks'][] = [
+                'blockName'   => null,
+                'attrs'       => [],
+                'innerBlocks' => [],
+                'innerHTML'   => $text,
+            ];
         }
     }
 }
