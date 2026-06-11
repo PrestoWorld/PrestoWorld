@@ -1,0 +1,23 @@
+version: "3"
+
+server:
+  command: "php public/index.php"
+  env:
+    - RR_MODE: true
+
+http:
+  address: 0.0.0.0:8080
+  middleware: ["static", "gzip"]
+  static:
+    dir: "public"
+    forbid: [".php", ".htaccess"]
+  pool:
+    num_workers: ${RR_HTTP_NUM_WORKERS:-2}
+    max_jobs: 64
+    allocate_timeout: 60s
+    destroy_timeout: 60s
+
+logs:
+  mode: production
+  level: debug
+  encoding: console

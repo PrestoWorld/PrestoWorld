@@ -1,0 +1,22 @@
+{
+	frankenphp
+	order php_server before file_server
+}
+
+${APP_URL:-localhost} {
+	root * public/
+	encode zstd gzip
+	
+	php_server {
+		index index.php
+		resolve_root_symlink
+	}
+	
+	# FrankenPHP worker mode configuration
+	# To use: frankenphp run --config Caddyfile
+	# frankenphp {
+	# 	worker public/index.php
+	# }
+	
+	file_server
+}
