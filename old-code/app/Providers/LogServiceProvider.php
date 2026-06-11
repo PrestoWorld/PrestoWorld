@@ -8,9 +8,6 @@ use App\Support\ServiceProvider;
 use Psr\Log\LoggerInterface;
 use Witals\Framework\Log\LogManager;
 
-/**
- * Log Service Provider
- */
 class LogServiceProvider extends ServiceProvider
 {
     public function register(): void
@@ -22,13 +19,13 @@ class LogServiceProvider extends ServiceProvider
                     'standard' => [
                         'driver' => 'standard',
                         'path' => $app->basePath('storage/logs/prestoworld.log'),
-                        'level' => 'info', // Show from Info and above in production log
+                        'level' => 'info',
                         'buffered' => true,
                         'formatter' => 'line',
                     ],
                     'debug' => [
                         'driver' => 'debug',
-                        'level' => 'debug', // Show everything in debug console
+                        'level' => 'debug',
                     ],
                     'null' => [
                         'driver' => 'null',

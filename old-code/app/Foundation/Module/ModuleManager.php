@@ -6,11 +6,6 @@ namespace App\Foundation\Module;
 
 use App\Foundation\Application;
 
-/**
- * Module Manager
- * 
- * Handles discovery, loading, and management of modules
- */
 class ModuleManager
 {
     private Application $app;
@@ -22,13 +17,10 @@ class ModuleManager
         $this->app = $app;
     }
 
-    /**
-     * Discover modules from modules directory
-     */
     public function discover(): void
     {
         $modulesPath = $this->app->basePath('modules');
-        
+
         if (!is_dir($modulesPath)) {
             return;
         }
@@ -43,21 +35,17 @@ class ModuleManager
 
             if (file_exists($metadataPath)) {
                 $metadata = json_decode(file_get_contents($metadataPath), true);
-                
-                // Allow config override for enabled state
+
                 $configKey = "modules.enabled.{$metadata['name']}";
                 if ($this->app->config($configKey) !== null) {
                     $metadata['enabled'] = $this->app->config($configKey);
                 }
 
-                $this->modules[$metadata['name']] = new class($this->app, $modulePath, $metadata) extends Module {};
+                $this->modules[$metadata['name']] = new Module($this->app, $modulePath, $metadata);
             }
         }
     }
 
-    /**
-     * Load enabled modules
-     */
     public function loadEnabled(): void
     {
         $sorted = $this->getSortedModules();
@@ -69,9 +57,6 @@ class ModuleManager
         }
     }
 
-    /**
-     * Load specific module
-     */
     public function load(ModuleInterface $module): void
     {
         $name = $module->getName();
@@ -80,9 +65,6 @@ class ModuleManager
             return;
         }
 
-        // Register PSR-4 autoloading for module
-        // Note: In a real app, composer should handle this, or we register manually
-        // basic manual registration:
         $metadata = json_decode(file_get_contents($module->getPath() . '/module.json'), true);
         if (isset($metadata['autoload']['psr-4'])) {
             foreach ($metadata['autoload']['psr-4'] as $ns => $path) {
@@ -103,19 +85,12 @@ class ModuleManager
         $this->loaded[$name] = true;
     }
 
-    /**
-     * Sort modules using a topological sort so that dependencies are always
-     * loaded before the modules that depend on them.
-     * Falls back to priority ordering when no dependency edge exists.
-     *
-     * @throws \RuntimeException on circular dependency
-     */
     private function getSortedModules(): array
     {
-        $modules  = $this->modules;  // name => ModuleInterface
+        $modules  = $this->modules;
         $sorted   = [];
-        $visiting = [];              // grey nodes (currently on stack)
-        $visited  = [];              // black nodes (fully processed)
+        $visiting = [];
+        $visited  = [];
 
         $visit = null;
         $visit = function (string $name) use (&$modules, &$sorted, &$visiting, &$visited, &$visit): void {
@@ -133,7 +108,6 @@ class ModuleManager
 
             $module = $modules[$name] ?? null;
             if ($module !== null) {
-                // Visit each dependency first
                 foreach ($module->getDependencies() as $depName) {
                     if (!isset($modules[$depName])) {
                         error_log("ModuleManager: Module '{$name}' depends on '{$depName}' which is not installed.");
@@ -151,8 +125,6 @@ class ModuleManager
             }
         };
 
-        // Sort modules by priority first so that same-priority modules with no
-        // dependency edges are still ordered deterministically.
         $prioritised = array_values($modules);
         usort($prioritised, function (ModuleInterface $a, ModuleInterface $b) {
             if ($a->getPriority() !== $b->getPriority()) {
@@ -168,26 +140,16 @@ class ModuleManager
         return $sorted;
     }
 
-    /**
-     * Get all discovered modules (unordered, keyed by name).
-     */
     public function all(): array
     {
         return $this->modules;
     }
 
-    /**
-     * Get all enabled modules in guaranteed dependency-safe load order.
-     * Use this instead of all() whenever order matters (schema sync, boots, etc.).
-     */
     public function allSorted(): array
     {
         return $this->getSortedModules();
     }
 
-    /**
-     * Check if module is loaded
-     */
     public function isLoaded(string $name): bool
     {
         return isset($this->loaded[$name]);

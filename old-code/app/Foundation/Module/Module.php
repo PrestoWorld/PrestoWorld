@@ -6,10 +6,7 @@ namespace App\Foundation\Module;
 
 use App\Foundation\Application;
 
-/**
- * Base Module Class
- */
-abstract class Module implements ModuleInterface
+class Module implements ModuleInterface
 {
     protected Application $app;
     protected array $metadata;
@@ -56,11 +53,6 @@ abstract class Module implements ModuleInterface
         ];
     }
 
-    /**
-     * Return the list of module names this module depends on.
-     * Declared as "depends": ["customers", "orders"] in module.json.
-     * These modules are guaranteed to be loaded (and their tables synced) first.
-     */
     public function getDependencies(): array
     {
         return $this->metadata['depends'] ?? [];
@@ -82,7 +74,6 @@ abstract class Module implements ModuleInterface
             return;
         }
 
-        // Register module providers
         foreach ($this->getProviders() as $provider) {
             $this->app->register($provider);
         }

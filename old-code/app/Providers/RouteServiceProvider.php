@@ -13,7 +13,6 @@ class RouteServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        // Strategy selected ONCE at boot via Factory — zero per-request overhead
         $this->app->singleton(RouterInterface::class, function ($app) {
             return RouterFactory::create(
                 $app,
@@ -21,7 +20,6 @@ class RouteServiceProvider extends ServiceProvider
             );
         });
 
-        // Keep Router::class alias so existing code that type-hints Router still works
         $this->app->singleton(Router::class, function ($app) {
             return $app->make(RouterInterface::class);
         });
@@ -31,13 +29,11 @@ class RouteServiceProvider extends ServiceProvider
     {
         $router = $this->app->make(RouterInterface::class);
 
-        // Set the smart fallback to WordPress if the bridge is enabled
         $router->setWordPressFallback(function ($request) {
             $wpDispatcherClass = \PrestoWorld\Bridge\WordPress\Routing\WordPressDispatcher::class;
             return $this->app->make($wpDispatcherClass)->dispatch($request);
         });
 
-        // Load modern routes
         $this->loadRoutes($router);
     }
 

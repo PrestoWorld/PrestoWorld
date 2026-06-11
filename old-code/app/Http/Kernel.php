@@ -10,14 +10,9 @@ use Witals\Framework\Http\Request;
 use Witals\Framework\Http\Response;
 use Psr\Log\LoggerInterface;
 
-/**
- * HTTP Kernel
- * Handles HTTP request processing and middleware
- */
 class Kernel implements KernelContract
 {
-
-
+    protected Application $app;
     protected LoggerInterface $logger;
 
     public function __construct(Application $app, LoggerInterface $logger)
@@ -32,17 +27,12 @@ class Kernel implements KernelContract
         \App\Http\Middleware\AdminAuthMiddleware::class,
     ];
 
-    /**
-     * Handle an incoming HTTP request
-     */
     public function handle(Request $request): Response
     {
-        // Reset debug bar for the current request
         if ($this->app->has(\App\Foundation\Debug\DebugBar::class)) {
             $this->app->make(\App\Foundation\Debug\DebugBar::class)->reset();
         }
 
-        // Bind the current request instance to the container
         $this->app->instance(Request::class, $request);
 
         $this->logger->info("Incoming request: {method} {uri}", [
@@ -51,10 +41,8 @@ class Kernel implements KernelContract
             'ip' => $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1',
         ]);
 
-        // Create Middleware Pipeline
         $pipeline = $this->middleware;
-        
-        // Add Router Dispatch as the final destination
+
         $pipeline[] = function ($request) {
             return $this->dispatchToRouter($request);
         };
@@ -62,42 +50,32 @@ class Kernel implements KernelContract
         return $this->sendRequestThroughPipeline($request, $pipeline);
     }
 
-    /**
-     * Execute the middleware pipeline
-     */
     protected function sendRequestThroughPipeline(Request $request, array $pipeline): Response
     {
         $middleware = array_shift($pipeline);
 
         if ($middleware === null) {
-             // Should not happen if pipeline always has the destination
-             throw new \RuntimeException("Middleware pipeline exhausted without response");
+            throw new \RuntimeException("Middleware pipeline exhausted without response");
         }
 
-        // Create the callback for the NEXT middleware in line
         $next = function ($nextRequest) use ($pipeline) {
             return $this->sendRequestThroughPipeline($nextRequest, $pipeline);
         };
 
-        // If generic closure
         if ($middleware instanceof \Closure) {
             return $middleware($request, $next);
         }
 
-        // If class string
         if (is_string($middleware)) {
-             $instance = $this->app->make($middleware);
-             if (method_exists($instance, 'handle')) {
-                 return $instance->handle($request, $next);
-             }
+            $instance = $this->app->make($middleware);
+            if (method_exists($instance, 'handle')) {
+                return $instance->handle($request, $next);
+            }
         }
 
         throw new \RuntimeException("Invalid middleware: " . json_encode($middleware));
     }
 
-    /**
-     * Dispatch request to Router
-     */
     protected function dispatchToRouter(Request $request): Response
     {
         try {
@@ -110,7 +88,6 @@ class Kernel implements KernelContract
                 $response = Response::html((string)$result);
             }
 
-            // Enforce Template Engine rendering for HTML web responses (standardization)
             if ($this->shouldEnforceTemplateEngine($request, $response)) {
                 if (!$this->app->has('view.rendered') || $this->app->make('view.rendered') !== true) {
                     throw new \RuntimeException("PrestoWorld Standards Error: Web response must be rendered via a registered template engine (Stempler).");
@@ -121,19 +98,14 @@ class Kernel implements KernelContract
 
         } catch (\Throwable $e) {
             $this->logger->error("Request error: " . $e->getMessage(), ['exception' => $e]);
-            
-            // Standardize: Use Witals' framework exception handler for rendering
+
             $handler = $this->app->make(\Witals\Framework\Contracts\Exceptions\ExceptionHandlerInterface::class);
             return $handler->render($e, $request);
         }
     }
 
-    /**
-     * Inject Debug Bar into HTML responses
-     */
     protected function injectDebugBar(Request $request, Response $response): Response
     {
-        // Skip for redirects or non-HTML responses
         if ($response->getStatusCode() >= 300 && $response->getStatusCode() < 400) {
             return $response;
         }
@@ -149,7 +121,7 @@ class Kernel implements KernelContract
 
         $debugBar = $this->app->make(\App\Foundation\Debug\DebugBar::class);
         $debugBarHtml = $debugBar->render();
-        
+
         if (str_contains($content, '</body>')) {
             $content = str_replace('</body>', $debugBarHtml . '</body>', $content);
         } else {
@@ -159,23 +131,17 @@ class Kernel implements KernelContract
         return new Response($content, $response->getStatusCode(), $response->getHeaders());
     }
 
-    /**
-     * Check if the current response should be enforced to use a template engine.
-     */
     protected function shouldEnforceTemplateEngine(Request $request, Response $response): bool
     {
-        // 1. Only enforce for HTML responses
         if (!str_contains($response->getHeader('Content-Type', ''), 'text/html')) {
             return false;
         }
 
-        // 2. Skip for AJAX/JSON requests (using header check since isAjax is not in core Request)
         $isAjax = $request->header('X-Requested-With') === 'XMLHttpRequest';
         if ($isAjax || str_contains($request->header('Accept', ''), 'application/json')) {
             return false;
         }
 
-        // 3. Skip for redirects
         if ($response->getStatusCode() >= 300 && $response->getStatusCode() < 400) {
             return false;
         }
@@ -183,9 +149,6 @@ class Kernel implements KernelContract
         return true;
     }
 
-    /**
-     * Handle home route
-     */
     public function handleHome(Request $request): Response
     {
         $modules = [];
@@ -204,16 +167,13 @@ class Kernel implements KernelContract
             }
         }
 
-        // Demo Data: Load posts via CycleORM
         $postsData = [];
         $postsError = null;
         try {
             if ($this->app->has(\Cycle\ORM\ORMInterface::class)) {
                 $orm = $this->app->make(\Cycle\ORM\ORMInterface::class);
                 $repo = $orm->getRepository(\App\Models\Post::class);
-                
-                // Fetch 5 latest items (posts or pages)
-                // Note: Using select() directly from repository might check if SelectRepository is used
+
                 $posts = $repo->select()
                     ->where('status', 'publish')
                     ->where('type', 'in', ['post', 'page'])
@@ -238,7 +198,6 @@ class Kernel implements KernelContract
             $postsError = 'ORM Error: ' . $e->getMessage();
         }
 
-        // Fetch Web Services
         $webServices = [];
         try {
             if ($this->app->has(\Cycle\Database\DatabaseProviderInterface::class)) {
@@ -254,38 +213,29 @@ class Kernel implements KernelContract
             error_log("Home WebServices Error: " . $e->getMessage());
         }
 
-        // Use Theme Engine to render if not a JSON request
         if (str_contains($request->header('accept', ''), 'text/html') || !$request->header('accept')) {
             $themeManager = $this->app->make(\PrestoWorld\Theme\ThemeManager::class);
             $hooks = $this->app->make('hooks');
 
-
-            // Trigger Action
             $hooks->doAction('pre_render_home');
 
-            // Apply Filter to Title
             $pageTitle = $hooks->applyFilters('home_page_title', 'Home');
-            
-            // Allow dynamic theme switching for demo
+
             if ($targetTheme = $request->query('theme')) {
                 $themeManager->setActiveTheme($targetTheme);
             }
             $themeManager->loadActiveTheme();
             $this->app->instance('view.rendered', true);
             $html = $themeManager->render('index', [
-                'title' => $pageTitle, // Used filtered title
+                'title' => $pageTitle,
                 'posts' => $postsData,
                 'web_services' => $webServices,
                 'posts_error' => $postsError,
                 'themes' => $themeManager->all()
             ]);
 
-            // Apply Native Filter to Content
             $html = $hooks->applyFilters('home_page_content', $html);
 
-
-
-            // Apply GLOBAL Filter as the very last step (MU-Plugins, etc)
             $html = $hooks->applyFilters('presto.response_body', $html);
 
             return \Witals\Framework\Http\Response::html($html);
@@ -312,9 +262,6 @@ class Kernel implements KernelContract
         ]);
     }
 
-    /**
-     * Handle health check route
-     */
     public function handleHealth(Request $request): Response
     {
         return Response::json([
@@ -325,9 +272,6 @@ class Kernel implements KernelContract
         ]);
     }
 
-    /**
-     * Handle info route
-     */
     public function handleInfo(Request $request): Response
     {
         return Response::json([
@@ -367,7 +311,7 @@ class Kernel implements KernelContract
             $dbal = $this->app->make(\Cycle\Database\DatabaseProviderInterface::class);
             $db = $dbal->database();
             $driver = $db->getDriver();
-            $driver->connect(); // Ensure connection is established
+            $driver->connect();
             return 'Connected (' . get_class($driver) . ')';
         } catch (\Throwable $e) {
             return 'Error: ' . $e->getMessage();
@@ -380,13 +324,8 @@ class Kernel implements KernelContract
         if ($this->app->isReactPhp()) return 'ReactPHP';
         if ($this->app->isSwoole()) return 'Swoole';
         if ($this->app->isOpenSwoole()) return 'OpenSwoole';
-        
-        return 'Traditional Web Server';
-    }
 
-    protected function getPhpVersion(): string
-    {
-        return PHP_VERSION;
+        return 'Traditional Web Server';
     }
 
     protected function getServerInfo(): string
