@@ -40,7 +40,7 @@ class Application extends BaseApplication
 
         parent::boot();
 
-        // Register PrestoWorld Core Modules
+        // Register PrestoWorld Core Modules (as singletons so Kernel can resolve them)
         $this->registerModule(\PrestoWorld\Modules\Gutenberg\Module::class);
         $this->registerModule(\PrestoWorld\Modules\Schema\Module::class);
         $this->registerModule(\PrestoWorld\Modules\Search\Module::class);
@@ -51,6 +51,8 @@ class Application extends BaseApplication
         $module = new $moduleClass($this);
         $module->register();
         $module->boot();
+        // Bind into container so it can be resolved anywhere
+        $this->instance($moduleClass, $module);
     }
 
     /**
