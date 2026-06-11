@@ -27,6 +27,30 @@ class Application extends BaseApplication
             \Witals\Framework\Contracts\Http\Kernel::class,
             \App\Http\Kernel::class
         );
+
+        // Bind Core Database
+        $this->register(\PrestoWorld\Foundation\Providers\DatabaseServiceProvider::class);
+    }
+
+    public function boot(): void
+    {
+        if ($this->booted) {
+            return;
+        }
+
+        parent::boot();
+
+        // Register PrestoWorld Core Modules
+        $this->registerModule(\PrestoWorld\Modules\Gutenberg\Module::class);
+        $this->registerModule(\PrestoWorld\Modules\Schema\Module::class);
+        $this->registerModule(\PrestoWorld\Modules\Search\Module::class);
+    }
+
+    protected function registerModule(string $moduleClass): void
+    {
+        $module = new $moduleClass($this);
+        $module->register();
+        $module->boot();
     }
 
     /**

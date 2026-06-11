@@ -4,12 +4,17 @@ declare(strict_types=1);
 
 namespace PrestoWorld\Modules\Search;
 
-use Witals\Framework\Module\BaseModule;
+use Witals\Framework\Module\Module as WitalsModule;
 use PrestoWorld\Modules\Schema\PostRepository;
 use Cycle\Database\DatabaseInterface;
 
-class Module extends BaseModule
+class Module extends WitalsModule
 {
+    public function __construct($app)
+    {
+        parent::__construct($app, __DIR__, ['name' => 'search']);
+    }
+
     public function getName(): string
     {
         return 'PrestoWorld Search Engine Module';
@@ -25,11 +30,6 @@ class Module extends BaseModule
         });
 
         // Global Helper for PW_Query
-        if (!function_exists('pw_query')) {
-            function pw_query(array $args = []): PW_Query
-            {
-                return new PW_Query($args);
-            }
-        }
+        require_once __DIR__ . '/helpers.php';
     }
 }

@@ -193,6 +193,12 @@ class PostTypeSchemaManager
         foreach ($columns as $name => $definition) {
             $type = is_string($definition) ? $definition : ($definition['type'] ?? 'string');
             $column = $schema->column($name);
+            
+            if ($type === 'decimal') {
+                $column->decimal(15, 2);
+                continue;
+            }
+
             if (method_exists($column, $type)) {
                 $column->$type();
             }

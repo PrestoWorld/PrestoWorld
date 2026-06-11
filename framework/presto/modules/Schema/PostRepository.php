@@ -49,7 +49,7 @@ class PostRepository
     }
 
     /**
-     * Group posts by type and batch load their custom data
+     * Group posts by type and batch load their custom data + taxonomies
      */
     protected function hydrateCustomData(array $posts): array
     {
@@ -59,17 +59,21 @@ class PostRepository
         foreach ($posts as $post) {
             $byType[$post['post_type']][] = $post['id'];
             $indexedPosts[$post['id']] = $post;
+            $indexedPosts[$post['id']]['terms'] = []; // Initialize terms array
         }
 
+        $this->hydrateSpecializedData($byType, $indexedPosts);
+        $this->hydrateTerms(array_keys($indexedPosts), $indexedPosts);
+
+        return array_values($indexedPosts);
+    }
+
+    protected function hydrateSpecializedData(array $byType, array &$indexedPosts): void
+    {
         foreach ($byType as $type => $ids) {
             $customTableName = $this->tablePrefix . "post_" . $type;
-            
-            // Check if specialized table exists
-            if (!$this->db->hasTable($customTableName)) {
-                continue;
-            }
+            if (!$this->db->hasTable($customTableName)) continue;
 
-            // Batch load custom data for this type
             $customData = $this->db->select('*')
                 ->from($customTableName)
                 ->where('post_id', 'IN', $ids)
@@ -77,13 +81,24 @@ class PostRepository
 
             foreach ($customData as $row) {
                 $postId = $row['post_id'];
-                unset($row['post_id'], $row['id']); // Clean up
-                
-                // Merge custom data into the main post object
+                unset($row['post_id'], $row['id']);
                 $indexedPosts[$postId] = array_merge($indexedPosts[$postId], $row);
             }
         }
+    }
 
-        return array_values($indexedPosts);
+    protected function hydrateTerms(array $postIds, array &$indexedPosts): void
+    {
+        $termData = $this->db->select('tr.object_id', 't.*')
+            ->from($this->tablePrefix . 'term_relationships as tr')
+            ->innerJoin($this->tablePrefix . 'terms', 't')->on('t.id', 'tr.term_id')
+            ->where('tr.object_id', 'IN', $postIds)
+            ->fetchAll();
+
+        foreach ($termData as $row) {
+            $postId = $row['object_id'];
+            unset($row['object_id']);
+            $indexedPosts[$postId]['terms'][] = $row;
+        }
     }
 }

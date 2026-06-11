@@ -42,8 +42,8 @@ class PW_Query
         // Transform and execute via Search Engine
         $result = $engine->search($this->args);
 
-        $this->posts = $result->items;
-        $this->found_posts = $result->total;
+        $this->posts = $result->getItems();
+        $this->found_posts = $result->getTotal();
         $this->post_count = count($this->posts);
         
         $limit = (int) ($this->args['posts_per_page'] ?? 10);

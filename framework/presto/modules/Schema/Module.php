@@ -4,11 +4,16 @@ declare(strict_types=1);
 
 namespace PrestoWorld\Modules\Schema;
 
-use Witals\Framework\Module\BaseModule;
+use Witals\Framework\Module\Module as WitalsModule;
 use Cycle\Database\DatabaseInterface;
 
-class Module extends BaseModule
+class Module extends WitalsModule
 {
+    public function __construct($app)
+    {
+        parent::__construct($app, __DIR__, ['name' => 'schema']);
+    }
+
     public function getName(): string
     {
         return 'PrestoWorld Schema Engine';
@@ -29,6 +34,10 @@ class Module extends BaseModule
 
     public function boot(): void
     {
-        // Initial schema check or logging could go here
+        // Register console commands
+        if ($this->app->has(\Witals\Framework\Console\Kernel::class)) {
+            $this->app->make(\Witals\Framework\Console\Kernel::class)
+                ->register(\App\Console\Commands\DemoSchemaCommand::class);
+        }
     }
 }

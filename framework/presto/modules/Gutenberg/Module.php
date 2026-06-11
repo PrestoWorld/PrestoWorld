@@ -4,13 +4,18 @@ declare(strict_types=1);
 
 namespace PrestoWorld\Modules\Gutenberg;
 
-use Witals\Framework\Module\BaseModule;
+use Witals\Framework\Module\Module as WitalsModule;
 use PrestoWorld\Modules\Gutenberg\Parser\BlockParser;
 use PrestoWorld\Modules\Gutenberg\Renderer\BlockRenderer;
 use PrestoWorld\Modules\Gutenberg\Theme\ThemeJson;
 
-class Module extends BaseModule
+class Module extends WitalsModule
 {
+    public function __construct($app)
+    {
+        parent::__construct($app, __DIR__, ['name' => 'gutenberg']);
+    }
+
     public function getName(): string
     {
         return 'Gutenberg Native Engine';
@@ -23,7 +28,7 @@ class Module extends BaseModule
         
         $this->app->singleton(ThemeJson::class, function($app) {
             $activeTheme = $app->config('theme.active', 'twentytwentyfive');
-            $path = $app->basePath("content/themes/{$activeTheme}/theme.json");
+            $path = $app->basePath("content/themes/{$activeTheme}");
             return new ThemeJson($path);
         });
     }
@@ -57,44 +62,12 @@ class Module extends BaseModule
         // Pattern support
         $renderer->register('core/pattern', function($attrs) {
             $slug = $attrs['slug'] ?? '';
-            // Pattern logic normally involves looking up registered patterns or files
             return "<!-- Pattern placeholder: {$slug} -->";
         });
     }
 
-    /**
-     * Render raw Gutenberg content
-     */
     public function renderRawContent(string $content): string
     {
-        $parser = $this->app->make(BlockParser::class);
-        $renderer = $this->app->make(BlockRenderer::class);
-
-        $blocks = $parser->parse($content);
-        return $renderer->render($blocks);
-    }
-
-    /**
-     * Get the generated CSS for the active theme
-     */
-    public function getStyles(): string
-    {
-        return $this->app->make(ThemeJson::class)->generateCss();
-    }
-
-    /**
-     * Render a template file from the theme
-     */
-    public function renderTemplate(string $templateName): string
-    {
-        $activeTheme = $this->app->config('theme.active', 'twentytwentyfive');
-        $path = $this->app->basePath("content/themes/{$activeTheme}/templates/{$templateName}.html");
-        
-        if (!file_exists($path)) {
-            return "Template {$templateName} not found in theme {$activeTheme}";
-        }
-
-        $content = file_get_contents($path);
         $parser = $this->app->make(BlockParser::class);
         $renderer = $this->app->make(BlockRenderer::class);
 
