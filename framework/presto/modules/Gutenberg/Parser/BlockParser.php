@@ -41,9 +41,13 @@ class BlockParser
             if (str_starts_with($tagContent, '/wp:')) {
                 // Closing Tag
                 if (!empty($stack)) {
-                    $parent = array_pop($stack);
-                    // Standardize: if innerBlocks is empty, use the captured text as innerHTML
-                    // This is handled during addText but ensured here.
+                    $finished = array_pop($stack);
+                    // Attach finished block to parent or root
+                    if (!empty($stack)) {
+                        $stack[count($stack) - 1]['innerBlocks'][] = $finished;
+                    } else {
+                        $blocks[] = $finished;
+                    }
                 }
                 continue;
             }
@@ -72,16 +76,16 @@ class BlockParser
                     'innerHTML'   => '',
                 ];
 
-                if (empty($stack)) {
-                    $blocks[] = &$block;
-                } else {
-                    $stack[count($stack) - 1]['innerBlocks'][] = &$block;
-                }
-
                 if (!$isVoid) {
-                    $stack[] = &$block;
+                    $stack[] = $block;
+                } else {
+                    // Void block: add to parent stack or root directly
+                    if (empty($stack)) {
+                        $blocks[] = $block;
+                    } else {
+                        $stack[count($stack) - 1]['innerBlocks'][] = $block;
+                    }
                 }
-                unset($block);
                 continue;
             }
 
@@ -107,15 +111,9 @@ class BlockParser
             ];
         } else {
             $parent = &$stack[count($stack) - 1];
-            
-            // CLEANUP: If this text looks like an opening/closing HTML tag of the PARENT block,
-            // we store it in innerHTML but DONT add it to innerBlocks.
-            // This prevents double-tagging when the renderer wraps the block.
-            $isWrappingTag = preg_match('/^<\/?([a-z0-9]+)[^>]*>$/i', trim($text));
-            
-            if ($isWrappingTag) {
-                $parent['innerHTML'] .= $text;
-            } else {
+            $parent['innerHTML'] .= $text;
+            // Also add as a null innerBlock so renderers can iterate it
+            if (trim($text) !== '') {
                 $parent['innerBlocks'][] = [
                     'blockName'   => null,
                     'attrs'       => [],

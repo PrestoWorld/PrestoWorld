@@ -13,7 +13,9 @@ class ThemeJson
 
     public function __construct(string $path)
     {
-        $this->data = file_exists($path) ? json_decode(file_get_contents($path), true) : [];
+        // Accept both a directory (e.g. for tests) and a direct file path
+        $file = is_dir($path) ? rtrim($path, '/') . '/theme.json' : $path;
+        $this->data = file_exists($file) ? (json_decode(file_get_contents($file), true) ?? []) : [];
     }
 
     public function compile(): string
@@ -95,6 +97,33 @@ class ThemeJson
 
         $css .= $colorStyles;
 
+        // 7. Global styles (body background/text from styles.color)
+        $styles = $this->data['styles'] ?? [];
+        if (!empty($styles['color']['background'])) {
+            $css .= "body { background-color: " . $this->resolveVar($styles['color']['background']) . "; }\n";
+        }
+        if (!empty($styles['color']['text'])) {
+            $css .= "body { color: " . $this->resolveVar($styles['color']['text']) . "; }\n";
+        }
+
         return $css;
+    }
+
+    public function getSetting(string $dotPath): mixed
+    {
+        $keys = explode('.', $dotPath);
+        $data = $this->data['settings'] ?? [];
+        foreach ($keys as $key) {
+            if (!isset($data[$key])) return null;
+            $data = $data[$key];
+        }
+        return $data;
+    }
+
+    protected function resolveVar(string $value): string
+    {
+        return preg_replace_callback('#var:([^|]+)\|([^|]+)\|([^|]+)#', function ($m) {
+            return "var(--wp--preset--{$m[2]}--{$m[3]})";
+        }, $value);
     }
 }
