@@ -47,6 +47,10 @@ class TemplatePartBlock extends AbstractBlock
             $renderedContent = $content; 
         }
 
-        return "<{$tagName} class=\"wp-block-template-part\">{$renderedContent}</{$tagName}>";
+        // WordPress standard: always include wp-block-template-part
+        $classes = array_merge(['wp-block-template-part'], $this->classes);
+        $classAttr = ' class="' . implode(' ', array_unique($classes)) . '"';
+        
+        return "<{$tagName}{$classAttr}>{$renderedContent}</{$tagName}>";
     }
 }

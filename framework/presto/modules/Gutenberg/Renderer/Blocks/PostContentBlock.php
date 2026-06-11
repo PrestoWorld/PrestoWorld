@@ -14,7 +14,9 @@ class PostContentBlock extends AbstractBlock
         $post = $context['post'] ?? [];
         $content = $post['post_content'] ?? $post['content'] ?? 'Sample content...';
         
-        $classAttr = !empty($this->classes) ? ' class="' . implode(' ', $this->classes) . '"' : '';
+        // WordPress standard: always include wp-block-post-content
+        $classes = array_merge(['wp-block-post-content'], $this->classes);
+        $classAttr = ' class="' . implode(' ', array_unique($classes)) . '"';
         $styleAttr = !empty($this->styles) ? ' style="' . implode(';', $this->styles) . '"' : '';
         
         return "<div{$classAttr}{$styleAttr}>{$content}</div>";

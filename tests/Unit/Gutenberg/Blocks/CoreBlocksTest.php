@@ -14,8 +14,6 @@ class CoreBlocksTest extends TestCase
 {
     public function test_group_block_renders_with_tag_name(): void
     {
-        // Note: wp-block-group class is added by LayoutDecorator at render time.
-        // The block itself only uses classes passed in constructor.
         $block = new GroupBlock([
             'attrs' => ['tagName' => 'section'],
             'classes' => ['is-layout-constrained']
@@ -23,8 +21,10 @@ class CoreBlocksTest extends TestCase
         
         $html = $block->render([]);
         
-        $this->assertStringStartsWith('<section', $html);
+        // WordPress standard: wp-block-group is always included
+        $this->assertStringContainsString('wp-block-group', $html);
         $this->assertStringContainsString('is-layout-constrained', $html);
+        $this->assertStringStartsWith('<section', $html);
         $this->assertStringEndsWith('</section>', $html);
     }
 
@@ -32,11 +32,17 @@ class CoreBlocksTest extends TestCase
     {
         $block0 = new SiteTitleBlock(['attrs' => ['level' => 0], 'classes' => ['site-title']]);
         $html0 = $block0->render(['site_title' => 'My Site', 'site_url' => '/']);
-        $this->assertStringContainsString('<p class="site-title">', $html0);
+        // WordPress standard: wp-block-site-title is always included
+        $this->assertStringContainsString('wp-block-site-title', $html0);
+        $this->assertStringContainsString('site-title', $html0);
+        $this->assertStringContainsString('target="_self"', $html0);
+        $this->assertStringContainsString('<p', $html0);
 
         $block1 = new SiteTitleBlock(['attrs' => ['level' => 1], 'classes' => ['site-title']]);
         $html1 = $block1->render(['site_title' => 'My Site', 'site_url' => '/']);
-        $this->assertStringContainsString('<h1 class="site-title">', $html1);
+        $this->assertStringContainsString('wp-block-site-title', $html1);
+        $this->assertStringContainsString('site-title', $html1);
+        $this->assertStringContainsString('<h1', $html1);
     }
 
     public function test_spacer_block_styles(): void
@@ -57,7 +63,9 @@ class CoreBlocksTest extends TestCase
         $block = new SiteLogoBlock(['classes' => ['my-logo']]);
         $html = $block->render(['site_logo_url' => 'logo.png']);
         
-        $this->assertStringContainsString('class="my-logo"', $html);
+        // WordPress standard: wp-block-site-logo is always included
+        $this->assertStringContainsString('wp-block-site-logo', $html);
+        $this->assertStringContainsString('my-logo', $html);
         $this->assertStringContainsString('src="logo.png"', $html);
     }
 }

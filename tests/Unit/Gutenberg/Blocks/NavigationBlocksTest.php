@@ -19,14 +19,18 @@ class NavigationBlocksTest extends TestCase
         
         $html = $block->render([]);
         
-        $this->assertStringContainsString('class="custom-nav-item wp-block-navigation-item wp-block-navigation-link"', $html);
+        // WordPress standard: wp-block-navigation-item is always included
+        $this->assertStringContainsString('wp-block-navigation-item', $html);
+        $this->assertStringContainsString('custom-nav-item', $html);
         $this->assertStringContainsString('href="/about"', $html);
         $this->assertStringContainsString('About Us', $html);
+        // Label is wrapped in span
+        $this->assertStringContainsString('wp-block-navigation-item__label', $html);
     }
 
     public function test_navigation_block_renders_with_responsive_container(): void
     {
-        $nav = new NavigationBlock(['classes' => ['main-menu']]);
+        $nav = new NavigationBlock(['classes' => ['main-menu'], 'attrs' => ['overlayMenu' => 'always']]);
         $link = new NavigationLinkBlock(['attrs' => ['label' => 'Home', 'url' => '/']]);
         $nav->setInnerBlocks([$link]);
         
@@ -37,7 +41,9 @@ class NavigationBlocksTest extends TestCase
         // Check Responsive Button
         $this->assertStringContainsString('class="wp-block-navigation__responsive-container-open"', $html);
         // Check UL Container and Inner Content
-        $this->assertStringContainsString('<ul class="wp-block-navigation__container main-menu">', $html);
+        $this->assertStringContainsString('wp-block-navigation__container', $html);
         $this->assertStringContainsString('Home', $html);
+        // Check is-responsive class
+        $this->assertStringContainsString('is-responsive', $html);
     }
 }

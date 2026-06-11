@@ -11,13 +11,19 @@ class PostFeaturedImageBlock extends AbstractBlock
 {
     public function render(array $context): string
     {
-        $classAttr = !empty($this->classes) ? ' class="' . implode(' ', $this->classes) . '"' : '';
+        $post = $context['post'] ?? [];
+        
+        // WordPress standard: always include wp-block-post-featured-image
+        $classes = array_merge(['wp-block-post-featured-image'], $this->classes);
+        $classAttr = ' class="' . implode(' ', array_unique($classes)) . '"';
         $styleAttr = !empty($this->styles) ? ' style="' . implode(';', $this->styles) . '"' : '';
         
-        $img = '<img src="https://picsum.photos/1200/800" alt="Sample Featured Image" />';
+        $imgUrl = $post['featured_image_url'] ?? 'https://picsum.photos/1200/800';
+        $img = "<img src=\"{$imgUrl}\" alt=\"Sample Featured Image\" />";
         
+        $url = $post['url'] ?? $post['link'] ?? '#';
         if ($this->attrs['isLink'] ?? false) {
-            $img = "<a href=\"#\">{$img}</a>";
+            $img = "<a href=\"{$url}\">{$img}</a>";
         }
         
         return "<figure{$classAttr}{$styleAttr}>{$img}</figure>";

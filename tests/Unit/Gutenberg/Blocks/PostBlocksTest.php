@@ -28,9 +28,13 @@ class PostBlocksTest extends TestCase
         
         $html = $block->render($context);
         
-        $this->assertStringContainsString('<h3 class="custom-title">', $html);
+        // WordPress standard: wp-block-post-title is always included
+        $this->assertStringContainsString('wp-block-post-title', $html);
+        $this->assertStringContainsString('custom-title', $html);
         $this->assertStringContainsString('href="/test-hello"', $html);
+        $this->assertStringContainsString('target="_self"', $html);
         $this->assertStringContainsString('Test Hello', $html);
+        $this->assertStringContainsString('<h3', $html);
     }
 
     public function test_post_date_block_renders_correctly(): void
@@ -46,7 +50,9 @@ class PostBlocksTest extends TestCase
         
         $html = $block->render($context);
         
-        $this->assertStringContainsString('class="post-date"', $html);
+        // WordPress standard: wp-block-post-date is always included
+        $this->assertStringContainsString('wp-block-post-date', $html);
+        $this->assertStringContainsString('post-date', $html);
         $this->assertStringContainsString('January 1, 2026', $html);
         $this->assertStringNotContainsString('<a href', $html);
     }

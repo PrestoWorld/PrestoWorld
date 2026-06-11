@@ -14,7 +14,9 @@ class GroupBlock extends AbstractBlock
         $inner = $this->renderInner($context);
         $tag = $this->attrs['tagName'] ?? 'div';
         
-        $classAttr = !empty($this->classes) ? ' class="' . implode(' ', $this->classes) . '"' : '';
+        // WordPress standard: always include wp-block-group
+        $classes = array_merge(['wp-block-group'], $this->classes);
+        $classAttr = ' class="' . implode(' ', array_unique($classes)) . '"';
         $styleAttr = !empty($this->styles) ? ' style="' . implode(';', $this->styles) . '"' : '';
 
         return "<{$tag}{$classAttr}{$styleAttr}>{$inner}</{$tag}>";
