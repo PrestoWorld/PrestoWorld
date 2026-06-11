@@ -17,6 +17,16 @@ if (!function_exists('register_post_type')) {
     }
 }
 
+if (!function_exists('register_taxonomy')) {
+    /**
+     * Compatibility function for WordPress register_taxonomy
+     */
+    function register_taxonomy(string $taxonomy, $objectTypes, array $args = []): void
+    {
+        app(PostTypeSchemaManager::class)->registerTaxonomy($taxonomy, $args);
+    }
+}
+
 if (!function_exists('register_post_meta')) {
     /**
      * Register post meta and sync it as a table column
