@@ -1,0 +1,1 @@
+{"version":2,"defects":[],"times":{"Tests\\Unit\\ConfigTest::test_can_load_config":0.007,"Tests\\Unit\\ConfigTest::test_returns_default_when_config_not_found":0,"Tests\\Feature\\ApplicationTest::test_application_can_handle_request":0.002}}
