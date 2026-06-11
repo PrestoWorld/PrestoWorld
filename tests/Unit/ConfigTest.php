@@ -6,7 +6,7 @@ namespace Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
 use App\Foundation\Application;
-use App\Foundation\Config\ConfigRepository;
+use PrestoWorld\Foundation\Config\ConfigRepository;
 
 class ConfigTest extends TestCase
 {
@@ -27,7 +27,7 @@ class ConfigTest extends TestCase
     {
         if (file_exists($this->tempConfigPath . '/app.php')) {
             unlink($this->tempConfigPath . '/app.php');
-        }~
+        }
         if (is_dir($this->tempConfigPath)) {
             rmdir($this->tempConfigPath);
         }

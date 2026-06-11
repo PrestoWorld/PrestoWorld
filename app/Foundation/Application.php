@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Foundation;
 
 use Witals\Framework\Application as BaseApplication;
-use App\Foundation\Config\ConfigRepository;
+use PrestoWorld\Foundation\Config\ConfigRepository;
 
 /**
  * PrestoWorld Application

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Foundation\Config;
+namespace PrestoWorld\Foundation\Config;
 
 use RuntimeException;
 
