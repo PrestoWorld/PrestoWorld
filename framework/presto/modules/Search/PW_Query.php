@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace PrestoWorld\Modules\Search;
 
+use Prestoworld\SearchEngine\SearchEngine;
+
 /**
  * PW_Query - The high-performance successor to WP_Query
  * 

@@ -15,7 +15,8 @@
         "php": "^8.1",
         "witals/framework": "*",
         "prestoworld/marketplace-sdk": "*",
-        "prestoworld/wp-bridge": "*"
+        "prestoworld/wp-bridge": "*",
+        "prestoworld/search-engine": "dev-master"
     },
     "autoload": {
         "psr-4": {

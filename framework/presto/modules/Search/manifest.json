@@ -1,7 +1,7 @@
 {
     "name": "search",
     "version": "1.0.0",
-    "description": "Search engine — PW_Query, SearchEngine, search results",
+    "description": "Search module — PW_Query integration, helpers, container registration",
     "type": "support",
     "priority": 60,
     "enabled": true,

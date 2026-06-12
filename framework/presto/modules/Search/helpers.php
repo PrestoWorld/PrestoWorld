@@ -11,7 +11,7 @@ if (!function_exists('pw_query')) {
     function pw_query(array $args = []): PW_Query
     {
         $query = new PW_Query();
-        $query->setEngine(app(PrestoWorld\Modules\Search\SearchEngine::class));
+        $query->setEngine(app(Prestoworld\SearchEngine\SearchEngine::class));
         $query->query($args);
         return $query;
     }

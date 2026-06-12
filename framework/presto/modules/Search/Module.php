@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PrestoWorld\Modules\Search;
 
+use Prestoworld\SearchEngine\SearchEngine;
 use Witals\Framework\Module\Module as WitalsModule;
 use PrestoWorld\Modules\Schema\PostRepository;
 use Cycle\Database\DatabaseInterface;
