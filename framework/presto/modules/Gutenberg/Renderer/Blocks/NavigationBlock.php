@@ -9,66 +9,61 @@ namespace PrestoWorld\Modules\Gutenberg\Renderer\Blocks;
  */
 class NavigationBlock extends AbstractBlock
 {
+    protected static array $justifyMap = [
+        'left' => 'items-justified-left',
+        'right' => 'items-justified-right',
+        'center' => 'items-justified-center',
+        'space-between' => 'items-justified-space-between',
+    ];
+
     public function render(array $context): string
     {
         $inner = $this->renderInner($context);
-        
+
         // WordPress standard: wp-block-navigation__container for UL
         $containerClasses = ['wp-block-navigation__container'];
-        
+
         // Add layout classes from attributes
         $layout = $this->attrs['layout'] ?? [];
         if (isset($layout['justifyContent'])) {
-            $justifyMap = [
-                'left' => 'items-justified-left',
-                'right' => 'items-justified-right',
-                'center' => 'items-justified-center',
-                'space-between' => 'items-justified-space-between',
-            ];
-            if (isset($justifyMap[$layout['justifyContent']])) {
-                $containerClasses[] = $justifyMap[$layout['justifyContent']];
+            if (isset(self::$justifyMap[$layout['justifyContent']])) {
+                $containerClasses[] = self::$justifyMap[$layout['justifyContent']];
             }
         }
-        
+
         if (isset($layout['orientation']) && $layout['orientation'] === 'vertical') {
             $containerClasses[] = 'is-vertical';
         }
-        
+
         if (isset($layout['flexWrap']) && $layout['flexWrap'] === 'nowrap') {
             $containerClasses[] = 'no-wrap';
         }
-        
+
         if (!empty($this->classes)) {
             $containerClasses = array_merge($containerClasses, $this->classes);
         }
-        
+
         $containerClassAttr = ' class="' . implode(' ', array_unique($containerClasses)) . '"';
-        
+
         $wrappedInner = "<ul{$containerClassAttr}>{$inner}</ul>";
-        
+
         if (empty($inner)) {
             $wrappedInner = "<ul{$containerClassAttr}><li class=\"wp-block-navigation-item\"><a class=\"wp-block-navigation-item__content\" href=\"/\"><span class=\"wp-block-navigation-item__label\">Home</span></a></li></ul>";
         }
 
         // WordPress standard: wp-block-navigation for nav
         $navClasses = ['wp-block-navigation'];
-        
+
         // Check if responsive
         $isResponsive = isset($this->attrs['overlayMenu']) && $this->attrs['overlayMenu'] !== 'never';
         if ($isResponsive) {
             $navClasses[] = 'is-responsive';
         }
-        
+
         // Add layout classes to nav as well
         if (isset($layout['justifyContent'])) {
-            $justifyMap = [
-                'left' => 'items-justified-left',
-                'right' => 'items-justified-right',
-                'center' => 'items-justified-center',
-                'space-between' => 'items-justified-space-between',
-            ];
-            if (isset($justifyMap[$layout['justifyContent']])) {
-                $navClasses[] = $justifyMap[$layout['justifyContent']];
+            if (isset(self::$justifyMap[$layout['justifyContent']])) {
+                $navClasses[] = self::$justifyMap[$layout['justifyContent']];
             }
         }
         

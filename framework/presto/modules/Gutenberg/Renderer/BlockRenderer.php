@@ -97,6 +97,13 @@ class BlockRenderer
 
     protected function decorateRecursive(array &$block): void
     {
+        // Skip if already decorated (prevents re-walk in recursive render)
+        if (!empty($block['_decorated'])) {
+            return;
+        }
+
+        $block['_decorated'] = true;
+
         // Populate defaults
         $block['classes'] = $block['classes'] ?? [];
         $block['styles'] = $block['styles'] ?? [];
