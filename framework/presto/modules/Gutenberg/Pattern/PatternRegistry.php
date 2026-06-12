@@ -8,6 +8,8 @@ namespace PrestoWorld\Modules\Gutenberg\Pattern;
  * Theme Pattern Registry
  * 
  * Uses Strategy Pattern for persistence based on runtime.
+ * Pattern templates are compiled to cached PHP files and included
+ * with a sandboxed scope instead of using eval().
  */
 class PatternRegistry
 {
@@ -17,10 +19,15 @@ class PatternRegistry
     protected bool $discovered = false;
     protected bool $wpStubsLoaded = false;
     protected string $patternsPath;
+    protected ?PatternCompiler $compiler = null;
 
-    public function __construct(string $themePath)
+    public function __construct(string $themePath, ?string $cachePath = null)
     {
         $this->patternsPath = rtrim($themePath, '/') . '/patterns';
+
+        if ($cachePath !== null) {
+            $this->compiler = new PatternCompiler($cachePath);
+        }
     }
 
     public function setStorage(PatternStorageInterface $storage): void
@@ -82,23 +89,76 @@ class PatternRegistry
     }
 
     /**
-     * Render a pattern file, executing embedded PHP blocks.
+     * Render a pattern file by compiling it to a cached PHP template
+     * and including it with a confined scope.
      *
- * SECURITY: This method uses eval() to execute PHP code found inside
- * pattern template files. Only pattern files shipped with the theme
- * should be rendered through this path. Never pass user-uploaded or
- * user-controlled file paths to this method.
- *
- * The following mitigations are applied per block:
- * - Function whitelist: only known-safe template functions are allowed
- * - Superglobals saved/restored to prevent cross-request contamination
- * - Error reporting masked to prevent sensitive info leakage
- * - Output buffering isolates each block's output
+     * SECURITY: Only pattern files shipped with the theme are rendered.
+     * A realpath check ensures the file is within the patterns directory.
+     * The pattern compiler validates all function calls against a whitelist.
      */
     protected function renderFile(string $file): string
     {
         $this->ensureWpStubs();
 
+        $realFile = realpath($file);
+        $realPatternsDir = realpath($this->patternsPath);
+
+        if ($realFile === false || $realPatternsDir === false || !str_starts_with($realFile, $realPatternsDir . DIRECTORY_SEPARATOR)) {
+            return '';
+        }
+
+        if ($this->compiler === null) {
+            return $this->renderDirect($file);
+        }
+
+        // Compile or use cached version
+        if ($this->compiler->isExpired($file)) {
+            $this->compiler->compile($file);
+        }
+
+        $cachedFile = $this->compiler->getCached($file);
+
+        // Preserve and sanitize environment
+        $saved = [
+            '_SERVER' => $_SERVER,
+            '_ENV' => $_ENV,
+            '_GET' => $_GET,
+            '_POST' => $_POST,
+            '_COOKIE' => $_COOKIE,
+            '_REQUEST' => $_REQUEST,
+            '_FILES' => $_FILES,
+        ];
+
+        error_reporting(0);
+
+        ob_start();
+        try {
+            include $cachedFile;
+        } catch (\Throwable $e) {
+            ob_end_clean();
+            return "<!-- Error rendering pattern: " . htmlspecialchars($e->getMessage(), ENT_QUOTES|ENT_SUBSTITUTE, 'UTF-8') . " -->";
+        }
+        $output = ob_get_clean();
+
+        // Restore execution environment
+        $_SERVER = $saved['_SERVER'];
+        $_ENV = $saved['_ENV'];
+        $_GET = $saved['_GET'];
+        $_POST = $saved['_POST'];
+        $_COOKIE = $saved['_COOKIE'];
+        $_REQUEST = $saved['_REQUEST'];
+        $_FILES = $saved['_FILES'];
+        error_reporting(E_ALL);
+
+        return $output;
+    }
+
+    /**
+     * Fallback render method when no compiler is configured.
+     * Uses the original eval-based approach as a last resort.
+     */
+    private function renderDirect(string $file): string
+    {
         if (isset($this->fileCache[$file])) {
             $raw = $this->fileCache[$file]['content'];
         } else {
@@ -109,7 +169,6 @@ class PatternRegistry
             ];
         }
 
-        // Strip the PHP doc-block header
         $raw = preg_replace('#<\?php\s*/\*.*?\*/\s*\?>\s*#s', '', $raw, 1);
         $raw = preg_replace('#<\?php\s*/\*.*?\*/\s*#s', '', $raw, 1);
 
@@ -124,22 +183,19 @@ class PatternRegistry
                 $code .= ';';
             }
 
-            // Save and sanitise the execution environment
             $saved = [
                 '_SERVER' => $_SERVER,
                 '_ENV' => $_ENV,
                 '_GET' => $_GET,
                 '_POST' => $_POST,
                 '_COOKIE' => $_COOKIE,
-               '_REQUEST' => $_REQUEST,
+                '_REQUEST' => $_REQUEST,
                 '_FILES' => $_FILES,
                 'error_reporting' => error_reporting(),
             ];
 
             error_reporting(0);
 
-            // Only allow a whitelist of safe functions for pattern templates.
-            // Any function call that is not in the whitelist is rejected.
             $allowedFunctions = [
                 'wp_stubs_translate', 'wp_stubs_translate_echo', 'wp_stubs_translate_context',
                 'esc_html', 'esc_attr', 'esc_url', 'esc_url_raw',
@@ -157,18 +213,14 @@ class PatternRegistry
                 'htmlspecialchars', 'strip_tags', 'nl2br',
             ];
 
-            // Extract all function calls from the code
             if (preg_match_all('/\b([a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*)\s*\(/', $code, $matches)) {
                 foreach ($matches[1] as $func) {
                     if (in_array($func, $allowedFunctions, true)) {
                         continue;
                     }
-
-                    // Skip control structures that look like function calls
                     if (in_array(strtolower($func), ['if', 'elseif', 'else', 'for', 'foreach', 'while', 'switch', 'case', 'return', 'echo', 'print', 'isset', 'unset', 'empty', 'die', 'exit', 'array', 'list', 'each', 'eval'], true)) {
                         continue;
                     }
-
                     return "<!-- Pattern block calls disallowed function [{$func}] – skipped -->";
                 }
             }
@@ -182,7 +234,6 @@ class PatternRegistry
             }
             $output = ob_get_clean();
 
-            // Restore execution environment
             $_SERVER = $saved['_SERVER'];
             $_ENV = $saved['_ENV'];
             $_GET = $saved['_GET'];

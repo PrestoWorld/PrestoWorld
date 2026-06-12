@@ -32,7 +32,10 @@ class Module extends WitalsModule
                 ? new MemoryStorage() 
                 : new FileCacheStorage($app->storagePath('framework/cache/patterns'));
 
-            $registry = new PatternRegistry($themePath);
+            $registry = new PatternRegistry(
+                $themePath,
+                $app->storagePath('framework/cache/patterns'),
+            );
             $registry->setStorage($storage);
             
             return $registry;
