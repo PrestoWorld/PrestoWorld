@@ -6,13 +6,14 @@ namespace PrestoWorld\Modules\Search;
 
 use Prestoworld\SearchEngine\SearchEngine;
 use Prestoworld\SearchEngine\SearchResult;
+use Witals\Framework\Contracts\ConcurrentManager;
 
 /**
- * Concurrent search dispatcher using PHP Fibers.
+ * Concurrent search dispatcher using PHP Fibers via ConcurrentManager.
  *
- * In long-running environments (RoadRunner, Swoole), this allows
- * multiple independent search queries to run concurrently within
- * a single request, preventing sequential worker blocking.
+ * In long-running runtimes (RoadRunner), multiple independent search
+ * queries overlap within a single request — the event loop suspends a
+ * fiber when its DB/API query is pending and resumes it when data arrives.
  *
  * Usage:
  *   $results = FiberAwareSearch::all([
@@ -20,58 +21,52 @@ use Prestoworld\SearchEngine\SearchResult;
  *       'featured'     => ['post_type' => 'post', 'posts_per_page' => 3, 'tag_id' => 7],
  *   ]);
  *
- * Each query runs in its own Fiber; DB queries still block individually
- * but multiple queries overlap rather than executing back-to-back.
+ * Fallback (traditional runtime): queries execute sequentially with zero
+ * fiber overhead.
  */
 class FiberAwareSearch
 {
     /**
      * Execute multiple search queries concurrently using Fibers.
      *
-     * @param array<string, array> $queries  key => query args
-     * @param SearchEngine|null    $engine   shared engine instance
+     * @param array<string, array>      $queries  key => query args
+     * @param SearchEngine|null         $engine   shared engine instance
+     * @param ConcurrentManager|null    $concurrent  fiber manager
      * @return array<string, SearchResult>
      */
-    public static function all(array $queries, ?SearchEngine $engine = null): array
-    {
+    public static function all(
+        array $queries,
+        ?SearchEngine $engine = null,
+        ?ConcurrentManager $concurrent = null,
+    ): array {
         $engine ??= app(SearchEngine::class);
-        $results = [];
-        $fibers = [];
+        $concurrent ??= app(ConcurrentManager::class);
 
+        $tasks = [];
         foreach ($queries as $key => $args) {
-            $fibers[$key] = new \Fiber(function () use ($engine, $args) {
-                return $engine->search($args);
-            });
+            $tasks[$key] = fn() => $engine->search($args);
         }
 
-        foreach ($fibers as $key => $fiber) {
-            $fiber->start();
-            if ($fiber->isTerminated()) {
-                $results[$key] = $fiber->getReturn();
-            }
-        }
-
-        return $results;
+        return $concurrent->all($tasks);
     }
 
     /**
      * Execute a single search query wrapped in a Fiber.
-     * Useful when you want to interleave DB work with search.
      */
-    public static function single(array $args, ?SearchEngine $engine = null): SearchResult
-    {
+    public static function single(
+        array $args,
+        ?SearchEngine $engine = null,
+        ?ConcurrentManager $concurrent = null,
+    ): SearchResult {
         $engine ??= app(SearchEngine::class);
-        $fiber = new \Fiber(function () use ($engine, $args) {
-            return $engine->search($args);
-        });
+        $result = null;
 
-        $fiber->start();
+        $fn = function () use ($engine, $args, &$result) {
+            $result = $engine->search($args);
+        };
 
-        if ($fiber->isTerminated()) {
-            return $fiber->getReturn();
-        }
+        ($concurrent ?? app(ConcurrentManager::class))->run($fn);
 
-        // Should not reach here for synchronous DB queries
-        return new SearchResult([], 0);
+        return $result ?? new SearchResult([], 0);
     }
 }

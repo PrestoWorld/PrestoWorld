@@ -10,6 +10,7 @@ use Prestoworld\SearchEngine\Adapters\TypesenseAdapter;
 use Prestoworld\SearchEngine\Adapters\MeilisearchAdapter;
 use Prestoworld\SearchEngine\Adapters\TNTSearchAdapter;
 use Witals\Framework\Http\Client\ConcurrentHttpClient;
+use Witals\Framework\Contracts\ConcurrentManager;
 use Witals\Framework\Module\Module as WitalsModule;
 use PrestoWorld\Modules\Schema\PostRepository;
 use Cycle\Database\DatabaseInterface;
@@ -48,11 +49,12 @@ class Module extends WitalsModule
         });
 
         // HTTP client for concurrent external search requests
-        $this->app->singleton(ConcurrentHttpClient::class, function () {
-            return new ConcurrentHttpClient(null, [
-                'timeout' => 5,
-                'max_duration' => 10,
-            ]);
+        $this->app->singleton(ConcurrentHttpClient::class, function ($app) {
+            return new ConcurrentHttpClient(
+                client: null,
+                defaultOptions: ['timeout' => 5, 'max_duration' => 10],
+                concurrent: $app->make(ConcurrentManager::class),
+            );
         });
 
         // Register adapter-based SearchManager (lazy – no HTTP client created until used)
