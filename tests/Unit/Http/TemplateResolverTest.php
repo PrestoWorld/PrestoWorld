@@ -10,56 +10,93 @@ use Witals\Framework\Http\Request;
 
 class TemplateResolverTest extends TestCase
 {
-    private TemplateResolver $resolver;
+    private array $defaultMapping = [
+        '/' => 'index',
+        '/search' => 'search',
+        '/search/*' => 'search',
+    ];
 
-    protected function setUp(): void
+    private function makeResolver(?array $mapping = null, string $default = 'index'): TemplateResolver
     {
-        $this->resolver = new TemplateResolver();
+        return new TemplateResolver(
+            mapping: $mapping ?? $this->defaultMapping,
+            defaultTemplate: $default,
+        );
     }
 
     public function test_root_path_returns_index(): void
     {
-        $request = $this->makeRequest('/');
-        $this->assertSame('index', $this->resolver->resolve($request));
+        $resolver = $this->makeResolver();
+        $this->assertSame('index', $resolver->resolve($this->request('/')));
     }
 
     public function test_empty_path_returns_index(): void
     {
-        $request = $this->makeRequest('');
-        $this->assertSame('index', $this->resolver->resolve($request));
+        $resolver = $this->makeResolver();
+        $this->assertSame('index', $resolver->resolve($this->request('')));
     }
 
-    public function test_search_path_returns_search(): void
+    public function test_search_exact_path_returns_search(): void
     {
-        $request = $this->makeRequest('/search');
-        $this->assertSame('search', $this->resolver->resolve($request));
+        $resolver = $this->makeResolver();
+        $this->assertSame('search', $resolver->resolve($this->request('/search')));
+    }
+
+    public function test_search_nested_returns_search(): void
+    {
+        $resolver = $this->makeResolver();
+        $this->assertSame('search', $resolver->resolve($this->request('/search/products')));
     }
 
     public function test_search_with_query_returns_search(): void
     {
-        $request = $this->makeRequest('/search?q=hello');
-        $this->assertSame('search', $this->resolver->resolve($request));
-    }
-
-    public function test_search_nested_path_returns_search(): void
-    {
-        $request = $this->makeRequest('/search/products');
-        $this->assertSame('search', $this->resolver->resolve($request));
+        $resolver = $this->makeResolver();
+        $this->assertSame('search', $resolver->resolve($this->request('/search?q=hello')));
     }
 
     public function test_unknown_path_falls_back_to_index(): void
     {
-        $request = $this->makeRequest('/about');
-        $this->assertSame('index', $this->resolver->resolve($request));
+        $resolver = $this->makeResolver();
+        $this->assertSame('index', $resolver->resolve($this->request('/about')));
     }
 
-    public function test_api_path_falls_back_to_index(): void
+    public function test_unknown_path_uses_custom_default(): void
     {
-        $request = $this->makeRequest('/api/v1/posts');
-        $this->assertSame('index', $this->resolver->resolve($request));
+        $resolver = $this->makeResolver(default: 'fallback');
+        $this->assertSame('fallback', $resolver->resolve($this->request('/unknown')));
     }
 
-    private function makeRequest(string $uri): Request
+    public function test_custom_mapping(): void
+    {
+        $resolver = $this->makeResolver([
+            '/' => 'home',
+            '/blog' => 'archive',
+        ]);
+
+        $this->assertSame('home', $resolver->resolve($this->request('/')));
+        $this->assertSame('archive', $resolver->resolve($this->request('/blog')));
+        $this->assertSame('index', $resolver->resolve($this->request('/other')));
+    }
+
+    public function test_empty_mapping_uses_default(): void
+    {
+        $resolver = $this->makeResolver(mapping: [], default: 'fallback');
+        $this->assertSame('fallback', $resolver->resolve($this->request('/')));
+        $this->assertSame('fallback', $resolver->resolve($this->request('/anything')));
+    }
+
+    public function test_wildcard_mapping(): void
+    {
+        $resolver = $this->makeResolver([
+            '/category/*' => 'archive',
+        ]);
+
+        $this->assertSame('archive', $resolver->resolve($this->request('/category/tech')));
+        $this->assertSame('archive', $resolver->resolve($this->request('/category/tech/sub')));
+        $this->assertSame('index', $resolver->resolve($this->request('/other')));
+    }
+
+    private function request(string $uri): Request
     {
         return new Request('GET', $uri, [], [], [], [], [], [], null);
     }

@@ -11,10 +11,10 @@ class PageRenderer implements PageRendererContract
     private array $styles = [];
 
     public function __construct(
-        private string $defaultTitle = 'PrestoWorld',
-        private string $charset = 'UTF-8',
-        private string $viewport = 'width=device-width, initial-scale=1.0',
-        private string $cssReset = '*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; } body { font-family: system-ui, sans-serif; line-height: 1.6; }',
+        private string $defaultTitle,
+        private string $charset,
+        private string $viewport,
+        private string $cssReset,
     ) {}
 
     public function addStyle(string $css): void

@@ -25,9 +25,12 @@ class Application extends BaseApplication
             \App\Http\PageRenderer::class,
         );
 
-        $this->singleton(
-            \App\Http\TemplateResolver::class,
-        );
+        $this->singleton(\App\Http\TemplateResolver::class, function () {
+            return new \App\Http\TemplateResolver(
+                mapping: $this->config('templates.mapping', []),
+                defaultTemplate: $this->config('templates.default', 'index'),
+            );
+        });
 
         $this->singleton(
             \App\Services\ContentRenderer::class,
@@ -42,7 +45,7 @@ class Application extends BaseApplication
                 defaultTitle: $this->config('theme.default_title', 'PrestoWorld'),
                 charset: $this->config('theme.charset', 'UTF-8'),
                 viewport: $this->config('theme.viewport', 'width=device-width, initial-scale=1.0'),
-                cssReset: $this->config('theme.css_reset', ''),
+                cssReset: $this->config('theme.css_reset', '*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; } body { font-family: system-ui, sans-serif; line-height: 1.6; }'),
             );
         });
 

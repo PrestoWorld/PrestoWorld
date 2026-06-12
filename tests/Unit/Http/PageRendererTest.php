@@ -9,9 +9,19 @@ use App\Http\PageRenderer;
 
 class PageRendererTest extends TestCase
 {
+    private function makeRenderer(array $config = []): PageRenderer
+    {
+        return new PageRenderer(
+            defaultTitle: $config['defaultTitle'] ?? 'PrestoWorld',
+            charset: $config['charset'] ?? 'UTF-8',
+            viewport: $config['viewport'] ?? 'width=device-width, initial-scale=1.0',
+            cssReset: $config['cssReset'] ?? '*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; } body { font-family: system-ui, sans-serif; line-height: 1.6; }',
+        );
+    }
+
     public function test_render_returns_full_html_document(): void
     {
-        $renderer = new PageRenderer();
+        $renderer = $this->makeRenderer();
         $html = $renderer->render('<p>Hello</p>');
 
         $this->assertStringStartsWith('<!DOCTYPE html>', $html);
@@ -21,7 +31,7 @@ class PageRendererTest extends TestCase
 
     public function test_render_uses_custom_title(): void
     {
-        $renderer = new PageRenderer();
+        $renderer = $this->makeRenderer();
         $html = $renderer->render('', 'Custom Title');
 
         $this->assertStringContainsString('<title>Custom Title</title>', $html);
@@ -29,7 +39,7 @@ class PageRendererTest extends TestCase
 
     public function test_render_default_title(): void
     {
-        $renderer = new PageRenderer();
+        $renderer = $this->makeRenderer();
         $html = $renderer->render('');
 
         $this->assertStringContainsString('<title>PrestoWorld</title>', $html);
@@ -37,7 +47,7 @@ class PageRendererTest extends TestCase
 
     public function test_render_uses_configured_default_title(): void
     {
-        $renderer = new PageRenderer(defaultTitle: 'MySite');
+        $renderer = $this->makeRenderer(['defaultTitle' => 'MySite']);
         $html = $renderer->render('');
 
         $this->assertStringContainsString('<title>MySite</title>', $html);
@@ -46,7 +56,7 @@ class PageRendererTest extends TestCase
 
     public function test_render_uses_configured_charset(): void
     {
-        $renderer = new PageRenderer(charset: 'ISO-8859-1');
+        $renderer = $this->makeRenderer(['charset' => 'ISO-8859-1']);
         $html = $renderer->render('');
 
         $this->assertStringContainsString('ISO-8859-1', $html);
@@ -54,7 +64,7 @@ class PageRendererTest extends TestCase
 
     public function test_render_uses_configured_viewport(): void
     {
-        $renderer = new PageRenderer(viewport: 'width=480');
+        $renderer = $this->makeRenderer(['viewport' => 'width=480']);
         $html = $renderer->render('');
 
         $this->assertStringContainsString('width=480', $html);
@@ -62,7 +72,7 @@ class PageRendererTest extends TestCase
 
     public function test_render_uses_configured_css_reset(): void
     {
-        $renderer = new PageRenderer(cssReset: 'body { margin: 10px; }');
+        $renderer = $this->makeRenderer(['cssReset' => 'body { margin: 10px; }']);
         $html = $renderer->render('');
 
         $this->assertStringContainsString('body { margin: 10px; }', $html);
@@ -71,7 +81,7 @@ class PageRendererTest extends TestCase
 
     public function test_add_style_appears_in_output(): void
     {
-        $renderer = new PageRenderer();
+        $renderer = $this->makeRenderer();
         $renderer->addStyle('body { color: red; }');
         $html = $renderer->render('');
 
@@ -80,7 +90,7 @@ class PageRendererTest extends TestCase
 
     public function test_multiple_styles_are_combined(): void
     {
-        $renderer = new PageRenderer();
+        $renderer = $this->makeRenderer();
         $renderer->addStyle('a { color: blue; }');
         $renderer->addStyle('p { margin: 0; }');
         $html = $renderer->render('');
@@ -91,7 +101,7 @@ class PageRendererTest extends TestCase
 
     public function test_add_style_after_render_does_not_affect_previous_output(): void
     {
-        $renderer = new PageRenderer();
+        $renderer = $this->makeRenderer();
         $first = $renderer->render('');
 
         $renderer->addStyle('new { color: red; }');
@@ -103,7 +113,7 @@ class PageRendererTest extends TestCase
 
     public function test_render_handles_empty_body(): void
     {
-        $renderer = new PageRenderer();
+        $renderer = $this->makeRenderer();
         $html = $renderer->render('');
 
         $this->assertStringContainsString('<body>', $html);
@@ -112,7 +122,7 @@ class PageRendererTest extends TestCase
 
     public function test_render_includes_viewport_meta(): void
     {
-        $renderer = new PageRenderer();
+        $renderer = $this->makeRenderer();
         $html = $renderer->render('');
 
         $this->assertStringContainsString('viewport', $html);
@@ -120,7 +130,7 @@ class PageRendererTest extends TestCase
 
     public function test_render_includes_charset(): void
     {
-        $renderer = new PageRenderer();
+        $renderer = $this->makeRenderer();
         $html = $renderer->render('');
 
         $this->assertStringContainsString('charset', $html);
