@@ -30,6 +30,9 @@ class Application extends BaseApplication
 
         // Bind Core Database
         $this->register(\PrestoWorld\Foundation\Providers\DatabaseServiceProvider::class);
+        $this->register(\PrestoWorld\Foundation\Providers\SerializerServiceProvider::class);
+        $this->register(\PrestoWorld\Foundation\Providers\ValidationServiceProvider::class);
+        $this->register(\PrestoWorld\Foundation\Providers\ConsoleServiceProvider::class);
     }
 
     public function boot(): void
