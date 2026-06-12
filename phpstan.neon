@@ -1,0 +1,18 @@
+parameters:
+    level: 6
+    paths:
+        - app
+        - framework/presto
+        - framework/witals/src
+    excludePaths:
+        - framework/presto/Modules/Gutenberg/Pattern/wp-stubs.php
+    tmpDir: storage/framework/cache/phpstan
+    checkMissingIterableValueType: false
+    checkGenericClassInNonGenericObjectType: false
+    reportUnmatchedIgnoredErrors: false
+    TreatPhpDocTypesAsCertain: false
+
+    autoload_directories:
+        - app
+        - framework/presto
+        - framework/witals/src

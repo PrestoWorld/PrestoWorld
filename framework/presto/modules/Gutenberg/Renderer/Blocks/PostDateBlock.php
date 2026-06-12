@@ -56,12 +56,12 @@ class PostDateBlock extends AbstractBlock
         $classAttr = ' class="' . implode(' ', array_unique($classes)) . '"';
         $styleAttr = !empty($this->styles) ? ' style="' . implode(';', $this->styles) . '"' : '';
         
-        $timeTag = "<time datetime=\"{$datetime}\">{$formattedDate}</time>";
-        
+        $timeTag = "<time datetime=\"" . htmlspecialchars($datetime, ENT_QUOTES|ENT_SUBSTITUTE, 'UTF-8') . "\">" . htmlspecialchars($formattedDate, ENT_QUOTES|ENT_SUBSTITUTE, 'UTF-8') . "</time>";
+
         $isLink = $this->attrs['isLink'] ?? true;
         if ($isLink) {
             $url = $post['url'] ?? $post['link'] ?? '#';
-            $timeTag = "<a href=\"{$url}\">{$timeTag}</a>";
+            $timeTag = "<a href=\"" . htmlspecialchars($url, ENT_QUOTES|ENT_SUBSTITUTE, 'UTF-8') . "\">{$timeTag}</a>";
         }
         
         return "<div{$classAttr}{$styleAttr}>{$timeTag}</div>";

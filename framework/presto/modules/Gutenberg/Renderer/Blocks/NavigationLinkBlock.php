@@ -58,7 +58,7 @@ class NavigationLinkBlock extends AbstractBlock
         $linkClassAttr = ' class="' . implode(' ', $linkClasses) . '"';
         
         // Build link attributes
-        $linkAttrs = " href=\"{$url}\"";
+        $linkAttrs = " href=\"" . htmlspecialchars($url, ENT_QUOTES|ENT_SUBSTITUTE, 'UTF-8') . "\"";
         
         if ($isActive) {
             $linkAttrs .= ' aria-current="page"';
@@ -75,7 +75,7 @@ class NavigationLinkBlock extends AbstractBlock
         }
         
         if (!empty($title)) {
-            $linkAttrs .= " title=\"{$title}\"";
+            $linkAttrs .= ' title="' . htmlspecialchars($title, ENT_QUOTES|ENT_SUBSTITUTE, 'UTF-8') . '"';
         }
         
         // Build link content

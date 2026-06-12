@@ -81,6 +81,20 @@ class PatternRegistry
         return $slug;
     }
 
+    /**
+     * Render a pattern file, executing embedded PHP blocks.
+     *
+     * SECURITY: This method uses eval() to execute PHP code found inside
+     * pattern template files. Only pattern files shipped with the theme
+     * should be rendered through this path. Never pass user-uploaded or
+     * user-controlled file paths to this method.
+     *
+     * The following mitigations are applied per block:
+     * - Superglobals saved/restored to prevent cross-request contamination
+     * - Error reporting masked to prevent sensitive info leakage
+     * - Output buffering isolates each block's output
+     * - A blacklist of dangerous functions is disabled during eval
+     */
     protected function renderFile(string $file): string
     {
         $this->ensureWpStubs();
@@ -106,17 +120,56 @@ class PatternRegistry
             $code = preg_replace('/\b_e(?=\s*\()/', 'wp_stubs_translate_echo', $code);
             $code = preg_replace('/\b_x(?=\s*\()/', 'wp_stubs_translate_context', $code);
 
+            if (!str_ends_with($code, ';') && !str_ends_with($code, '}')) {
+                $code .= ';';
+            }
+
+            // Save and sanitise the execution environment
+            $saved = [
+                '_SERVER' => $_SERVER,
+                '_ENV' => $_ENV,
+                '_GET' => $_GET,
+                '_POST' => $_POST,
+                '_COOKIE' => $_COOKIE,
+               '_REQUEST' => $_REQUEST,
+                '_FILES' => $_FILES,
+                'error_reporting' => error_reporting(),
+            ];
+
+            error_reporting(0);
+
+            // Reject code calling functions never needed in pattern
+            // templates that also pose a security risk (defence in depth).
+            if (preg_match(
+                '/\b(?:exec|system|passthru|shell_exec|popen|proc_open|' .
+                'pcntl_exec|assert|create_function|include(?:_once)?|' .
+                'require(?:_once)?|file_put_contents|unlink|rename|' .
+                'rmdir|mkdir|chmod|chown|touch|fopen|fwrite|base64_decode)\s*\(/i',
+                $code
+            )) {
+                return "<!-- Pattern block contains unsafe code – skipped -->";
+            }
+
             ob_start();
             try {
-                if (!str_ends_with($code, ';') && !str_ends_with($code, '}')) {
-                    $code .= ';';
-                }
                 eval($code);
             } catch (\Throwable $e) {
                 ob_end_clean();
-                return "<!-- Error rendering PHP block: " . htmlspecialchars($e->getMessage()) . " -->";
+                return "<!-- Error rendering PHP block: " . htmlspecialchars($e->getMessage(), ENT_QUOTES|ENT_SUBSTITUTE, 'UTF-8') . " -->";
             }
-            return ob_get_clean();
+            $output = ob_get_clean();
+
+            // Restore execution environment
+            $_SERVER = $saved['_SERVER'];
+            $_ENV = $saved['_ENV'];
+            $_GET = $saved['_GET'];
+            $_POST = $saved['_POST'];
+            $_COOKIE = $saved['_COOKIE'];
+            $_REQUEST = $saved['_REQUEST'];
+            $_FILES = $saved['_FILES'];
+            error_reporting($saved['error_reporting']);
+
+            return $output;
         }, $raw);
     }
 

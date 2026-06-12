@@ -96,4 +96,19 @@ class Application extends BaseApplication
             ? $path
             : $this->basePath($path);
     }
+
+    protected function initializeTranslator(): void
+    {
+        if ($this->translator === null) {
+            $locale = $this->config('app.locale', getenv('APP_LOCALE') ?: 'en');
+            $paths = [
+                $this->basePath('resources/lang'),
+            ];
+
+            $this->translator = new \Witals\Framework\I18n\Translator($locale, $paths);
+
+            $this->instance(\Witals\Framework\Contracts\I18n\TranslatorFactory::class, $this->translator);
+            $this->instance('translator', $this->translator);
+        }
+    }
 }

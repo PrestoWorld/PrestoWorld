@@ -42,9 +42,9 @@ class SiteTitleBlock extends AbstractBlock
             $linkTarget = $this->attrs['linkTarget'] ?? '_self';
             $isCurrentPage = $context['is_current_page'] ?? false;
             $ariaCurrent = $isCurrentPage ? ' aria-current="page"' : '';
-            $content = "<a href=\"{$url}\" target=\"{$linkTarget}\" rel=\"home\"{$ariaCurrent}>{$title}</a>";
+            $content = "<a href=\"" . htmlspecialchars($url, ENT_QUOTES|ENT_SUBSTITUTE, 'UTF-8') . "\" target=\"" . htmlspecialchars($linkTarget, ENT_QUOTES|ENT_SUBSTITUTE, 'UTF-8') . "\" rel=\"home\"{$ariaCurrent}>" . htmlspecialchars($title, ENT_QUOTES|ENT_SUBSTITUTE, 'UTF-8') . "</a>";
         } else {
-            $content = htmlspecialchars($title);
+            $content = htmlspecialchars($title, ENT_QUOTES|ENT_SUBSTITUTE, 'UTF-8');
         }
         
         return "<{$tag}{$classAttr}>{$content}</{$tag}>";

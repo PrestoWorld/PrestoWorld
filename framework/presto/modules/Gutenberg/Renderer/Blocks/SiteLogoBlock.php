@@ -29,7 +29,7 @@ class SiteLogoBlock extends AbstractBlock
         if (!empty($this->attrs['height'])) {
             $imgAttr .= " height=\"{$this->attrs['height']}\"";
         }
-        $img = "<img src=\"{$logoUrl}\" alt=\"Site Logo\"{$imgAttr} />";
+        $img = "<img src=\"" . htmlspecialchars($logoUrl, ENT_QUOTES|ENT_SUBSTITUTE, 'UTF-8') . "\" alt=\"Site Logo\"{$imgAttr} />";
         
         // Wrap in link if isLink
         if ($isLink) {
@@ -42,7 +42,7 @@ class SiteLogoBlock extends AbstractBlock
                 $ariaLabel = ' aria-label="(Home link, opens in a new tab)"';
             }
             
-            $img = "<a href=\"{$siteUrl}\" {$rel}{$ariaLabel} target=\"{$linkTarget}\">{$img}</a>";
+            $img = "<a href=\"" . htmlspecialchars($siteUrl, ENT_QUOTES|ENT_SUBSTITUTE, 'UTF-8') . "\" {$rel}{$ariaLabel} target=\"" . htmlspecialchars($linkTarget, ENT_QUOTES|ENT_SUBSTITUTE, 'UTF-8') . "\">{$img}</a>";
         }
         
         // Build wrapper classes

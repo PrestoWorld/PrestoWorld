@@ -71,9 +71,9 @@ class PostFeaturedImageBlock extends AbstractBlock
         // Build img tag
         $imgAttrStr = '';
         foreach ($imgAttr as $key => $value) {
-            $imgAttrStr .= " {$key}=\"{$value}\"";
+            $imgAttrStr .= ' ' . $key . '="' . htmlspecialchars((string)$value, ENT_QUOTES|ENT_SUBSTITUTE, 'UTF-8') . '"';
         }
-        $img = "<img src=\"{$imgUrl}\"{$imgAttrStr} />";
+        $img = "<img src=\"" . htmlspecialchars($imgUrl, ENT_QUOTES|ENT_SUBSTITUTE, 'UTF-8') . "\"{$imgAttrStr} />";
         
         // Overlay markup
         $overlayMarkup = $this->getOverlayMarkup();
@@ -81,10 +81,10 @@ class PostFeaturedImageBlock extends AbstractBlock
         // Wrap in link if isLink
         if ($isLink) {
             $linkTarget = $this->attrs['linkTarget'] ?? '_self';
-            $rel = !empty($this->attrs['rel']) ? 'rel="' . htmlspecialchars($this->attrs['rel']) . '"' : '';
-            $height = !empty($this->attrs['height']) ? 'style="height:' . htmlspecialchars($this->attrs['height']) . '"' : '';
+            $rel = !empty($this->attrs['rel']) ? 'rel="' . htmlspecialchars($this->attrs['rel'], ENT_QUOTES|ENT_SUBSTITUTE, 'UTF-8') . '"' : '';
+            $height = !empty($this->attrs['height']) ? 'style="height:' . htmlspecialchars($this->attrs['height'], ENT_QUOTES|ENT_SUBSTITUTE, 'UTF-8') . '"' : '';
             $url = $post['url'] ?? $post['link'] ?? '#';
-            $img = "<a href=\"{$url}\" target=\"{$linkTarget}\" {$rel} {$height}>{$img}{$overlayMarkup}</a>";
+            $img = "<a href=\"" . htmlspecialchars($url, ENT_QUOTES|ENT_SUBSTITUTE, 'UTF-8') . "\" target=\"" . htmlspecialchars($linkTarget, ENT_QUOTES|ENT_SUBSTITUTE, 'UTF-8') . "\" {$rel} {$height}>{$img}{$overlayMarkup}</a>";
         } else {
             $img = $img . $overlayMarkup;
         }

@@ -40,10 +40,10 @@ class PostTitleBlock extends AbstractBlock
         
         if ($isLink) {
             $linkTarget = $this->attrs['linkTarget'] ?? '_self';
-            $rel = !empty($this->attrs['rel']) ? 'rel="' . htmlspecialchars($this->attrs['rel']) . '"' : '';
-            $content = "<a href=\"{$url}\" target=\"{$linkTarget}\" {$rel}>{$title}</a>";
+            $rel = !empty($this->attrs['rel']) ? 'rel="' . htmlspecialchars($this->attrs['rel'], ENT_QUOTES|ENT_SUBSTITUTE, 'UTF-8') . '"' : '';
+            $content = "<a href=\"" . htmlspecialchars($url, ENT_QUOTES|ENT_SUBSTITUTE, 'UTF-8') . "\" target=\"" . htmlspecialchars($linkTarget, ENT_QUOTES|ENT_SUBSTITUTE, 'UTF-8') . "\" {$rel}>" . htmlspecialchars($title, ENT_QUOTES|ENT_SUBSTITUTE, 'UTF-8') . "</a>";
         } else {
-            $content = $title;
+            $content = htmlspecialchars($title, ENT_QUOTES|ENT_SUBSTITUTE, 'UTF-8');
         }
         
         $tag = 0 === $level ? 'p' : 'h' . (int)$level;
