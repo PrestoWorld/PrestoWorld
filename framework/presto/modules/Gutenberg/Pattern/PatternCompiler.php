@@ -50,35 +50,9 @@ class PatternCompiler
         $raw = preg_replace('#<\?php\s*/\*.*?\*/\s*\?>\s*#s', '', $raw, 1);
         $raw = preg_replace('#<\?php\s*/\*.*?\*/\s*#s', '', $raw, 1);
 
-        // Replace translate functions with wp stubs
-        $raw = str_replace(
-            ['__(', '_e(', '_x('],
-            ['wp_stubs_translate(', 'wp_stubs_translate_echo(', 'wp_stubs_translate_context('],
-            $raw,
-        );
-
-        // Validate all function calls in PHP blocks
+        // Process all PHP blocks using a Lexer for safety and accuracy
         $raw = preg_replace_callback('#<\?php\s*(.+?)\s*\?>#s', function ($m) {
-            $code = trim($m[1]);
-
-            if (!str_ends_with($code, ';') && !str_ends_with($code, '}')) {
-                $code .= ';';
-            }
-
-            // Check function whitelist
-            if (preg_match_all('/\b([a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*)\s*\(/', $code, $matches)) {
-                foreach ($matches[1] as $func) {
-                    if (in_array($func, self::ALLOWED_FUNCTIONS, true)) {
-                        continue;
-                    }
-                    if (in_array(strtolower($func), self::CONTROL_STRUCTURES, true)) {
-                        continue;
-                    }
-                    return '<?php /* Disallowed function: ' . $func . ' */ ?>';
-                }
-            }
-
-            return '<?php ' . $code . ' ?>';
+            return $this->processPhpBlock($m[1]);
         }, $raw);
 
         $dir = dirname($cacheFile);
@@ -113,5 +87,73 @@ class PatternCompiler
         $basename = basename($file, '.php');
 
         return rtrim($this->cachePath, '/') . '/' . $basename . '_' . $hash . '.php';
+    }
+
+    /**
+     * Safely process a PHP block using token_get_all()
+     */
+    private function processPhpBlock(string $code): string
+    {
+        $tokens = token_get_all('<?php ' . trim($code) . ' ?>');
+        $processed = '';
+        $replaces = [
+            '__' => 'wp_stubs_translate',
+            '_e' => 'wp_stubs_translate_echo',
+            '_x' => 'wp_stubs_translate_context',
+        ];
+
+        foreach ($tokens as $i => $token) {
+            if (is_array($token)) {
+                [$id, $text] = $token;
+
+                if ($id === T_OPEN_TAG || $id === T_CLOSE_TAG) {
+                    continue;
+                }
+
+                if ($id === T_STRING) {
+                    // Check if it's one of our translation functions
+                    if (isset($replaces[$text])) {
+                        $processed .= $replaces[$text];
+                        continue;
+                    }
+
+                    // For any string, if it's followed by '(', it's likely a function call.
+                    // We must validate it against our whitelist.
+                    $next = $this->getNextNonWhitespace($tokens, $i);
+                    if ($next === '(') {
+                        if (!in_array($text, self::ALLOWED_FUNCTIONS, true) &&
+                            !in_array(strtolower($text), self::CONTROL_STRUCTURES, true)) {
+                            return '<?php /* Disallowed function: ' . $text . ' */ ?>';
+                        }
+                    }
+                }
+
+                $processed .= $text;
+            } else {
+                $processed .= $token;
+            }
+        }
+
+        $result = trim($processed);
+        if ($result !== '' && !str_ends_with($result, ';') && !str_ends_with($result, '}')) {
+            $result .= ';';
+        }
+
+        return '<?php ' . $result . ' ?>';
+    }
+
+    private function getNextNonWhitespace(array $tokens, int $currentIndex): ?string
+    {
+        for ($i = $currentIndex + 1; $i < count($tokens); $i++) {
+            $token = $tokens[$i];
+            if (is_array($token)) {
+                if ($token[0] === T_WHITESPACE) {
+                    continue;
+                }
+                return $token[1];
+            }
+            return $token;
+        }
+        return null;
     }
 }
