@@ -147,11 +147,68 @@ class ConfigRepository
     private function loadFromCache(string $file): mixed
     {
         if ($this->cache === null && $this->cachePath !== null && file_exists($this->cachePath)) {
-            $data = require $this->cachePath;
-            $this->cache = is_array($data) ? $data : null;
+            $cacheMeta = $this->cachePath . '.meta';
+            $cacheValid = true;
+
+            // Validate cache freshness: check if any source file is newer than cache
+            if (file_exists($cacheMeta)) {
+                $cacheMtime = filemtime($this->cachePath);
+                $sourceMtimes = unserialize(file_get_contents($cacheMeta), ['allowed_classes' => false]);
+
+                if (is_array($sourceMtimes)) {
+                    foreach ($sourceMtimes as $sourcePath => $mtime) {
+                        if (!file_exists($sourcePath) || filemtime($sourcePath) > $mtime) {
+                            $cacheValid = false;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if ($cacheValid) {
+                $data = require $this->cachePath;
+                $this->cache = is_array($data) ? $data : null;
+            }
         }
 
         return $this->cache[$file] ?? null;
+    }
+
+    /**
+     * Persist compiled config to a cached PHP file with mtime metadata.
+     * Call this after loading all configs to avoid disk reads on subsequent requests.
+     */
+    public function persistCache(): void
+    {
+        if ($this->cachePath === null) {
+            return;
+        }
+
+        $all = $this->loadAll();
+        $cacheDir = dirname($this->cachePath);
+
+        if (!is_dir($cacheDir)) {
+            mkdir($cacheDir, 0755, true);
+        }
+
+        // Save compiled config
+        $content = "<?php\n\ndeclare(strict_types=1);\n\nreturn " . var_export($all, true) . ";\n";
+        file_put_contents($this->cachePath, $content, LOCK_EX);
+
+        // Save mtime metadata for invalidation
+        $sourceMtimes = [];
+        foreach ($this->paths as $path) {
+            if (!is_dir($path)) {
+                continue;
+            }
+            foreach (glob($path . '/*.php') ?: [] as $file) {
+                $sourceMtimes[$file] = filemtime($file);
+            }
+            foreach (glob($path . '/*.json') ?: [] as $file) {
+                $sourceMtimes[$file] = filemtime($file);
+            }
+        }
+        file_put_contents($this->cachePath . '.meta', serialize($sourceMtimes), LOCK_EX);
     }
 
     private function fileExists(string $path, string $file): bool

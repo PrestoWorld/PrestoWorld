@@ -50,6 +50,11 @@ class Application extends BaseApplication
         });
 
         $this->register(\PrestoWorld\Foundation\Providers\DatabaseServiceProvider::class);
+
+        // Persist compiled config cache for long-running environments
+        if ($this->isLongRunning() && $this->configRepository !== null) {
+            $this->configRepository->persistCache();
+        }
     }
 
     public function boot(): void
@@ -104,6 +109,9 @@ class Application extends BaseApplication
         if ($this->configRepository === null) {
             $this->configRepository = new ConfigRepository(
                 $this->resolveConfigPath('config')
+            );
+            $this->configRepository->setCachePath(
+                $this->basePath('storage/framework/cache/config.php')
             );
         }
 
