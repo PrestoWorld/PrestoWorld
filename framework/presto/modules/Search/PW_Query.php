@@ -20,12 +20,19 @@ class PW_Query
     public array $query_vars = [];
 
     protected array $args = [];
+    protected ?SearchEngine $engine = null;
+    protected int $postIndex = 0;
 
     public function __construct(array $args = [])
     {
         if (!empty($args)) {
             $this->query($args);
         }
+    }
+
+    public function setEngine(SearchEngine $engine): void
+    {
+        $this->engine = $engine;
     }
 
     /**
@@ -35,17 +42,16 @@ class PW_Query
     {
         $this->args = $args;
         $this->parse_args($args);
+        $this->postIndex = 0;
 
-        /** @var SearchEngine $engine */
-        $engine = app(SearchEngine::class);
-        
-        // Transform and execute via Search Engine
+        $engine = $this->engine ?? app(SearchEngine::class);
+
         $result = $engine->search($this->args);
 
         $this->posts = $result->getItems();
         $this->found_posts = $result->getTotal();
         $this->post_count = count($this->posts);
-        
+
         $limit = (int) ($this->args['posts_per_page'] ?? 10);
         $this->max_num_pages = (int) ceil($this->found_posts / ($limit > 0 ? $limit : 1));
 
@@ -57,7 +63,7 @@ class PW_Query
      */
     public function have_posts(): bool
     {
-        return !empty($this->posts);
+        return $this->postIndex < count($this->posts);
     }
 
     /**
@@ -65,7 +71,6 @@ class PW_Query
      */
     protected function parse_args(array $args): void
     {
-        // Default WP values
         $defaults = [
             'post_type' => 'post',
             'post_status' => 'publish',
@@ -83,6 +88,10 @@ class PW_Query
      */
     public function the_post(): ?array
     {
-        return array_shift($this->posts);
+        if ($this->postIndex >= count($this->posts)) {
+            return null;
+        }
+
+        return $this->posts[$this->postIndex++];
     }
 }
