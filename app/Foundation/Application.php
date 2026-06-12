@@ -7,28 +7,19 @@ namespace App\Foundation;
 use Witals\Framework\Application as BaseApplication;
 use PrestoWorld\Foundation\Config\ConfigRepository;
 
-/**
- * PrestoWorld Application
- */
 class Application extends BaseApplication
 {
-    protected array $config = [];
     protected ?ConfigRepository $configRepository = null;
 
-    /**
-     * Register configured service providers
-     */
     public function registerConfiguredProviders(): void
     {
         parent::registerConfiguredProviders();
 
-        // Bind the HTTP Kernel
         $this->singleton(
             \Witals\Framework\Contracts\Http\Kernel::class,
             \App\Http\Kernel::class
         );
 
-        // Bind Core Database
         $this->register(\PrestoWorld\Foundation\Providers\DatabaseServiceProvider::class);
     }
 
@@ -39,52 +30,34 @@ class Application extends BaseApplication
         }
 
         parent::boot();
-
-        // PrestoWorld modules are auto-discovered via ModuleManager
-        // (scans framework/presto/modules/ for manifest.json)
     }
 
-    /**
-     * Set config path(s) for the application.
-     */
     public function setConfigPaths(string|array $paths): void
     {
         $paths = is_array($paths) ? $paths : [$paths];
-        $this->resolveConfigRepository();
-        $this->configRepository->setPaths(
+        $this->configRepository = null;
+        $repo = $this->resolveConfigRepository();
+        $repo->setPaths(
             array_map(fn (string $p) => $this->resolveConfigPath($p), $paths)
         );
-        $this->config = [];
     }
 
-    /**
-     * Add an additional config path.
-     */
     public function addConfigPath(string $path): void
     {
-        $this->resolveConfigRepository();
-        $this->configRepository->addPath($this->resolveConfigPath($path));
-        $this->config = [];
+        $repo = $this->resolveConfigRepository();
+        $repo->addPath($this->resolveConfigPath($path));
     }
 
-    /**
-     * Get config value with dot notation.
-     */
     public function config(string $key, $default = null)
     {
-        $this->resolveConfigRepository();
+        $repo = $this->resolveConfigRepository();
 
         $keys = explode('.', $key);
         $file = array_shift($keys);
 
-        if (isset($this->config[$file])) {
-            $config = $this->config[$file];
-        } else {
-            $config = $this->configRepository->load($file);
-            if ($config === null) {
-                return $default;
-            }
-            $this->config[$file] = $config;
+        $config = $repo->load($file);
+        if ($config === null) {
+            return $default;
         }
 
         foreach ($keys as $segment) {
@@ -97,13 +70,15 @@ class Application extends BaseApplication
         return $config;
     }
 
-    private function resolveConfigRepository(): void
+    private function resolveConfigRepository(): ConfigRepository
     {
         if ($this->configRepository === null) {
             $this->configRepository = new ConfigRepository(
                 $this->resolveConfigPath('config')
             );
         }
+
+        return $this->configRepository;
     }
 
     private function resolveConfigPath(string $path): string
