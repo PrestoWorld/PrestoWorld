@@ -25,6 +25,15 @@ class Application extends BaseApplication
             \App\Http\PageRenderer::class,
         );
 
+        $this->singleton(
+            \App\Contracts\Services\HtmlComposer::class,
+            \App\Services\HtmlComposer::class,
+        );
+
+        $this->singleton(\App\Contracts\Http\ThemeConfig::class, function () {
+            return \App\Contracts\Http\ThemeConfig::fromArray($this->config('theme', []));
+        });
+
         $this->singleton(\App\Http\TemplateResolver::class, function ($app) {
             $mapping = $app->config('templates.mapping', []);
             $default = $app->config('templates.default', 'index');
@@ -48,12 +57,6 @@ class Application extends BaseApplication
         $this->singleton(
             \App\Services\PageService::class,
         );
-
-        $this->singleton(\App\Http\PageRenderer::class, function () {
-            return new \App\Http\PageRenderer(
-                \App\Contracts\Http\ThemeConfig::fromArray($this->config('theme', [])),
-            );
-        });
 
         $this->register(\PrestoWorld\Foundation\Providers\DatabaseServiceProvider::class);
 

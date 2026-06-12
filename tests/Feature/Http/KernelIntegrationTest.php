@@ -8,6 +8,7 @@ use PHPUnit\Framework\TestCase;
 use App\Http\Kernel;
 use App\Services\PageService;
 use App\Contracts\Services\ContentRenderer;
+use App\Services\HtmlComposer;
 use App\Http\TemplateResolver;
 use App\Http\Mappings\ConfigMappingPolicy;
 use App\Http\PageRenderer;
@@ -39,10 +40,11 @@ class KernelIntegrationTest extends TestCase
         $contentRenderer->method('getStyles')->willReturn('');
         $contentRenderer->method('render')->willReturnCallback(fn(string $t) => "<main>{$t}</main>");
 
-        $pageRenderer = new PageRenderer(ThemeConfig::fromArray([
+        $composer = new HtmlComposer(ThemeConfig::fromArray([
             'default_title' => 'PrestoWorld',
             'css_reset' => '',
         ]));
+        $pageRenderer = new PageRenderer($composer);
 
         $pageService = new PageService($resolver, $contentRenderer, $pageRenderer);
 
@@ -111,10 +113,11 @@ class KernelIntegrationTest extends TestCase
         $contentRenderer->method('getStyles')->willReturn('body { background: red; }');
         $contentRenderer->method('render')->willReturn('<p>styled</p>');
 
-        $pageRenderer = new PageRenderer(ThemeConfig::fromArray([
+        $composer = new HtmlComposer(ThemeConfig::fromArray([
             'default_title' => 'Test',
             'css_reset' => '* { margin: 0; }',
         ]));
+        $pageRenderer = new PageRenderer($composer);
 
         $pageService = new PageService($resolver, $contentRenderer, $pageRenderer);
         $kernel = new Kernel($pageService, $logger);

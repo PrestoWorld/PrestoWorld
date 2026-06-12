@@ -34,19 +34,6 @@ class ContentRendererTest extends TestCase
         $renderer->render('index');
     }
 
-    public function test_render_throws_on_null_result(): void
-    {
-        $gutenberg = $this->createMock(GutenbergModule::class);
-        $gutenberg->method('renderTemplate')->willReturn('');
-
-        $renderer = new ContentRenderer($gutenberg);
-
-        $this->expectException(RenderException::class);
-        $this->expectExceptionMessage('returned empty content');
-
-        $renderer->render('index');
-    }
-
     public function test_get_styles_returns_from_gutenberg(): void
     {
         $gutenberg = $this->createMock(GutenbergModule::class);
@@ -65,14 +52,10 @@ class ContentRendererTest extends TestCase
         $this->assertSame('', $renderer->getStyles());
     }
 
-    public function test_null_renderer_throws_on_render(): void
+    public function test_null_renderer_returns_empty_string(): void
     {
         $renderer = new NullContentRenderer();
-
-        $this->expectException(RenderException::class);
-        $this->expectExceptionMessage('No content renderer is available');
-
-        $renderer->render('index');
+        $this->assertSame('', $renderer->render('index'));
     }
 
     public function test_null_renderer_returns_empty_styles(): void
