@@ -8,6 +8,7 @@ use Witals\Framework\Module\Module as WitalsModule;
 use PrestoWorld\Modules\Gutenberg\Parser\BlockParser;
 use PrestoWorld\Modules\Gutenberg\Renderer\BlockRenderer;
 use PrestoWorld\Modules\Gutenberg\Theme\ThemeJson;
+use PrestoWorld\Modules\Gutenberg\Theme\TemplatePartRegistry;
 use PrestoWorld\Modules\Gutenberg\Pattern\PatternRegistry;
 use PrestoWorld\Modules\Gutenberg\Pattern\MemoryStorage;
 use PrestoWorld\Modules\Gutenberg\Pattern\FileCacheStorage;
@@ -41,6 +42,20 @@ class Module extends WitalsModule
             return $registry;
         });
 
+        $this->app->singleton(TemplatePartRegistry::class, function ($app) {
+            $themePath = $this->getThemePath($app);
+            $isStateful = isset($_SERVER['RR_MODE']) || isset($_SERVER['FRANKENPHP_WORKER']);
+            $storage = $isStateful ? new MemoryStorage() : new FileCacheStorage($app->storagePath('framework/cache/parts'));
+
+            $registry = new TemplatePartRegistry(
+                $themePath,
+                $app->storagePath('framework/cache/parts')
+            );
+            $registry->setStorage($storage);
+            
+            return $registry;
+        });
+
         $this->app->singleton(BlockRenderer::class, function ($app) {
             $renderer = new BlockRenderer();
             $renderer->setPatternRegistry($app->make(PatternRegistry::class));
@@ -48,7 +63,8 @@ class Module extends WitalsModule
                 'theme_path' => $this->getThemePath($app),
                 'site_title' => 'PrestoWorld',
                 'site_url' => '/',
-                'post_repository' => $app->make(PostRepository::class)
+                'post_repository' => $app->make(PostRepository::class),
+                'template_part_registry' => $app->make(TemplatePartRegistry::class),
             ]);
 
             // Register Decorators for attribute processing (Decorator Pattern)
