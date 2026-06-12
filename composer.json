@@ -15,9 +15,7 @@
         "php": "^8.1",
         "witals/framework": "*",
         "prestoworld/marketplace-sdk": "*",
-        "prestoworld/wp-bridge": "*",
-        "symfony/validator": "^7.4",
-        "symfony/translation": "^7.4"
+        "prestoworld/wp-bridge": "*"
     },
     "autoload": {
         "psr-4": {
