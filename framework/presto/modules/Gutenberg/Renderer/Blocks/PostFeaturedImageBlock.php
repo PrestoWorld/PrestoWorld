@@ -42,11 +42,11 @@ class PostFeaturedImageBlock extends AbstractBlock
         if (!empty($this->attrs['aspectRatio'])) {
             $extraStyles .= 'width:100%;height:100%;';
         } elseif (!empty($this->attrs['height'])) {
-            $extraStyles .= "height:{$this->attrs['height']};";
+            $extraStyles .= 'height:' . htmlspecialchars((string)$this->attrs['height'], ENT_QUOTES|ENT_SUBSTITUTE, 'UTF-8') . ';';
         }
         
         if (!empty($this->attrs['scale'])) {
-            $extraStyles .= "object-fit:{$this->attrs['scale']};";
+            $extraStyles .= 'object-fit:' . htmlspecialchars((string)$this->attrs['scale'], ENT_QUOTES|ENT_SUBSTITUTE, 'UTF-8') . ';';
         }
         
         if (!empty($extraStyles)) {
@@ -90,9 +90,9 @@ class PostFeaturedImageBlock extends AbstractBlock
         }
         
         // Wrapper styles
-        $aspectRatio = !empty($this->attrs['aspectRatio']) ? "aspect-ratio:{$this->attrs['aspectRatio']};" : '';
-        $width = !empty($this->attrs['width']) ? "width:{$this->attrs['width']};" : '';
-        $height = !empty($this->attrs['height']) ? "height:{$this->attrs['height']};" : '';
+        $aspectRatio = !empty($this->attrs['aspectRatio']) ? 'aspect-ratio:' . htmlspecialchars((string)$this->attrs['aspectRatio'], ENT_QUOTES|ENT_SUBSTITUTE, 'UTF-8') . ';' : '';
+        $width = !empty($this->attrs['width']) ? 'width:' . htmlspecialchars((string)$this->attrs['width'], ENT_QUOTES|ENT_SUBSTITUTE, 'UTF-8') . ';' : '';
+        $height = !empty($this->attrs['height']) ? 'height:' . htmlspecialchars((string)$this->attrs['height'], ENT_QUOTES|ENT_SUBSTITUTE, 'UTF-8') . ';' : '';
         
         $wrapperStyle = '';
         if ($aspectRatio || $width || $height) {
@@ -104,7 +104,8 @@ class PostFeaturedImageBlock extends AbstractBlock
         $classAttr = ' class="' . implode(' ', array_unique($classes)) . '"';
         $styleAttr = !empty($wrapperStyle) ? ' style="' . $wrapperStyle . '"' : '';
         if (!empty($this->styles)) {
-            $styleAttr = ' style="' . $wrapperStyle . implode(';', $this->styles) . '"';
+            $escapedStyles = array_map(fn ($s) => htmlspecialchars((string)$s, ENT_QUOTES|ENT_SUBSTITUTE, 'UTF-8'), $this->styles);
+            $styleAttr = ' style="' . $wrapperStyle . implode(';', $escapedStyles) . '"';
         }
         
         return "<figure{$classAttr}{$styleAttr}>{$img}</figure>";
@@ -144,11 +145,11 @@ class PostFeaturedImageBlock extends AbstractBlock
         
         // Apply background styles
         if ($hasCustomGradient) {
-            $styles[] = "background-image: {$this->attrs['customGradient']};";
+            $styles[] = 'background-image: ' . htmlspecialchars((string)$this->attrs['customGradient'], ENT_QUOTES|ENT_SUBSTITUTE, 'UTF-8') . ';';
         }
         
         if (isset($this->attrs['customOverlayColor']) && $this->attrs['customOverlayColor']) {
-            $styles[] = "background-color: {$this->attrs['customOverlayColor']};";
+            $styles[] = 'background-color: ' . htmlspecialchars((string)$this->attrs['customOverlayColor'], ENT_QUOTES|ENT_SUBSTITUTE, 'UTF-8') . ';';
         }
         
         return sprintf(

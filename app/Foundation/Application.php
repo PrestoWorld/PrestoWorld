@@ -29,6 +29,23 @@ class Application extends BaseApplication
             \App\Http\TemplateResolver::class,
         );
 
+        $this->singleton(
+            \App\Services\ContentRenderer::class,
+        );
+
+        $this->singleton(
+            \App\Services\PageService::class,
+        );
+
+        $this->singleton(\App\Http\PageRenderer::class, function () {
+            return new \App\Http\PageRenderer(
+                defaultTitle: $this->config('theme.default_title', 'PrestoWorld'),
+                charset: $this->config('theme.charset', 'UTF-8'),
+                viewport: $this->config('theme.viewport', 'width=device-width, initial-scale=1.0'),
+                cssReset: $this->config('theme.css_reset', ''),
+            );
+        });
+
         $this->register(\PrestoWorld\Foundation\Providers\DatabaseServiceProvider::class);
     }
 
@@ -79,7 +96,7 @@ class Application extends BaseApplication
         return $config;
     }
 
-    private function resolveConfigRepository(): ConfigRepository
+    public function resolveConfigRepository(): ConfigRepository
     {
         if ($this->configRepository === null) {
             $this->configRepository = new ConfigRepository(

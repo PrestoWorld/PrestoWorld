@@ -10,6 +10,13 @@ class PageRenderer implements PageRendererContract
 {
     private array $styles = [];
 
+    public function __construct(
+        private string $defaultTitle = 'PrestoWorld',
+        private string $charset = 'UTF-8',
+        private string $viewport = 'width=device-width, initial-scale=1.0',
+        private string $cssReset = '*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; } body { font-family: system-ui, sans-serif; line-height: 1.6; }',
+    ) {}
+
     public function addStyle(string $css): void
     {
         $this->styles[] = $css;
@@ -17,18 +24,17 @@ class PageRenderer implements PageRendererContract
 
     public function render(string $body, ?string $title = null): string
     {
-        $title = $title ?? 'PrestoWorld';
+        $title = $title ?? $this->defaultTitle;
 
         return <<<HTML
         <!DOCTYPE html>
         <html lang="en">
         <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <meta charset="{$this->charset}">
+            <meta name="viewport" content="{$this->viewport}">
             <title>{$title}</title>
             <style>
-                *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-                body { font-family: system-ui, sans-serif; line-height: 1.6; }
+                {$this->cssReset}
                 {$this->compileStyles()}
             </style>
         </head>

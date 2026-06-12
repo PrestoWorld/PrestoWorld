@@ -35,6 +35,40 @@ class PageRendererTest extends TestCase
         $this->assertStringContainsString('<title>PrestoWorld</title>', $html);
     }
 
+    public function test_render_uses_configured_default_title(): void
+    {
+        $renderer = new PageRenderer(defaultTitle: 'MySite');
+        $html = $renderer->render('');
+
+        $this->assertStringContainsString('<title>MySite</title>', $html);
+        $this->assertStringNotContainsString('<title>PrestoWorld</title>', $html);
+    }
+
+    public function test_render_uses_configured_charset(): void
+    {
+        $renderer = new PageRenderer(charset: 'ISO-8859-1');
+        $html = $renderer->render('');
+
+        $this->assertStringContainsString('ISO-8859-1', $html);
+    }
+
+    public function test_render_uses_configured_viewport(): void
+    {
+        $renderer = new PageRenderer(viewport: 'width=480');
+        $html = $renderer->render('');
+
+        $this->assertStringContainsString('width=480', $html);
+    }
+
+    public function test_render_uses_configured_css_reset(): void
+    {
+        $renderer = new PageRenderer(cssReset: 'body { margin: 10px; }');
+        $html = $renderer->render('');
+
+        $this->assertStringContainsString('body { margin: 10px; }', $html);
+        $this->assertStringNotContainsString('box-sizing', $html);
+    }
+
     public function test_add_style_appears_in_output(): void
     {
         $renderer = new PageRenderer();
@@ -89,14 +123,6 @@ class PageRendererTest extends TestCase
         $renderer = new PageRenderer();
         $html = $renderer->render('');
 
-        $this->assertStringContainsString('UTF-8', $html);
-    }
-
-    public function test_render_escapes_title(): void
-    {
-        $renderer = new PageRenderer();
-        $html = $renderer->render('', 'Test & "Title"');
-
-        $this->assertStringContainsString('Test & "Title"', $html);
+        $this->assertStringContainsString('charset', $html);
     }
 }

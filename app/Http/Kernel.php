@@ -7,24 +7,26 @@ namespace App\Http;
 use Witals\Framework\Contracts\Http\Kernel as KernelContract;
 use Witals\Framework\Http\Request;
 use Witals\Framework\Http\Response;
-use PrestoWorld\Modules\Gutenberg\Module as GutenbergModule;
-use App\Contracts\Http\PageRenderer;
+use App\Services\PageService;
+use App\Exceptions\TemplateNotFoundException;
+use App\Exceptions\RenderException;
 
 class Kernel implements KernelContract
 {
     public function __construct(
-        private GutenbergModule $gutenberg,
-        private PageRenderer $renderer,
-        private TemplateResolver $resolver,
+        private PageService $pageService,
     ) {}
 
     public function handle(Request $request): Response
     {
-        $template = $this->resolver->resolve($request);
-        $this->renderer->addStyle($this->gutenberg->getStyles());
-        $body = $this->gutenberg->renderTemplate($template);
-        $html = $this->renderer->render($body);
+        try {
+            $html = $this->pageService->handle($request);
 
-        return new Response($html, 200, ['Content-Type' => 'text/html; charset=utf-8']);
+            return new Response($html, 200, ['Content-Type' => 'text/html; charset=utf-8']);
+        } catch (TemplateNotFoundException) {
+            return new Response('Page not found', 404);
+        } catch (RenderException) {
+            return new Response('Internal server error', 500);
+        }
     }
 }
