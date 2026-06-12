@@ -20,6 +20,15 @@ class Application extends BaseApplication
             \App\Http\Kernel::class
         );
 
+        $this->singleton(
+            \App\Contracts\Http\PageRenderer::class,
+            \App\Http\PageRenderer::class,
+        );
+
+        $this->singleton(
+            \App\Http\TemplateResolver::class,
+        );
+
         $this->register(\PrestoWorld\Foundation\Providers\DatabaseServiceProvider::class);
     }
 

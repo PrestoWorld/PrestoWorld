@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http;
 
-class PageRenderer
+use App\Contracts\Http\PageRenderer as PageRendererContract;
+
+class PageRenderer implements PageRendererContract
 {
     private array $styles = [];
 
