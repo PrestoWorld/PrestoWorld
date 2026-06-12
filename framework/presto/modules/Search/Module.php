@@ -5,12 +5,19 @@ declare(strict_types=1);
 namespace PrestoWorld\Modules\Search;
 
 use Prestoworld\SearchEngine\SearchEngine;
+use Prestoworld\SearchEngine\SearchManager;
+use Prestoworld\SearchEngine\Adapters\TypesenseAdapter;
+use Prestoworld\SearchEngine\Adapters\MeilisearchAdapter;
+use Prestoworld\SearchEngine\Adapters\TNTSearchAdapter;
+use Witals\Framework\Http\Client\ConcurrentHttpClient;
 use Witals\Framework\Module\Module as WitalsModule;
 use PrestoWorld\Modules\Schema\PostRepository;
 use Cycle\Database\DatabaseInterface;
 
 class Module extends WitalsModule
 {
+    private static bool $helpersLoaded = false;
+
     public function __construct(
         protected \Witals\Framework\Application $app,
         protected string $path = '',
@@ -32,14 +39,54 @@ class Module extends WitalsModule
 
     public function register(): void
     {
-        $this->app->singleton(SearchEngine::class, function($app) {
+        // Primary: DB-backed SearchEngine (fast, no external I/O)
+        $this->app->singleton(SearchEngine::class, function ($app) {
             return new SearchEngine(
                 $app->make(DatabaseInterface::class),
                 $app->make(PostRepository::class)
             );
         });
 
-        // Global Helper for PW_Query
-        require_once __DIR__ . '/helpers.php';
+        // HTTP client for concurrent external search requests
+        $this->app->singleton(ConcurrentHttpClient::class, function () {
+            return new ConcurrentHttpClient(null, [
+                'timeout' => 5,
+                'max_duration' => 10,
+            ]);
+        });
+
+        // Register adapter-based SearchManager (lazy – no HTTP client created until used)
+        $this->app->singleton(SearchManager::class, function ($app) {
+            $config = $app->config('search', []);
+
+            return new SearchManager($config);
+        });
+
+        // Register specific adapters as injectable services
+        $this->app->bind(TypesenseAdapter::class, function ($app) {
+            $config = $app->config('search.adapters.typesense', []);
+            return new TypesenseAdapter($config);
+        });
+
+        $this->app->bind(MeilisearchAdapter::class, function ($app) {
+            $config = $app->config('search.adapters.meilisearch', []);
+            return new MeilisearchAdapter($config);
+        });
+
+        $this->app->bind(TNTSearchAdapter::class, function () {
+            return new TNTSearchAdapter();
+        });
+
+        // Global Helper for PW_Query — loaded once
+        if (!self::$helpersLoaded) {
+            require_once __DIR__ . '/helpers.php';
+            self::$helpersLoaded = true;
+        }
+    }
+
+    public function boot(): void
+    {
+        // No eager initialization — adapters connect lazily on first use.
+        // In RoadRunner this means zero I/O during worker boot.
     }
 }
