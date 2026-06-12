@@ -9,9 +9,18 @@ use Cycle\Database\DatabaseInterface;
 
 class Module extends WitalsModule
 {
-    public function __construct($app)
-    {
-        parent::__construct($app, __DIR__, ['name' => 'schema']);
+    public function __construct(
+        protected \Witals\Framework\Application $app,
+        protected string $path = '',
+        protected array $metadata = [],
+    ) {
+        if ($path === '') {
+            $path = __DIR__;
+        }
+        if ($metadata === []) {
+            $metadata = ['name' => 'schema'];
+        }
+        parent::__construct($app, $path, $metadata);
     }
 
     public function getName(): string
