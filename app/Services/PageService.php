@@ -7,8 +7,8 @@ namespace App\Services;
 use Witals\Framework\Http\Request;
 use App\Http\TemplateResolver;
 use App\Contracts\Http\PageRenderer;
+use App\Contracts\Services\ContentRenderer;
 use App\Exceptions\TemplateNotFoundException;
-use App\Exceptions\RenderException;
 
 class PageService
 {
@@ -27,16 +27,7 @@ class PageService
         }
 
         $this->renderer->addStyle($this->contentRenderer->getStyles());
-
-        try {
-            $body = $this->contentRenderer->render($template);
-        } catch (RenderException $e) {
-            throw new RenderException(
-                "Failed to render template [{$template}]: " . $e->getMessage(),
-                0,
-                $e
-            );
-        }
+        $body = $this->contentRenderer->render($template);
 
         return $this->renderer->render($body);
     }

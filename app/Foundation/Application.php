@@ -25,15 +25,24 @@ class Application extends BaseApplication
             \App\Http\PageRenderer::class,
         );
 
-        $this->singleton(\App\Http\TemplateResolver::class, function () {
+        $this->singleton(\App\Http\TemplateResolver::class, function ($app) {
+            $mapping = $app->config('templates.mapping', []);
+            $default = $app->config('templates.default', 'index');
             return new \App\Http\TemplateResolver(
-                mapping: $this->config('templates.mapping', []),
-                defaultTemplate: $this->config('templates.default', 'index'),
+                new \App\Http\Mappings\ConfigMappingPolicy($mapping, $default),
             );
         });
 
         $this->singleton(
-            \App\Services\ContentRenderer::class,
+            \App\Contracts\Services\ContentRenderer::class,
+            function ($app) {
+                if ($app->has(\PrestoWorld\Modules\Gutenberg\Module::class)) {
+                    return new \App\Services\ContentRenderer(
+                        $app->make(\PrestoWorld\Modules\Gutenberg\Module::class),
+                    );
+                }
+                return new \App\Services\NullContentRenderer();
+            },
         );
 
         $this->singleton(
@@ -42,10 +51,7 @@ class Application extends BaseApplication
 
         $this->singleton(\App\Http\PageRenderer::class, function () {
             return new \App\Http\PageRenderer(
-                defaultTitle: $this->config('theme.default_title', 'PrestoWorld'),
-                charset: $this->config('theme.charset', 'UTF-8'),
-                viewport: $this->config('theme.viewport', 'width=device-width, initial-scale=1.0'),
-                cssReset: $this->config('theme.css_reset', '*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; } body { font-family: system-ui, sans-serif; line-height: 1.6; }'),
+                \App\Contracts\Http\ThemeConfig::fromArray($this->config('theme', [])),
             );
         });
 

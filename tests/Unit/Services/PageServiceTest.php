@@ -6,12 +6,11 @@ namespace Tests\Unit\Services;
 
 use PHPUnit\Framework\TestCase;
 use App\Services\PageService;
-use App\Services\ContentRenderer;
+use App\Contracts\Services\ContentRenderer;
 use App\Http\TemplateResolver;
 use App\Contracts\Http\PageRenderer;
 use Witals\Framework\Http\Request;
 use App\Exceptions\TemplateNotFoundException;
-use App\Exceptions\RenderException;
 
 class PageServiceTest extends TestCase
 {
@@ -41,6 +40,22 @@ class PageServiceTest extends TestCase
     {
         $resolver = $this->createMock(TemplateResolver::class);
         $resolver->method('resolve')->willReturn('');
+
+        $service = new PageService(
+            $resolver,
+            $this->createMock(ContentRenderer::class),
+            $this->createMock(PageRenderer::class),
+        );
+
+        $this->expectException(TemplateNotFoundException::class);
+
+        $service->handle(new Request('GET', '/', [], [], [], [], [], [], null));
+    }
+
+    public function test_handle_throws_when_template_null(): void
+    {
+        $resolver = $this->createMock(TemplateResolver::class);
+        $resolver->method('resolve')->willReturn(null);
 
         $service = new PageService(
             $resolver,

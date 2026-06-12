@@ -7,6 +7,7 @@ namespace Tests\Unit\Http;
 use PHPUnit\Framework\TestCase;
 use App\Http\Kernel;
 use App\Services\PageService;
+use Psr\Log\LoggerInterface;
 use Witals\Framework\Http\Request;
 use Witals\Framework\Http\Response;
 use App\Exceptions\TemplateNotFoundException;
@@ -14,12 +15,18 @@ use App\Exceptions\RenderException;
 
 class KernelTest extends TestCase
 {
+    private function createKernel(PageService $pageService): Kernel
+    {
+        $logger = $this->createMock(LoggerInterface::class);
+        return new Kernel($pageService, $logger);
+    }
+
     public function test_handle_returns_200_on_success(): void
     {
         $pageService = $this->createMock(PageService::class);
         $pageService->method('handle')->willReturn('<html><body>OK</body></html>');
 
-        $kernel = new Kernel($pageService);
+        $kernel = $this->createKernel($pageService);
         $request = new Request('GET', '/', [], [], [], [], [], [], null);
 
         $response = $kernel->handle($request);
@@ -33,7 +40,7 @@ class KernelTest extends TestCase
         $pageService = $this->createMock(PageService::class);
         $pageService->method('handle')->willReturn('<html><body>OK</body></html>');
 
-        $kernel = new Kernel($pageService);
+        $kernel = $this->createKernel($pageService);
         $request = new Request('GET', '/', [], [], [], [], [], [], null);
 
         $response = $kernel->handle($request);
@@ -49,7 +56,7 @@ class KernelTest extends TestCase
             ->with($this->isInstanceOf(Request::class))
             ->willReturn('<html></html>');
 
-        $kernel = new Kernel($pageService);
+        $kernel = $this->createKernel($pageService);
         $request = new Request('GET', '/', [], [], [], [], [], [], null);
 
         $kernel->handle($request);
@@ -60,7 +67,7 @@ class KernelTest extends TestCase
         $pageService = $this->createMock(PageService::class);
         $pageService->method('handle')->willThrowException(new TemplateNotFoundException());
 
-        $kernel = new Kernel($pageService);
+        $kernel = $this->createKernel($pageService);
         $request = new Request('GET', '/missing', [], [], [], [], [], [], null);
 
         $response = $kernel->handle($request);
@@ -74,7 +81,7 @@ class KernelTest extends TestCase
         $pageService = $this->createMock(PageService::class);
         $pageService->method('handle')->willThrowException(new RenderException());
 
-        $kernel = new Kernel($pageService);
+        $kernel = $this->createKernel($pageService);
         $request = new Request('GET', '/', [], [], [], [], [], [], null);
 
         $response = $kernel->handle($request);
@@ -88,7 +95,7 @@ class KernelTest extends TestCase
         $pageService = $this->createMock(PageService::class);
         $pageService->method('handle')->willReturn('<html><body>OK</body></html>');
 
-        $kernel = new Kernel($pageService);
+        $kernel = $this->createKernel($pageService);
         $request = new Request('GET', '/', [], [], [], [], [], [], null);
 
         $response = $kernel->handle($request);

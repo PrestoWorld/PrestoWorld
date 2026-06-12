@@ -5,20 +5,17 @@ declare(strict_types=1);
 namespace App\Services;
 
 use PrestoWorld\Modules\Gutenberg\Module as GutenbergModule;
+use App\Contracts\Services\ContentRenderer as ContentRendererContract;
 use App\Exceptions\RenderException;
 
-class ContentRenderer
+class ContentRenderer implements ContentRendererContract
 {
     public function __construct(
-        private ?GutenbergModule $gutenberg = null,
+        private GutenbergModule $gutenberg,
     ) {}
 
     public function render(string $template): string
     {
-        if ($this->gutenberg === null) {
-            throw new RenderException('Gutenberg module is not available');
-        }
-
         $result = $this->gutenberg->renderTemplate($template);
 
         if ($result === null || $result === '') {
@@ -30,6 +27,6 @@ class ContentRenderer
 
     public function getStyles(): string
     {
-        return $this->gutenberg?->getStyles() ?? '';
+        return $this->gutenberg->getStyles();
     }
 }

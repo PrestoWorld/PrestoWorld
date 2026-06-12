@@ -6,6 +6,7 @@ namespace Tests\Unit\Http;
 
 use PHPUnit\Framework\TestCase;
 use App\Http\TemplateResolver;
+use App\Http\Mappings\ConfigMappingPolicy;
 use Witals\Framework\Http\Request;
 
 class TemplateResolverTest extends TestCase
@@ -19,8 +20,10 @@ class TemplateResolverTest extends TestCase
     private function makeResolver(?array $mapping = null, string $default = 'index'): TemplateResolver
     {
         return new TemplateResolver(
-            mapping: $mapping ?? $this->defaultMapping,
-            defaultTemplate: $default,
+            new ConfigMappingPolicy(
+                mapping: $mapping ?? $this->defaultMapping,
+                defaultTemplate: $default,
+            ),
         );
     }
 
@@ -94,6 +97,24 @@ class TemplateResolverTest extends TestCase
         $this->assertSame('archive', $resolver->resolve($this->request('/category/tech')));
         $this->assertSame('archive', $resolver->resolve($this->request('/category/tech/sub')));
         $this->assertSame('index', $resolver->resolve($this->request('/other')));
+    }
+
+    public function test_resolver_accepts_custom_policy(): void
+    {
+        $policy = $this->createMock(\App\Contracts\Http\TemplateMappingPolicy::class);
+        $policy->method('match')->willReturn('custom');
+
+        $resolver = new TemplateResolver($policy);
+        $this->assertSame('custom', $resolver->resolve($this->request('/any')));
+    }
+
+    public function test_resolver_returns_null_from_policy(): void
+    {
+        $policy = $this->createMock(\App\Contracts\Http\TemplateMappingPolicy::class);
+        $policy->method('match')->willReturn(null);
+
+        $resolver = new TemplateResolver($policy);
+        $this->assertNull($resolver->resolve($this->request('/any')));
     }
 
     private function request(string $uri): Request

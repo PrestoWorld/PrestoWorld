@@ -6,17 +6,13 @@ namespace Tests\Unit\Http;
 
 use PHPUnit\Framework\TestCase;
 use App\Http\PageRenderer;
+use App\Contracts\Http\ThemeConfig;
 
 class PageRendererTest extends TestCase
 {
     private function makeRenderer(array $config = []): PageRenderer
     {
-        return new PageRenderer(
-            defaultTitle: $config['defaultTitle'] ?? 'PrestoWorld',
-            charset: $config['charset'] ?? 'UTF-8',
-            viewport: $config['viewport'] ?? 'width=device-width, initial-scale=1.0',
-            cssReset: $config['cssReset'] ?? '*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; } body { font-family: system-ui, sans-serif; line-height: 1.6; }',
-        );
+        return new PageRenderer(ThemeConfig::fromArray($config));
     }
 
     public function test_render_returns_full_html_document(): void
@@ -47,7 +43,7 @@ class PageRendererTest extends TestCase
 
     public function test_render_uses_configured_default_title(): void
     {
-        $renderer = $this->makeRenderer(['defaultTitle' => 'MySite']);
+        $renderer = $this->makeRenderer(['default_title' => 'MySite']);
         $html = $renderer->render('');
 
         $this->assertStringContainsString('<title>MySite</title>', $html);
@@ -72,7 +68,7 @@ class PageRendererTest extends TestCase
 
     public function test_render_uses_configured_css_reset(): void
     {
-        $renderer = $this->makeRenderer(['cssReset' => 'body { margin: 10px; }']);
+        $renderer = $this->makeRenderer(['css_reset' => 'body { margin: 10px; }']);
         $html = $renderer->render('');
 
         $this->assertStringContainsString('body { margin: 10px; }', $html);

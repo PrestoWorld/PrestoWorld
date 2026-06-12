@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http;
 
+use Psr\Log\LoggerInterface;
 use Witals\Framework\Contracts\Http\Kernel as KernelContract;
 use Witals\Framework\Http\Request;
 use Witals\Framework\Http\Response;
@@ -22,6 +23,7 @@ class Kernel implements KernelContract
 
     public function __construct(
         private PageService $pageService,
+        private LoggerInterface $logger,
     ) {}
 
     public function handle(Request $request): Response
@@ -34,8 +36,13 @@ class Kernel implements KernelContract
                 ...self::SECURITY_HEADERS,
             ]);
         } catch (TemplateNotFoundException) {
+            $this->logger->warning('Page not found: {path}', ['path' => $request->path()]);
             return new Response('Page not found', 404, self::SECURITY_HEADERS);
-        } catch (RenderException) {
+        } catch (RenderException $e) {
+            $this->logger->error('Render error: {message}', [
+                'message' => $e->getMessage(),
+                'exception' => $e,
+            ]);
             return new Response('Internal server error', 500, self::SECURITY_HEADERS);
         }
     }
