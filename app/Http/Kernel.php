@@ -13,6 +13,13 @@ use App\Exceptions\RenderException;
 
 class Kernel implements KernelContract
 {
+    private const SECURITY_HEADERS = [
+        'X-Content-Type-Options' => 'nosniff',
+        'X-Frame-Options' => 'DENY',
+        'X-XSS-Protection' => '1; mode=block',
+        'Referrer-Policy' => 'strict-origin-when-cross-origin',
+    ];
+
     public function __construct(
         private PageService $pageService,
     ) {}
@@ -22,11 +29,14 @@ class Kernel implements KernelContract
         try {
             $html = $this->pageService->handle($request);
 
-            return new Response($html, 200, ['Content-Type' => 'text/html; charset=utf-8']);
+            return new Response($html, 200, [
+                'Content-Type' => 'text/html; charset=utf-8',
+                ...self::SECURITY_HEADERS,
+            ]);
         } catch (TemplateNotFoundException) {
-            return new Response('Page not found', 404);
+            return new Response('Page not found', 404, self::SECURITY_HEADERS);
         } catch (RenderException) {
-            return new Response('Internal server error', 500);
+            return new Response('Internal server error', 500, self::SECURITY_HEADERS);
         }
     }
 }
