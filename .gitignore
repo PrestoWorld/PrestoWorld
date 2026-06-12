@@ -1,6 +1,40 @@
-vendor
-composer.lock
+/vendor/
+/node_modules/
+/composer.lock
+
+# OS files
 .DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Runtime / Generated — track only .gitkeep
+/storage/framework/cache/*
+!/storage/framework/cache/.gitkeep
+/storage/logs/*
+!/storage/logs/.gitkeep
+/storage/framework/sessions/*
+!/storage/framework/sessions/.gitkeep
+/storage/framework/views/*
+!/storage/framework/views/.gitkeep
+/storage/framework/testing/*
+!/storage/framework/testing/.gitkeep
+
+# Testing
 .phpunit.cache
 .phpunit.result.cache
-.env
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Build artifacts
+/dist
+/build
+*.phar
