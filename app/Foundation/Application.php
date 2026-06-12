@@ -40,23 +40,8 @@ class Application extends BaseApplication
 
         parent::boot();
 
-        // Register PrestoWorld Core Modules (as singletons so Kernel can resolve them)
-        $this->registerModule(\PrestoWorld\Modules\Gutenberg\Module::class);
-        $this->registerModule(\PrestoWorld\Modules\Schema\Module::class);
-        $this->registerModule(\PrestoWorld\Modules\Search\Module::class);
-    }
-
-    protected function registerModule(string $moduleClass): void
-    {
-        // Resolve path from class name as a fallback for core modules
-        $path = $this->basePath() . '/framework/presto/Modules/' . basename(str_replace('\\', '/', $moduleClass));
-        $module = new $moduleClass($this, $path);
-        
-        $module->register();
-        $module->boot();
-        
-        // Bind into container so it can be resolved anywhere
-        $this->instance($moduleClass, $module);
+        // PrestoWorld modules are auto-discovered via ModuleManager
+        // (scans framework/presto/modules/ for manifest.json)
     }
 
     /**

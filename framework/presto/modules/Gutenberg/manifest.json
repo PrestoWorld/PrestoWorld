@@ -1,0 +1,26 @@
+{
+    "name": "gutenberg",
+    "version": "1.0.0",
+    "description": "Gutenberg block engine — parser, renderer, theme.json, patterns",
+    "type": "support",
+    "priority": 50,
+    "enabled": true,
+    "namespace": "PrestoWorld\\Modules\\Gutenberg",
+    "entry": "Module.php",
+    "requires": {
+        "php": "^8.1"
+    },
+    "dependencies": {
+        "schema": "^1.0.0"
+    },
+    "provides": [
+        "gutenberg.renderer",
+        "gutenberg.blocks"
+    ],
+    "providers": [],
+    "autoload": {
+        "psr-4": {
+            "PrestoWorld\\Modules\\Gutenberg\\": "."
+        }
+    }
+}

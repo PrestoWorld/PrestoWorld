@@ -1,0 +1,26 @@
+{
+    "name": "search",
+    "version": "1.0.0",
+    "description": "Search engine — PW_Query, SearchEngine, search results",
+    "type": "support",
+    "priority": 60,
+    "enabled": true,
+    "namespace": "PrestoWorld\\Modules\\Search",
+    "entry": "Module.php",
+    "requires": {
+        "php": "^8.1"
+    },
+    "dependencies": {
+        "schema": "^1.0.0"
+    },
+    "provides": [
+        "search.engine",
+        "search.query"
+    ],
+    "providers": [],
+    "autoload": {
+        "psr-4": {
+            "PrestoWorld\\Modules\\Search\\": "."
+        }
+    }
+}
