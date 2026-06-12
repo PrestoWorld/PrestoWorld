@@ -11,9 +11,9 @@ class FileCacheStorage implements PatternStorageInterface
 {
     protected string $cacheDir;
 
-    public function __construct(string $basePath)
+    public function __construct(string $cacheDir)
     {
-        $this->cacheDir = $basePath . '/storages/framework/cache/patterns';
+        $this->cacheDir = $cacheDir;
         if (!is_dir($this->cacheDir)) {
             mkdir($this->cacheDir, 0775, true);
         }

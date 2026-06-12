@@ -30,7 +30,7 @@ class Module extends WitalsModule
             $isStateful = isset($_SERVER['RR_MODE']) || isset($_SERVER['FRANKENPHP_WORKER']);
             $storage = $isStateful 
                 ? new MemoryStorage() 
-                : new FileCacheStorage($app->basePath());
+                : new FileCacheStorage($app->storagePath('framework/cache/patterns'));
 
             $registry = new PatternRegistry($themePath);
             $registry->setStorage($storage);
@@ -57,7 +57,11 @@ class Module extends WitalsModule
 
         $this->app->singleton(ThemeJson::class, function ($app) {
             $themePath = $this->getThemePath($app);
-            return new ThemeJson($themePath . '/theme.json');
+            // Use application storage path instead of hardcoded framework storage
+            return new ThemeJson(
+                $themePath . '/theme.json',
+                $app->storagePath('framework/cache')
+            );
         });
     }
 

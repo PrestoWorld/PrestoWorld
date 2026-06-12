@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace PrestoWorld\Modules\Gutenberg\Pattern;
 
-require_once __DIR__ . '/wp-stubs.php';
-
 /**
  * Theme Pattern Registry
  * 
@@ -14,8 +12,10 @@ require_once __DIR__ . '/wp-stubs.php';
 class PatternRegistry
 {
     protected ?PatternStorageInterface $storage = null;
-    protected array $files = []; // Internal map of slug => original file path
+    protected array $files = [];
+    protected array $fileCache = [];
     protected bool $discovered = false;
+    protected bool $wpStubsLoaded = false;
     protected string $patternsPath;
 
     public function __construct(string $themePath)
@@ -60,39 +60,54 @@ class PatternRegistry
 
     protected function extractSlug(string $file): ?string
     {
-        $content = file_get_contents($file, false, null, 0, 512);
-        if (preg_match('/\*\s*Slug:\s*(.+)/i', $content, $m)) {
-            return trim($m[1]);
+        if (isset($this->fileCache[$file])) {
+            return $this->fileCache[$file]['slug'] ?? null;
         }
-        $base = basename($file, '.php');
-        return 'twentytwentyfive/' . $base;
+
+        $content = file_get_contents($file);
+        $slug = null;
+        if (preg_match('/\*\s*Slug:\s*(.+)/i', $content, $m)) {
+            $slug = trim($m[1]);
+        } else {
+            $base = basename($file, '.php');
+            $slug = 'twentytwentyfive/' . $base;
+        }
+
+        $this->fileCache[$file] = [
+            'slug' => $slug,
+            'content' => $content,
+        ];
+
+        return $slug;
     }
 
     protected function renderFile(string $file): string
     {
-        $raw = file_get_contents($file);
-        
+        $this->ensureWpStubs();
+
+        if (isset($this->fileCache[$file])) {
+            $raw = $this->fileCache[$file]['content'];
+        } else {
+            $raw = file_get_contents($file);
+            $this->fileCache[$file] = [
+                'slug' => basename($file, '.php'),
+                'content' => $raw,
+            ];
+        }
+
         // Strip the PHP doc-block header
         $raw = preg_replace('#<\?php\s*/\*.*?\*/\s*\?>\s*#s', '', $raw, 1);
         $raw = preg_replace('#<\?php\s*/\*.*?\*/\s*#s', '', $raw, 1);
 
-        // We use output buffering to capture the result of PHP execution
-        // While wp-stubs.php is already required in the constructor,
-        // we wrap each block's execution to return its output.
         return preg_replace_callback('#<\?php\s*(.+?)\s*\?>#s', function ($m) {
             $code = trim($m[1]);
 
-            // WordPress compatibility: rename conflicting global functions to avoid
-            // clashes with framework helpers (like Witals' __ helper).
             $code = preg_replace('/\b__(?=\s*\()/', 'wp_stubs_translate', $code);
             $code = preg_replace('/\b_e(?=\s*\()/', 'wp_stubs_translate_echo', $code);
             $code = preg_replace('/\b_x(?=\s*\()/', 'wp_stubs_translate_context', $code);
 
-            // If it's a simple return/expression, try to return it.
-            // If it's a statement with echo/printf, capture it.
             ob_start();
             try {
-                // Ensure the code ends with a semicolon if it's not a block
                 if (!str_ends_with($code, ';') && !str_ends_with($code, '}')) {
                     $code .= ';';
                 }
@@ -103,5 +118,13 @@ class PatternRegistry
             }
             return ob_get_clean();
         }, $raw);
+    }
+
+    protected function ensureWpStubs(): void
+    {
+        if (!$this->wpStubsLoaded) {
+            $this->wpStubsLoaded = true;
+            require_once __DIR__ . '/wp-stubs.php';
+        }
     }
 }

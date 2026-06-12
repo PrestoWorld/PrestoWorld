@@ -70,19 +70,24 @@ class BlockRenderer
 
             // Create the block instance using the Factory
             $instance = BlockFactory::create($block);
-            
-            // Merge global context with local context
-            $context = array_merge($this->context, $localContext, [
+
+            // Build context — avoid per-block array_merge
+            $context = [
                 'pattern_registry' => $this->patternRegistry,
                 'renderer_callback' => function(string $html) {
                     if (!isset($this->registry['__rerender'])) return $html;
                     return ($this->registry['__rerender'])($html);
-                }
-            ]);
+                },
+            ];
+            foreach ($this->context as $k => $v) {
+                $context[$k] = $v;
+            }
+            foreach ($localContext as $k => $v) {
+                $context[$k] = $v;
+            }
 
             return $instance->render($context);
         } catch (\Throwable $e) {
-            // Log or display error in dev mode
             if (isset($_SERVER['WP_DEBUG']) && $_SERVER['WP_DEBUG']) {
                 return "<!-- Block Error ($name): " . htmlspecialchars($e->getMessage()) . " -->";
             }

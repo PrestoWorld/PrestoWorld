@@ -21,7 +21,7 @@ class DatabaseServiceProvider extends ServiceProvider
             $drivers = [
                 'sqlite' => new Config\SQLiteDriverConfig(
                     connection: new Config\SQLite\FileConnectionConfig(
-                        database: $app->basePath('storages/database.sqlite')
+                        database: $app->basePath('storage/database.sqlite')
                     ),
                 ),
                 'mysql' => new Config\MySQLDriverConfig(

@@ -14,21 +14,40 @@ class PostTypeSchemaManager
 {
     protected DatabaseInterface $db;
     protected string $tablePrefix = 'pw_';
-    protected string $stateFilePath;
+    protected ?string $stateFilePath = null;
     protected array $syncedStates = [];
+    protected bool $stateLoaded = false;
+    protected bool $stateDirty = false;
 
     public function __construct(DatabaseInterface $db, string $storagePath = '')
     {
         $this->db = $db;
-        $this->stateFilePath = ($storagePath ?: sys_get_temp_dir()) . '/pw_schema_state.json';
-        $this->loadSyncedStates();
+        if ($storagePath !== '') {
+            $this->stateFilePath = $storagePath . '/pw_schema_state.json';
+        }
     }
 
     public function __destruct()
     {
-        if (!empty($this->syncedStates)) {
+        if ($this->stateDirty && $this->stateFilePath !== null) {
             @file_put_contents($this->stateFilePath, json_encode($this->syncedStates));
         }
+    }
+
+    protected function ensureStateLoaded(): void
+    {
+        if ($this->stateLoaded || $this->stateFilePath === null) {
+            return;
+        }
+        $this->stateLoaded = true;
+        if (file_exists($this->stateFilePath)) {
+            $this->syncedStates = json_decode(file_get_contents($this->stateFilePath), true) ?: [];
+        }
+    }
+
+    protected function markStateDirty(): void
+    {
+        $this->stateDirty = true;
     }
 
     /**
@@ -36,6 +55,8 @@ class PostTypeSchemaManager
      */
     public function register(string $postType, array $args = []): void
     {
+        $this->ensureStateLoaded();
+
         $stateHash = md5(serialize($args));
         $stateKey = "pt_{$postType}";
 
@@ -48,7 +69,7 @@ class PostTypeSchemaManager
 
         $tableName = $this->tablePrefix . "post_" . $postType;
         $schema = $this->db->table($tableName)->getSchema();
-        
+
         $schema->column('post_id')->integer()->nullable(false);
         $schema->index(['post_id'])->unique();
 
@@ -58,6 +79,7 @@ class PostTypeSchemaManager
 
         $schema->save();
         $this->syncedStates[$stateKey] = $stateHash;
+        $this->markStateDirty();
     }
 
     /**
@@ -65,6 +87,8 @@ class PostTypeSchemaManager
      */
     public function registerTaxonomy(string $taxonomy, array $args = []): void
     {
+        $this->ensureStateLoaded();
+
         $stateHash = md5(serialize($args));
         $stateKey = "tax_{$taxonomy}";
 
@@ -76,11 +100,10 @@ class PostTypeSchemaManager
 
         $tableName = $this->tablePrefix . "tax_" . $taxonomy;
         $schema = $this->db->table($tableName)->getSchema();
-        
+
         $schema->column('term_id')->integer()->nullable(false);
         $schema->index(['term_id'])->unique();
-        
-        // Add hierarchy support
+
         if ($args['hierarchical'] ?? false) {
             $schema->column('parent_id')->integer()->nullable()->index();
         }
@@ -91,6 +114,7 @@ class PostTypeSchemaManager
 
         $schema->save();
         $this->syncedStates[$stateKey] = $stateHash;
+        $this->markStateDirty();
     }
 
     /**
@@ -98,6 +122,8 @@ class PostTypeSchemaManager
      */
     public function registerMeta(string $postType, string $metaKey, string $type = 'string', array $options = []): void
     {
+        $this->ensureStateLoaded();
+
         $stateHash = md5($type . serialize($options));
         $stateKey = "meta_{$postType}_{$metaKey}";
 
@@ -112,19 +138,22 @@ class PostTypeSchemaManager
 
         $schema = $this->db->table($tableName)->getSchema();
         $column = $schema->column($metaKey);
-        
+
         $this->mapColumnType($column, $type, $options);
-        
+
         if ($options['nullable'] ?? true) { $column->nullable(); }
         if (isset($options['default'])) { $column->defaultValue($options['default']); }
         if ($options['index'] ?? false) { $schema->index([$metaKey]); }
 
         $schema->save();
         $this->syncedStates[$stateKey] = $stateHash;
+        $this->markStateDirty();
     }
 
     protected function ensureMasterTable(): void
     {
+        $this->ensureStateLoaded();
+
         $stateKey = 'master_table';
         if (isset($this->syncedStates[$stateKey]) && !defined('PW_FORCE_MIGRATE')) {
             return;
@@ -143,10 +172,13 @@ class PostTypeSchemaManager
 
         $schema->save();
         $this->syncedStates[$stateKey] = 'active';
+        $this->markStateDirty();
     }
 
     protected function ensureTaxonomyTables(): void
     {
+        $this->ensureStateLoaded();
+
         $stateKey = 'tax_tables';
         if (isset($this->syncedStates[$stateKey]) && !defined('PW_FORCE_MIGRATE')) {
             return;
@@ -167,13 +199,7 @@ class PostTypeSchemaManager
         $rel->save();
 
         $this->syncedStates[$stateKey] = 'active';
-    }
-
-    protected function loadSyncedStates(): void
-    {
-        if (file_exists($this->stateFilePath)) {
-            $this->syncedStates = json_decode(file_get_contents($this->stateFilePath), true) ?: [];
-        }
+        $this->markStateDirty();
     }
 
     protected function mapColumnType($column, string $type, array $options): void

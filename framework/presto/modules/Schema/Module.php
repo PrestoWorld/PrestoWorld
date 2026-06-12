@@ -33,7 +33,7 @@ class Module extends WitalsModule
         $this->app->singleton(PostTypeSchemaManager::class, function($app) {
             return new PostTypeSchemaManager(
                 $app->make(DatabaseInterface::class),
-                $app->basePath('storages/framework/cache')
+                $app->basePath('storage/framework/cache')
             );
         });
 
