@@ -8,7 +8,7 @@
 	encode zstd gzip
 	
 	php_server {
-		index index.php
+		index public/index.php
 		resolve_root_symlink
 	}
 	
