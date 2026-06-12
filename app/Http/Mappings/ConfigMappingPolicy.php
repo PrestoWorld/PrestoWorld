@@ -8,26 +8,34 @@ use App\Contracts\Http\TemplateMappingPolicy;
 
 class ConfigMappingPolicy implements TemplateMappingPolicy
 {
-    private array $rules;
+    /** @var list<array{type:string, pattern?:string, prefix?:string, template:string}> */
+    private array $exactRules;
+
+    /** @var list<array{type:string, pattern?:string, prefix?:string, template:string}> */
+    private array $prefixRules;
+
     private string $defaultTemplate;
 
     public function __construct(array $mapping, string $defaultTemplate = 'index')
     {
         $this->defaultTemplate = $defaultTemplate;
-        $this->rules = $this->compileRules($mapping);
+        $parsed = $this->compileRules($mapping);
+        $this->exactRules = $parsed['exact'];
+        $this->prefixRules = $parsed['prefix'];
     }
 
     public function match(string $path): ?string
     {
-        foreach ($this->rules as $rule) {
-            if ($rule['type'] === 'exact' && $path === $rule['pattern']) {
+        foreach ($this->exactRules as $rule) {
+            if ($path === $rule['pattern']) {
                 return $rule['template'];
             }
+        }
 
+        foreach ($this->prefixRules as $rule) {
             if ($rule['type'] === 'wildcard' && str_starts_with($path, $rule['prefix'])) {
                 return $rule['template'];
             }
-
             if ($rule['type'] === 'prefix' && $this->isPrefixMatch($path, $rule['pattern'])) {
                 return $rule['template'];
             }
@@ -36,27 +44,32 @@ class ConfigMappingPolicy implements TemplateMappingPolicy
         return $this->defaultTemplate;
     }
 
+    /**
+     * @return array{exact: list<array>, prefix: list<array>}
+     */
     private function compileRules(array $mapping): array
     {
-        $rules = [];
+        $exact = [];
+        $prefix = [];
         foreach ($mapping as $pattern => $template) {
             if ($pattern === '/') {
-                $rules[] = ['type' => 'exact', 'pattern' => $pattern, 'template' => $template];
+                $exact[] = ['type' => 'exact', 'pattern' => '/', 'template' => $template];
             } elseif (str_ends_with($pattern, '/*')) {
-                $prefix = rtrim($pattern, '*');
-                $rules[] = ['type' => 'wildcard', 'prefix' => $prefix, 'template' => $template];
-                // Also add an exact match for the prefix itself (e.g., /category/ matches /category/)
-                $exactPrefix = rtrim($prefix, '/');
+                $wildPrefix = rtrim($pattern, '*');
+                $prefix[] = ['type' => 'wildcard', 'prefix' => $wildPrefix, 'template' => $template];
+                $exactPrefix = rtrim($wildPrefix, '/');
                 if ($exactPrefix !== '') {
-                    $rules[] = ['type' => 'exact', 'pattern' => $exactPrefix, 'template' => $template];
+                    $exact[] = ['type' => 'exact', 'pattern' => $exactPrefix, 'template' => $template];
                 }
             } else {
-                // Non-root, non-wildcard: can match exact and as prefix
-                $rules[] = ['type' => 'exact', 'pattern' => $pattern, 'template' => $template];
-                $rules[] = ['type' => 'prefix', 'pattern' => $pattern, 'template' => $template];
+                $exact[] = ['type' => 'exact', 'pattern' => $pattern, 'template' => $template];
+                $prefix[] = ['type' => 'prefix', 'pattern' => $pattern, 'template' => $template];
             }
         }
-        return $rules;
+
+        usort($prefix, fn(array $a, array $b): int => (strlen($b['prefix'] ?? $b['pattern']) <=> strlen($a['prefix'] ?? $a['pattern'])));
+
+        return ['exact' => $exact, 'prefix' => $prefix];
     }
 
     private function isPrefixMatch(string $path, string $prefix): bool
