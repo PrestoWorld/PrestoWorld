@@ -15,6 +15,9 @@ class Application extends BaseApplication
     {
         parent::registerConfiguredProviders();
 
+        // Register routing — binds RouteRegistry, Router and loads routes/web.php
+        $this->register(\App\Providers\RouteServiceProvider::class);
+
         $this->singleton(
             \Witals\Framework\Contracts\Http\Kernel::class,
             \App\Http\Kernel::class

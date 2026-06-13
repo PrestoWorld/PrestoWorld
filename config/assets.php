@@ -32,7 +32,7 @@ return [
         ],
 
         'admin-spa-css' => [
-            'src' => 'spa/css/admin-spa.css',
+            'src' => 'assets/admin/spa/css/admin-spa.css',
             'type' => 'css',
             'version' => '1.0.0',
             'deps' => [],
@@ -40,7 +40,7 @@ return [
         ],
 
         'admin-spa-js' => [
-            'src' => 'spa/js/admin-spa.js',
+            'src' => 'assets/admin/spa/js/admin-spa.js',
             'type' => 'js',
             'version' => '1.0.0',
             'deps' => ['admin-spa-css'],

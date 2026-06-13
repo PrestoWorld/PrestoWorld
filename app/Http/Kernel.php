@@ -8,6 +8,7 @@ use Psr\Log\LoggerInterface;
 use Witals\Framework\Contracts\Http\Kernel as KernelContract;
 use Witals\Framework\Http\Request;
 use Witals\Framework\Http\Response;
+use App\Http\Routing\Contracts\RouterInterface;
 use App\Services\PageService;
 use App\Exceptions\TemplateNotFoundException;
 use App\Exceptions\RenderException;
@@ -23,11 +24,61 @@ class Kernel implements KernelContract
     ];
 
     public function __construct(
+        private RouterInterface $router,
         private PageService $pageService,
         private LoggerInterface $logger,
     ) {}
 
     public function handle(Request $request): Response
+    {
+        // 1. Try router first (registered routes in routes/web.php)
+        $routerResponse = $this->dispatchRouter($request);
+        if ($routerResponse !== null) {
+            return $routerResponse;
+        }
+
+        // 2. Fallback: theme rendering via PageService
+        return $this->dispatchPageService($request);
+    }
+
+    /**
+     * Dispatch request through the router.
+     * Returns null if no route matched (404 from router = no match).
+     */
+    private function dispatchRouter(Request $request): ?Response
+    {
+        try {
+            $result = $this->router->dispatch($request);
+
+            // Router returns a 404 JSON when no route matches — treat as "no match"
+            if ($result instanceof Response) {
+                if ($result->getStatusCode() === 404) {
+                    return null;
+                }
+                return $this->withSecurityHeaders($result);
+            }
+
+            // If result is a plain string, wrap it as HTML response
+            if (is_string($result)) {
+                return $this->withSecurityHeaders(
+                    new Response($result, 200, ['Content-Type' => 'text/html; charset=utf-8'])
+                );
+            }
+
+            return null;
+        } catch (\Throwable $e) {
+            $this->logger->error('Kernel: Router dispatch error: {message}', [
+                'message' => $e->getMessage(),
+                'exception' => $e,
+            ]);
+            return new Response('Internal server error', 500, self::SECURITY_HEADERS);
+        }
+    }
+
+    /**
+     * Fallback to theme rendering via PageService.
+     */
+    private function dispatchPageService(Request $request): Response
     {
         try {
             $html = $this->pageService->handle($request);
@@ -37,14 +88,22 @@ class Kernel implements KernelContract
                 ...self::SECURITY_HEADERS,
             ]);
         } catch (TemplateNotFoundException) {
-            $this->logger->warning('Page not found: {path}', ['path' => $request->path()]);
+            $this->logger->warning('Kernel: Page not found: {path}', ['path' => $request->path()]);
             return new Response('Page not found', 404, self::SECURITY_HEADERS);
         } catch (RenderException $e) {
-            $this->logger->error('Render error: {message}', [
+            $this->logger->error('Kernel: Render error: {message}', [
                 'message' => $e->getMessage(),
                 'exception' => $e,
             ]);
             return new Response('Internal server error', 500, self::SECURITY_HEADERS);
         }
+    }
+
+    private function withSecurityHeaders(Response $response): Response
+    {
+        foreach (self::SECURITY_HEADERS as $name => $value) {
+            $response = $response->withHeader($name, $value);
+        }
+        return $response;
     }
 }
