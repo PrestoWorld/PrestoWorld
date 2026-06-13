@@ -79,6 +79,40 @@ class Module extends WitalsModule
             return new TNTSearchAdapter();
         });
 
+        // Async (Fiber-aware) decorated adapters — wrap each adapter in
+        // AsyncSearchAdapterDecorator so every call runs through the event
+        // loop when in long-running mode (RoadRunner), or synchronously
+        // in traditional mode.
+        $this->app->singleton(TypesenseAdapter::class . '.async', function ($app) {
+            return new AsyncSearchAdapterDecorator(
+                inner: $app->make(TypesenseAdapter::class),
+                concurrent: $app->make(ConcurrentManager::class),
+            );
+        });
+
+        $this->app->singleton(MeilisearchAdapter::class . '.async', function ($app) {
+            return new AsyncSearchAdapterDecorator(
+                inner: $app->make(MeilisearchAdapter::class),
+                concurrent: $app->make(ConcurrentManager::class),
+            );
+        });
+
+        $this->app->singleton(TNTSearchAdapter::class . '.async', function ($app) {
+            return new AsyncSearchAdapterDecorator(
+                inner: $app->make(TNTSearchAdapter::class),
+                concurrent: $app->make(ConcurrentManager::class),
+            );
+        });
+
+        // Generic SearchEngineInterface alias pointing to the
+        // async-decorated TNT adapter (the default in this env).
+        $this->app->singleton(
+            \Prestoworld\SearchEngine\Contracts\SearchEngineInterface::class,
+            function ($app) {
+                return $app->make(TNTSearchAdapter::class . '.async');
+            },
+        );
+
         // Global Helper for PW_Query — loaded once
         if (!self::$helpersLoaded) {
             require_once __DIR__ . '/helpers.php';
