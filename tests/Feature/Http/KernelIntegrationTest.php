@@ -8,6 +8,7 @@ use PHPUnit\Framework\TestCase;
 use App\Http\Kernel;
 use App\Services\PageService;
 use App\Contracts\Services\ContentRenderer;
+use App\Contracts\Services\RenderedContent;
 use App\Services\HtmlComposer;
 use App\Http\TemplateResolver;
 use App\Http\Mappings\ConfigMappingPolicy;
@@ -37,8 +38,9 @@ class KernelIntegrationTest extends TestCase
         );
 
         $contentRenderer = $this->createMock(ContentRenderer::class);
-        $contentRenderer->method('getStyles')->willReturn('');
-        $contentRenderer->method('render')->willReturnCallback(fn(string $t) => "<main>{$t}</main>");
+        $contentRenderer->method('render')->willReturnCallback(
+            fn(string $t) => new RenderedContent("<main>{$t}</main>", ''),
+        );
 
         $composer = new HtmlComposer(ThemeConfig::fromArray([
             'default_title' => 'PrestoWorld',
@@ -110,8 +112,7 @@ class KernelIntegrationTest extends TestCase
         );
 
         $contentRenderer = $this->createMock(ContentRenderer::class);
-        $contentRenderer->method('getStyles')->willReturn('body { background: red; }');
-        $contentRenderer->method('render')->willReturn('<p>styled</p>');
+        $contentRenderer->method('render')->willReturn(new RenderedContent('<p>styled</p>', 'body { background: red; }'));
 
         $composer = new HtmlComposer(ThemeConfig::fromArray([
             'default_title' => 'Test',

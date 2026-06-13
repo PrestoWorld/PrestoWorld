@@ -8,6 +8,7 @@ use PHPUnit\Framework\TestCase;
 use App\Http\Kernel;
 use App\Services\PageService;
 use App\Contracts\Services\ContentRenderer;
+use App\Contracts\Services\RenderedContent;
 use App\Http\TemplateResolver;
 use App\Http\Mappings\ConfigMappingPolicy;
 use App\Contracts\Http\PageRenderer;
@@ -77,8 +78,7 @@ class KernelErrorHandlingTest extends TestCase
         );
 
         $contentRenderer = $this->createMock(ContentRenderer::class);
-        $contentRenderer->method('getStyles')->willReturn('');
-        $contentRenderer->method('render')->willReturnCallback(fn(string $t) => $t);
+        $contentRenderer->method('render')->willReturnCallback(fn(string $t) => new RenderedContent($t, ''));
 
         $pageService = new PageService(
             $resolver,

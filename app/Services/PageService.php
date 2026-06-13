@@ -26,9 +26,8 @@ class PageService
             throw new TemplateNotFoundException('No template could be resolved for this request');
         }
 
-        $this->renderer->addStyle($this->contentRenderer->getStyles());
-        $body = $this->contentRenderer->render($template);
+        $content = $this->contentRenderer->render($template);
 
-        return $this->renderer->render($body);
+        return $this->renderer->render($content);
     }
 }

@@ -6,7 +6,7 @@ namespace App\Services;
 
 use PrestoWorld\Modules\Gutenberg\Module as GutenbergModule;
 use App\Contracts\Services\ContentRenderer as ContentRendererContract;
-use App\Exceptions\RenderException;
+use App\Contracts\Services\RenderedContent;
 
 class ContentRenderer implements ContentRendererContract
 {
@@ -14,19 +14,11 @@ class ContentRenderer implements ContentRendererContract
         private GutenbergModule $gutenberg,
     ) {}
 
-    public function render(string $template): string
+    public function render(string $template): RenderedContent
     {
-        $result = $this->gutenberg->renderTemplate($template);
-
-        if ($result === null || $result === '') {
-            throw new RenderException("Template [{$template}] returned empty content");
-        }
-
-        return $result;
-    }
-
-    public function getStyles(): string
-    {
-        return $this->gutenberg->getStyles();
+        return new RenderedContent(
+            body: $this->gutenberg->renderTemplate($template) ?? '',
+            styles: $this->gutenberg->getStyles(),
+        );
     }
 }
