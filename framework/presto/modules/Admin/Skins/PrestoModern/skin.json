@@ -1,0 +1,18 @@
+{
+    "name": "presto-modern",
+    "version": "1.0.0",
+    "description": "Modern dark-themed admin skin with SSR rendering",
+    "mode": "ssr",
+    "entry": "PrestoModernSkin.php",
+    "namespace": "PrestoWorld\\Modules\\Admin\\Skins\\PrestoModern",
+    "views": "views",
+    "assets": {
+        "css": ["/assets/presto/admin/modern.css"],
+        "js": ["/assets/presto/admin/modern.js"]
+    },
+    "autoload": {
+        "psr-4": {
+            "PrestoWorld\\Modules\\Admin\\Skins\\PrestoModern\\": "."
+        }
+    }
+}

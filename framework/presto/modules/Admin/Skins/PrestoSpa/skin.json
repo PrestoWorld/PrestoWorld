@@ -1,0 +1,17 @@
+{
+    "name": "presto-spa",
+    "version": "1.0.0",
+    "description": "Single-page application admin skin with CSR rendering (Solid JS)",
+    "mode": "csr",
+    "entry": "PrestoSpaSkin.php",
+    "namespace": "PrestoWorld\\Modules\\Admin\\Skins\\PrestoSpa",
+    "assets": {
+        "css": ["/assets/admin/spa/css/admin-spa.css"],
+        "js": ["/assets/admin/spa/js/admin-spa.js"]
+    },
+    "autoload": {
+        "psr-4": {
+            "PrestoWorld\\Modules\\Admin\\Skins\\PrestoSpa\\": "."
+        }
+    }
+}
