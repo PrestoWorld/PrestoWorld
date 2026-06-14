@@ -8,6 +8,8 @@ use Psr\Log\LoggerInterface;
 use Witals\Framework\Contracts\Http\Kernel as KernelContract;
 use Witals\Framework\Http\Request;
 use Witals\Framework\Http\Response;
+use Witals\Framework\Context\Contracts\ContextManagerInterface;
+use Witals\Framework\Context\Contracts\ContextLoaderInterface;
 use App\Http\Routing\Contracts\RouterInterface;
 use App\Services\PageService;
 use App\Exceptions\TemplateNotFoundException;
@@ -27,6 +29,8 @@ class Kernel implements KernelContract
         private RouterInterface $router,
         private PageService $pageService,
         private LoggerInterface $logger,
+        private ContextManagerInterface $contextManager,
+        private ContextLoaderInterface $contextLoader,
     ) {}
 
     public function handle(Request $request): Response
@@ -37,7 +41,13 @@ class Kernel implements KernelContract
             return $routerResponse;
         }
 
-        // 2. Fallback: theme rendering via PageService
+        // 2. Try ContextLoader (context-matched pages, e.g., theme templates)
+        $contextResponse = $this->dispatchContext($request);
+        if ($contextResponse !== null) {
+            return $contextResponse;
+        }
+
+        // 3. Fallback: theme rendering via PageService
         return $this->dispatchPageService($request);
     }
 
@@ -72,6 +82,28 @@ class Kernel implements KernelContract
                 'exception' => $e,
             ]);
             return new Response('Internal server error', 500, self::SECURITY_HEADERS);
+        }
+    }
+
+    /**
+     * Dispatch via ContextLoader if a context matches the request.
+     */
+    private function dispatchContext(Request $request): ?Response
+    {
+        try {
+            $context = $this->contextManager->resolveContext($request);
+            if ($context === null) {
+                return null;
+            }
+
+            $response = $this->contextLoader->load($context);
+            return $this->withSecurityHeaders($response);
+        } catch (\Throwable $e) {
+            $this->logger->error('Kernel: Context dispatch error: {message}', [
+                'message' => $e->getMessage(),
+                'exception' => $e,
+            ]);
+            return null;
         }
     }
 

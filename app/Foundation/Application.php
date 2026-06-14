@@ -71,6 +71,17 @@ class Application extends BaseApplication
         $this->register(\Witals\Framework\Auth\AuthServiceProvider::class);
         $this->register(\PrestoWorld\Foundation\Providers\DatabaseServiceProvider::class);
 
+        // Context system
+        $this->singleton(\Witals\Framework\Context\Contracts\BlockManagerInterface::class, \Witals\Framework\Context\BlockManager::class);
+        $this->singleton(\Witals\Framework\Context\Contracts\ContextManagerInterface::class, \Witals\Framework\Context\ContextManager::class);
+        $this->singleton(\Witals\Framework\Context\Contracts\ContextLoaderInterface::class, function ($app) {
+            return new \Witals\Framework\Context\ContextLoader(
+                $app->make(\Witals\Framework\Context\Contracts\BlockManagerInterface::class),
+                templateDir: $app->basePath('content/themes/' . ($app->config('theme.active', 'twentytwentyfive')) . '/templates'),
+                contextManager: $app->make(\Witals\Framework\Context\Contracts\ContextManagerInterface::class),
+            );
+        });
+
         // Persist compiled config cache for long-running environments
         if ($this->isLongRunning() && $this->configRepository !== null) {
             $this->configRepository->persistCache();
