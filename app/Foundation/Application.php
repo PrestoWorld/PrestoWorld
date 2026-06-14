@@ -91,7 +91,12 @@ class Application extends BaseApplication
                 $witalsManager->registerModuleRoutes($registry);
             }
 
-            $registry->addMiddleware(\App\Http\Middleware\AdminAuthMiddleware::class);
+            // Admin auth only applies to admin routes — lazy-load
+            $registry->addMiddlewareFor(
+                \App\Http\Middleware\AdminAuthMiddleware::class,
+                only: ['/dashboard', '/api/admin'],
+            );
+            // Global middleware runs on all matched routes
             $registry->addMiddleware(\App\Http\Middleware\CorsMiddleware::class);
             $registry->addMiddleware(\App\Http\Middleware\LocaleMiddleware::class);
         }
