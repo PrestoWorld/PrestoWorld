@@ -16,6 +16,24 @@
         "admin.menu-repository",
         "admin.assets"
     ],
+    "route_prefix": "",
+    "routes": [
+        {
+            "method": "GET",
+            "path": "/dashboard",
+            "handler": ["App\\Http\\Controllers\\Admin\\SpaController", "__invoke"]
+        },
+        {
+            "method": "GET",
+            "path": "/api/admin/menu",
+            "handler": ["App\\Http\\Controllers\\Admin\\SpaController", "menu"]
+        },
+        {
+            "method": "GET",
+            "path": "/api/admin/dashboard/widgets",
+            "handler": ["App\\Http\\Controllers\\Admin\\SpaController", "dashboardWidgets"]
+        }
+    ],
     "autoload": {
         "psr-4": {
             "PrestoWorld\\Modules\\Admin\\": "."

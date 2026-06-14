@@ -11,6 +11,13 @@ class Application extends BaseApplication
 {
     protected ?ConfigRepository $configRepository = null;
 
+    public function registerCoreContainerAliases(): void
+    {
+        parent::registerCoreContainerAliases();
+
+        $this->instance(self::class, $this);
+    }
+
     public function registerConfiguredProviders(): void
     {
         parent::registerConfiguredProviders();
@@ -73,6 +80,20 @@ class Application extends BaseApplication
     {
         if ($this->booted) {
             return;
+        }
+
+        // Register module routes before parent::boot() so they get PRIORITY_MODULE (checked first)
+        if ($this->has(\App\Http\Routing\Contracts\RouteRegistryInterface::class)) {
+            $registry = $this->make(\App\Http\Routing\Contracts\RouteRegistryInterface::class);
+
+            if ($this->has(\Witals\Framework\Module\ModuleManager::class)) {
+                $witalsManager = $this->make(\Witals\Framework\Module\ModuleManager::class);
+                $witalsManager->registerModuleRoutes($registry);
+            }
+
+            $registry->addMiddleware(\App\Http\Middleware\AdminAuthMiddleware::class);
+            $registry->addMiddleware(\App\Http\Middleware\CorsMiddleware::class);
+            $registry->addMiddleware(\App\Http\Middleware\LocaleMiddleware::class);
         }
 
         parent::boot();

@@ -13,7 +13,7 @@ return [
     | In production, wire a real AuthContext provider.
     */
     'auth' => [
-        'enabled' => env('ADMIN_AUTH_ENABLED', true),
+        'enabled' => env('ADMIN_AUTH_ENABLED', false),
     ],
 
     /*
