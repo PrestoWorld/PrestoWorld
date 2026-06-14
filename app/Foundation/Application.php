@@ -68,6 +68,7 @@ class Application extends BaseApplication
             \App\Services\PageService::class,
         );
 
+        $this->register(\Witals\Framework\Auth\AuthServiceProvider::class);
         $this->register(\PrestoWorld\Foundation\Providers\DatabaseServiceProvider::class);
 
         // Persist compiled config cache for long-running environments

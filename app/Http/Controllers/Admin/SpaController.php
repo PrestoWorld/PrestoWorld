@@ -22,10 +22,15 @@ class SpaController
     {
         $skin = $this->skins->getActiveSkin();
 
+        $widgetColumns = [];
+        foreach ($this->widgets->getWidgetsGroupedByColumn('dashboard') as $col => $widgets) {
+            $widgetColumns[$col] = array_map(fn($w) => $w->toArray(), $widgets);
+        }
+
         $initialState = [
             'user' => $this->getUserState(),
             'menu' => $this->menu->getTreeAsArray(),
-            'widgets' => $this->widgets->getWidgetsGroupedByColumn('dashboard'),
+            'widgets' => $widgetColumns,
             'page' => [
                 'path' => $request->path(),
                 'title' => 'Dashboard',
