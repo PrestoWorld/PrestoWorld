@@ -166,11 +166,55 @@ class PostTypeSchemaManager
         $schema->column('slug')->string(255)->index();
         $schema->column('status')->string(20)->defaultValue('publish')->index();
         $schema->column('author_id')->integer()->nullable()->index();
+        $schema->column('trid')->bigInteger()->nullable()->index();
         $schema->column('created_at')->datetime()->defaultValue('CURRENT_TIMESTAMP');
         $schema->column('updated_at')->datetime()->nullable();
         $schema->column('compact_meta')->json()->nullable();
 
         $schema->save();
+
+        $this->ensureTranslationTables();
+
+        $this->syncedStates[$stateKey] = 'active';
+        $this->markStateDirty();
+    }
+
+    protected function ensureTranslationTables(): void
+    {
+        $this->ensureStateLoaded();
+
+        $stateKey = 'translation_tables';
+        if (isset($this->syncedStates[$stateKey]) && !defined('PW_FORCE_MIGRATE')) {
+            return;
+        }
+
+        // 1. icl_translations — WPML-compatible translation index
+        // Maps any element (post, term, etc.) to its translation group.
+        $icl = $this->db->table($this->tablePrefix . 'icl_translations')->getSchema();
+        $icl->primary('translation_id');
+        $icl->column('element_type')->string(60)->nullable(false);
+        $icl->column('element_id')->integer()->nullable(false);
+        $icl->column('trid')->bigInteger()->nullable(false);
+        $icl->column('language_code')->string(7)->nullable(false);
+        $icl->column('source_language_code')->string(7)->nullable();
+        $icl->index(['element_type', 'element_id', 'language_code'])->unique();
+        $icl->index(['trid']);
+        $icl->index(['language_code']);
+        $icl->save();
+
+        // 2. post_translations — translated field values per locale
+        $data = $this->db->table($this->tablePrefix . 'post_translations')->getSchema();
+        $data->primary('id');
+        $data->column('post_id')->integer()->nullable(false);
+        $data->column('locale')->string(5)->nullable(false);
+        $data->column('title')->string(255)->nullable();
+        $data->column('slug')->string(255)->nullable();
+        $data->column('content')->text()->nullable();
+        $data->column('excerpt')->text()->nullable();
+        $data->index(['post_id']);
+        $data->index(['post_id', 'locale'])->unique();
+        $data->save();
+
         $this->syncedStates[$stateKey] = 'active';
         $this->markStateDirty();
     }
