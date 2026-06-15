@@ -28,6 +28,13 @@ class BlockRenderer
         $this->context = $context;
     }
 
+    public function mergeContext(array $context): void
+    {
+        foreach ($context as $k => $v) {
+            $this->context[$k] = $v;
+        }
+    }
+
     public function addDecorator(BlockDecoratorInterface $decorator): void
     {
         $this->decorators[] = $decorator;

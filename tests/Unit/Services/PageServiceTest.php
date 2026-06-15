@@ -12,9 +12,21 @@ use App\Http\TemplateResolver;
 use App\Contracts\Http\PageRenderer;
 use Witals\Framework\Http\Request;
 use App\Exceptions\TemplateNotFoundException;
+use PrestoWorld\Modules\Schema\PostRepository;
+use Cycle\Database\DatabaseInterface;
 
 class PageServiceTest extends TestCase
 {
+    private function mockPostRepository(): PostRepository
+    {
+        return $this->createMock(PostRepository::class);
+    }
+
+    private function mockDatabase(): DatabaseInterface
+    {
+        return $this->createMock(DatabaseInterface::class);
+    }
+
     public function test_handle_resolves_and_renders_template(): void
     {
         $resolver = $this->createMock(TemplateResolver::class);
@@ -28,7 +40,7 @@ class PageServiceTest extends TestCase
         $pageRenderer = $this->createMock(PageRenderer::class);
         $pageRenderer->method('render')->willReturn('<html><body><p>Content</p></body></html>');
 
-        $service = new PageService($resolver, $contentRenderer, $pageRenderer);
+        $service = new PageService($resolver, $contentRenderer, $pageRenderer, $this->mockPostRepository(), $this->mockDatabase());
         $request = new Request('GET', '/', [], [], [], [], [], [], null);
 
         $result = $service->handle($request);
@@ -46,6 +58,8 @@ class PageServiceTest extends TestCase
             $resolver,
             $this->createMock(ContentRenderer::class),
             $this->createMock(PageRenderer::class),
+            $this->mockPostRepository(),
+            $this->mockDatabase(),
         );
 
         $this->expectException(TemplateNotFoundException::class);
@@ -62,6 +76,8 @@ class PageServiceTest extends TestCase
             $resolver,
             $this->createMock(ContentRenderer::class),
             $this->createMock(PageRenderer::class),
+            $this->mockPostRepository(),
+            $this->mockDatabase(),
         );
 
         $this->expectException(TemplateNotFoundException::class);
@@ -84,7 +100,7 @@ class PageServiceTest extends TestCase
             ->method('render')
             ->with($this->callback(fn(RenderedContent $c) => $c->styles === 'body { margin: 0; }'));
 
-        $service = new PageService($resolver, $contentRenderer, $pageRenderer);
+        $service = new PageService($resolver, $contentRenderer, $pageRenderer, $this->mockPostRepository(), $this->mockDatabase());
         $request = new Request('GET', '/', [], [], [], [], [], [], null);
 
         $service->handle($request);

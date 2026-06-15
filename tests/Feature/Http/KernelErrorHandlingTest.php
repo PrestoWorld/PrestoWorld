@@ -16,6 +16,8 @@ use App\Contracts\Http\ThemeConfig;
 use App\Exceptions\TemplateNotFoundException;
 use App\Exceptions\RenderException;
 use Psr\Log\LoggerInterface;
+use PrestoWorld\Modules\Schema\PostRepository;
+use Cycle\Database\DatabaseInterface;
 use Witals\Framework\Http\Request;
 use Witals\Framework\Http\Response;
 
@@ -33,6 +35,8 @@ class KernelErrorHandlingTest extends TestCase
             $resolver,
             $this->createMock(ContentRenderer::class),
             $this->createMock(PageRenderer::class),
+            $this->createMock(PostRepository::class),
+            $this->createMock(DatabaseInterface::class),
         );
 
         $kernel = new Kernel($pageService, $logger);
@@ -57,6 +61,8 @@ class KernelErrorHandlingTest extends TestCase
             $resolver,
             $contentRenderer,
             $this->createMock(PageRenderer::class),
+            $this->createMock(PostRepository::class),
+            $this->createMock(DatabaseInterface::class),
         );
 
         $kernel = new Kernel($pageService, $logger);
@@ -84,6 +90,8 @@ class KernelErrorHandlingTest extends TestCase
             $resolver,
             $contentRenderer,
             $this->createMock(PageRenderer::class),
+            $this->createMock(PostRepository::class),
+            $this->createMock(DatabaseInterface::class),
         );
 
         $kernel = new Kernel($pageService, $logger);

@@ -58,6 +58,7 @@ class Application extends BaseApplication
                 if ($app->has(\PrestoWorld\Modules\Gutenberg\Module::class)) {
                     return new \App\Services\ContentRenderer(
                         $app->make(\PrestoWorld\Modules\Gutenberg\Module::class),
+                        $app->make(\PrestoWorld\Modules\Gutenberg\Renderer\BlockRenderer::class),
                     );
                 }
                 return new \App\Services\NullContentRenderer();
@@ -70,6 +71,7 @@ class Application extends BaseApplication
 
         $this->register(\Witals\Framework\Auth\AuthServiceProvider::class);
         $this->register(\PrestoWorld\Foundation\Providers\DatabaseServiceProvider::class);
+        $this->register(\App\Providers\ConsoleServiceProvider::class);
 
         // Context system
         $this->singleton(\Witals\Framework\Context\Contracts\BlockManagerInterface::class, \Witals\Framework\Context\BlockManager::class);

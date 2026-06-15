@@ -9,7 +9,7 @@ use App\Contracts\Services\RenderedContent;
 
 class NullContentRenderer implements ContentRendererContract
 {
-    public function render(string $template): RenderedContent
+    public function render(string $template, array $post = []): RenderedContent
     {
         return RenderedContent::empty();
     }

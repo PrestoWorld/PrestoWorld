@@ -6,5 +6,5 @@ namespace App\Contracts\Services;
 
 interface ContentRenderer
 {
-    public function render(string $template): RenderedContent;
+    public function render(string $template, array $post = []): RenderedContent;
 }

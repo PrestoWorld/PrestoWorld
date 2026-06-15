@@ -14,6 +14,8 @@ use App\Http\TemplateResolver;
 use App\Http\Mappings\ConfigMappingPolicy;
 use App\Http\PageRenderer;
 use App\Contracts\Http\ThemeConfig;
+use PrestoWorld\Modules\Schema\PostRepository;
+use Cycle\Database\DatabaseInterface;
 use Psr\Log\LoggerInterface;
 use Witals\Framework\Http\Request;
 use Witals\Framework\Http\Response;
@@ -48,7 +50,7 @@ class KernelIntegrationTest extends TestCase
         ]));
         $pageRenderer = new PageRenderer($composer);
 
-        $pageService = new PageService($resolver, $contentRenderer, $pageRenderer);
+        $pageService = new PageService($resolver, $contentRenderer, $pageRenderer, $this->createMock(PostRepository::class), $this->createMock(DatabaseInterface::class));
 
         $this->kernel = new Kernel($pageService, $logger);
     }
@@ -120,7 +122,7 @@ class KernelIntegrationTest extends TestCase
         ]));
         $pageRenderer = new PageRenderer($composer);
 
-        $pageService = new PageService($resolver, $contentRenderer, $pageRenderer);
+        $pageService = new PageService($resolver, $contentRenderer, $pageRenderer, $this->createMock(PostRepository::class), $this->createMock(DatabaseInterface::class));
         $kernel = new Kernel($pageService, $logger);
 
         $response = $kernel->handle(new Request('GET', '/'));

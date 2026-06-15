@@ -9,6 +9,7 @@ use App\Services\ContentRenderer;
 use App\Services\NullContentRenderer;
 use App\Contracts\Services\RenderedContent;
 use PrestoWorld\Modules\Gutenberg\Module as GutenbergModule;
+use PrestoWorld\Modules\Gutenberg\Renderer\BlockRenderer;
 
 class ContentRendererTest extends TestCase
 {
@@ -18,7 +19,7 @@ class ContentRendererTest extends TestCase
         $gutenberg->method('renderTemplate')->with('index')->willReturn('<p>Hello</p>');
         $gutenberg->method('getStyles')->willReturn('body { color: red; }');
 
-        $renderer = new ContentRenderer($gutenberg);
+        $renderer = new ContentRenderer($gutenberg, $this->createMock(BlockRenderer::class));
         $result = $renderer->render('index');
 
         $this->assertInstanceOf(RenderedContent::class, $result);
@@ -31,7 +32,7 @@ class ContentRendererTest extends TestCase
         $gutenberg = $this->createMock(GutenbergModule::class);
         $gutenberg->method('renderTemplate')->willReturn('');
 
-        $renderer = new ContentRenderer($gutenberg);
+        $renderer = new ContentRenderer($gutenberg, $this->createMock(BlockRenderer::class));
         $result = $renderer->render('index');
 
         $this->assertSame('', $result->body);
@@ -43,7 +44,7 @@ class ContentRendererTest extends TestCase
         $gutenberg->method('renderTemplate')->willReturn('<p>Content</p>');
         $gutenberg->method('getStyles')->willReturn('body { color: red; }');
 
-        $renderer = new ContentRenderer($gutenberg);
+        $renderer = new ContentRenderer($gutenberg, $this->createMock(BlockRenderer::class));
         $result = $renderer->render('index');
 
         $this->assertSame('body { color: red; }', $result->styles);
@@ -55,7 +56,7 @@ class ContentRendererTest extends TestCase
         $gutenberg->method('renderTemplate')->willReturn('<p>Content</p>');
         $gutenberg->method('getStyles')->willReturn('');
 
-        $renderer = new ContentRenderer($gutenberg);
+        $renderer = new ContentRenderer($gutenberg, $this->createMock(BlockRenderer::class));
         $result = $renderer->render('index');
 
         $this->assertSame('', $result->styles);
