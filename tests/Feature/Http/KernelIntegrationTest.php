@@ -14,8 +14,11 @@ use App\Http\TemplateResolver;
 use App\Http\Mappings\ConfigMappingPolicy;
 use App\Http\PageRenderer;
 use App\Contracts\Http\ThemeConfig;
+use App\Http\Routing\Contracts\RouterInterface;
 use PrestoWorld\Modules\Schema\PostRepository;
 use Cycle\Database\DatabaseInterface;
+use Witals\Framework\Context\Contracts\ContextManagerInterface;
+use Witals\Framework\Context\Contracts\ContextLoaderInterface;
 use Psr\Log\LoggerInterface;
 use Witals\Framework\Http\Request;
 use Witals\Framework\Http\Response;
@@ -27,6 +30,11 @@ class KernelIntegrationTest extends TestCase
     protected function setUp(): void
     {
         $logger = $this->createMock(LoggerInterface::class);
+        $router = $this->createMock(RouterInterface::class);
+        $router->method('dispatch')->willReturn(null);
+        $contextManager = $this->createMock(ContextManagerInterface::class);
+        $contextManager->method('resolveContext')->willReturn(null);
+        $contextLoader = $this->createMock(ContextLoaderInterface::class);
 
         $resolver = new TemplateResolver(
             new ConfigMappingPolicy(
@@ -52,7 +60,7 @@ class KernelIntegrationTest extends TestCase
 
         $pageService = new PageService($resolver, $contentRenderer, $pageRenderer, $this->createMock(PostRepository::class), $this->createMock(DatabaseInterface::class));
 
-        $this->kernel = new Kernel($pageService, $logger);
+        $this->kernel = new Kernel($router, $pageService, $logger, $contextManager, $contextLoader);
     }
 
     public function test_root_route_returns_index_template(): void
@@ -122,8 +130,14 @@ class KernelIntegrationTest extends TestCase
         ]));
         $pageRenderer = new PageRenderer($composer);
 
+        $router = $this->createMock(RouterInterface::class);
+        $router->method('dispatch')->willReturn(null);
+        $contextManager = $this->createMock(ContextManagerInterface::class);
+        $contextManager->method('resolveContext')->willReturn(null);
+        $contextLoader = $this->createMock(ContextLoaderInterface::class);
+
         $pageService = new PageService($resolver, $contentRenderer, $pageRenderer, $this->createMock(PostRepository::class), $this->createMock(DatabaseInterface::class));
-        $kernel = new Kernel($pageService, $logger);
+        $kernel = new Kernel($router, $pageService, $logger, $contextManager, $contextLoader);
 
         $response = $kernel->handle(new Request('GET', '/'));
 

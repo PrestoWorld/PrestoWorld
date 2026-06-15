@@ -13,8 +13,11 @@ use App\Http\Mappings\ConfigMappingPolicy;
 use App\Http\PageRenderer;
 use App\Services\HtmlComposer;
 use App\Contracts\Http\ThemeConfig;
+use App\Http\Routing\Contracts\RouterInterface;
 use PrestoWorld\Modules\Schema\PostRepository;
 use Cycle\Database\DatabaseInterface;
+use Witals\Framework\Context\Contracts\ContextManagerInterface;
+use Witals\Framework\Context\Contracts\ContextLoaderInterface;
 use Psr\Log\LoggerInterface;
 use Witals\Framework\Http\Request;
 
@@ -23,6 +26,11 @@ class NullContentRendererTest extends TestCase
     public function test_handles_request_when_no_content_renderer_available(): void
     {
         $logger = $this->createMock(LoggerInterface::class);
+        $router = $this->createMock(RouterInterface::class);
+        $router->method('dispatch')->willReturn(null);
+        $contextManager = $this->createMock(ContextManagerInterface::class);
+        $contextManager->method('resolveContext')->willReturn(null);
+        $contextLoader = $this->createMock(ContextLoaderInterface::class);
 
         $resolver = new TemplateResolver(
             new ConfigMappingPolicy(
@@ -41,7 +49,7 @@ class NullContentRendererTest extends TestCase
 
         $pageService = new PageService($resolver, $contentRenderer, $pageRenderer, $this->createMock(PostRepository::class), $this->createMock(DatabaseInterface::class));
 
-        $kernel = new Kernel($pageService, $logger);
+        $kernel = new Kernel($router, $pageService, $logger, $contextManager, $contextLoader);
         $response = $kernel->handle(new Request('GET', '/'));
 
         $this->assertSame(200, $response->getStatusCode());
@@ -54,6 +62,11 @@ class NullContentRendererTest extends TestCase
     public function test_no_styles_when_content_renderer_empty(): void
     {
         $logger = $this->createMock(LoggerInterface::class);
+        $router = $this->createMock(RouterInterface::class);
+        $router->method('dispatch')->willReturn(null);
+        $contextManager = $this->createMock(ContextManagerInterface::class);
+        $contextManager->method('resolveContext')->willReturn(null);
+        $contextLoader = $this->createMock(ContextLoaderInterface::class);
 
         $resolver = new TemplateResolver(
             new ConfigMappingPolicy(['/' => 'index'], 'index'),
@@ -69,7 +82,7 @@ class NullContentRendererTest extends TestCase
 
         $pageService = new PageService($resolver, $contentRenderer, $pageRenderer, $this->createMock(PostRepository::class), $this->createMock(DatabaseInterface::class));
 
-        $kernel = new Kernel($pageService, $logger);
+        $kernel = new Kernel($router, $pageService, $logger, $contextManager, $contextLoader);
         $response = $kernel->handle(new Request('GET', '/'));
 
         $html = $response->getContent();

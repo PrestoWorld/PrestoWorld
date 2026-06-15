@@ -15,6 +15,9 @@ use App\Contracts\Http\PageRenderer;
 use App\Contracts\Http\ThemeConfig;
 use App\Exceptions\TemplateNotFoundException;
 use App\Exceptions\RenderException;
+use App\Http\Routing\Contracts\RouterInterface;
+use Witals\Framework\Context\Contracts\ContextManagerInterface;
+use Witals\Framework\Context\Contracts\ContextLoaderInterface;
 use Psr\Log\LoggerInterface;
 use PrestoWorld\Modules\Schema\PostRepository;
 use Cycle\Database\DatabaseInterface;
@@ -27,6 +30,11 @@ class KernelErrorHandlingTest extends TestCase
     {
         $logger = $this->createMock(LoggerInterface::class);
         $logger->expects($this->once())->method('warning');
+        $router = $this->createMock(RouterInterface::class);
+        $router->method('dispatch')->willReturn(null);
+        $contextManager = $this->createMock(ContextManagerInterface::class);
+        $contextManager->method('resolveContext')->willReturn(null);
+        $contextLoader = $this->createMock(ContextLoaderInterface::class);
 
         $resolver = $this->createMock(TemplateResolver::class);
         $resolver->method('resolve')->willReturn(null);
@@ -39,7 +47,7 @@ class KernelErrorHandlingTest extends TestCase
             $this->createMock(DatabaseInterface::class),
         );
 
-        $kernel = new Kernel($pageService, $logger);
+        $kernel = new Kernel($router, $pageService, $logger, $contextManager, $contextLoader);
         $response = $kernel->handle(new Request('GET', '/missing'));
 
         $this->assertSame(404, $response->getStatusCode());
@@ -50,6 +58,11 @@ class KernelErrorHandlingTest extends TestCase
     {
         $logger = $this->createMock(LoggerInterface::class);
         $logger->expects($this->once())->method('error');
+        $router = $this->createMock(RouterInterface::class);
+        $router->method('dispatch')->willReturn(null);
+        $contextManager = $this->createMock(ContextManagerInterface::class);
+        $contextManager->method('resolveContext')->willReturn(null);
+        $contextLoader = $this->createMock(ContextLoaderInterface::class);
 
         $resolver = $this->createMock(TemplateResolver::class);
         $resolver->method('resolve')->willReturn('index');
@@ -65,7 +78,7 @@ class KernelErrorHandlingTest extends TestCase
             $this->createMock(DatabaseInterface::class),
         );
 
-        $kernel = new Kernel($pageService, $logger);
+        $kernel = new Kernel($router, $pageService, $logger, $contextManager, $contextLoader);
         $response = $kernel->handle(new Request('GET', '/'));
 
         $this->assertSame(500, $response->getStatusCode());
@@ -75,6 +88,11 @@ class KernelErrorHandlingTest extends TestCase
     public function test_custom_template_mapping(): void
     {
         $logger = $this->createMock(LoggerInterface::class);
+        $router = $this->createMock(RouterInterface::class);
+        $router->method('dispatch')->willReturn(null);
+        $contextManager = $this->createMock(ContextManagerInterface::class);
+        $contextManager->method('resolveContext')->willReturn(null);
+        $contextLoader = $this->createMock(ContextLoaderInterface::class);
 
         $resolver = new TemplateResolver(
             new ConfigMappingPolicy(
@@ -94,7 +112,7 @@ class KernelErrorHandlingTest extends TestCase
             $this->createMock(DatabaseInterface::class),
         );
 
-        $kernel = new Kernel($pageService, $logger);
+        $kernel = new Kernel($router, $pageService, $logger, $contextManager, $contextLoader);
 
         // Custom mapping matches
         $response = $kernel->handle(new Request('GET', '/blog'));
