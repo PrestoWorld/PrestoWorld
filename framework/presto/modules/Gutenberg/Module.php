@@ -89,6 +89,12 @@ class Module extends WitalsModule
         $parser   = $this->app->make(BlockParser::class);
         $renderer = $this->app->make(BlockRenderer::class);
         $patterns = $this->app->make(PatternRegistry::class);
+        $repo     = $this->app->make(PostRepository::class);
+
+        // Sync locale from framework translator to post repository
+        if ($this->app->has('translator')) {
+            $repo->setLocale($this->app->make('translator')->getLocale());
+        }
 
         // Core Rerender logic for template parts and patterns
         $renderer->register('__rerender', function (string $html) use ($parser, $renderer): string {

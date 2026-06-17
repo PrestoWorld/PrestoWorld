@@ -68,6 +68,7 @@ class PostRepository
             $byType[$post['post_type']][] = $post['id'];
             $indexedPosts[$post['id']] = $post;
             $indexedPosts[$post['id']]['terms'] = [];
+            $indexedPosts[$post['id']]['link']  = $this->generateLink($post);
         }
 
         $this->hydrateSpecializedData($byType, $indexedPosts);
@@ -79,6 +80,21 @@ class PostRepository
         }
 
         return array_values($indexedPosts);
+    }
+
+    protected function generateLink(array $post): string
+    {
+        $slug = $post['slug'] ?? '';
+        if (empty($slug)) {
+             return '#';
+        }
+        $type = $post['post_type'] ?? 'post';
+        
+        if ($type === 'page') {
+            return '/' . ltrim($slug, '/');
+        }
+        
+        return '/' . $type . '/' . ltrim($slug, '/');
     }
 
     protected function hydrateSpecializedData(array $byType, array &$indexedPosts): void

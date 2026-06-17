@@ -13,6 +13,17 @@ class NavigationLinkBlock extends AbstractBlock
     {
         $label = $this->attrs['label'] ?? '';
         $url   = $this->attrs['url'] ?? '#';
+
+        // Resolve placeholder links to look more realistic
+        if ($url === '#' && !empty($label)) {
+            $slug = strtolower(trim(preg_replace('/[^a-zA-Z0-9]+/', '-', $label), '-'));
+            if ($slug === 'home') {
+                $url = '/';
+            } else {
+                $url = '/' . $slug;
+            }
+        }
+
         $title = $this->attrs['title'] ?? '';
         $rel   = $this->attrs['rel'] ?? '';
 
