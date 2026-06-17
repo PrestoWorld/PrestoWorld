@@ -29,6 +29,8 @@ class PatternCompiler
         'is_category', 'is_tag', 'is_tax', 'is_archive', 'is_single',
         'wp_trim_words', 'wp_strip_all_tags', 'sanitize_title',
         'htmlspecialchars', 'strip_tags', 'nl2br',
+        'printf', 'esc_html__', 'esc_html_e', 'esc_html_x', 'esc_attr__', 'esc_attr_e',
+        '_n', 'wp_kses_post', 'get_theme_file_uri', 'get_template_directory_uri', 'site_url',
     ];
 
     private const CONTROL_STRUCTURES = [

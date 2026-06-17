@@ -211,6 +211,8 @@ class PatternRegistry
                 'is_category', 'is_tag', 'is_tax', 'is_archive', 'is_single',
                 'wp_trim_words', 'wp_strip_all_tags', 'sanitize_title',
                 'htmlspecialchars', 'strip_tags', 'nl2br',
+                'printf', 'esc_html__', 'esc_html_e', 'esc_html_x', 'esc_attr__', 'esc_attr_e',
+                '_n', 'wp_kses_post', 'get_theme_file_uri', 'get_template_directory_uri', 'site_url',
             ];
 
             if (preg_match_all('/\b([a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*)\s*\(/', $code, $matches)) {
