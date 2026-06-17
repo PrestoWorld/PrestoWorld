@@ -25,6 +25,7 @@ class BlockFactory
         'core/post-date'           => PostDateBlock::class,
         'core/post-content'        => PostContentBlock::class,
         'core/post-featured-image' => PostFeaturedImageBlock::class,
+        'core/post-terms'          => PostTermsBlock::class,
         'core/spacer'              => SpacerBlock::class,
         'core/columns'             => ColumnsBlock::class,
         'core/column'              => ColumnBlock::class,

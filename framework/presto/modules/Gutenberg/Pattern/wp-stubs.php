@@ -123,3 +123,23 @@ if (!function_exists('site_url')) {
         return '/' . ltrim($path, '/');
     }
 }
+
+if (!function_exists('human_time_diff')) {
+    function human_time_diff(int $from, ?int $to = null): string
+    {
+        if ($to === null) {
+            $to = time();
+        }
+        $diff = abs($to - $from);
+        if ($diff < 60) {
+            return $diff . ' seconds';
+        }
+        if ($diff < 3600) {
+            return round($diff / 60) . ' minutes';
+        }
+        if ($diff < 86400) {
+            return round($diff / 3600) . ' hours';
+        }
+        return round($diff / 86400) . ' days';
+    }
+}

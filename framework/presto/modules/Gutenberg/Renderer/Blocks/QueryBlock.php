@@ -23,8 +23,22 @@ class QueryBlock extends AbstractBlock
             $posts = $context['post_repository']->find($criteria);
         }
 
-        // Pass the fetched posts down to inner blocks (specifically post-template)
-        $inner = $this->renderInner(array_merge($context, ['posts' => $posts]));
+        $inner = '';
+        $hasResults = !empty($posts);
+
+        foreach ($this->innerBlocks as $block) {
+            $name = $block->name;
+
+            // Handle conditional blocks
+            if ($name === 'core/post-template' && !$hasResults) {
+                continue;
+            }
+            if ($name === 'core/query-no-results' && $hasResults) {
+                continue;
+            }
+
+            $inner .= $block->render(array_merge($context, ['posts' => $posts]));
+        }
         
         // WordPress standard: always include wp-block-query
         $classes = array_merge(['wp-block-query'], $this->classes);

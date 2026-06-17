@@ -13,11 +13,11 @@ class PostFeaturedImageBlock extends AbstractBlock
     {
         $post = $context['post'] ?? [];
         
-        if (!isset($post['post_id']) && !isset($post['ID'])) {
+        if (!isset($post['post_id']) && !isset($post['ID']) && !isset($post['id'])) {
             return '';
         }
         
-        $postId = $post['post_id'] ?? $post['ID'];
+        $postId = $post['post_id'] ?? $post['ID'] ?? $post['id'];
         
         $isLink = $this->attrs['isLink'] ?? false;
         $sizeSlug = $this->attrs['sizeSlug'] ?? 'post-thumbnail';
