@@ -15,7 +15,27 @@ export default defineConfig({
           if (info.name && info.name.endsWith('.css')) {
             return 'css/admin-spa.css';
           }
+          if (info.name && /\.(woff2?|ttf|eot)$/.test(info.name)) {
+            return 'fonts/[name][extname]';
+          }
           return 'assets/[name]-[hash][extname]';
+        },
+        manualChunks(id) {
+          if (id.includes('node_modules/solid-js')) {
+            return 'vendor-solid';
+          }
+          if (id.includes('node_modules/lucide-solid')) {
+            return 'vendor-lucide';
+          }
+          if (id.includes('node_modules')) {
+            return 'vendor';
+          }
+          if (id.includes('src/pages/')) {
+            const match = id.match(/src\/pages\/(.+)\.tsx$/);
+            if (match) {
+              return `page-${match[1].toLowerCase()}`;
+            }
+          }
         },
       },
     },

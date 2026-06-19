@@ -15,9 +15,9 @@ class DatabaseServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->app->singleton(DatabaseInterface::class, function ($app) {
-            $connection = getenv('DB_CONNECTION') ?: 'sqlite';
-            
+        $connection = getenv('DB_CONNECTION') ?: 'sqlite';
+        
+        $this->app->singleton(DatabaseManager::class, function ($app) use ($connection) {
             $drivers = [
                 'sqlite' => new Config\SQLiteDriverConfig(
                     connection: new Config\SQLite\FileConnectionConfig(
@@ -35,7 +35,7 @@ class DatabaseServiceProvider extends ServiceProvider
                 ),
             ];
 
-            $dbal = new DatabaseManager(
+            return new DatabaseManager(
                 new Config\DatabaseConfig([
                     'default' => 'default',
                     'databases' => [
@@ -44,8 +44,14 @@ class DatabaseServiceProvider extends ServiceProvider
                     'drivers' => $drivers,
                 ])
             );
+        });
 
-            return $dbal->database('default');
+        $this->app->singleton(\Cycle\Database\DatabaseProviderInterface::class, function ($app) {
+            return $app->make(DatabaseManager::class);
+        });
+
+        $this->app->singleton(DatabaseInterface::class, function ($app) {
+            return $app->make(\Cycle\Database\DatabaseProviderInterface::class)->database('default');
         });
     }
 }
