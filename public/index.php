@@ -18,7 +18,18 @@ use Witals\Framework\Contracts\RuntimeType;
 // 1. Load Composer Autoloader
 require_once __DIR__ . '/../vendor/autoload.php';
 
-// 2. Detect Runtime (FPM, RoadRunner, FrankenPHP, etc.)
+// 2. Load Environment Variables from .env
+if (file_exists(__DIR__ . '/../.env')) {
+    $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/..');
+    $dotenv->safeLoad();
+}
+
+// Clear OPcache to pick up fresh .env values in config files
+if (function_exists('opcache_reset')) {
+    opcache_reset();
+}
+
+// 3. Detect Runtime (FPM, RoadRunner, FrankenPHP, etc.)
 $runtime = RuntimeType::detect();
 
 // 3. Initialize Application
