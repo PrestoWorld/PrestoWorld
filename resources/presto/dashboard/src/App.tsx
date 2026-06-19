@@ -1,11 +1,10 @@
-import { createSignal, For, Show, Switch, Match, lazy, Suspense } from 'solid-js';
+import { createSignal, For, Show, Switch, Match, lazy, Suspense, onMount, onCleanup } from 'solid-js';
 import { 
   LayoutDashboard, 
   FileText, 
   Blocks, 
   Settings as SettingsIcon, 
   Plus, 
-  Search, 
   Globe, 
   Bell, 
   ExternalLink, 
@@ -15,6 +14,7 @@ import {
 } from 'lucide-solid';
 import { initialPosts, initialPlugins, initialActivities } from './mockData';
 import { WPPost, WPPlugin, WPActivity, WPToast, AdminInitialState } from './types';
+
 const DashboardPage = lazy(() => import('./pages/DashboardPage'));
 const PostsPage = lazy(() => import('./pages/PostsPage'));
 const PluginsPage = lazy(() => import('./pages/PluginsPage'));
@@ -29,8 +29,29 @@ declare global {
 const initialState = window.__INITIAL_STATE__;
 const initialUser = initialState?.user ?? { name: 'Administrator', role: 'admin', avatar: null };
 
+type ScreenId = 'dashboard' | 'posts' | 'plugins' | 'settings';
+
+const SCREEN_IDS: ScreenId[] = ['dashboard', 'posts', 'plugins', 'settings'];
+
+function hashToScreen(hash: string): ScreenId {
+  const cleaned = hash.replace(/^#\/+/, '').replace(/\/+$/, '');
+  return SCREEN_IDS.includes(cleaned as ScreenId) ? (cleaned as ScreenId) : 'dashboard';
+}
+
 export default function App() {
-  const [currentTab, setCurrentTab] = createSignal<'dashboard' | 'posts' | 'plugins' | 'settings'>('dashboard');
+  const [screenId, setScreenId] = createSignal<ScreenId>(hashToScreen(window.location.hash));
+
+  onMount(() => {
+    const onHashChange = () => setScreenId(hashToScreen(window.location.hash));
+    window.addEventListener('hashchange', onHashChange);
+    onCleanup(() => window.removeEventListener('hashchange', onHashChange));
+  });
+
+  const goTo = (screen: ScreenId) => {
+    window.location.hash = screen === 'dashboard' ? '#' : `#/${screen}`;
+    setIsMobileOpen(false);
+  };
+
   const [posts, setPosts] = createSignal<WPPost[]>(initialPosts);
   const [plugins, setPlugins] = createSignal<WPPlugin[]>(initialPlugins);
   const [activities, setActivities] = createSignal<WPActivity[]>(initialActivities);
@@ -268,7 +289,7 @@ export default function App() {
   const totalComments = () => posts().reduce((sum, p) => sum + p.commentsCount, 0);
 
   return (
-    <div class="wp-admin-layout">
+    <div class="wp-admin-layout" data-screen-id={screenId()}>
       
       <div class="wp-toast-container">
         <For each={toasts()}>
@@ -339,30 +360,30 @@ export default function App() {
           <nav class="sidebar-menu">
             <span class="menu-title">Management</span>
 
-            <div 
-              class={`menu-item ${currentTab() === 'dashboard' ? 'active' : ''}`}
-              onClick={() => { setCurrentTab('dashboard'); setIsMobileOpen(false); }}
+            <button 
+              class={`menu-item w-full text-left ${screenId() === 'dashboard' ? 'active' : ''}`}
+              onClick={() => goTo('dashboard')}
             >
               <span class="icon-wrapper">
                 <LayoutDashboard size={18} />
               </span>
               <span>Dashboard</span>
-            </div>
+            </button>
 
-            <div 
-              class={`menu-item ${currentTab() === 'posts' ? 'active' : ''}`}
-              onClick={() => { setCurrentTab('posts'); setIsMobileOpen(false); }}
+            <button
+              class={`menu-item w-full text-left ${screenId() === 'posts' ? 'active' : ''}`}
+              onClick={() => goTo('posts')}
             >
               <span class="icon-wrapper">
                 <FileText size={18} />
               </span>
               <span>Posts</span>
               <span class="count-badge bg-slate-800">{posts().length}</span>
-            </div>
+            </button>
 
-            <div 
-              class={`menu-item ${currentTab() === 'plugins' ? 'active' : ''}`}
-              onClick={() => { setCurrentTab('plugins'); setIsMobileOpen(false); }}
+            <button
+              class={`menu-item w-full text-left ${screenId() === 'plugins' ? 'active' : ''}`}
+              onClick={() => goTo('plugins')}
             >
               <span class="icon-wrapper">
                 <Blocks size={18} />
@@ -373,19 +394,19 @@ export default function App() {
                   {updatePluginsCount()} UP
                 </span>
               </Show>
-            </div>
+            </button>
 
             <span class="menu-title">Configuration</span>
 
-            <div 
-              class={`menu-item ${currentTab() === 'settings' ? 'active' : ''}`}
-              onClick={() => { setCurrentTab('settings'); setIsMobileOpen(false); }}
+            <button
+              class={`menu-item w-full text-left ${screenId() === 'settings' ? 'active' : ''}`}
+              onClick={() => goTo('settings')}
             >
               <span class="icon-wrapper">
                 <SettingsIcon size={18} />
               </span>
               <span>Settings</span>
-            </div>
+            </button>
           </nav>
         </div>
 
@@ -454,7 +475,7 @@ export default function App() {
           </div>
         </header>
 
-        <main class="wp-main-content">
+        <main class="wp-main-content" data-screen-id={screenId()}>
           <Suspense fallback={
             <div class="flex items-center justify-center min-h-[400px]">
               <div class="flex flex-col items-center gap-3">
@@ -464,7 +485,7 @@ export default function App() {
             </div>
           }>
           <Switch>
-            <Match when={currentTab() === 'dashboard'}>
+            <Match when={screenId() === 'dashboard'}>
               <DashboardPage
                 publishedPostsCount={publishedPostsCount}
                 totalComments={totalComments}
@@ -480,7 +501,7 @@ export default function App() {
               />
             </Match>
 
-            <Match when={currentTab() === 'posts'}>
+            <Match when={screenId() === 'posts'}>
               <PostsPage
                 postSearch={postSearch}
                 setPostSearch={setPostSearch}
@@ -493,7 +514,7 @@ export default function App() {
               />
             </Match>
 
-            <Match when={currentTab() === 'plugins'}>
+            <Match when={screenId() === 'plugins'}>
               <PluginsPage
                 pluginSearch={pluginSearch}
                 setPluginSearch={setPluginSearch}
@@ -507,7 +528,7 @@ export default function App() {
               />
             </Match>
 
-            <Match when={currentTab() === 'settings'}>
+            <Match when={screenId() === 'settings'}>
               <SettingsPage
                 siteTitle={siteTitle}
                 setSiteTitle={setSiteTitle}
