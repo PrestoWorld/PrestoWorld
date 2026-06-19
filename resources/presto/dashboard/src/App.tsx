@@ -20,7 +20,10 @@ import {
   Layers,
   Wrench,
   Activity as ActivityIcon,
-  BookOpen
+  BookOpen,
+  Pencil,
+  ToggleLeft,
+  ToggleRight
 } from 'lucide-solid';
 import { initialPosts, initialPlugins, initialActivities } from './mockData';
 import { WPPost, WPPlugin, WPActivity, WPToast, AdminInitialState } from './types';
@@ -707,7 +710,7 @@ export default function App() {
 
                     <button
                       onClick={() => setIsAddPostOpen(true)}
-                      class="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs tracking-tight px-4.5 py-3 rounded-xl flex items-center gap-1.5 cursor-pointer shadow-md shadow-indigo-150/40 transition-all hover:scale-[1.02] duration-200"
+                      class="bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-extrabold text-xs tracking-tight px-5 py-3 rounded-xl flex items-center gap-2 cursor-pointer shadow-md shadow-indigo-200 transition-all duration-200 hover:scale-[1.02]"
                     >
                       <Plus size={14} strokeWidth={2.5} />
                       <span>Write New Post</span>
@@ -786,22 +789,16 @@ export default function App() {
                               </td>
 
                               <td>
-                                <button 
-                                  onClick={() => togglePostStatus(post.id)}
-                                  class="focus:outline-none cursor-pointer hover:scale-[1.03] active:scale-[0.98] transition-transform"
-                                  title="Toggle status"
+                                <span 
+                                  class="wp-badge select-none"
+                                  classList={{
+                                    'badge-published': post.status === 'Published',
+                                    'badge-draft': post.status === 'Draft',
+                                    'badge-scheduled': post.status === 'Scheduled'
+                                  }}
                                 >
-                                  <span 
-                                    class="wp-badge select-none"
-                                    classList={{
-                                      'badge-published': post.status === 'Published',
-                                      'badge-draft': post.status === 'Draft',
-                                      'badge-scheduled': post.status === 'Scheduled'
-                                    }}
-                                  >
-                                    {post.status}
-                                  </span>
-                                </button>
+                                  {post.status}
+                                </span>
                               </td>
 
                               <td class="text-center text-xs font-semibold text-slate-500 font-mono">
@@ -809,18 +806,32 @@ export default function App() {
                               </td>
 
                               <td class="text-right">
-                                <div class="flex items-center justify-end gap-1.5">
+                                <div class="flex items-center justify-end gap-1">
                                   <button
                                     onClick={() => togglePostStatus(post.id)}
-                                    class="text-[11px] font-bold px-3 py-1.5 text-slate-600 hover:text-indigo-600 bg-white hover:bg-slate-50 border border-slate-200 hover:border-slate-300 rounded-lg transition-all cursor-pointer shadow-sm active:scale-95"
-                                    title="Toggle Status"
+                                    class="p-2 rounded-lg border transition-all cursor-pointer active:scale-90 hover:scale-105"
+                                    classList={{
+                                      'text-emerald-600 hover:bg-emerald-50 border-transparent hover:border-emerald-100': post.status === 'Published',
+                                      'text-slate-400 hover:bg-slate-50 border-transparent hover:border-slate-200': post.status !== 'Published'
+                                    }}
+                                    title={post.status === 'Published' ? 'Unpublish' : 'Publish'}
                                   >
-                                    Toggle
+                                    <Show when={post.status === 'Published'} fallback={<ToggleLeft size={18} strokeWidth={2} />}>
+                                      <ToggleRight size={18} strokeWidth={2} />
+                                    </Show>
+                                  </button>
+                                  <button
+                                    class="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg border border-transparent hover:border-indigo-100 transition-all cursor-pointer active:scale-90 hover:scale-105"
+                                    aria-label="Edit post"
+                                    title="Edit"
+                                  >
+                                    <Pencil size={13} strokeWidth={2.5} />
                                   </button>
                                   <button
                                     onClick={() => handleDeletePost(post.id, post.title)}
-                                    class="p-2 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg border border-transparent hover:border-rose-100 transition-all cursor-pointer active:scale-90"
+                                    class="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg border border-transparent hover:border-rose-100 transition-all cursor-pointer active:scale-90 hover:scale-105"
                                     aria-label="Delete post"
+                                    title="Delete"
                                   >
                                     <Trash2 size={13} strokeWidth={2.5} />
                                   </button>
