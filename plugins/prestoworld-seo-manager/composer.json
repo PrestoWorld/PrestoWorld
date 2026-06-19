@@ -1,0 +1,19 @@
+{
+    "name": "prestoworld/seo-manager",
+    "description": "Advanced SEO management for PrestoWorld",
+    "type": "prestoworld-plugin",
+    "require": {
+        "php": "^8.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "PrestoWorld\\Plugins\\SEO\\": "src/"
+        }
+    },
+    "extra": {
+        "prestoworld": {
+            "plugin-name": "prestoworld/seo-manager",
+            "icon": "assets/icon.svg"
+        }
+    }
+}

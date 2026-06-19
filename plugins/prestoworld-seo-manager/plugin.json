@@ -1,0 +1,85 @@
+{
+    "name": "prestoworld/seo-manager",
+    "title": "SEO Manager",
+    "version": "1.0.0",
+    "description": "Advanced SEO management for PrestoWorld — meta tags, sitemap, robots.txt, and content analysis",
+    "icon": "assets/icon.svg",
+    "min_php": "^8.1",
+    "min_presto": "^1.0",
+    "priority": 50,
+    "enabled": true,
+    "entry": "Plugin.php",
+    "provides": [
+        "seo.meta-manager",
+        "seo.sitemap-generator"
+    ],
+    "requires": [
+        {
+            "name": "prestoworld/analytics",
+            "version": "^1.0"
+        }
+    ],
+    "hooks": {
+        "register": [
+            "admin.sidebar.menu",
+            "content.head.meta",
+            "seo.sitemap.generate"
+        ],
+        "use": [
+            "admin.sidebar.menu",
+            "content.head.meta",
+            "seo.sitemap.generate",
+            "admin.settings.render"
+        ]
+    },
+    "schema": {
+        "version": "1.0.0",
+        "tables": [
+            {
+                "name": "seo_meta",
+                "columns": [
+                    { "name": "id", "type": "primary" },
+                    { "name": "content_id", "type": "integer", "unsigned": true, "nullable": false },
+                    { "name": "content_type", "type": "string", "size": 50, "nullable": false },
+                    { "name": "meta_title", "type": "string", "size": 255, "nullable": true },
+                    { "name": "meta_description", "type": "text", "nullable": true },
+                    { "name": "og_image", "type": "string", "size": 500, "nullable": true },
+                    { "name": "robots", "type": "string", "size": 100, "nullable": true, "default": "index,follow" },
+                    { "name": "canonical_url", "type": "string", "size": 500, "nullable": true },
+                    { "name": "created_at", "type": "datetime", "nullable": false },
+                    { "name": "updated_at", "type": "datetime", "nullable": false }
+                ],
+                "indexes": [
+                    { "columns": ["content_id", "content_type"], "unique": true }
+                ]
+            },
+            {
+                "name": "seo_redirects",
+                "columns": [
+                    { "name": "id", "type": "primary" },
+                    { "name": "source_url", "type": "string", "size": 500, "nullable": false },
+                    { "name": "target_url", "type": "string", "size": 500, "nullable": false },
+                    { "name": "http_code", "type": "integer", "default": 301 },
+                    { "name": "enabled", "type": "boolean", "default": true },
+                    { "name": "created_at", "type": "datetime", "nullable": false }
+                ],
+                "indexes": [
+                    { "columns": ["source_url"], "unique": true }
+                ]
+            }
+        ]
+    },
+    "settings": {
+        "admin_url": "/admin/seo",
+        "icon": "search",
+        "position": 20
+    },
+    "providers": [],
+    "keywords": ["seo", "meta-tags", "sitemap", "redirects"],
+    "repositories": [
+        {
+            "type": "github",
+            "url": "https://github.com/prestoworld/plugins"
+        }
+    ]
+}

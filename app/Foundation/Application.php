@@ -72,6 +72,7 @@ class Application extends BaseApplication
         $this->register(\Witals\Framework\Auth\AuthServiceProvider::class);
         $this->register(\PrestoWorld\Foundation\Providers\DatabaseServiceProvider::class);
         $this->register(\App\Providers\ConsoleServiceProvider::class);
+        $this->register(\PrestoWorld\Plugin\PluginServiceProvider::class);
 
         // Context system
         $this->singleton(\Witals\Framework\Context\Contracts\BlockManagerInterface::class, \Witals\Framework\Context\BlockManager::class);
