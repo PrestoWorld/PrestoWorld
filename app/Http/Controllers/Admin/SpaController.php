@@ -9,45 +9,13 @@ use Witals\Framework\Http\Response;
 use PrestoWorld\Modules\Admin\SkinManager;
 use PrestoWorld\Contracts\Admin\Menu\MenuContextRepository;
 use PrestoWorld\Contracts\Admin\Dashboard\DashboardWidgetRepository;
-use PrestoWorld\Contracts\Admin\Menu\MenuItem as MenuItemContract;
 use PrestoWorld\Modules\Admin\ScreenOptions\ScreenOption;
 use PrestoWorld\Modules\Admin\ScreenOptions\ScreenOptionsContext;
 use PrestoWorld\Modules\Admin\AdminBar\AdminBarItem;
 use PrestoWorld\Modules\Admin\AdminBar\AdminBarContext;
-use PrestoWorld\Modules\Admin\Menu\MenuSection;
 
 class SpaController
 {
-    /** Known screen IDs */
-    protected const SCREENS = [
-        ['id' => 'dashboard', 'title' => 'Dashboard', 'icon' => 'LayoutDashboard', 'position' => 0],
-        ['id' => 'posts',     'title' => 'Posts',     'icon' => 'FileText',       'position' => 10],
-        ['id' => 'plugins',   'title' => 'Plugins',   'icon' => 'Blocks',         'position' => 20],
-        ['id' => 'settings',  'title' => 'Settings',  'icon' => 'Settings',       'position' => 30],
-    ];
-
-    /** Known menu sections sidebar groups */
-    protected const MENU_SECTIONS = [
-        [
-            'id' => 'management',
-            'title' => 'Management',
-            'priority' => 10,
-            'items' => [
-                ['screenId' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'LayoutDashboard'],
-                ['screenId' => 'posts',     'label' => 'Posts',     'icon' => 'FileText'],
-                ['screenId' => 'plugins',   'label' => 'Plugins',   'icon' => 'Blocks'],
-            ],
-        ],
-        [
-            'id' => 'configuration',
-            'title' => 'Configuration',
-            'priority' => 20,
-            'items' => [
-                ['screenId' => 'settings', 'label' => 'Settings', 'icon' => 'Settings'],
-            ],
-        ],
-    ];
-
     /** Widget-to-component mapping */
     protected const WIDGET_COMPONENTS = [
         'at-a-glance'  => 'StatCards',
@@ -66,10 +34,12 @@ class SpaController
     {
         $skin = $this->skins->getActiveSkin();
 
+        $menuSections = $this->buildMenuSections();
+
         $initialState = [
             'user' => $this->getUserState(),
-            'screens' => self::SCREENS,
-            'menuSections' => $this->buildMenuSections(),
+            'screens' => $this->buildScreens($menuSections),
+            'menuSections' => $menuSections,
             'widgets' => $this->buildWidgets(),
             'screenOptions' => $this->buildScreenOptions(),
             'adminBar' => $this->buildAdminBar()->toArray(),
@@ -100,17 +70,33 @@ class SpaController
         return Response::json($this->buildWidgets());
     }
 
-    public function providers(): Response
+    public function menuTree(): Response
     {
-        return Response::json([
-            'providers' => array_map(
-                fn($p) => [
-                    'identifier' => $p->getIdentifier(),
-                    'priority' => $p->getPriority(),
-                ],
-                $this->menu->getProviders(),
-            ),
-        ]);
+        return Response::json($this->menu->getTreeAsArray());
+    }
+
+    /** Build screens list from registered menu items */
+    protected function buildScreens(array $menuSections): array
+    {
+        $screens = [];
+        $seen = [];
+
+        foreach ($menuSections as $section) {
+            foreach ($section['items'] ?? [] as $item) {
+                $screenId = $item['screenId'] ?? null;
+                if ($screenId !== null && !isset($seen[$screenId])) {
+                    $seen[$screenId] = true;
+                    $screens[] = [
+                        'id' => $screenId,
+                        'title' => $item['label'],
+                        'icon' => $item['icon'] ?? 'Circle',
+                        'position' => $item['priority'] ?? count($screens) * 10,
+                    ];
+                }
+            }
+        }
+
+        return $screens;
     }
 
     /** Build sidebar sections from the registered menu tree */
@@ -118,16 +104,23 @@ class SpaController
     {
         $menuTree = $this->menu->getTreeAsArray();
 
-        return array_map(function (array $section, int $idx) {
-            $sectionDef = self::MENU_SECTIONS[$idx] ?? [];
+        return array_map(function (array $group) {
+            $items = $group['children'] ?? [];
 
             return [
-                'id' => $sectionDef['id'] ?? 'section-' . $idx,
-                'title' => $sectionDef['title'] ?? $section['label'] ?? '',
-                'priority' => $sectionDef['priority'] ?? 10,
-                'items' => $section['children'] ?? [$section],
+                'id' => $group['id'] ?? 'section-' . spl_object_id($group),
+                'title' => $group['label'] ?? '',
+                'priority' => $group['priority'] ?? 10,
+                'items' => array_map(fn(array $child) => [
+                    'id' => $child['id'] ?? $child['screenId'] ?? '',
+                    'screenId' => $child['screenId'] ?? $child['id'] ?? '',
+                    'label' => $child['label'] ?? '',
+                    'icon' => $child['icon'] ?? 'Circle',
+                    'url' => $child['url'] ?? '',
+                    'priority' => $child['priority'] ?? 10,
+                ], $items),
             ];
-        }, $menuTree, array_keys($menuTree));
+        }, $menuTree);
     }
 
     /** Build widget definitions with SPA component mapping */

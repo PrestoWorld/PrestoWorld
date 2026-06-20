@@ -6,6 +6,10 @@ namespace PrestoWorld\Contracts\Admin\Menu;
 
 interface MenuItem
 {
+    public function getId(): ?string;
+    public function setId(string $id): self;
+    public function getScreenId(): ?string;
+    public function setScreenId(string $screenId): self;
     public function getLabel(): string;
     public function getUrl(): string;
     public function getIcon(): ?string;

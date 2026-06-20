@@ -2,7 +2,7 @@ import { createSignal, For, Show, Switch, Match, lazy, Suspense, onMount, onClea
 import { 
   LayoutDashboard,
   FileText,
-  Blocks,
+  Puzzle,
   Settings,
   Plus,
   Globe,
@@ -28,15 +28,40 @@ declare global {
 
 const initialState = window.__INITIAL_STATE__;
 const initialUser = initialState?.user ?? { name: 'Administrator', role: 'admin', avatar: null };
-const initialScreens = initialState?.screens ?? [];
-const initialMenuSections = initialState?.menuSections ?? [];
-const initialAdminBar = initialState?.adminBar ?? { items: [] };
+const initialScreens = initialState?.screens ?? [
+  { id: 'dashboard', title: 'Dashboard', position: 0 },
+  { id: 'posts',     title: 'Posts',     position: 10 },
+  { id: 'plugins',   title: 'Plugins',   position: 20 },
+  { id: 'settings',  title: 'Settings',  position: 30 },
+];
+const initialMenuSections = initialState?.menuSections ?? [
+  {
+    id: 'management', title: 'Management', priority: 10,
+    items: [
+      { id: 'dashboard-item', screenId: 'dashboard', label: 'Dashboard', icon: 'LayoutDashboard' },
+      { id: 'posts-item',     screenId: 'posts',     label: 'Posts',     icon: 'FileText' },
+      { id: 'plugins-item',   screenId: 'plugins',   label: 'Plugins',   icon: 'Puzzle' },
+    ],
+  },
+  {
+    id: 'configuration', title: 'Configuration', priority: 20,
+    items: [
+      { id: 'settings-item', screenId: 'settings', label: 'Settings', icon: 'Settings' },
+    ],
+  },
+];
+const initialAdminBar = initialState?.adminBar ?? {
+  items: [
+    { id: 'new-post',       label: 'New Post',       icon: 'Plus',  type: 'button' },
+    { id: 'notifications',  label: 'Notifications',  icon: 'Bell',  type: 'notification', badge: 3 },
+  ],
+};
 const initialScreenOptions = initialState?.screenOptions ?? [];
 
 const ICON_MAP: Record<string, Component<{ size?: number }>> = {
   LayoutDashboard,
   FileText,
-  Blocks,
+  Puzzle,
   Settings,
   Plus,
   Globe,
@@ -385,8 +410,8 @@ export default function App() {
                   <For each={section.items}>
                     {(item) => {
                       const Icon = resolveIcon(item.icon);
-                      const badgeValue = item.id === 'plugins' ? updatePluginsCount() : item.badge;
-                      const showBadge = badgeValue && (typeof badgeValue === 'number' ? badgeValue > 0 : true);
+                      const badgeValue = item.screenId === 'plugins' ? updatePluginsCount() : item.badge;
+                      const showBadge = badgeValue != null && (typeof badgeValue === 'number' ? badgeValue > 0 : true);
                       return (
                         <button
                           class={`menu-item w-full text-left ${screenId() === item.screenId ? 'active' : ''}`}

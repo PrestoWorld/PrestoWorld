@@ -38,10 +38,11 @@ class MenuContextRepository implements MenuContextRepositoryContract
             attributes: $attributes,
             priority: $priority,
         );
+        $item->setId($id);
         $this->items[$id] = $item;
     }
 
-    public function registerItem(string $parentGroup, string $label, string $url, ?string $icon = null, ?string $image = null, array $attributes = [], int $priority = 10): void
+    public function registerItem(string $parentGroup, string $label, string $url, ?string $icon = null, ?string $image = null, array $attributes = [], int $priority = 10, ?string $id = null, ?string $screenId = null): void
     {
         $item = new MenuItem(
             label: $label,
@@ -51,6 +52,14 @@ class MenuContextRepository implements MenuContextRepositoryContract
             attributes: $attributes,
             priority: $priority,
         );
+
+        if ($id !== null) {
+            $item->setId($id);
+        }
+
+        if ($screenId !== null) {
+            $item->setScreenId($screenId);
+        }
 
         if (isset($this->items[$parentGroup])) {
             $this->items[$parentGroup]->addChild($item);

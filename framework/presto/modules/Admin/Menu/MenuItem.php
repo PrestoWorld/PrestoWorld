@@ -8,6 +8,8 @@ use PrestoWorld\Contracts\Admin\Menu\MenuItem as MenuItemContract;
 
 class MenuItem implements MenuItemContract
 {
+    protected ?string $id = null;
+    protected ?string $screenId = null;
     protected array $children = [];
     protected array $meta = [];
     protected ?string $capability = null;
@@ -32,6 +34,14 @@ class MenuItem implements MenuItemContract
             priority: $data['priority'] ?? 10,
         );
 
+        if (isset($data['id'])) {
+            $item->id = $data['id'];
+        }
+
+        if (isset($data['screenId'])) {
+            $item->screenId = $data['screenId'];
+        }
+
         if (isset($data['meta']) && is_array($data['meta'])) {
             $item->meta = $data['meta'];
         }
@@ -49,6 +59,28 @@ class MenuItem implements MenuItemContract
         }
 
         return $item;
+    }
+
+    public function getId(): ?string
+    {
+        return $this->id;
+    }
+
+    public function setId(string $id): self
+    {
+        $this->id = $id;
+        return $this;
+    }
+
+    public function getScreenId(): ?string
+    {
+        return $this->screenId;
+    }
+
+    public function setScreenId(string $screenId): self
+    {
+        $this->screenId = $screenId;
+        return $this;
     }
 
     public function getLabel(): string
@@ -150,10 +182,15 @@ class MenuItem implements MenuItemContract
     public function toArray(): array
     {
         $data = [
+            'id' => $this->id,
             'label' => $this->label,
             'url' => $this->url,
             'priority' => $this->priority,
         ];
+
+        if ($this->screenId !== null) {
+            $data['screenId'] = $this->screenId;
+        }
 
         if ($this->icon !== null) {
             $data['icon'] = $this->icon;
