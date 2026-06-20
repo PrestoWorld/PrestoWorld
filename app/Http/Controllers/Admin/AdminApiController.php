@@ -1,0 +1,203 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Http\Controllers\Admin;
+
+use Witals\Framework\Http\Response;
+use Cycle\Database\DatabaseInterface;
+use PrestoWorld\Contracts\Plugin\PluginStoreInterface;
+
+class AdminApiController
+{
+    protected string $prefix = 'pw_';
+
+    public function __construct(
+        protected DatabaseInterface $db,
+        protected PluginStoreInterface $plugins,
+    ) {}
+
+    // ── Posts ───────────────────────────────────────────────────
+
+    public function posts(): Response
+    {
+        $rows = $this->db->select('*')
+            ->from($this->prefix . 'posts')
+            ->orderBy('created_at', 'DESC')
+            ->fetchAll();
+
+        $posts = array_map(fn(array $row) => [
+            'id' => (int) $row['id'],
+            'title' => $row['title'] ?? '',
+            'author' => $this->resolveAuthor((int) ($row['author_id'] ?? 0)),
+            'category' => $this->resolveCategory((int) $row['id']),
+            'status' => $this->mapStatus($row['status'] ?? 'draft'),
+            'date' => $this->formatDate($row['created_at'] ?? ''),
+            'commentsCount' => $this->extractMeta($row, 'comments_count', 0),
+        ], $rows);
+
+        return Response::json($posts);
+    }
+
+    // ── Plugins ─────────────────────────────────────────────────
+
+    public function plugins(): Response
+    {
+        $installed = $this->plugins->getInstalledPlugins();
+
+        $plugins = array_values(array_map(fn(array $row) => [
+            'id' => $row['name'],
+            'name' => $row['name'],
+            'desc' => $row['metadata']['desc'] ?? $row['metadata']['description'] ?? '',
+            'version' => $row['version'],
+            'author' => $row['metadata']['author'] ?? 'Unknown',
+            'active' => $row['enabled'],
+            'updateAvailable' => $row['metadata']['update_available'] ?? false,
+            'category' => $row['metadata']['category'] ?? 'Uncategorized',
+        ], $installed));
+
+        return Response::json($plugins);
+    }
+
+    // ── Stats ───────────────────────────────────────────────────
+
+    public function stats(): Response
+    {
+        try {
+            $totalPosts = (int) $this->db->select('COUNT(*) as count')
+                ->from($this->prefix . 'posts')
+                ->fetch()['count'] ?? 0;
+
+            $publishedPosts = (int) $this->db->select('COUNT(*) as count')
+                ->from($this->prefix . 'posts')
+                ->where('status', 'publish')
+                ->fetch()['count'] ?? 0;
+
+            $draftPosts = (int) $this->db->select('COUNT(*) as count')
+                ->from($this->prefix . 'posts')
+                ->where('status', 'draft')
+                ->fetch()['count'] ?? 0;
+        } catch (\Throwable) {
+            $totalPosts = $publishedPosts = $draftPosts = 0;
+        }
+
+        $installed = $this->plugins->getInstalledPlugins();
+        $totalPlugins = count($installed);
+        $activePlugins = count(array_filter($installed, fn($p) => $p['enabled']));
+
+        return Response::json([
+            'posts' => [
+                'total' => $totalPosts,
+                'published' => $publishedPosts,
+                'draft' => $draftPosts,
+            ],
+            'plugins' => [
+                'total' => $totalPlugins,
+                'active' => $activePlugins,
+                'inactive' => $totalPlugins - $activePlugins,
+            ],
+        ]);
+    }
+
+    // ── Activities ──────────────────────────────────────────────
+
+    public function activities(): Response
+    {
+        try {
+            $rows = $this->db->select('*')
+                ->from($this->prefix . 'posts')
+                ->orderBy('updated_at', 'DESC')
+                ->limit(20)
+                ->fetchAll();
+        } catch (\Throwable) {
+            $rows = [];
+        }
+
+        $activities = [];
+        foreach ($rows as $row) {
+            $title = $row['title'] ?? 'Untitled';
+            $activities[] = [
+                'id' => (int) $row['id'],
+                'text' => $row['status'] === 'publish'
+                    ? "Published post: \"{$title}\""
+                    : "Updated post: \"{$title}\"",
+                'time' => $this->relativeTime($row['updated_at'] ?? $row['created_at'] ?? ''),
+                'type' => $row['status'] === 'publish' ? 'post' : 'update',
+            ];
+        }
+
+        return Response::json($activities);
+    }
+
+    // ── Helpers ─────────────────────────────────────────────────
+
+    protected function resolveAuthor(int $authorId): string
+    {
+        return 'admin';
+    }
+
+    protected function resolveCategory(int $postId): string
+    {
+        try {
+            $term = $this->db->select('t.name')
+                ->from($this->prefix . 'term_relationships as tr')
+                ->innerJoin($this->prefix . 'terms', 't')->on('t.id', 'tr.term_id')
+                ->where('tr.object_id', $postId)
+                ->limit(1)
+                ->fetch();
+
+            return $term['name'] ?? 'Uncategorized';
+        } catch (\Throwable) {
+            return 'Uncategorized';
+        }
+    }
+
+    protected function mapStatus(string $status): string
+    {
+        return match ($status) {
+            'publish', 'published' => 'Published',
+            'draft' => 'Draft',
+            'scheduled' => 'Scheduled',
+            default => 'Draft',
+        };
+    }
+
+    protected function formatDate(mixed $date): string
+    {
+        if ($date instanceof \DateTimeInterface) {
+            return $date->format('Y-m-d H:i');
+        }
+        if (is_string($date) && $date !== '') {
+            return date('Y-m-d H:i', strtotime($date));
+        }
+        return date('Y-m-d H:i');
+    }
+
+    protected function extractMeta(array $row, string $key, mixed $default = null): mixed
+    {
+        if (!isset($row['compact_meta'])) {
+            return $default;
+        }
+        $meta = is_string($row['compact_meta'])
+            ? json_decode($row['compact_meta'], true)
+            : $row['compact_meta'];
+        return $meta[$key] ?? $default;
+    }
+
+    protected function relativeTime(mixed $datetime): string
+    {
+        $timestamp = $datetime instanceof \DateTimeInterface
+            ? $datetime->getTimestamp()
+            : (is_string($datetime) ? strtotime($datetime) : time());
+
+        $diff = time() - $timestamp;
+
+        return match (true) {
+            $diff < 60 => 'Just now',
+            $diff < 3600 => floor($diff / 60) . ' minutes ago',
+            $diff < 86400 => floor($diff / 3600) . ' hours ago',
+            $diff < 604800 => floor($diff / 86400) . ' days ago',
+            default => date('M j', $timestamp),
+        };
+    }
+}

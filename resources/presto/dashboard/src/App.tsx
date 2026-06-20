@@ -12,8 +12,8 @@ import {
   X,
   Check,
 } from 'lucide-solid';
-import { initialPosts, initialPlugins, initialActivities } from './mockData';
 import { WPPost, WPPlugin, WPActivity, WPToast, AdminInitialState, AdminMenuItem, AdminMenuSection, AdminBarItem, DashboardWidgetDefinition } from './types';
+import { fetchPosts, fetchPlugins, fetchActivities, fetchStats, type DashboardStats } from './api';
 
 const DashboardPage = lazy(() => import('./pages/DashboardPage'));
 const PostsPage = lazy(() => import('./pages/PostsPage'));
@@ -90,6 +90,13 @@ export default function App() {
     const onHashChange = () => setScreenId(hashToScreen(window.location.hash));
     window.addEventListener('hashchange', onHashChange);
     onCleanup(() => window.removeEventListener('hashchange', onHashChange));
+
+    Promise.all([
+      fetchPosts().then(setPosts).catch(() => {}),
+      fetchPlugins().then(setPlugins).catch(() => {}),
+      fetchActivities().then(setActivities).catch(() => {}),
+      fetchStats().then(setStats).catch(() => {}),
+    ]).finally(() => setLoading(false));
   });
 
   const goTo = (screen: string) => {
@@ -97,10 +104,12 @@ export default function App() {
     setIsMobileOpen(false);
   };
 
-  const [posts, setPosts] = createSignal<WPPost[]>(initialPosts);
-  const [plugins, setPlugins] = createSignal<WPPlugin[]>(initialPlugins);
-  const [activities, setActivities] = createSignal<WPActivity[]>(initialActivities);
+  const [posts, setPosts] = createSignal<WPPost[]>([]);
+  const [plugins, setPlugins] = createSignal<WPPlugin[]>([]);
+  const [activities, setActivities] = createSignal<WPActivity[]>([]);
   const [toasts, setToasts] = createSignal<WPToast[]>([]);
+  const [loading, setLoading] = createSignal(true);
+  const [stats, setStats] = createSignal<DashboardStats>({ posts: { total: 0, published: 0, draft: 0 }, plugins: { total: 0, active: 0, inactive: 0 } });
 
   const [isMobileOpen, setIsMobileOpen] = createSignal(false);
 
@@ -328,9 +337,9 @@ export default function App() {
     });
   };
 
-  const activePluginsCount = () => plugins().filter(p => p.active).length;
+  const publishedPostsCount = () => stats().posts.published;
+  const activePluginsCount = () => stats().plugins.active;
   const updatePluginsCount = () => plugins().filter(p => p.updateAvailable).length;
-  const publishedPostsCount = () => posts().filter(p => p.status === 'Published').length;
   const totalComments = () => posts().reduce((sum, p) => sum + p.commentsCount, 0);
 
   return (
@@ -514,79 +523,88 @@ export default function App() {
         </header>
 
         <main class="wp-main-content" data-screen-id={screenId()}>
-          <Suspense fallback={
+          <Show when={loading()} fallback={
+            <Suspense fallback={
+              <div class="flex items-center justify-center min-h-[400px]">
+                <div class="flex flex-col items-center gap-3">
+                  <div class="w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                  <span class="text-xs font-mono font-bold text-slate-400 tracking-widest uppercase">Loading</span>
+                </div>
+              </div>
+            }>
+            <Switch>
+              <Match when={screenId() === 'dashboard'}>
+                <DashboardPage
+                  publishedPostsCount={publishedPostsCount}
+                  totalComments={totalComments}
+                  activePluginsCount={activePluginsCount}
+                  totalPlugins={() => plugins().length}
+                  draftTitle={draftTitle}
+                  setDraftTitle={setDraftTitle}
+                  draftContent={draftContent}
+                  setDraftContent={setDraftContent}
+                  handleSaveDraft={handleSaveDraft}
+                  activities={activities}
+                  addToast={addToast}
+                />
+              </Match>
+
+              <Match when={screenId() === 'posts'}>
+                <PostsPage
+                  postSearch={postSearch}
+                  setPostSearch={setPostSearch}
+                  postCategoryFilter={postCategoryFilter}
+                  setPostCategoryFilter={setPostCategoryFilter}
+                  filteredPosts={filteredPosts}
+                  togglePostStatus={togglePostStatus}
+                  handleDeletePost={handleDeletePost}
+                  setIsAddPostOpen={setIsAddPostOpen}
+                />
+              </Match>
+
+              <Match when={screenId() === 'plugins'}>
+                <PluginsPage
+                  pluginSearch={pluginSearch}
+                  setPluginSearch={setPluginSearch}
+                  pluginCategoryFilter={pluginCategoryFilter}
+                  setPluginCategoryFilter={setPluginCategoryFilter}
+                  filteredPlugins={filteredPlugins}
+                  togglePlugin={togglePlugin}
+                  updatePlugin={updatePlugin}
+                  updatingPlugins={updatingPlugins}
+                  mockInstallPlugin={mockInstallPlugin}
+                />
+              </Match>
+
+              <Match when={screenId() === 'settings'}>
+                <SettingsPage
+                  siteTitle={siteTitle}
+                  setSiteTitle={setSiteTitle}
+                  siteTagline={siteTagline}
+                  setSiteTagline={setSiteTagline}
+                  siteUrl={siteUrl}
+                  setSiteUrl={setSiteUrl}
+                  adminEmail={adminEmail}
+                  setAdminEmail={setAdminEmail}
+                  membershipOpen={membershipOpen}
+                  setMembershipOpen={setMembershipOpen}
+                  defaultRole={defaultRole}
+                  setDefaultRole={setDefaultRole}
+                  permalinkStructure={permalinkStructure}
+                  setPermalinkStructure={setPermalinkStructure}
+                  saveSettings={saveSettings}
+                />
+              </Match>
+            </Switch>
+            </Suspense>
+          }>
             <div class="flex items-center justify-center min-h-[400px]">
               <div class="flex flex-col items-center gap-3">
                 <div class="w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
                 <span class="text-xs font-mono font-bold text-slate-400 tracking-widest uppercase">Loading</span>
               </div>
             </div>
-          }>
-          <Switch>
-            <Match when={screenId() === 'dashboard'}>
-              <DashboardPage
-                publishedPostsCount={publishedPostsCount}
-                totalComments={totalComments}
-                activePluginsCount={activePluginsCount}
-                totalPlugins={() => plugins().length}
-                draftTitle={draftTitle}
-                setDraftTitle={setDraftTitle}
-                draftContent={draftContent}
-                setDraftContent={setDraftContent}
-                handleSaveDraft={handleSaveDraft}
-                activities={activities}
-                addToast={addToast}
-              />
-            </Match>
-
-            <Match when={screenId() === 'posts'}>
-              <PostsPage
-                postSearch={postSearch}
-                setPostSearch={setPostSearch}
-                postCategoryFilter={postCategoryFilter}
-                setPostCategoryFilter={setPostCategoryFilter}
-                filteredPosts={filteredPosts}
-                togglePostStatus={togglePostStatus}
-                handleDeletePost={handleDeletePost}
-                setIsAddPostOpen={setIsAddPostOpen}
-              />
-            </Match>
-
-            <Match when={screenId() === 'plugins'}>
-              <PluginsPage
-                pluginSearch={pluginSearch}
-                setPluginSearch={setPluginSearch}
-                pluginCategoryFilter={pluginCategoryFilter}
-                setPluginCategoryFilter={setPluginCategoryFilter}
-                filteredPlugins={filteredPlugins}
-                togglePlugin={togglePlugin}
-                updatePlugin={updatePlugin}
-                updatingPlugins={updatingPlugins}
-                mockInstallPlugin={mockInstallPlugin}
-              />
-            </Match>
-
-            <Match when={screenId() === 'settings'}>
-              <SettingsPage
-                siteTitle={siteTitle}
-                setSiteTitle={setSiteTitle}
-                siteTagline={siteTagline}
-                setSiteTagline={setSiteTagline}
-                siteUrl={siteUrl}
-                setSiteUrl={setSiteUrl}
-                adminEmail={adminEmail}
-                setAdminEmail={setAdminEmail}
-                membershipOpen={membershipOpen}
-                setMembershipOpen={setMembershipOpen}
-                defaultRole={defaultRole}
-                setDefaultRole={setDefaultRole}
-                permalinkStructure={permalinkStructure}
-                setPermalinkStructure={setPermalinkStructure}
-                saveSettings={saveSettings}
-              />
-            </Match>
-          </Switch>
-          </Suspense>
+          </Show>
         </main>
 
         <footer class="mt-auto px-6 py-4 bg-white border-t border-slate-200 text-center text-[10px] uppercase tracking-[0.2em] font-mono text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-2">
