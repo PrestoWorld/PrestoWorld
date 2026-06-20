@@ -16,6 +16,9 @@ class DashboardWidget implements DashboardWidgetContract
         protected int $column = 1,
         protected string $context = 'dashboard',
         protected bool $visible = true,
+        protected string $component = '',
+        protected string $grid = 'half',
+        protected array $props = [],
     ) {}
 
     public static function fromArray(array $data): self
@@ -28,6 +31,9 @@ class DashboardWidget implements DashboardWidgetContract
             column: $data['column'] ?? 1,
             context: $data['context'] ?? 'dashboard',
             visible: $data['visible'] ?? true,
+            component: $data['component'] ?? '',
+            grid: $data['grid'] ?? 'half',
+            props: $data['props'] ?? [],
         );
     }
 
@@ -72,6 +78,39 @@ class DashboardWidget implements DashboardWidgetContract
         return $this->visible;
     }
 
+    public function getComponent(): string
+    {
+        return $this->component;
+    }
+
+    public function setComponent(string $component): self
+    {
+        $this->component = $component;
+        return $this;
+    }
+
+    public function getGrid(): string
+    {
+        return $this->grid;
+    }
+
+    public function setGrid(string $grid): self
+    {
+        $this->grid = $grid;
+        return $this;
+    }
+
+    public function getProps(): array
+    {
+        return $this->props;
+    }
+
+    public function setProps(array $props): self
+    {
+        $this->props = $props;
+        return $this;
+    }
+
     public function toArray(): array
     {
         return [
@@ -82,6 +121,9 @@ class DashboardWidget implements DashboardWidgetContract
             'column' => $this->column,
             'context' => $this->context,
             'visible' => $this->visible,
+            'component' => $this->component,
+            'grid' => $this->grid,
+            'props' => $this->props,
         ];
     }
 }

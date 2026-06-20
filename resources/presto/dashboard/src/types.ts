@@ -1,3 +1,5 @@
+// ── Data Models ──────────────────────────────────────────────
+
 export interface WPPost {
   id: number;
   title: string;
@@ -32,6 +34,23 @@ export interface WPToast {
   type: 'success' | 'error' | 'info';
 }
 
+// ── Admin Contexts ───────────────────────────────────────────
+
+/** WordPress-style screen ID (dashboard, posts, plugins, settings) */
+export type ScreenId = 'dashboard' | 'posts' | 'plugins' | 'settings';
+
+/** Registered screen definition */
+export interface AdminScreen {
+  id: ScreenId | string;
+  title: string;
+  parent?: string;
+  capability?: string;
+  icon?: string;
+  position?: number;
+}
+
+// ── Menu Context ─────────────────────────────────────────────
+
 export interface AdminUser {
   name: string;
   role: string;
@@ -41,17 +60,87 @@ export interface AdminUser {
 export interface AdminMenuItem {
   id: string;
   label: string;
+  screenId: string;
   icon?: string;
-  path?: string;
+  href?: string;
+  badge?: string | number;
+  badgeClass?: string;
   children?: AdminMenuItem[];
 }
 
+export interface AdminMenuSection {
+  id: string;
+  title: string;
+  priority: number;
+  items: AdminMenuItem[];
+}
+
+// ── Dashboard Widget Context ─────────────────────────────────
+
+export type DashboardWidgetGrid = 'full' | 'half' | 'third' | 'quarter';
+
+export interface DashboardWidgetDefinition {
+  id: string;
+  title: string;
+  component: string;
+  grid: DashboardWidgetGrid;
+  priority: number;
+  visible: boolean;
+  props?: Record<string, unknown>;
+}
+
+// ── Screen Options Context ───────────────────────────────────
+
+export type ScreenOptionType = 'checkbox' | 'select' | 'text' | 'number';
+
+export interface ScreenOption {
+  id: string;
+  label: string;
+  type: ScreenOptionType;
+  default?: unknown;
+  options?: { label: string; value: string }[];
+}
+
+export interface ScreenOptionsContext {
+  screenId: string;
+  title: string;
+  options: ScreenOption[];
+}
+
+// ── Admin Bar Context ────────────────────────────────────────
+
+export type AdminBarItemType = 'link' | 'button' | 'divider' | 'notification';
+
+export interface AdminBarItem {
+  id: string;
+  label: string;
+  icon?: string;
+  href?: string;
+  type: AdminBarItemType;
+  badge?: string | number;
+  children?: AdminBarItem[];
+}
+
+export interface AdminBarContext {
+  items: AdminBarItem[];
+}
+
+// ── Page Context ─────────────────────────────────────────────
+
+export interface AdminPageContext {
+  path: string;
+  title: string;
+  screenId: string;
+}
+
+// ── Root Initial State ───────────────────────────────────────
+
 export interface AdminInitialState {
   user: AdminUser;
-  menu: AdminMenuItem[];
-  widgets: Record<string, unknown[]>;
-  page: {
-    path: string;
-    title: string;
-  };
+  screens: AdminScreen[];
+  menuSections: AdminMenuSection[];
+  widgets: DashboardWidgetDefinition[];
+  screenOptions: ScreenOptionsContext[];
+  adminBar: AdminBarContext;
+  page: AdminPageContext;
 }

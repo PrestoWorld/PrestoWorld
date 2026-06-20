@@ -1,19 +1,19 @@
-import { createSignal, For, Show, Switch, Match, lazy, Suspense, onMount, onCleanup } from 'solid-js';
+import { createSignal, For, Show, Switch, Match, lazy, Suspense, onMount, onCleanup, type Component } from 'solid-js';
 import { 
-  LayoutDashboard, 
-  FileText, 
-  Blocks, 
-  Settings as SettingsIcon, 
-  Plus, 
-  Globe, 
-  Bell, 
-  ExternalLink, 
+  LayoutDashboard,
+  FileText,
+  Blocks,
+  Settings,
+  Plus,
+  Globe,
+  Bell,
+  ExternalLink,
   Sparkles,
   X,
   Check,
 } from 'lucide-solid';
 import { initialPosts, initialPlugins, initialActivities } from './mockData';
-import { WPPost, WPPlugin, WPActivity, WPToast, AdminInitialState } from './types';
+import { WPPost, WPPlugin, WPActivity, WPToast, AdminInitialState, AdminMenuItem, AdminMenuSection, AdminBarItem, DashboardWidgetDefinition } from './types';
 
 const DashboardPage = lazy(() => import('./pages/DashboardPage'));
 const PostsPage = lazy(() => import('./pages/PostsPage'));
@@ -28,18 +28,38 @@ declare global {
 
 const initialState = window.__INITIAL_STATE__;
 const initialUser = initialState?.user ?? { name: 'Administrator', role: 'admin', avatar: null };
+const initialScreens = initialState?.screens ?? [];
+const initialMenuSections = initialState?.menuSections ?? [];
+const initialAdminBar = initialState?.adminBar ?? { items: [] };
+const initialScreenOptions = initialState?.screenOptions ?? [];
 
-type ScreenId = 'dashboard' | 'posts' | 'plugins' | 'settings';
+const ICON_MAP: Record<string, Component<{ size?: number }>> = {
+  LayoutDashboard,
+  FileText,
+  Blocks,
+  Settings,
+  Plus,
+  Globe,
+  Bell,
+  ExternalLink,
+  Sparkles,
+  X,
+  Check,
+};
 
-const SCREEN_IDS: ScreenId[] = ['dashboard', 'posts', 'plugins', 'settings'];
+function resolveIcon(name?: string): Component<{ size?: number }> {
+  if (!name) return () => null;
+  return ICON_MAP[name] ?? (() => null);
+}
 
-function hashToScreen(hash: string): ScreenId {
+function hashToScreen(hash: string): string {
   const cleaned = hash.replace(/^#\/+/, '').replace(/\/+$/, '');
-  return SCREEN_IDS.includes(cleaned as ScreenId) ? (cleaned as ScreenId) : 'dashboard';
+  if (cleaned && initialScreens.some(s => s.id === cleaned)) return cleaned;
+  return initialScreens[0]?.id ?? 'dashboard';
 }
 
 export default function App() {
-  const [screenId, setScreenId] = createSignal<ScreenId>(hashToScreen(window.location.hash));
+  const [screenId, setScreenId] = createSignal<string>(hashToScreen(window.location.hash));
 
   onMount(() => {
     const onHashChange = () => setScreenId(hashToScreen(window.location.hash));
@@ -47,8 +67,8 @@ export default function App() {
     onCleanup(() => window.removeEventListener('hashchange', onHashChange));
   });
 
-  const goTo = (screen: ScreenId) => {
-    window.location.hash = screen === 'dashboard' ? '#' : `#/${screen}`;
+  const goTo = (screen: string) => {
+    window.location.hash = screen === initialScreens[0]?.id ? '#' : `#/${screen}`;
     setIsMobileOpen(false);
   };
 
@@ -358,55 +378,34 @@ export default function App() {
           </div>
 
           <nav class="sidebar-menu">
-            <span class="menu-title">Management</span>
-
-            <button 
-              class={`menu-item w-full text-left ${screenId() === 'dashboard' ? 'active' : ''}`}
-              onClick={() => goTo('dashboard')}
-            >
-              <span class="icon-wrapper">
-                <LayoutDashboard size={18} />
-              </span>
-              <span>Dashboard</span>
-            </button>
-
-            <button
-              class={`menu-item w-full text-left ${screenId() === 'posts' ? 'active' : ''}`}
-              onClick={() => goTo('posts')}
-            >
-              <span class="icon-wrapper">
-                <FileText size={18} />
-              </span>
-              <span>Posts</span>
-              <span class="count-badge bg-slate-800">{posts().length}</span>
-            </button>
-
-            <button
-              class={`menu-item w-full text-left ${screenId() === 'plugins' ? 'active' : ''}`}
-              onClick={() => goTo('plugins')}
-            >
-              <span class="icon-wrapper">
-                <Blocks size={18} />
-              </span>
-              <span>Plugins</span>
-              <Show when={updatePluginsCount() > 0}>
-                <span class="count-badge bg-indigo-600 text-[10px] ml-auto animate-pulse">
-                  {updatePluginsCount()} UP
-                </span>
-              </Show>
-            </button>
-
-            <span class="menu-title">Configuration</span>
-
-            <button
-              class={`menu-item w-full text-left ${screenId() === 'settings' ? 'active' : ''}`}
-              onClick={() => goTo('settings')}
-            >
-              <span class="icon-wrapper">
-                <SettingsIcon size={18} />
-              </span>
-              <span>Settings</span>
-            </button>
+            <For each={initialMenuSections}>
+              {(section) => (
+                <>
+                  <span class="menu-title">{section.title}</span>
+                  <For each={section.items}>
+                    {(item) => {
+                      const Icon = resolveIcon(item.icon);
+                      const badgeValue = item.id === 'plugins' ? updatePluginsCount() : item.badge;
+                      const showBadge = badgeValue && (typeof badgeValue === 'number' ? badgeValue > 0 : true);
+                      return (
+                        <button
+                          class={`menu-item w-full text-left ${screenId() === item.screenId ? 'active' : ''}`}
+                          onClick={() => goTo(item.screenId)}
+                        >
+                          <span class="icon-wrapper">
+                            <Icon size={18} />
+                          </span>
+                          <span>{item.label}</span>
+                          <Show when={showBadge}>
+                            <span class="count-badge bg-slate-800 text-[10px] ml-auto">{badgeValue}</span>
+                          </Show>
+                        </button>
+                      );
+                    }}
+                  </For>
+                </>
+              )}
+            </For>
           </nav>
         </div>
 
@@ -456,22 +455,36 @@ export default function App() {
           </div>
 
           <div class="flex items-center gap-3 sm:gap-4">
-            <button
-              onClick={() => setIsAddPostOpen(true)}
-              class="flex items-center gap-1.5 bg-slate-900 hover:bg-indigo-600 text-white font-semibold text-xs tracking-tight px-3 py-2 rounded-lg transition-colors cursor-pointer shadow-sm shadow-slate-200"
-            >
-              <Plus size={13} strokeWidth={2.5} />
-              <span class="hidden sm:inline">Add Post</span>
-            </button>
-
-            <div class="h-4 w-px bg-slate-200"></div>
-
-            <div class="flex items-center gap-3">
-              <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 cursor-pointer transition-colors border border-slate-150 relative">
-                <Bell size={14} />
-                <span class="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-indigo-650 rounded-full animate-ping"></span>
-              </div>
-            </div>
+            <For each={initialAdminBar.items}>
+              {(barItem) => {
+                const BarIcon = resolveIcon(barItem.icon);
+                const isNotif = barItem.type === 'notification';
+                return (
+                  <>
+                    <Show when={barItem.type === 'button'}>
+                      <button
+                        onClick={() => { if (barItem.id === 'new-post') setIsAddPostOpen(true); }}
+                        class="flex items-center gap-1.5 bg-slate-900 hover:bg-indigo-600 text-white font-semibold text-xs tracking-tight px-3 py-2 rounded-lg transition-colors cursor-pointer shadow-sm shadow-slate-200"
+                      >
+                        <BarIcon size={13} strokeWidth={2.5} />
+                        <span class="hidden sm:inline">{barItem.label}</span>
+                      </button>
+                    </Show>
+                    <Show when={isNotif}>
+                      <div class="h-4 w-px bg-slate-200"></div>
+                      <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 cursor-pointer transition-colors border border-slate-150 relative">
+                          <BarIcon size={14} />
+                          <Show when={barItem.badge}>
+                            <span class="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-indigo-650 rounded-full animate-ping"></span>
+                          </Show>
+                        </div>
+                      </div>
+                    </Show>
+                  </>
+                );
+              }}
+            </For>
           </div>
         </header>
 
