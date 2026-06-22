@@ -36,8 +36,27 @@ export interface WPToast {
 
 // ── Admin Contexts ───────────────────────────────────────────
 
+export interface WPTheme {
+  directory: string;
+  name: string;
+  uri: string | null;
+  author: string | null;
+  author_uri: string | null;
+  description: string | null;
+  version: string | null;
+  requires: string | null;
+  requires_php: string | null;
+  tested: string | null;
+  tags: string | null;
+  text_domain: string | null;
+  license: string | null;
+  license_uri: string | null;
+  screenshot: string | null;
+  is_active: boolean;
+}
+
 /** WordPress-style screen ID (dashboard, posts, plugins, settings) */
-export type ScreenId = 'dashboard' | 'posts' | 'plugins' | 'settings';
+export type ScreenId = 'dashboard' | 'posts' | 'plugins' | 'themes' | 'settings';
 
 /** Registered screen definition */
 export interface AdminScreen {

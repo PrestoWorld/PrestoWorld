@@ -4,6 +4,7 @@ import {
   FileText,
   Puzzle,
   Settings,
+  Palette,
   Plus,
   Globe,
   Bell,
@@ -12,12 +13,13 @@ import {
   X,
   Check,
 } from 'lucide-solid';
-import { WPPost, WPPlugin, WPActivity, WPToast, AdminInitialState, AdminMenuItem, AdminMenuSection, AdminBarItem, DashboardWidgetDefinition } from './types';
-import { fetchPosts, fetchPlugins, fetchActivities, fetchStats, type DashboardStats } from './api';
+import { WPPost, WPPlugin, WPTheme, WPActivity, WPToast, AdminInitialState, AdminMenuItem, AdminMenuSection, AdminBarItem, DashboardWidgetDefinition } from './types';
+import { fetchPosts, fetchPlugins, fetchThemes, fetchActivities, fetchStats, type DashboardStats } from './api';
 
 const DashboardPage = lazy(() => import('./pages/DashboardPage'));
 const PostsPage = lazy(() => import('./pages/PostsPage'));
 const PluginsPage = lazy(() => import('./pages/PluginsPage'));
+const ThemesPage = lazy(() => import('./pages/ThemesPage'));
 const SettingsPage = lazy(() => import('./pages/SettingsPage'));
 
 declare global {
@@ -31,6 +33,7 @@ const initialUser = initialState?.user ?? { name: 'Administrator', role: 'admin'
 const initialScreens = initialState?.screens ?? [
   { id: 'dashboard', title: 'Dashboard', position: 0 },
   { id: 'posts',     title: 'Posts',     position: 10 },
+  { id: 'themes',    title: 'Themes',    position: 15 },
   { id: 'plugins',   title: 'Plugins',   position: 20 },
   { id: 'settings',  title: 'Settings',  position: 30 },
 ];
@@ -40,12 +43,18 @@ const initialMenuSections = initialState?.menuSections ?? [
     items: [
       { id: 'dashboard-item', screenId: 'dashboard', label: 'Dashboard', icon: 'LayoutDashboard' },
       { id: 'posts-item',     screenId: 'posts',     label: 'Posts',     icon: 'FileText' },
-      { id: 'plugins-item',   screenId: 'plugins',   label: 'Plugins',   icon: 'Puzzle' },
+    ],
+  },
+  {
+    id: 'appearance', title: 'Appearance', priority: 15,
+    items: [
+      { id: 'themes-item', screenId: 'themes', label: 'Themes', icon: 'Palette' },
     ],
   },
   {
     id: 'configuration', title: 'Configuration', priority: 20,
     items: [
+      { id: 'plugins-item',   screenId: 'plugins',   label: 'Plugins',   icon: 'Puzzle' },
       { id: 'settings-item', screenId: 'settings', label: 'Settings', icon: 'Settings' },
     ],
   },
@@ -63,6 +72,7 @@ const ICON_MAP: Record<string, Component<{ size?: number }>> = {
   FileText,
   Puzzle,
   Settings,
+  Palette,
   Plus,
   Globe,
   Bell,
@@ -94,6 +104,7 @@ export default function App() {
     Promise.all([
       fetchPosts().then(setPosts).catch(() => {}),
       fetchPlugins().then(setPlugins).catch(() => {}),
+      fetchThemes().then(setThemes).catch(() => {}),
       fetchActivities().then(setActivities).catch(() => {}),
       fetchStats().then(setStats).catch(() => {}),
     ]).finally(() => setLoading(false));
@@ -115,6 +126,31 @@ export default function App() {
 
   const [postSearch, setPostSearch] = createSignal('');
   const [postCategoryFilter, setPostCategoryFilter] = createSignal('All');
+  const [themes, setThemes] = createSignal<WPTheme[]>([]);
+  const [activatingTheme, setActivatingTheme] = createSignal<string | null>(null);
+
+  const activeTheme = () => themes().find(t => t.is_active);
+
+  const activateTheme = (directory: string) => {
+    setActivatingTheme(directory);
+    fetch(`/api/admin/themes/activate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ theme: directory }),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          setThemes(themes().map(t => ({ ...t, is_active: t.directory === directory })));
+          addToast(`Theme "${data.name}" activated successfully`);
+        } else {
+          addToast(data.error || 'Failed to activate theme', 'error');
+        }
+      })
+      .catch(() => addToast('Failed to activate theme', 'error'))
+      .finally(() => setActivatingTheme(null));
+  };
+
   const [pluginSearch, setPluginSearch] = createSignal('');
   const [pluginCategoryFilter, setPluginCategoryFilter] = createSignal('All');
 
@@ -559,6 +595,15 @@ export default function App() {
                   togglePostStatus={togglePostStatus}
                   handleDeletePost={handleDeletePost}
                   setIsAddPostOpen={setIsAddPostOpen}
+                />
+              </Match>
+
+              <Match when={screenId() === 'themes'}>
+                <ThemesPage
+                  themes={themes}
+                  activeTheme={activeTheme}
+                  activating={activatingTheme()}
+                  onActivate={activateTheme}
                 />
               </Match>
 

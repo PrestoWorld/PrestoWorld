@@ -34,6 +34,7 @@ class SpaController
         'index.php'           => 'dashboard',
         'edit.php'            => 'posts',
         'plugins.php'         => 'plugins',
+        'themes.php'          => 'themes',
         'options-general.php' => 'settings',
         'admin.php'           => null, // determined by ?page= param
     ];

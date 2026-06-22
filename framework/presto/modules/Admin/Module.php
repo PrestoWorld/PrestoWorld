@@ -102,7 +102,10 @@ class Module extends WitalsModule
         $menu->registerItem('management', 'Dashboard', '#/dashboard', icon: 'LayoutDashboard', priority: 10, id: 'dashboard', screenId: 'dashboard');
         $menu->registerItem('management', 'Posts', '#/posts', icon: 'FileText', priority: 20, id: 'posts', screenId: 'posts');
 
-        $menu->registerGroup('configuration', 'Configuration', icon: 'Settings', priority: 2);
+        $menu->registerGroup('appearance', 'Appearance', icon: 'Palette', priority: 2);
+        $menu->registerItem('appearance', 'Themes', '#/themes', icon: 'Palette', priority: 10, id: 'themes', screenId: 'themes');
+
+        $menu->registerGroup('configuration', 'Configuration', icon: 'Settings', priority: 3);
         $menu->registerItem('configuration', 'Plugins', '#/plugins', icon: 'Puzzle', priority: 10, id: 'plugins', screenId: 'plugins');
         $menu->registerItem('configuration', 'Settings', '#/settings', icon: 'Settings', priority: 20, id: 'settings', screenId: 'settings');
     }

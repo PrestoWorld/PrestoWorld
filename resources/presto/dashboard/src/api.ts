@@ -36,6 +36,25 @@ export interface WPActivity {
   type: 'post' | 'comment' | 'update' | 'security';
 }
 
+export interface WPTheme {
+  directory: string;
+  name: string;
+  uri: string | null;
+  author: string | null;
+  author_uri: string | null;
+  description: string | null;
+  version: string | null;
+  requires: string | null;
+  requires_php: string | null;
+  tested: string | null;
+  tags: string | null;
+  text_domain: string | null;
+  license: string | null;
+  license_uri: string | null;
+  screenshot: string | null;
+  is_active: boolean;
+}
+
 export interface DashboardStats {
   posts: { total: number; published: number; draft: number };
   plugins: { total: number; active: number; inactive: number };
@@ -51,6 +70,10 @@ export async function fetchPlugins(): Promise<WPPlugin[]> {
 
 export async function fetchStats(): Promise<DashboardStats> {
   return fetchJSON<DashboardStats>(`${BASE}/stats`);
+}
+
+export async function fetchThemes(): Promise<WPTheme[]> {
+  return fetchJSON<WPTheme[]>(`${BASE}/themes`);
 }
 
 export async function fetchActivities(): Promise<WPActivity[]> {

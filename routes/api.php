@@ -12,5 +12,7 @@ $router->get('/api/admin/dashboard/widgets', [\App\Http\Controllers\Admin\SpaCon
 
 $router->get('/api/admin/posts', [AdminApiController::class, 'posts']);
 $router->get('/api/admin/plugins', [AdminApiController::class, 'plugins']);
+$router->get('/api/admin/themes', [AdminApiController::class, 'themes']);
+$router->post('/api/admin/themes/activate', [AdminApiController::class, 'activateTheme']);
 $router->get('/api/admin/stats', [AdminApiController::class, 'stats']);
 $router->get('/api/admin/activities', [AdminApiController::class, 'activities']);
