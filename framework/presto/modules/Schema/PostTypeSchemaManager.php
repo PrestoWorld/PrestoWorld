@@ -13,7 +13,7 @@ use Cycle\Database\Schema\AbstractTable;
 class PostTypeSchemaManager
 {
     protected DatabaseInterface $db;
-    protected string $tablePrefix = 'pw_';
+    protected string $tablePrefix;
     protected ?string $stateFilePath = null;
     protected array $syncedStates = [];
     protected bool $stateLoaded = false;
@@ -22,6 +22,7 @@ class PostTypeSchemaManager
     public function __construct(DatabaseInterface $db, string $storagePath = '')
     {
         $this->db = $db;
+        $this->tablePrefix = getenv('PW_TABLE_PREFIX') ?: 'pw_';
         if ($storagePath !== '') {
             $this->stateFilePath = $storagePath . '/pw_schema_state.json';
         }

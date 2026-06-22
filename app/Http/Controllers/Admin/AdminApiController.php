@@ -10,12 +10,14 @@ use PrestoWorld\Contracts\Plugin\PluginStoreInterface;
 
 class AdminApiController
 {
-    protected string $prefix = 'pw_';
+    protected string $prefix;
 
     public function __construct(
         protected DatabaseInterface $db,
         protected PluginStoreInterface $plugins,
-    ) {}
+    ) {
+        $this->prefix = getenv('PW_TABLE_PREFIX') ?: 'pw_';
+    }
 
     // ── Posts ───────────────────────────────────────────────────
 

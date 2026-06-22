@@ -69,11 +69,14 @@ class Application extends BaseApplication
             \App\Services\PageService::class,
         );
 
+        // WordPress bridge must register BEFORE DatabaseServiceProvider
+        // so it can detect wp-config.php and set DB env vars early.
+        $this->register(\PrestoWorld\Bridge\WordPress\BridgeServiceProvider::class);
+
         $this->register(\Witals\Framework\Auth\AuthServiceProvider::class);
         $this->register(\PrestoWorld\Foundation\Providers\DatabaseServiceProvider::class);
         $this->register(\App\Providers\ConsoleServiceProvider::class);
         $this->register(\PrestoWorld\Plugin\PluginServiceProvider::class);
-        $this->register(\PrestoWorld\Bridge\WordPress\BridgeServiceProvider::class);
 
         // Context system
         $this->singleton(\Witals\Framework\Context\Contracts\BlockManagerInterface::class, \Witals\Framework\Context\BlockManager::class);
