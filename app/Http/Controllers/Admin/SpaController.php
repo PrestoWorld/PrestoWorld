@@ -30,32 +30,108 @@ class SpaController
         protected DashboardWidgetRepository $widgets,
     ) {}
 
+    protected const WP_SCREEN_MAP = [
+        'index.php'           => 'dashboard',
+        'edit.php'            => 'posts',
+        'plugins.php'         => 'plugins',
+        'options-general.php' => 'settings',
+        'admin.php'           => null, // determined by ?page= param
+    ];
+
     public function __invoke(Request $request): Response
     {
-        $skin = $this->skins->getActiveSkin();
+        $path = $request->path();
+        $skin = $this->resolveSkin($path, $request);
+        $screenId = $this->resolveScreenId($request);
 
         $menuSections = $this->buildMenuSections();
+        $screens = $this->buildScreens($menuSections);
+
+        $screenTitle = 'Dashboard';
+        foreach ($screens as $s) {
+            if (($s['id'] ?? '') === $screenId) {
+                $screenTitle = $s['title'] ?? 'Dashboard';
+                break;
+            }
+        }
 
         $initialState = [
             'user' => $this->getUserState(),
-            'screens' => $this->buildScreens($menuSections),
+            'screens' => $screens,
             'menuSections' => $menuSections,
             'widgets' => $this->buildWidgets(),
             'screenOptions' => $this->buildScreenOptions(),
             'adminBar' => $this->buildAdminBar()->toArray(),
             'page' => [
                 'path' => $request->path(),
-                'title' => 'Dashboard',
-                'screenId' => 'dashboard',
+                'title' => $screenTitle,
+                'screenId' => $screenId,
             ],
         ];
 
         $html = $skin->renderLayout('', [
-            'title' => 'Admin',
+            'title' => $screenTitle,
             'initialState' => $initialState,
         ]);
 
         return Response::html($html);
+    }
+
+    protected function resolveSkin(string $path, Request $request): mixed
+    {
+        // /wp-admin/* routes always use the WordPress SSR skin
+        if (str_starts_with($path, '/wp-admin')) {
+            if ($this->skins->hasSkin('wordpress-classic')) {
+                return $this->skins->getSkin('wordpress-classic');
+            }
+        }
+
+        // ?skin= query param override
+        $querySkin = $request->query('skin');
+        if ($querySkin !== null && $this->skins->hasSkin($querySkin)) {
+            return $this->skins->getSkin($querySkin);
+        }
+
+        return $this->skins->getActiveSkin();
+    }
+
+    protected function resolveScreenId(Request $request): string
+    {
+        $path = $request->path();
+        $scriptName = basename($path);
+
+        // Direct ?screen= param override
+        $queryScreen = $request->query('screen');
+        if ($queryScreen !== null) {
+            return $queryScreen;
+        }
+
+        // Map WordPress script names to screen IDs
+        if (isset(self::WP_SCREEN_MAP[$scriptName])) {
+            $mapped = self::WP_SCREEN_MAP[$scriptName];
+            if ($mapped !== null) {
+                return $mapped;
+            }
+            // admin.php — get from ?page= param
+            return $request->query('page', 'dashboard');
+        }
+
+        // /wp-admin/ root → dashboard
+        if (in_array($path, ['/wp-admin', '/wp-admin/'], true)) {
+            return 'dashboard';
+        }
+
+        return 'dashboard';
+    }
+
+    public function adminAjax(Request $request): Response
+    {
+        $action = $request->query('action', $request->post('action', ''));
+        return Response::json([
+            'success' => false,
+            'data' => [],
+            'error' => "WP Ajax action '{$action}' is not implemented in PrestoWorld.",
+        ]);
     }
 
     public function menu(Request $request): Response
@@ -103,12 +179,13 @@ class SpaController
     protected function buildMenuSections(): array
     {
         $menuTree = $this->menu->getTreeAsArray();
+        $sections = [];
 
-        return array_map(function (array $group) {
+        foreach ($menuTree as $i => $group) {
             $items = $group['children'] ?? [];
 
-            return [
-                'id' => $group['id'] ?? 'section-' . spl_object_id($group),
+            $sections[] = [
+                'id' => $group['id'] ?? 'section-' . $i,
                 'title' => $group['label'] ?? '',
                 'priority' => $group['priority'] ?? 10,
                 'items' => array_map(fn(array $child) => [
@@ -120,7 +197,9 @@ class SpaController
                     'priority' => $child['priority'] ?? 10,
                 ], $items),
             ];
-        }, $menuTree);
+        }
+
+        return $sections;
     }
 
     /** Build widget definitions with SPA component mapping */

@@ -46,6 +46,7 @@ class Module extends WitalsModule
         $sm = $this->app->make(\PrestoWorld\Modules\Admin\SkinManager::class);
         $this->registerPrestoModernSkin($sm);
         $this->registerPrestoSpaSkin($sm);
+        $this->registerWordPressSkin($sm);
 
         $this->skinsRegistered = true;
     }
@@ -62,6 +63,13 @@ class Module extends WitalsModule
         $assets = $this->app->make(\Witals\Framework\Support\Assets\Contracts\AssetRegistryInterface::class);
         $skin = new \PrestoWorld\Modules\Admin\Skins\PrestoSpa\PrestoSpaSkin($assets);
         $manager->registerSkin($skin, $skin::getManifest());
+    }
+
+    protected function registerWordPressSkin(\PrestoWorld\Modules\Admin\SkinManager $manager): void
+    {
+        $view = $this->app->make(ViewFactory::class);
+        $skin = new \PrestoWorld\Bridge\WordPress\Admin\Skins\WordPressSkin($view);
+        $manager->registerSkin($skin, \PrestoWorld\Bridge\WordPress\Admin\Skins\WordPressSkin::getManifest());
     }
 
     protected function setActiveSkinFromConfig(): void

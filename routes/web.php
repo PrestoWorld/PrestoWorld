@@ -15,4 +15,4 @@ $router->get('/logout', [AuthController::class, 'handleLogout']);
 // Admin SPA entry
 $router->get('/dashboard', \App\Http\Controllers\Admin\SpaController::class);
 
-
+// Routes are dynamically injected by modules and service providers.
