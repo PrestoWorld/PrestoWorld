@@ -1,0 +1,19 @@
+{
+    "name": "classic-theme",
+    "version": "1.0.0",
+    "description": "Classic WordPress theme engine — loads PHP-based themes (header.php, footer.php, index.php, etc.) with modern performance optimizations",
+    "type": "support",
+    "priority": 40,
+    "enabled": true,
+    "namespace": "PrestoWorld\\Modules\\ClassicTheme",
+    "entry": "Module.php",
+    "requires": {
+        "php": "^8.1"
+    },
+    "providers": [],
+    "autoload": {
+        "psr-4": {
+            "PrestoWorld\\Modules\\ClassicTheme\\": "."
+        }
+    }
+}

@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 return [
+    'active' => getenv('PW_ACTIVE_THEME') ?: 'twentytwenty',
+    'path' => getenv('PW_THEME_DIR') ?: null,
     'default_title' => 'PrestoWorld',
     'charset' => 'UTF-8',
     'viewport' => 'width=device-width, initial-scale=1.0',

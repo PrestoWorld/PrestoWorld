@@ -53,12 +53,27 @@ class Application extends BaseApplication
         });
 
         $this->singleton(
+            \PrestoWorld\Theme\ThemeEngineFactory::class,
+            function ($app) {
+                $factory = new \PrestoWorld\Theme\ThemeEngineFactory($app);
+
+                $themePath = $app->config('theme.path');
+                if ($themePath === null) {
+                    $active = $app->config('theme.active', 'twentytwenty');
+                    $themePath = $app->basePath('public/wp-content/themes/' . $active);
+                }
+
+                $factory->setThemePath($themePath);
+                return $factory;
+            },
+        );
+
+        $this->singleton(
             \App\Contracts\Services\ContentRenderer::class,
             function ($app) {
-                if ($app->has(\PrestoWorld\Modules\Gutenberg\Module::class)) {
+                if ($app->has(\PrestoWorld\Theme\ThemeEngineFactory::class)) {
                     return new \App\Services\ContentRenderer(
-                        $app->make(\PrestoWorld\Modules\Gutenberg\Module::class),
-                        $app->make(\PrestoWorld\Modules\Gutenberg\Renderer\BlockRenderer::class),
+                        $app->make(\PrestoWorld\Theme\ThemeEngineFactory::class),
                     );
                 }
                 return new \App\Services\NullContentRenderer();
@@ -82,7 +97,7 @@ class Application extends BaseApplication
         $this->singleton(\Witals\Framework\Context\Contracts\BlockManagerInterface::class, \Witals\Framework\Context\BlockManager::class);
         $this->singleton(\Witals\Framework\Context\Contracts\ContextManagerInterface::class, \Witals\Framework\Context\ContextManager::class);
         $this->singleton(\Witals\Framework\Context\Contracts\ContextLoaderInterface::class, function ($app) {
-            $themeDir = getenv('PW_THEME_DIR') ?: $app->basePath('content/themes/' . ($app->config('theme.active', 'twentytwentyfive')));
+            $themeDir = getenv('PW_THEME_DIR') ?: $app->basePath('content/themes/' . ($app->config('theme.active', 'twentytwenty')));
             return new \Witals\Framework\Context\ContextLoader(
                 $app->make(\Witals\Framework\Context\Contracts\BlockManagerInterface::class),
                 templateDir: $themeDir . '/templates',

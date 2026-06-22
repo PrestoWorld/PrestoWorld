@@ -56,4 +56,40 @@ class PageRendererTest extends TestCase
         $renderer = $this->makeRenderer($composer);
         $renderer->render($this->content('body'), 'Custom Title');
     }
+
+    public function test_render_returns_body_directly_when_complete(): void
+    {
+        $composer = $this->createMock(HtmlComposer::class);
+        $composer->expects($this->never())->method('compose');
+
+        $renderer = $this->makeRenderer($composer);
+        $html = $renderer->render(
+            new RenderedContent('<!DOCTYPE html><html><body>Full</body></html>', '', complete: true),
+        );
+
+        $this->assertSame('<!DOCTYPE html><html><body>Full</body></html>', $html);
+    }
+
+    public function test_render_ignores_composer_when_complete_with_title(): void
+    {
+        $composer = $this->createMock(HtmlComposer::class);
+        $composer->expects($this->never())->method('compose');
+
+        $renderer = $this->makeRenderer($composer);
+        $html = $renderer->render(
+            new RenderedContent('<html><body>Full</body></html>', '', complete: true),
+            'Ignored Title',
+        );
+
+        $this->assertSame('<html><body>Full</body></html>', $html);
+    }
+
+    public function test_complete_factory_method(): void
+    {
+        $content = RenderedContent::complete('<html><body>Full</body></html>', 'body { color: red; }');
+
+        $this->assertTrue($content->complete);
+        $this->assertSame('<html><body>Full</body></html>', $content->body);
+        $this->assertSame('body { color: red; }', $content->styles);
+    }
 }

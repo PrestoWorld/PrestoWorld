@@ -1,0 +1,53 @@
+<?php
+
+declare(strict_types=1);
+
+namespace PrestoWorld\Modules\ClassicTheme;
+
+use Witals\Framework\Module\Module as WitalsModule;
+
+class Module extends WitalsModule
+{
+    public function register(): void
+    {
+        $themePath = $this->resolveThemePath();
+
+        $this->app->singleton(StyleParser::class, function () use ($themePath) {
+            return new StyleParser($themePath . '/style.css');
+        });
+
+        $this->app->singleton(FunctionsLoader::class, function () use ($themePath) {
+            return new FunctionsLoader($themePath);
+        });
+
+        $this->app->singleton(TemplateHierarchy::class, function () {
+            return new TemplateHierarchy();
+        });
+
+        $this->app->singleton(TemplateLoader::class, function ($app) use ($themePath) {
+            return new TemplateLoader(
+                $themePath,
+                $app->make(FunctionsLoader::class),
+                $app->make(TemplateHierarchy::class),
+            );
+        });
+
+        $this->app->singleton(ClassicThemeEngine::class, function ($app) use ($themePath) {
+            return new ClassicThemeEngine(
+                $themePath,
+                $app,
+            );
+        });
+    }
+
+    private function resolveThemePath(): string
+    {
+        $envPath = getenv('PW_THEME_DIR');
+        if ($envPath) {
+            return $envPath;
+        }
+
+        $active = $this->app->config('theme.active', 'twentytwenty');
+        return $this->app->basePath() . '/public/wp-content/themes/' . $active;
+    }
+}

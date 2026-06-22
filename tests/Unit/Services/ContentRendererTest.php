@@ -8,18 +8,32 @@ use PHPUnit\Framework\TestCase;
 use App\Services\ContentRenderer;
 use App\Services\NullContentRenderer;
 use App\Contracts\Services\RenderedContent;
-use PrestoWorld\Modules\Gutenberg\Module as GutenbergModule;
-use PrestoWorld\Modules\Gutenberg\Renderer\BlockRenderer;
+use PrestoWorld\Theme\ThemeEngineFactory;
+use PrestoWorld\Contracts\Theme\ThemeEngineInterface;
 
 class ContentRendererTest extends TestCase
 {
-    public function test_render_returns_content_and_styles_from_gutenberg(): void
+    private function mockEngine(): ThemeEngineInterface
     {
-        $gutenberg = $this->createMock(GutenbergModule::class);
-        $gutenberg->method('renderTemplate')->with('index')->willReturn('<p>Hello</p>');
-        $gutenberg->method('getStyles')->willReturn('body { color: red; }');
+        return $this->createMock(ThemeEngineInterface::class);
+    }
 
-        $renderer = new ContentRenderer($gutenberg, $this->createMock(BlockRenderer::class));
+    private function mockFactory(?ThemeEngineInterface $engine = null): ThemeEngineFactory
+    {
+        $factory = $this->createMock(ThemeEngineFactory::class);
+        $factory->method('create')->willReturn($engine ?? $this->mockEngine());
+
+        return $factory;
+    }
+
+    public function test_render_returns_content_and_styles_from_engine(): void
+    {
+        $engine = $this->mockEngine();
+        $engine->method('render')->with('index', [])->willReturn(
+            new RenderedContent('<p>Hello</p>', 'body { color: red; }'),
+        );
+
+        $renderer = new ContentRenderer($this->mockFactory($engine));
         $result = $renderer->render('index');
 
         $this->assertInstanceOf(RenderedContent::class, $result);
@@ -27,39 +41,44 @@ class ContentRendererTest extends TestCase
         $this->assertSame('body { color: red; }', $result->styles);
     }
 
-    public function test_render_returns_empty_body_when_gutenberg_returns_empty(): void
+    public function test_render_returns_empty_body_when_engine_returns_empty(): void
     {
-        $gutenberg = $this->createMock(GutenbergModule::class);
-        $gutenberg->method('renderTemplate')->willReturn('');
+        $engine = $this->mockEngine();
+        $engine->method('render')->willReturn(new RenderedContent('', ''));
 
-        $renderer = new ContentRenderer($gutenberg, $this->createMock(BlockRenderer::class));
+        $renderer = new ContentRenderer($this->mockFactory($engine));
         $result = $renderer->render('index');
 
         $this->assertSame('', $result->body);
     }
 
-    public function test_render_returns_styles_when_gutenberg_has_styles(): void
+    public function test_render_passes_post_data_to_engine(): void
     {
-        $gutenberg = $this->createMock(GutenbergModule::class);
-        $gutenberg->method('renderTemplate')->willReturn('<p>Content</p>');
-        $gutenberg->method('getStyles')->willReturn('body { color: red; }');
+        $post = ['ID' => 1, 'post_title' => 'Test'];
+        $engine = $this->mockEngine();
+        $engine->expects($this->once())
+            ->method('render')
+            ->with('single', $post)
+            ->willReturn(new RenderedContent('<p>Test</p>', ''));
 
-        $renderer = new ContentRenderer($gutenberg, $this->createMock(BlockRenderer::class));
-        $result = $renderer->render('index');
+        $renderer = new ContentRenderer($this->mockFactory($engine));
+        $result = $renderer->render('single', $post);
 
-        $this->assertSame('body { color: red; }', $result->styles);
+        $this->assertSame('<p>Test</p>', $result->body);
     }
 
-    public function test_render_returns_empty_styles_when_gutenberg_has_none(): void
+    public function test_render_uses_factory_to_get_engine(): void
     {
-        $gutenberg = $this->createMock(GutenbergModule::class);
-        $gutenberg->method('renderTemplate')->willReturn('<p>Content</p>');
-        $gutenberg->method('getStyles')->willReturn('');
+        $engine = $this->mockEngine();
+        $engine->method('render')->willReturn(new RenderedContent('<p>Engine</p>', ''));
 
-        $renderer = new ContentRenderer($gutenberg, $this->createMock(BlockRenderer::class));
+        $factory = $this->createMock(ThemeEngineFactory::class);
+        $factory->expects($this->once())->method('create')->willReturn($engine);
+
+        $renderer = new ContentRenderer($factory);
         $result = $renderer->render('index');
 
-        $this->assertSame('', $result->styles);
+        $this->assertSame('<p>Engine</p>', $result->body);
     }
 
     public function test_null_renderer_returns_empty_content(): void

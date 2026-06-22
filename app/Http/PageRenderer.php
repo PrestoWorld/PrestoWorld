@@ -16,6 +16,10 @@ class PageRenderer implements PageRendererContract
 
     public function render(RenderedContent $content, ?string $title = null): string
     {
+        if ($content->complete) {
+            return $content->body;
+        }
+
         return $this->composer->compose(
             body: $content->body,
             styles: $content->styles,

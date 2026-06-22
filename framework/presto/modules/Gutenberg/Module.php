@@ -133,6 +133,12 @@ class Module extends WitalsModule
 
     protected function getThemePath($app): string
     {
-        return getenv('PW_THEME_DIR') ?: $app->basePath() . '/content/themes/twentytwentyfive';
+        $envPath = getenv('PW_THEME_DIR');
+        if ($envPath) {
+            return $envPath;
+        }
+
+        $active = $app->config('theme.active', 'twentytwenty');
+        return $app->basePath() . '/public/wp-content/themes/' . $active;
     }
 }
