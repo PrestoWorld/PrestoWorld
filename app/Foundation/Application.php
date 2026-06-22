@@ -137,6 +137,21 @@ class Application extends BaseApplication
         }
 
         parent::boot();
+
+        // Override wp-admin view namespace to prioritize app-level templates
+        if ($this->has(\Witals\Framework\Contracts\View\Factory::class)) {
+            $view = $this->make(\Witals\Framework\Contracts\View\Factory::class);
+            $appTemplates = $this->basePath('app/Views/wp-admin');
+            if (is_dir($appTemplates)) {
+                try {
+                    $ref = new \ReflectionClass(\PrestoWorld\Bridge\WordPress\Admin\Skins\WordPressSkin::class);
+                    $vendorTemplates = dirname($ref->getFileName()) . '/../../../templates/admin/wordpress';
+                    $vendorTemplates = realpath($vendorTemplates) ?: $vendorTemplates;
+                    $view->addNamespace('wp-admin', [$appTemplates, $vendorTemplates]);
+                } catch (\Throwable) {
+                }
+            }
+        }
     }
 
     public function setConfigPaths(string|array $paths): void

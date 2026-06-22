@@ -78,7 +78,7 @@ class AdminApiController
 
     public function activateTheme(\Witals\Framework\Http\Request $request): Response
     {
-        $body = json_decode($request->getContent(), true);
+        $body = json_decode($request->body() ?? '{}', true);
         $theme = $body['theme'] ?? '';
 
         if ($theme === '') {
@@ -111,6 +111,26 @@ class AdminApiController
             'theme' => $theme,
             'name' => $name,
         ]);
+    }
+
+    public function activateThemeFromForm(\Witals\Framework\Http\Request $request): Response
+    {
+        $theme = $request->post('theme', '');
+
+        if ($theme === '') {
+            return Response::redirect('/wp-admin/themes.php');
+        }
+
+        $themesDir = getenv('PW_CONTENT_DIR')
+            ? getenv('PW_CONTENT_DIR') . '/themes'
+            : null;
+
+        if ($themesDir !== null && is_dir($themesDir . '/' . $theme)) {
+            putenv('PW_ACTIVE_THEME=' . $theme);
+            $_ENV['PW_ACTIVE_THEME'] = $theme;
+        }
+
+        return Response::redirect('/wp-admin/themes.php');
     }
 
     // ── Stats ───────────────────────────────────────────────────
