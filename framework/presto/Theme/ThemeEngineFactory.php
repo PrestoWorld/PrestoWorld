@@ -73,7 +73,7 @@ class ThemeEngineFactory
     {
         if ($this->blockEngine === null) {
             $gutenberg = $this->container->has(GutenbergModule::class)
-                ? $this->container->get(GutenbergModule::class)
+                ? $this->container->make(GutenbergModule::class)
                 : null;
 
             if ($gutenberg === null) {

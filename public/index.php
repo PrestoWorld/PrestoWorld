@@ -29,16 +29,26 @@ if (function_exists('opcache_reset')) {
     opcache_reset();
 }
 
-// 3. Detect Runtime (FPM, RoadRunner, FrankenPHP, etc.)
+// 3. Configure Error Display — respects PW_DEBUG or APP_DEBUG
+$pwDebug = getenv('PW_DEBUG') === '1' || getenv('PW_DEBUG') === 'true';
+$appDebug = getenv('APP_DEBUG') === '1' || getenv('APP_DEBUG') === 'true';
+
+if ($pwDebug || $appDebug) {
+    ini_set('display_errors', '1');
+    ini_set('display_startup_errors', '1');
+    error_reporting(E_ALL);
+}
+
+// 4. Detect Runtime (FPM, RoadRunner, FrankenPHP, etc.)
 $runtime = RuntimeType::detect();
 
 // 3. Initialize Application
 $app = new Application(dirname(__DIR__), $runtime);
 
-// 4. Specify Config Path
+// 5. Specify Config Path
 $app->setConfigPaths('config');
 
-// 5. Create and Start Server
+// 6. Create and Start Server
 // ServerFactory will return the appropriate server instance based on $runtime
 $server = ServerFactory::create($runtime, $app);
 

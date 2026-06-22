@@ -20,9 +20,19 @@ class ThemeDetectorTest extends TestCase
 
     protected function tearDown(): void
     {
-        array_map('unlink', glob($this->tmpDir . '/*'));
-        array_map('rmdir', glob($this->tmpDir . '/*', GLOB_ONLYDIR));
-        rmdir($this->tmpDir);
+        $this->rmdir($this->tmpDir);
+    }
+
+    private function rmdir(string $dir): void
+    {
+        if (!is_dir($dir)) {
+            return;
+        }
+        foreach (array_diff(scandir($dir), ['.', '..']) as $item) {
+            $path = $dir . '/' . $item;
+            is_dir($path) ? $this->rmdir($path) : unlink($path);
+        }
+        rmdir($dir);
     }
 
     public function test_detect_classic_with_style_and_index(): void

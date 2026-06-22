@@ -40,6 +40,26 @@ class Module extends WitalsModule
         });
     }
 
+    public function boot(): void
+    {
+        $this->registerConsoleCommand();
+
+        $transformerDir = __DIR__ . '/Transformers';
+        if (is_dir($transformerDir)) {
+            TransformerRegistry::registerFromDirectory($transformerDir);
+        }
+    }
+
+    private function registerConsoleCommand(): void
+    {
+        if (!$this->app->has(\Witals\Framework\Console\Kernel::class)) {
+            return;
+        }
+
+        $this->app->make(\Witals\Framework\Console\Kernel::class)
+            ->register(\PrestoWorld\Modules\ClassicTheme\Console\GenerateStubsCommand::class);
+    }
+
     private function resolveThemePath(): string
     {
         $envPath = getenv('PW_THEME_DIR');

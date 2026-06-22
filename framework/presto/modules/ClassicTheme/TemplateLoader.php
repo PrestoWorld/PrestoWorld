@@ -52,24 +52,14 @@ class TemplateLoader
 
         $candidates = $this->hierarchy->resolve($template, $post);
         $templateFile = $this->findFirst($candidates);
-        $headerFile = $this->findHeader();
-        $footerFile = $this->findFooter();
 
         ob_start();
 
         try {
-            if ($headerFile !== null) {
-                $this->includeTemplate($headerFile, $post, 'header');
-            }
-
             if ($templateFile !== null) {
                 $this->includeTemplate($templateFile, $post);
             } else {
                 echo '<!-- No template found -->';
-            }
-
-            if ($footerFile !== null) {
-                $this->includeTemplate($footerFile, $post, 'footer');
             }
         } catch (\Throwable) {
             // Template may depend on WordPress not being available
@@ -117,18 +107,6 @@ class TemplateLoader
         }
 
         return null;
-    }
-
-    private function findHeader(): ?string
-    {
-        $path = $this->themePath . '/header.php';
-        return file_exists($path) ? $path : null;
-    }
-
-    private function findFooter(): ?string
-    {
-        $path = $this->themePath . '/footer.php';
-        return file_exists($path) ? $path : null;
     }
 
     private function includeTemplate(string $path, array $post, ?string $type = null): void

@@ -30,7 +30,10 @@ class ClassicThemeEngineTest extends TestCase
     public function test_render_returns_complete_content(): void
     {
         file_put_contents($this->tmpDir . '/style.css', '/* Theme Name: Test */');
-        file_put_contents($this->tmpDir . '/index.php', '<?php echo "<main>Home</main>";');
+        file_put_contents(
+            $this->tmpDir . '/index.php',
+            '<?php get_header(); echo "<main>Home</main>"; get_footer(); ?>',
+        );
         file_put_contents($this->tmpDir . '/header.php', '<!DOCTYPE html><html><head><title>Test</title></head><body>');
         file_put_contents($this->tmpDir . '/footer.php', '</body></html>');
 

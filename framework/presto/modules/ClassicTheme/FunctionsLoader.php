@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace PrestoWorld\Modules\ClassicTheme;
 
+use PrestoWorld\Modules\ClassicTheme\TransformerRegistry;
+
 class FunctionsLoader
 {
     private string $themePath;
 
     private bool $loaded = false;
+
+    private bool $stubsLoaded = false;
 
     private array $loadedFiles = [];
 
@@ -24,13 +28,46 @@ class FunctionsLoader
         }
 
         $this->loaded = true;
+
+        putenv('PW_THEME_DIR=' . $this->themePath);
+        $this->loadTransformers();
+        $this->loadStubs();
+
         $functionsFile = $this->themePath . '/functions.php';
 
-        if (!file_exists($functionsFile)) {
+        if (file_exists($functionsFile)) {
+            $this->loadFile($functionsFile);
+        }
+
+        // Mark as loaded even if the file failed — partial loading may have
+        // registered some functions/classes before the error.
+        $this->loaded = true;
+    }
+
+    public function loadTransformers(): void
+    {
+        $transformerDir = __DIR__ . '/Transformers';
+
+        if (!is_dir($transformerDir)) {
             return;
         }
 
-        $this->loadFile($functionsFile);
+        TransformerRegistry::registerFromDirectory($transformerDir);
+        TransformerRegistry::defineClasses();
+    }
+
+    public function loadStubs(): void
+    {
+        if ($this->stubsLoaded) {
+            return;
+        }
+
+        $this->stubsLoaded = true;
+        $stubsFile = __DIR__ . '/wp-stubs.php';
+
+        if (file_exists($stubsFile)) {
+            $this->loadFile($stubsFile);
+        }
     }
 
     public function isLoaded(): bool
@@ -74,8 +111,8 @@ class FunctionsLoader
             })();
         } catch (\Throwable $e) {
             // Theme functions.php may depend on WordPress not being available
-            // (e.g., in testing or non-WP contexts).
-            $this->loaded = false;
+            // in non-WP contexts. Partial loading is acceptable — some
+            // functions/classes may still have been defined before the error.
         }
     }
 }

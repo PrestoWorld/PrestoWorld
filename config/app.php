@@ -7,4 +7,5 @@ return [
     'locales' => ['en', 'vi'],
     'debug' => (bool)(getenv('APP_DEBUG') ?: false),
     'env' => getenv('APP_ENV') ?: 'production',
+    'pw_debug' => (bool)(getenv('PW_DEBUG') ?: false),
 ];
