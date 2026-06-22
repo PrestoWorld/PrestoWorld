@@ -82,9 +82,10 @@ class Application extends BaseApplication
         $this->singleton(\Witals\Framework\Context\Contracts\BlockManagerInterface::class, \Witals\Framework\Context\BlockManager::class);
         $this->singleton(\Witals\Framework\Context\Contracts\ContextManagerInterface::class, \Witals\Framework\Context\ContextManager::class);
         $this->singleton(\Witals\Framework\Context\Contracts\ContextLoaderInterface::class, function ($app) {
+            $themeDir = getenv('PW_THEME_DIR') ?: $app->basePath('content/themes/' . ($app->config('theme.active', 'twentytwentyfive')));
             return new \Witals\Framework\Context\ContextLoader(
                 $app->make(\Witals\Framework\Context\Contracts\BlockManagerInterface::class),
-                templateDir: $app->basePath('content/themes/' . ($app->config('theme.active', 'twentytwentyfive')) . '/templates'),
+                templateDir: $themeDir . '/templates',
                 contextManager: $app->make(\Witals\Framework\Context\Contracts\ContextManagerInterface::class),
             );
         });

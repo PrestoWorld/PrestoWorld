@@ -113,7 +113,9 @@ if (!function_exists('wp_kses_post')) {
 if (!function_exists('get_theme_file_uri')) {
     function get_theme_file_uri(string $file = ''): string
     {
-        return '/content/themes/twentytwentyfive/' . ltrim($file, '/');
+        $contentUrl = getenv('PW_CONTENT_URL') ?: '/content';
+        $theme = getenv('PW_THEME_ACTIVE') ?: 'twentytwentyfive';
+        return rtrim($contentUrl, '/') . '/themes/' . $theme . '/' . ltrim($file, '/');
     }
 }
 

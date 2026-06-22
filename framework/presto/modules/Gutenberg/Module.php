@@ -133,6 +133,6 @@ class Module extends WitalsModule
 
     protected function getThemePath($app): string
     {
-        return $app->basePath() . '/content/themes/twentytwentyfive';
+        return getenv('PW_THEME_DIR') ?: $app->basePath() . '/content/themes/twentytwentyfive';
     }
 }
