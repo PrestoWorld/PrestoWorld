@@ -968,4 +968,3 @@ class AdminApiController
         return ['width' => $info[0], 'height' => $info[1]];
     }
 }
-}
