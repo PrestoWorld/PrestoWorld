@@ -8,11 +8,13 @@ use Witals\Framework\Http\Response;
 use Cycle\Database\DatabaseInterface;
 use PrestoWorld\Contracts\Plugin\PluginStoreInterface;
 use PrestoWorld\Theme\ThemeRepository;
+use App\Storage\CloudStorageManager;
 
 class AdminApiController
 {
     protected string $prefix;
     protected bool $wordPressMode;
+    protected ?CloudStorageManager $cloud = null;
 
     public function __construct(
         protected DatabaseInterface $db,
@@ -25,6 +27,17 @@ class AdminApiController
     protected function isWordPress(): bool
     {
         return $this->wordPressMode;
+    }
+
+    protected function cloud(): ?CloudStorageManager
+    {
+        if ($this->cloud === null) {
+            $mgr = new CloudStorageManager();
+            if ($mgr->isEnabled()) {
+                $this->cloud = $mgr;
+            }
+        }
+        return $this->cloud;
     }
 
     // ── Posts ───────────────────────────────────────────────────
@@ -461,6 +474,25 @@ class AdminApiController
         }
 
         $result = $this->copyToPrestoStorage((int) $row['ID']);
+
+        // Also upload to cloud storage
+        $cloudManager = $this->cloud();
+        if ($result !== null && $cloudManager !== null) {
+            $cloudResult = [];
+            foreach ($result as $file) {
+                $localPath = $this->getBasePath() . '/storage/uploads/' . $file['file'];
+                if (file_exists($localPath)) {
+                    try {
+                        $url = $cloudManager->provider()->upload($file['file'], $localPath);
+                        $cloudResult[] = ['file' => $file['file'], 'url' => $url];
+                    } catch (\Throwable) {
+                        $cloudResult[] = ['file' => $file['file'], 'error' => 'cloud_upload_failed'];
+                    }
+                }
+            }
+            return Response::json(['success' => true, 'files' => $result, 'cloud' => $cloudResult]);
+        }
+
         if ($result === null) {
             return Response::json(['error' => 'Source file not found'], 404);
         }
@@ -502,7 +534,24 @@ class AdminApiController
         $relativePath = $subDir . '/' . $filename;
         $mime = mime_content_type($destPath) ?: 'application/octet-stream';
         $size = filesize($destPath);
-        $url = '/storage/uploads/' . $relativePath;
+
+        // Upload to cloud storage first (cloud-first strategy)
+        $cloudManager = $this->cloud();
+        $cloudUrl = null;
+        $source = 'presto';
+        $offloaded = true;
+
+        if ($cloudManager !== null) {
+            try {
+                $cloudUrl = $cloudManager->provider()->upload($relativePath, $destPath);
+                $source = $cloudManager->driverName();
+            } catch (\Throwable $e) {
+                // Cloud upload failed, fall back to local
+                $cloudUrl = null;
+            }
+        }
+
+        $url = $cloudUrl ?? ('/storage/uploads/' . $relativePath);
 
         if ($this->isWordPress()) {
             try {
@@ -525,8 +574,8 @@ class AdminApiController
             'size' => $size,
             'mimeType' => $mime,
             'dimensions' => $this->getImageDimensions($destPath),
-            'source' => 'presto',
-            'offloaded' => true,
+            'source' => $source,
+            'offloaded' => $offloaded,
             'alt' => '',
         ]);
     }
@@ -572,7 +621,23 @@ class AdminApiController
         $source = 'wordpress';
         $fileSize = 0;
 
-        if ($subPath !== '' && file_exists($prestoPath)) {
+        // Check cloud storage first (cloud-first strategy)
+        $cloudManager = $this->cloud();
+        $cloudUrl = null;
+        if ($subPath !== '' && $cloudManager !== null) {
+            try {
+                if ($cloudManager->provider()->exists($subPath)) {
+                    $cloudUrl = $cloudManager->provider()->url($subPath);
+                }
+            } catch (\Throwable) {
+            }
+        }
+
+        if ($cloudUrl !== null) {
+            $fileUrl = $cloudUrl;
+            $source = $cloudManager->driverName();
+            $fileSize = 0; // cloud files don't have local size
+        } elseif ($subPath !== '' && file_exists($prestoPath)) {
             $actualPath = $prestoPath;
             $fileUrl = '/storage/uploads/' . $subPath;
             $source = 'presto';
@@ -623,7 +688,7 @@ class AdminApiController
             'mimeType' => $mime,
             'dimensions' => $dimensions,
             'source' => $source,
-            'offloaded' => $source === 'presto',
+            'offloaded' => $cloudUrl !== null || file_exists($prestoPath),
             'alt' => $row['post_excerpt'] ?? '',
         ];
     }
@@ -632,6 +697,38 @@ class AdminApiController
     {
         $items = [];
         $storageDir = $this->getBasePath() . '/storage/uploads';
+
+        // List from cloud storage first (cloud-first)
+        $cloudManager = $this->cloud();
+        if ($cloudManager !== null) {
+            try {
+                $cloudFiles = $cloudManager->provider()->list();
+                foreach ($cloudFiles as $cf) {
+                    $mime = $this->guessMime($cf['path']);
+                    $dimensions = null;
+                    $localPath = $storageDir . '/' . $cf['path'];
+                    if (file_exists($localPath)) {
+                        $dimensions = $this->getImageDimensions($localPath);
+                    }
+                    $items[] = [
+                        'id' => 0,
+                        'postId' => null,
+                        'title' => basename($cf['path']),
+                        'filename' => basename($cf['path']),
+                        'url' => $cloudManager->provider()->url($cf['path']),
+                        'thumbnailUrl' => $cloudManager->provider()->url($cf['path']),
+                        'date' => $cf['mtime'] > 0 ? date('Y-m-d H:i:s', $cf['mtime']) : date('Y-m-d H:i:s'),
+                        'size' => $cf['size'],
+                        'mimeType' => $mime,
+                        'dimensions' => $dimensions,
+                        'source' => $cloudManager->driverName(),
+                        'offloaded' => true,
+                        'alt' => '',
+                    ];
+                }
+            } catch (\Throwable) {
+            }
+        }
 
         if (!is_dir($storageDir)) {
             return $items;
@@ -648,6 +745,19 @@ class AdminApiController
 
             $path = $file->getPathname();
             $relative = str_replace($storageDir . '/', '', $path);
+
+            // Skip if already included from cloud listing
+            $dup = false;
+            foreach ($items as $existing) {
+                if ($existing['filename'] === $file->getFilename()) {
+                    $dup = true;
+                    break;
+                }
+            }
+            if ($dup) {
+                continue;
+            }
+
             $mime = mime_content_type($path) ?: 'application/octet-stream';
 
             $items[] = [
@@ -668,6 +778,20 @@ class AdminApiController
         }
 
         return $items;
+    }
+
+    protected function guessMime(string $path): string
+    {
+        static $mimes = [
+            'jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'png' => 'image/png',
+            'gif' => 'image/gif', 'webp' => 'image/webp', 'svg' => 'image/svg+xml',
+            'mp4' => 'video/mp4', 'webm' => 'video/webm', 'mov' => 'video/quicktime',
+            'mp3' => 'audio/mpeg', 'wav' => 'audio/wav', 'ogg' => 'audio/ogg',
+            'pdf' => 'application/pdf', 'zip' => 'application/zip',
+            'doc' => 'application/msword', 'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        ];
+        $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+        return $mimes[$ext] ?? 'application/octet-stream';
     }
 
     protected function createAttachmentPost(string $filename, string $relativePath, string $mime): int
