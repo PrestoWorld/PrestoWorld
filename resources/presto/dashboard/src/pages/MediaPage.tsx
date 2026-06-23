@@ -1,22 +1,205 @@
+import { createSignal, For, Show, onMount } from 'solid-js';
+import { Image, Upload, Trash2, File, Film, Music, Archive, Download, Globe, HardDrive } from 'lucide-solid';
+import { WPMediaItem } from '../api';
+import { fetchMedia, uploadMedia } from '../api';
+
+function formatSize(bytes: number): string {
+  if (bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+}
+
+function mimeIcon(mime: string) {
+  if (mime.startsWith('image/')) return Image;
+  if (mime.startsWith('video/')) return Film;
+  if (mime.startsWith('audio/')) return Music;
+  if (mime.includes('zip') || mime.includes('rar') || mime.includes('tar')) return Archive;
+  return File;
+}
+
 export default function MediaPage() {
+  const [items, setItems] = createSignal<WPMediaItem[]>([]);
+  const [loading, setLoading] = createSignal(true);
+  const [uploading, setUploading] = createSignal(false);
+  const [dragOver, setDragOver] = createSignal(false);
+
+  const loadMedia = () => {
+    setLoading(true);
+    fetchMedia().then(setItems).catch(() => {}).finally(() => setLoading(false));
+  };
+
+  onMount(loadMedia);
+
+  const handleUpload = async (file: File) => {
+    if (!file.type.startsWith('image/') && !file.type.startsWith('video/') && !file.type.startsWith('audio/') && !file.type.startsWith('application/')) {
+      return;
+    }
+    setUploading(true);
+    try {
+      const result = await uploadMedia(file);
+      setItems([result, ...items()]);
+    } catch {
+      // ignore
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleFilePick = (e: Event) => {
+    const input = e.currentTarget as HTMLInputElement;
+    const file = input.files?.[0];
+    if (file) {
+      handleUpload(file);
+      input.value = '';
+    }
+  };
+
+  const handleDrop = (e: DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer?.files?.[0];
+    if (file) handleUpload(file);
+  };
+
+  const handleDragOver = (e: DragEvent) => {
+    e.preventDefault();
+    setDragOver(true);
+  };
+
+  const handleDragLeave = () => setDragOver(false);
+
+  const wordpressItems = () => items().filter(i => i.source === 'wordpress');
+  const prestoItems = () => items().filter(i => i.source === 'presto');
+
   return (
     <div class="space-y-6">
-      <div class="flex items-center justify-between">
+      <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 bg-white p-5 border border-slate-150/60 rounded-2xl shadow-sm">
         <div>
-          <h2 class="text-base font-extrabold text-slate-900 tracking-tight">Media Library</h2>
-          <p class="text-xs text-slate-500 font-semibold mt-1">Upload and manage media files.</p>
+          <h2 class="text-lg font-extrabold text-slate-900 tracking-tight">Media Library</h2>
+          <p class="text-xs text-slate-400 font-mono mt-0.5">{items().length} items &middot; {wordpressItems().length} WordPress &middot; {prestoItems().length} Presto</p>
         </div>
-        <button class="text-[11px] font-bold bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl transition-colors">
-          Add New
-        </button>
+        <label class="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs tracking-tight px-5 py-3 rounded-xl flex items-center gap-2 cursor-pointer shadow-md shadow-indigo-200 transition-all">
+          <Upload size={14} strokeWidth={2.5} />
+          <span>Upload File</span>
+          <input type="file" class="hidden" onChange={handleFilePick} />
+        </label>
       </div>
-      <div class="bg-white rounded-xl border border-slate-200 overflow-hidden p-12 flex flex-col items-center justify-center text-slate-400">
-        <svg class="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-        </svg>
-        <p class="text-sm font-semibold">No media items yet.</p>
-        <p class="text-xs mt-1">Drag and drop files here to upload.</p>
+
+      <div
+        class="border-2 border-dashed rounded-2xl p-8 text-center transition-all cursor-pointer"
+        classList={{
+          'border-indigo-400 bg-indigo-50/30': dragOver(),
+          'border-slate-200 bg-slate-50/30 hover:border-indigo-300 hover:bg-indigo-50/10': !dragOver(),
+        }}
+        onDrop={handleDrop}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onClick={() => {
+          const input = document.createElement('input');
+          input.type = 'file';
+          input.onchange = (e) => handleFilePick(e);
+          input.click();
+        }}
+      >
+        <Upload size={28} class="mx-auto text-slate-300 mb-2" />
+        <p class="text-xs font-bold text-slate-500">Drop files here or click to upload</p>
+        <p class="text-[10px] text-slate-400 font-mono mt-1">Files are stored in Presto storage with ultra-low latency</p>
       </div>
+
+      <Show when={uploading()}>
+        <div class="flex items-center gap-3 p-4 bg-indigo-50 border border-indigo-100 rounded-xl">
+          <div class="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+          <span class="text-xs font-bold text-indigo-700">Uploading...</span>
+        </div>
+      </Show>
+
+      <Show when={!loading()} fallback={
+        <div class="flex items-center justify-center min-h-[200px]">
+          <div class="w-6 h-6 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      }>
+        <Show when={items().length > 0} fallback={
+          <div class="text-center py-16">
+            <Image size={40} class="mx-auto text-slate-200 mb-3" />
+            <p class="text-sm font-bold text-slate-400">No media items yet</p>
+            <p class="text-xs text-slate-300 mt-1">Upload images, videos, or documents above</p>
+          </div>
+        }>
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+            <For each={items()}>
+              {(item) => {
+                const Icon = mimeIcon(item.mimeType);
+                const isImage = item.mimeType.startsWith('image/');
+                return (
+                  <div class="wp-card overflow-hidden group relative bg-white border border-slate-150 rounded-xl hover:shadow-md transition-all">
+                    <div class="aspect-square bg-slate-50 flex items-center justify-center overflow-hidden relative">
+                      <Show when={isImage && item.thumbnailUrl} fallback={
+                        <Icon size={32} class="text-slate-300" />
+                      }>
+                        <img
+                          src={item.thumbnailUrl}
+                          alt={item.alt || item.title}
+                          class="w-full h-full object-cover"
+                          loading="lazy"
+                        />
+                      </Show>
+
+                      <div class="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <span class="px-1.5 py-0.5 rounded text-[9px] font-bold font-mono uppercase tracking-wider shadow-sm"
+                              classList={{
+                                'bg-indigo-100 text-indigo-700': item.source === 'presto',
+                                'bg-amber-100 text-amber-700': item.source === 'wordpress',
+                              }}
+                        >
+                          {item.source}
+                        </span>
+                      </div>
+
+                      <Show when={isImage && item.dimensions}>
+                        <div class="absolute bottom-2 left-2 px-1.5 py-0.5 bg-black/50 text-white text-[9px] font-mono rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                          {item.dimensions!.width}x{item.dimensions!.height}
+                        </div>
+                      </Show>
+                    </div>
+
+                    <div class="p-2.5 space-y-1">
+                      <p class="text-[11px] font-bold text-slate-800 truncate" title={item.title}>
+                        {item.title}
+                      </p>
+                      <div class="flex items-center justify-between">
+                        <span class="text-[9px] font-mono text-slate-400">{formatSize(item.size)}</span>
+                        <div class="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Show when={item.url}>
+                            <a href={item.url} target="_blank" class="p-1 text-slate-400 hover:text-indigo-600 transition-colors" title="Download">
+                              <Download size={11} />
+                            </a>
+                          </Show>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }}
+            </For>
+          </div>
+
+          <Show when={wordpressItems().length > 0}>
+            <div class="mt-6 p-4 bg-amber-50/50 border border-amber-100 rounded-xl">
+              <div class="flex items-center gap-2 mb-2">
+                <Globe size={14} class="text-amber-600" />
+                <span class="text-xs font-bold text-amber-800">WordPress Media</span>
+                <span class="text-[9px] font-mono text-amber-600">{wordpressItems().length} items</span>
+              </div>
+              <p class="text-[10px] text-amber-700 leading-relaxed">
+                These files were uploaded via WordPress. PrestoWorld serves them with low-latency offload
+                when available in local storage. New uploads use Presto's native storage for zero-latency access.
+              </p>
+            </div>
+          </Show>
+        </Show>
+      </Show>
     </div>
   );
 }

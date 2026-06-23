@@ -17,3 +17,5 @@ $router->post('/api/admin/themes/activate', [AdminApiController::class, 'activat
 $router->get('/api/admin/stats', [AdminApiController::class, 'stats']);
 $router->get('/api/admin/activities', [AdminApiController::class, 'activities']);
 $router->get('/api/admin/users', [AdminApiController::class, 'users']);
+$router->get('/api/admin/media', [AdminApiController::class, 'media']);
+$router->post('/api/admin/media/upload', [AdminApiController::class, 'uploadMedia']);

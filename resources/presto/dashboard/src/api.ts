@@ -85,3 +85,30 @@ export async function fetchThemes(): Promise<WPTheme[]> {
 export async function fetchActivities(): Promise<WPActivity[]> {
   return fetchJSON<WPActivity[]>(`${BASE}/activities`);
 }
+
+export interface WPMediaItem {
+  id: number;
+  postId: number | null;
+  title: string;
+  filename: string;
+  url: string;
+  thumbnailUrl: string;
+  date: string;
+  size: number;
+  mimeType: string;
+  dimensions: { width: number; height: number } | null;
+  source: 'wordpress' | 'presto';
+  alt: string;
+}
+
+export async function fetchMedia(): Promise<WPMediaItem[]> {
+  return fetchJSON<WPMediaItem[]>(`${BASE}/media`);
+}
+
+export async function uploadMedia(file: File): Promise<WPMediaItem> {
+  const form = new FormData();
+  form.append('file', file);
+  const res = await fetch(`${BASE}/media/upload`, { method: 'POST', body: form });
+  if (!res.ok) throw new Error(`Upload error: ${res.status}`);
+  return res.json();
+}
