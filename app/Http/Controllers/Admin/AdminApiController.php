@@ -35,7 +35,10 @@ class AdminApiController
             ->from($this->prefix . 'posts')
             ->where('post_status', '!=', 'auto-draft');
 
-        if ($this->isWordPress()) {
+        $type = $_GET['type'] ?? null;
+        if ($type !== null) {
+            $query = $query->where('post_type', $type);
+        } elseif ($this->isWordPress()) {
             $query = $query->where('post_type', 'post');
         }
 

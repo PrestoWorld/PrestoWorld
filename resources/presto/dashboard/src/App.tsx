@@ -18,6 +18,7 @@ import { fetchPosts, fetchPlugins, fetchThemes, fetchActivities, fetchStats, typ
 
 const DashboardPage = lazy(() => import('./pages/DashboardPage'));
 const PostsPage = lazy(() => import('./pages/PostsPage'));
+const PagesPage = lazy(() => import('./pages/PagesPage'));
 const PluginsPage = lazy(() => import('./pages/PluginsPage'));
 const ThemesPage = lazy(() => import('./pages/ThemesPage'));
 const UsersPage = lazy(() => import('./pages/UsersPage'));
@@ -48,6 +49,7 @@ const initialMenuSections = initialState?.menuSections ?? [
     items: [
       { id: 'dashboard-item', screenId: 'dashboard', label: 'Dashboard', icon: 'LayoutDashboard' },
       { id: 'posts-item',     screenId: 'posts',     label: 'Posts',     icon: 'FileText' },
+      { id: 'pages-item',     screenId: 'edit-pages', label: 'Pages',    icon: 'FileText' },
     ],
   },
   {
@@ -628,6 +630,10 @@ export default function App() {
                   handleDeletePost={handleDeletePost}
                   setIsAddPostOpen={setIsAddPostOpen}
                 />
+              </Match>
+
+              <Match when={screenId() === 'edit-pages'}>
+                <PagesPage />
               </Match>
 
               <Match when={screenId() === 'themes'}>

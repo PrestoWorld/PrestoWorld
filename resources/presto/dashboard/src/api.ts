@@ -61,8 +61,13 @@ export interface DashboardStats {
   byPostType?: Array<{ type: string; count: number; label: string }>;
 }
 
-export async function fetchPosts(): Promise<WPPost[]> {
-  return fetchJSON<WPPost[]>(`${BASE}/posts`);
+export async function fetchPosts(type?: string): Promise<WPPost[]> {
+  const qs = type ? `?type=${encodeURIComponent(type)}` : '';
+  return fetchJSON<WPPost[]>(`${BASE}/posts${qs}`);
+}
+
+export async function fetchPages(): Promise<WPPost[]> {
+  return fetchPosts('page');
 }
 
 export async function fetchPlugins(): Promise<WPPlugin[]> {
