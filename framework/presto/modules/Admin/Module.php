@@ -98,16 +98,67 @@ class Module extends WitalsModule
 
     protected function registerDefaultMenuItems(MenuContract $menu): void
     {
-        $menu->registerGroup('management', 'Management', icon: 'LayoutDashboard', priority: 1);
-        $menu->registerItem('management', 'Dashboard', '#/dashboard', icon: 'LayoutDashboard', priority: 10, id: 'dashboard', screenId: 'dashboard');
-        $menu->registerItem('management', 'Posts', '#/posts', icon: 'FileText', priority: 20, id: 'posts', screenId: 'posts');
+        $m = 1; // Dashboard
+        $menu->registerGroup('dashboard-group', 'Dashboard', icon: 'LayoutDashboard', priority: $m++);
+        $menu->registerItem('dashboard-group', 'Dashboard', '#/dashboard', icon: 'LayoutDashboard', priority: 10, id: 'dashboard', screenId: 'dashboard');
 
-        $menu->registerGroup('appearance', 'Appearance', icon: 'Palette', priority: 2);
-        $menu->registerItem('appearance', 'Themes', '#/themes', icon: 'Palette', priority: 10, id: 'themes', screenId: 'themes');
+        $m++; // Posts
+        $menu->registerGroup('posts-group', 'Posts', icon: 'FileText', priority: $m++);
+        $menu->registerItem('posts-group', 'All Posts', '#/posts', icon: 'FileText', priority: 10, id: 'posts', screenId: 'posts');
+        $menu->registerItem('posts-group', 'Add New', '#/post-new', icon: 'Plus', priority: 20, id: 'post-new', screenId: 'post-new');
+        $menu->registerItem('posts-group', 'Categories', '#/edit-tags?taxonomy=category', icon: 'BookOpen', priority: 30, id: 'post-categories', screenId: 'edit-tags');
+        $menu->registerItem('posts-group', 'Tags', '#/edit-tags?taxonomy=post_tag', icon: 'Tags', priority: 40, id: 'post-tags', screenId: 'edit-tags');
 
-        $menu->registerGroup('configuration', 'Configuration', icon: 'Settings', priority: 3);
-        $menu->registerItem('configuration', 'Plugins', '#/plugins', icon: 'Puzzle', priority: 10, id: 'plugins', screenId: 'plugins');
-        $menu->registerItem('configuration', 'Settings', '#/settings', icon: 'Settings', priority: 20, id: 'settings', screenId: 'settings');
+        $m++; // Media
+        $menu->registerGroup('media-group', 'Media', icon: 'Image', priority: $m++);
+        $menu->registerItem('media-group', 'Library', '#/upload', icon: 'Image', priority: 10, id: 'media', screenId: 'upload');
+        $menu->registerItem('media-group', 'Add New', '#/media-new', icon: 'Plus', priority: 20, id: 'media-new', screenId: 'media-new');
+
+        $m++; // Pages
+        $menu->registerGroup('pages-group', 'Pages', icon: 'File', priority: $m++);
+        $menu->registerItem('pages-group', 'All Pages', '#/edit-pages', icon: 'File', priority: 10, id: 'pages', screenId: 'edit-pages');
+        $menu->registerItem('pages-group', 'Add New', '#/post-new?post_type=page', icon: 'Plus', priority: 20, id: 'page-new', screenId: 'page-new');
+
+        $m++; // Comments
+        $menu->registerGroup('comments-group', 'Comments', icon: 'MessageSquare', priority: $m++);
+        $menu->registerItem('comments-group', 'All Comments', '#/edit-comments', icon: 'MessageSquare', priority: 10, id: 'comments', screenId: 'edit-comments');
+
+        $m++; // Appearance
+        $menu->registerGroup('appearance-group', 'Appearance', icon: 'Palette', priority: $m++);
+        $menu->registerItem('appearance-group', 'Themes', '#/themes', icon: 'Palette', priority: 10, id: 'themes', screenId: 'themes');
+        $menu->registerItem('appearance-group', 'Customize', '#/customize', icon: 'Wrench', priority: 20, id: 'customize', screenId: 'customize');
+        $menu->registerItem('appearance-group', 'Widgets', '#/widgets', icon: 'Blocks', priority: 30, id: 'widgets', screenId: 'widgets');
+        $menu->registerItem('appearance-group', 'Menus', '#/nav-menus', icon: 'Menu', priority: 40, id: 'menus', screenId: 'nav-menus');
+        $menu->registerItem('appearance-group', 'Theme Editor', '#/theme-editor', icon: 'Code', priority: 50, id: 'theme-editor', screenId: 'theme-editor');
+
+        $m++; // Plugins
+        $menu->registerGroup('plugins-group', 'Plugins', icon: 'Puzzle', priority: $m++);
+        $menu->registerItem('plugins-group', 'Installed Plugins', '#/plugins', icon: 'Puzzle', priority: 10, id: 'plugins', screenId: 'plugins');
+        $menu->registerItem('plugins-group', 'Add New', '#/plugin-install', icon: 'Plus', priority: 20, id: 'plugin-install', screenId: 'plugin-install');
+        $menu->registerItem('plugins-group', 'Plugin Editor', '#/plugin-editor', icon: 'Code', priority: 30, id: 'plugin-editor', screenId: 'plugin-editor');
+
+        $m++; // Users
+        $menu->registerGroup('users-group', 'Users', icon: 'User', priority: $m++);
+        $menu->registerItem('users-group', 'All Users', '#/users', icon: 'User', priority: 10, id: 'users', screenId: 'users');
+        $menu->registerItem('users-group', 'Add New', '#/user-new', icon: 'Plus', priority: 20, id: 'user-new', screenId: 'user-new');
+        $menu->registerItem('users-group', 'Profile', '#/profile', icon: 'UserCheck', priority: 30, id: 'profile', screenId: 'profile');
+
+        $m++; // Tools
+        $menu->registerGroup('tools-group', 'Tools', icon: 'Wrench', priority: $m++);
+        $menu->registerItem('tools-group', 'Available Tools', '#/tools', icon: 'Wrench', priority: 10, id: 'tools', screenId: 'tools');
+        $menu->registerItem('tools-group', 'Import', '#/import', icon: 'Download', priority: 20, id: 'import', screenId: 'import');
+        $menu->registerItem('tools-group', 'Export', '#/export', icon: 'Upload', priority: 30, id: 'export', screenId: 'export');
+        $menu->registerItem('tools-group', 'Site Health', '#/site-health', icon: 'Activity', priority: 40, id: 'site-health', screenId: 'site-health');
+
+        $m++; // Settings
+        $menu->registerGroup('settings-group', 'Settings', icon: 'Settings', priority: $m++);
+        $menu->registerItem('settings-group', 'General', '#/settings', icon: 'Settings', priority: 10, id: 'settings', screenId: 'settings');
+        $menu->registerItem('settings-group', 'Writing', '#/options-writing', icon: 'Edit', priority: 20, id: 'options-writing', screenId: 'options-writing');
+        $menu->registerItem('settings-group', 'Reading', '#/options-reading', icon: 'BookOpen', priority: 30, id: 'options-reading', screenId: 'options-reading');
+        $menu->registerItem('settings-group', 'Discussion', '#/options-discussion', icon: 'MessageSquare', priority: 40, id: 'options-discussion', screenId: 'options-discussion');
+        $menu->registerItem('settings-group', 'Media', '#/options-media', icon: 'Image', priority: 50, id: 'options-media', screenId: 'options-media');
+        $menu->registerItem('settings-group', 'Permalinks', '#/options-permalink', icon: 'Link', priority: 60, id: 'options-permalink', screenId: 'options-permalink');
+        $menu->registerItem('settings-group', 'Privacy', '#/options-privacy', icon: 'Shield', priority: 70, id: 'options-privacy', screenId: 'options-privacy');
     }
 
     // ── Dashboard & Widgets ──────────────────────────────────────

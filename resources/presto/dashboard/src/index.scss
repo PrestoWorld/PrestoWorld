@@ -1014,6 +1014,64 @@ pre,
           border-radius: 9999px;
           border: 1px solid rgba(255, 255, 255, 0.05);
         }
+
+        .menu-parent {
+          font-weight: 600;
+
+          .menu-parent-label {
+            flex: 1;
+          }
+
+          .active-indicator {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: $wp-primary;
+            flex-shrink: 0;
+          }
+
+          .submenu-arrow {
+            font-size: 10px;
+            color: #475569;
+            transition: transform 0.2s ease;
+            flex-shrink: 0;
+            &[data-open="true"] { transform: rotate(180deg); }
+          }
+        }
+
+        .submenu-items {
+          margin-left: 0.75rem;
+          padding-left: 0.5rem;
+          border-left: 1px solid rgba(255, 255, 255, 0.06);
+
+          .menu-item {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.8rem;
+            border-radius: 0.5rem;
+
+            &.active {
+              background-color: rgba(56, 88, 233, 0.08);
+              color: #ffffff;
+              font-weight: 600;
+
+              &::before { display: none; }
+
+              .icon-wrapper {
+                color: $wp-primary;
+              }
+            }
+
+            &:hover {
+              background-color: rgba(255, 255, 255, 0.04);
+              color: #ffffff;
+            }
+
+            .icon-wrapper {
+              width: 18px;
+              height: 18px;
+            }
+          }
+        }
       }
     }
   }

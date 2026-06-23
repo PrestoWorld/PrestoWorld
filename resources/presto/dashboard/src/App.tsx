@@ -20,7 +20,12 @@ const DashboardPage = lazy(() => import('./pages/DashboardPage'));
 const PostsPage = lazy(() => import('./pages/PostsPage'));
 const PluginsPage = lazy(() => import('./pages/PluginsPage'));
 const ThemesPage = lazy(() => import('./pages/ThemesPage'));
+const UsersPage = lazy(() => import('./pages/UsersPage'));
+const MediaPage = lazy(() => import('./pages/MediaPage'));
+const CommentsPage = lazy(() => import('./pages/CommentsPage'));
+const ToolsPage = lazy(() => import('./pages/ToolsPage'));
 const SettingsPage = lazy(() => import('./pages/SettingsPage'));
+const GenericPage = lazy(() => import('./pages/GenericPage'));
 
 declare global {
   interface Window {
@@ -447,34 +452,60 @@ export default function App() {
             </button>
           </div>
 
-          <nav class="sidebar-menu">
+            <nav class="sidebar-menu">
             <For each={initialMenuSections}>
-              {(section) => (
-                <>
-                  <span class="menu-title">{section.title}</span>
-                  <For each={section.items}>
-                    {(item) => {
-                      const Icon = resolveIcon(item.icon);
-                      const badgeValue = item.screenId === 'plugins' ? updatePluginsCount() : item.badge;
-                      const showBadge = badgeValue != null && (typeof badgeValue === 'number' ? badgeValue > 0 : true);
-                      return (
-                        <button
-                          class={`menu-item w-full text-left ${screenId() === item.screenId ? 'active' : ''}`}
-                          onClick={() => goTo(item.screenId)}
-                        >
-                          <span class="icon-wrapper">
-                            <Icon size={18} />
-                          </span>
-                          <span>{item.label}</span>
-                          <Show when={showBadge}>
-                            <span class="count-badge bg-slate-800 text-[10px] ml-auto">{badgeValue}</span>
-                          </Show>
-                        </button>
-                      );
-                    }}
-                  </For>
-                </>
-              )}
+              {(section) => {
+                const firstItem = section.items[0];
+                if (!firstItem) return null;
+                const parentIcon = () => resolveIcon(firstItem.icon || section.icon);
+                const parentScreenId = section.screenId || firstItem.screenId;
+                const hasChildren = section.items.length > 1;
+                const anyChildActive = () => section.items.some(item => screenId() === item.screenId);
+                const [expanded, setExpanded] = createSignal(anyChildActive());
+                return (
+                  <>
+                    <button
+                      class={`menu-item menu-parent w-full text-left ${anyChildActive() ? 'active' : ''}`}
+                      onClick={() => {
+                        setExpanded(!expanded());
+                        goTo(parentScreenId);
+                      }}
+                    >
+                      <span class="icon-wrapper">
+                        <parentIcon size={18} />
+                      </span>
+                      <span class="menu-parent-label">{section.title || firstItem.label}</span>
+                      <Show when={anyChildActive()}>
+                        <span class="active-indicator" />
+                      </Show>
+                      <Show when={hasChildren}>
+                        <span class="submenu-arrow" data-open={expanded()}>&#9662;</span>
+                      </Show>
+                    </button>
+                    <Show when={hasChildren && expanded()}>
+                      <div class="submenu-items">
+                        <For each={section.items}>
+                          {(item) => {
+                            const Icon = resolveIcon(item.icon);
+                            const isChildActive = () => screenId() === item.screenId;
+                            return (
+                              <button
+                                class={`menu-item sub-menu-item w-full text-left ${isChildActive() ? 'active' : ''}`}
+                                onClick={() => goTo(item.screenId)}
+                              >
+                                <span class="icon-wrapper">
+                                  <Icon size={14} />
+                                </span>
+                                <span>{item.label}</span>
+                              </button>
+                            );
+                          }}
+                        </For>
+                      </div>
+                    </Show>
+                  </>
+                );
+              }}
             </For>
           </nav>
         </div>
@@ -621,7 +652,7 @@ export default function App() {
                 />
               </Match>
 
-              <Match when={screenId() === 'settings'}>
+              <Match when={screenId() === 'settings' || screenId() === 'options-writing' || screenId() === 'options-reading' || screenId() === 'options-discussion' || screenId() === 'options-media' || screenId() === 'options-permalink' || screenId() === 'options-privacy'}>
                 <SettingsPage
                   siteTitle={siteTitle}
                   setSiteTitle={setSiteTitle}
@@ -639,6 +670,26 @@ export default function App() {
                   setPermalinkStructure={setPermalinkStructure}
                   saveSettings={saveSettings}
                 />
+              </Match>
+
+              <Match when={screenId() === 'upload' || screenId() === 'media-new'}>
+                <MediaPage />
+              </Match>
+
+              <Match when={screenId() === 'users' || screenId() === 'user-new' || screenId() === 'profile'}>
+                <UsersPage />
+              </Match>
+
+              <Match when={screenId() === 'edit-comments'}>
+                <CommentsPage />
+              </Match>
+
+              <Match when={screenId() === 'tools' || screenId() === 'import' || screenId() === 'export' || screenId() === 'site-health'}>
+                <ToolsPage />
+              </Match>
+
+              <Match when={true}>
+                <GenericPage screenId={screenId()} />
               </Match>
             </Switch>
             </Suspense>

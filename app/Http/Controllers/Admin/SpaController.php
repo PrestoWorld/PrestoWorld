@@ -31,12 +31,61 @@ class SpaController
     ) {}
 
     protected const WP_SCREEN_MAP = [
+        // Dashboard
         'index.php'           => 'dashboard',
-        'edit.php'            => 'posts',
-        'plugins.php'         => 'plugins',
-        'themes.php'          => 'themes',
-        'options-general.php' => 'settings',
         'admin.php'           => null, // determined by ?page= param
+
+        // Posts
+        'edit.php'            => 'posts',
+        'post-new.php'        => 'post-new',
+        'post.php'            => 'post',
+
+        // Media
+        'upload.php'          => 'upload',
+        'media-new.php'       => 'media-new',
+
+        // Pages
+        'edit-pages.php'     => 'edit-pages',
+
+        // Comments
+        'edit-comments.php'  => 'edit-comments',
+
+        // Appearance
+        'themes.php'          => 'themes',
+        'customize.php'       => 'customize',
+        'widgets.php'         => 'widgets',
+        'nav-menus.php'       => 'nav-menus',
+        'theme-editor.php'    => 'theme-editor',
+
+        // Plugins
+        'plugins.php'         => 'plugins',
+        'plugin-install.php'  => 'plugin-install',
+        'plugin-editor.php'   => 'plugin-editor',
+
+        // Users
+        'users.php'           => 'users',
+        'user-new.php'        => 'user-new',
+        'user-edit.php'       => 'user-edit',
+        'profile.php'         => 'profile',
+
+        // Tools
+        'tools.php'           => 'tools',
+        'import.php'          => 'import',
+        'export.php'          => 'export',
+        'site-health.php'     => 'site-health',
+        'site-health-info.php'=> 'site-health-info',
+
+        // Settings
+        'options-general.php' => 'settings',
+        'options-writing.php' => 'options-writing',
+        'options-reading.php' => 'options-reading',
+        'options-discussion.php' => 'options-discussion',
+        'options-media.php'   => 'options-media',
+        'options-permalink.php' => 'options-permalink',
+        'options-privacy.php' => 'options-privacy',
+
+        // Updates
+        'update-core.php'     => 'update-core',
     ];
 
     public function __invoke(Request $request): Response
@@ -183,20 +232,27 @@ class SpaController
         $sections = [];
 
         foreach ($menuTree as $i => $group) {
-            $items = $group['children'] ?? [];
+            $children = $group['children'] ?? [];
+
+            // Use the first child as the primary screenId/icon for the group
+            $firstChild = $children[0] ?? [];
+            $screenId = $firstChild['screenId'] ?? $firstChild['id'] ?? '';
+            $icon = $firstChild['icon'] ?? $group['icon'] ?? 'Circle';
 
             $sections[] = [
                 'id' => $group['id'] ?? 'section-' . $i,
                 'title' => $group['label'] ?? '',
                 'priority' => $group['priority'] ?? 10,
+                'icon' => $icon,
+                'screenId' => $screenId,
                 'items' => array_map(fn(array $child) => [
                     'id' => $child['id'] ?? $child['screenId'] ?? '',
                     'screenId' => $child['screenId'] ?? $child['id'] ?? '',
                     'label' => $child['label'] ?? '',
-                    'icon' => $child['icon'] ?? 'Circle',
+                    'icon' => $child['icon'] ?? $icon,
                     'url' => $child['url'] ?? '',
                     'priority' => $child['priority'] ?? 10,
-                ], $items),
+                ], $children),
             ];
         }
 
