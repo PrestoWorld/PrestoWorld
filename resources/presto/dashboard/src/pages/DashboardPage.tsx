@@ -1,4 +1,4 @@
-import { For } from 'solid-js';
+import { For, Show, Match, Switch } from 'solid-js';
 import { FileText, MessageSquare, Blocks, Wrench, Sparkles, Activity as ActivityIcon, RefreshCw, ShieldAlert, BookOpen, Check, X } from 'lucide-solid';
 import { WPActivity } from '../types';
 
@@ -7,6 +7,7 @@ interface DashboardPageProps {
   totalComments: () => number;
   activePluginsCount: () => number;
   totalPlugins: () => number;
+  byPostType: () => Array<{ type: string; count: number; label: string }>;
   draftTitle: () => string;
   setDraftTitle: (v: string) => void;
   draftContent: () => string;
@@ -95,6 +96,30 @@ export default function DashboardPage(props: DashboardPageProps) {
           </div>
         </div>
       </div>
+
+      <Show when={props.byPostType().length > 0}>
+        <div>
+          <div class="flex items-center gap-2 mb-3">
+            <span class="text-[10px] uppercase tracking-wider font-extrabold text-slate-400 font-mono">Content Types</span>
+            <div class="flex-grow h-px bg-slate-200"></div>
+          </div>
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+            <For each={props.byPostType()}>
+              {(pt) => (
+                <div class="wp-card bg-white border border-slate-150 rounded-xl px-4 py-3 flex items-center gap-3">
+                  <div class="flex items-center justify-center w-9 h-9 rounded-lg bg-slate-50 border border-slate-100 text-slate-500">
+                    <FileText size={15} />
+                  </div>
+                  <div>
+                    <span class="block text-lg font-extrabold text-slate-900 leading-none">{pt.count}</span>
+                    <span class="block text-[10px] font-bold text-slate-400 font-mono tracking-wide uppercase">{pt.label}</span>
+                  </div>
+                </div>
+              )}
+            </For>
+          </div>
+        </div>
+      </Show>
 
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
 

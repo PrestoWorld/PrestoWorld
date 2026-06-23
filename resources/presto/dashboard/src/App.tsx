@@ -125,7 +125,7 @@ export default function App() {
   const [activities, setActivities] = createSignal<WPActivity[]>([]);
   const [toasts, setToasts] = createSignal<WPToast[]>([]);
   const [loading, setLoading] = createSignal(true);
-  const [stats, setStats] = createSignal<DashboardStats>({ posts: { total: 0, published: 0, draft: 0 }, plugins: { total: 0, active: 0, inactive: 0 } });
+  const [stats, setStats] = createSignal<DashboardStats>({ posts: { total: 0, published: 0, draft: 0 }, plugins: { total: 0, active: 0, inactive: 0 }, byPostType: [] });
 
   const [isMobileOpen, setIsMobileOpen] = createSignal(false);
 
@@ -606,6 +606,7 @@ export default function App() {
                   totalComments={totalComments}
                   activePluginsCount={activePluginsCount}
                   totalPlugins={() => plugins().length}
+                  byPostType={() => stats().byPostType ?? []}
                   draftTitle={draftTitle}
                   setDraftTitle={setDraftTitle}
                   draftContent={draftContent}

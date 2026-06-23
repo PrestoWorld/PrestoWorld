@@ -58,6 +58,7 @@ export interface WPTheme {
 export interface DashboardStats {
   posts: { total: number; published: number; draft: number };
   plugins: { total: number; active: number; inactive: number };
+  byPostType?: Array<{ type: string; count: number; label: string }>;
 }
 
 export async function fetchPosts(): Promise<WPPost[]> {

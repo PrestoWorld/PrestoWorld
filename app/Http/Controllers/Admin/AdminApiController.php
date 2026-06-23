@@ -12,23 +12,34 @@ use PrestoWorld\Theme\ThemeRepository;
 class AdminApiController
 {
     protected string $prefix;
+    protected bool $wordPressMode;
 
     public function __construct(
         protected DatabaseInterface $db,
         protected PluginStoreInterface $plugins,
     ) {
         $this->prefix = getenv('PW_TABLE_PREFIX') ?: 'pw_';
+        $this->wordPressMode = getenv('PW_CONTENT_DIR') !== false && $this->prefix === 'wp_';
+    }
+
+    protected function isWordPress(): bool
+    {
+        return $this->wordPressMode;
     }
 
     // ── Posts ───────────────────────────────────────────────────
 
     public function posts(): Response
     {
-        $rows = $this->db->select('*')
+        $query = $this->db->select('*')
             ->from($this->prefix . 'posts')
-            ->where('post_status', '!=', 'auto-draft')
-            ->orderBy('post_date', 'DESC')
-            ->fetchAll();
+            ->where('post_status', '!=', 'auto-draft');
+
+        if ($this->isWordPress()) {
+            $query = $query->where('post_type', 'post');
+        }
+
+        $rows = $query->orderBy('post_date', 'DESC')->fetchAll();
 
         $posts = array_map(fn(array $row) => [
             'id' => (int) ($row['ID'] ?? $row['id']),
@@ -139,22 +150,61 @@ class AdminApiController
     public function stats(): Response
     {
         try {
-            $totalPosts = (int) ($this->db->select('COUNT(*) as count')
+            $baseQuery = $this->db->select('COUNT(*) as count')
                 ->from($this->prefix . 'posts')
-                ->where('post_status', '!=', 'auto-draft')
-                ->fetch()['count'] ?? 0);
+                ->where('post_status', '!=', 'auto-draft');
 
-            $publishedPosts = (int) ($this->db->select('COUNT(*) as count')
+            $pubQuery = $this->db->select('COUNT(*) as count')
                 ->from($this->prefix . 'posts')
-                ->where('post_status', 'publish')
-                ->fetch()['count'] ?? 0);
+                ->where('post_status', 'publish');
 
-            $draftPosts = (int) ($this->db->select('COUNT(*) as count')
+            $draftQuery = $this->db->select('COUNT(*) as count')
                 ->from($this->prefix . 'posts')
-                ->where('post_status', 'draft')
-                ->fetch()['count'] ?? 0);
+                ->where('post_status', 'draft');
+
+            if ($this->isWordPress()) {
+                $baseQuery = $baseQuery->where('post_type', 'post');
+                $pubQuery = $pubQuery->where('post_type', 'post');
+                $draftQuery = $draftQuery->where('post_type', 'post');
+            }
+
+            $totalPosts = (int) ($baseQuery->fetch()['count'] ?? 0);
+            $publishedPosts = (int) ($pubQuery->fetch()['count'] ?? 0);
+            $draftPosts = (int) ($draftQuery->fetch()['count'] ?? 0);
         } catch (\Throwable) {
             $totalPosts = $publishedPosts = $draftPosts = 0;
+        }
+
+        // Post type breakdown (WordPress mode only)
+        $byPostType = [];
+        if ($this->isWordPress()) {
+            try {
+                $rows = $this->db->select(['post_type', 'COUNT(*) as count'])
+                    ->from($this->prefix . 'posts')
+                    ->where('post_status', '!=', 'auto-draft')
+                    ->groupBy('post_type')
+                    ->fetchAll();
+
+                $labels = [
+                    'post' => 'Posts',
+                    'page' => 'Pages',
+                    'attachment' => 'Media',
+                    'revision' => 'Revisions',
+                    'nav_menu_item' => 'Menu Items',
+                    'customize_changeset' => 'Changesets',
+                ];
+
+                foreach ($rows as $row) {
+                    $type = $row['post_type'] ?? 'unknown';
+                    $byPostType[] = [
+                        'type' => $type,
+                        'count' => (int) ($row['count'] ?? 0),
+                        'label' => $labels[$type] ?? ucfirst($type),
+                    ];
+                }
+            } catch (\Throwable) {
+                $byPostType = [];
+            }
         }
 
         $installed = $this->plugins->getInstalledPlugins();
@@ -172,6 +222,7 @@ class AdminApiController
                 'active' => $activePlugins,
                 'inactive' => $totalPlugins - $activePlugins,
             ],
+            'byPostType' => $byPostType,
         ]);
     }
 
@@ -180,10 +231,15 @@ class AdminApiController
     public function activities(): Response
     {
         try {
-            $rows = $this->db->select('*')
+            $query = $this->db->select('*')
                 ->from($this->prefix . 'posts')
-                ->where('post_status', '!=', 'auto-draft')
-                ->orderBy('post_modified', 'DESC')
+                ->where('post_status', '!=', 'auto-draft');
+
+            if ($this->isWordPress()) {
+                $query = $query->where('post_type', 'post');
+            }
+
+            $rows = $query->orderBy('post_modified', 'DESC')
                 ->limit(20)
                 ->fetchAll();
         } catch (\Throwable) {
