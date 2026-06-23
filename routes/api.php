@@ -16,3 +16,4 @@ $router->get('/api/admin/themes', [AdminApiController::class, 'themes']);
 $router->post('/api/admin/themes/activate', [AdminApiController::class, 'activateTheme']);
 $router->get('/api/admin/stats', [AdminApiController::class, 'stats']);
 $router->get('/api/admin/activities', [AdminApiController::class, 'activities']);
+$router->get('/api/admin/users', [AdminApiController::class, 'users']);

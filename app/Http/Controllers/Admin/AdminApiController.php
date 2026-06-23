@@ -26,17 +26,18 @@ class AdminApiController
     {
         $rows = $this->db->select('*')
             ->from($this->prefix . 'posts')
-            ->orderBy('created_at', 'DESC')
+            ->where('post_status', '!=', 'auto-draft')
+            ->orderBy('post_date', 'DESC')
             ->fetchAll();
 
         $posts = array_map(fn(array $row) => [
-            'id' => (int) $row['id'],
-            'title' => $row['title'] ?? '',
-            'author' => $this->resolveAuthor((int) ($row['author_id'] ?? 0)),
-            'category' => $this->resolveCategory((int) $row['id']),
-            'status' => $this->mapStatus($row['status'] ?? 'draft'),
-            'date' => $this->formatDate($row['created_at'] ?? ''),
-            'commentsCount' => $this->extractMeta($row, 'comments_count', 0),
+            'id' => (int) ($row['ID'] ?? $row['id']),
+            'title' => $row['post_title'] ?? $row['title'] ?? '',
+            'author' => $this->resolveAuthor((int) ($row['post_author'] ?? $row['author_id'] ?? 0)),
+            'category' => $this->resolveCategory((int) ($row['ID'] ?? $row['id'])),
+            'status' => $this->mapStatus($row['post_status'] ?? $row['status'] ?? 'draft'),
+            'date' => $this->formatDate($row['post_date'] ?? $row['created_at'] ?? ''),
+            'commentsCount' => (int) ($row['comment_count'] ?? $this->extractMeta($row, 'comments_count', 0)),
         ], $rows);
 
         return Response::json($posts);
@@ -138,19 +139,20 @@ class AdminApiController
     public function stats(): Response
     {
         try {
-            $totalPosts = (int) $this->db->select('COUNT(*) as count')
+            $totalPosts = (int) ($this->db->select('COUNT(*) as count')
                 ->from($this->prefix . 'posts')
-                ->fetch()['count'] ?? 0;
+                ->where('post_status', '!=', 'auto-draft')
+                ->fetch()['count'] ?? 0);
 
-            $publishedPosts = (int) $this->db->select('COUNT(*) as count')
+            $publishedPosts = (int) ($this->db->select('COUNT(*) as count')
                 ->from($this->prefix . 'posts')
-                ->where('status', 'publish')
-                ->fetch()['count'] ?? 0;
+                ->where('post_status', 'publish')
+                ->fetch()['count'] ?? 0);
 
-            $draftPosts = (int) $this->db->select('COUNT(*) as count')
+            $draftPosts = (int) ($this->db->select('COUNT(*) as count')
                 ->from($this->prefix . 'posts')
-                ->where('status', 'draft')
-                ->fetch()['count'] ?? 0;
+                ->where('post_status', 'draft')
+                ->fetch()['count'] ?? 0);
         } catch (\Throwable) {
             $totalPosts = $publishedPosts = $draftPosts = 0;
         }
@@ -180,7 +182,8 @@ class AdminApiController
         try {
             $rows = $this->db->select('*')
                 ->from($this->prefix . 'posts')
-                ->orderBy('updated_at', 'DESC')
+                ->where('post_status', '!=', 'auto-draft')
+                ->orderBy('post_modified', 'DESC')
                 ->limit(20)
                 ->fetchAll();
         } catch (\Throwable) {
@@ -189,14 +192,15 @@ class AdminApiController
 
         $activities = [];
         foreach ($rows as $row) {
-            $title = $row['title'] ?? 'Untitled';
+            $title = $row['post_title'] ?? $row['title'] ?? 'Untitled';
+            $status = $row['post_status'] ?? $row['status'] ?? '';
             $activities[] = [
-                'id' => (int) $row['id'],
-                'text' => $row['status'] === 'publish'
+                'id' => (int) ($row['ID'] ?? $row['id']),
+                'text' => $status === 'publish'
                     ? "Published post: \"{$title}\""
                     : "Updated post: \"{$title}\"",
-                'time' => $this->relativeTime($row['updated_at'] ?? $row['created_at'] ?? ''),
-                'type' => $row['status'] === 'publish' ? 'post' : 'update',
+                'time' => $this->relativeTime($row['post_modified'] ?? $row['post_date'] ?? $row['updated_at'] ?? $row['created_at'] ?? ''),
+                'type' => $status === 'publish' ? 'post' : 'update',
             ];
         }
 
@@ -207,7 +211,17 @@ class AdminApiController
 
     protected function resolveAuthor(int $authorId): string
     {
-        return 'admin';
+        if ($authorId < 1) return 'admin';
+        try {
+            $user = $this->db->select('user_nicename, display_name')
+                ->from($this->prefix . 'users')
+                ->where('ID', $authorId)
+                ->limit(1)
+                ->fetch();
+            return $user['display_name'] ?? $user['user_nicename'] ?? 'admin';
+        } catch (\Throwable) {
+            return 'admin';
+        }
     }
 
     protected function resolveCategory(int $postId): string
@@ -215,8 +229,10 @@ class AdminApiController
         try {
             $term = $this->db->select('t.name')
                 ->from($this->prefix . 'term_relationships as tr')
-                ->innerJoin($this->prefix . 'terms', 't')->on('t.id', 'tr.term_id')
+                ->innerJoin($this->prefix . 'term_taxonomy', 'tt')->on('tt.term_taxonomy_id', 'tr.term_taxonomy_id')
+                ->innerJoin($this->prefix . 'terms', 't')->on('t.term_id', 'tt.term_id')
                 ->where('tr.object_id', $postId)
+                ->where('tt.taxonomy', 'category')
                 ->limit(1)
                 ->fetch();
 
@@ -245,6 +261,51 @@ class AdminApiController
             return date('Y-m-d H:i', strtotime($date));
         }
         return date('Y-m-d H:i');
+    }
+
+    public function users(): Response
+    {
+        try {
+            $rows = $this->db->select('*')
+                ->from($this->prefix . 'users')
+                ->orderBy('user_registered', 'DESC')
+                ->fetchAll();
+        } catch (\Throwable) {
+            $rows = [];
+        }
+
+        $users = array_map(fn(array $row) => [
+            'id' => (int) ($row['ID'] ?? $row['id']),
+            'username' => $row['user_login'] ?? '',
+            'name' => $row['display_name'] ?? $row['user_nicename'] ?? '',
+            'email' => $row['user_email'] ?? '',
+            'role' => $this->resolveUserRole((int) ($row['ID'] ?? $row['id'])),
+            'registered' => $this->formatDate($row['user_registered'] ?? ''),
+            'posts' => 0,
+        ], $rows);
+
+        return Response::json($users);
+    }
+
+    protected function resolveUserRole(int $userId): string
+    {
+        try {
+            $meta = $this->db->select('meta_value')
+                ->from($this->prefix . 'usermeta')
+                ->where('user_id', $userId)
+                ->where('meta_key', 'wp_capabilities')
+                ->limit(1)
+                ->fetch();
+            if ($meta) {
+                $caps = maybe_unserialize($meta['meta_value']);
+                if (is_array($caps)) {
+                    $roles = array_keys($caps);
+                    return $roles[0] ?? 'subscriber';
+                }
+            }
+        } catch (\Throwable) {
+        }
+        return 'subscriber';
     }
 
     protected function extractMeta(array $row, string $key, mixed $default = null): mixed
