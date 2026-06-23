@@ -8,6 +8,7 @@ use Witals\Framework\Http\Response;
 use Cycle\Database\DatabaseInterface;
 use PrestoWorld\Contracts\Plugin\PluginStoreInterface;
 use PrestoWorld\Theme\ThemeRepository;
+use Witals\Framework\Support\Assets\Contracts\AssetTransformInterface;
 use App\Storage\CloudStorageManager;
 
 class AdminApiController
@@ -35,9 +36,52 @@ class AdminApiController
             $mgr = new CloudStorageManager();
             if ($mgr->isEnabled()) {
                 $this->cloud = $mgr;
+                $this->registerCloudRewriteRule($mgr);
             }
         }
         return $this->cloud;
+    }
+
+    protected function registerCloudRewriteRule(CloudStorageManager $mgr): void
+    {
+        try {
+            $cdnUrl = rtrim(getenv('PW_STORAGE_CDN_URL') ?: '', '/');
+            if ($cdnUrl === '') {
+                return;
+            }
+            $transformer = app(AssetTransformInterface::class);
+            $transformer->addRule(
+                '#^/storage/uploads/(.+)$#',
+                $cdnUrl . '/$1'
+            );
+        } catch (\Throwable) {
+        }
+    }
+
+    protected function resolveMediaUrl(string $url): string
+    {
+        try {
+            $transformer = app(AssetTransformInterface::class);
+            $config = $this->getMediaTransformConfig();
+            $transformed = $transformer->transformUrl(
+                $url,
+                $config['from'] ?? 'wp-content/uploads',
+                $config['to'] ?? 'storage/uploads'
+            );
+            return $transformed !== '' ? $transformed : $url;
+        } catch (\Throwable) {
+            return $url;
+        }
+    }
+
+    protected function getMediaTransformConfig(): array
+    {
+        $configPath = $this->getBasePath() . '/config/assets.php';
+        if (!file_exists($configPath)) {
+            return [];
+        }
+        $config = require $configPath;
+        return $config['transforms'][0] ?? [];
     }
 
     // ── Posts ───────────────────────────────────────────────────
@@ -551,7 +595,8 @@ class AdminApiController
             }
         }
 
-        $url = $cloudUrl ?? ('/storage/uploads/' . $relativePath);
+        $localUrl = '/storage/uploads/' . $relativePath;
+        $url = $cloudUrl ?? $this->resolveMediaUrl($localUrl);
 
         if ($this->isWordPress()) {
             try {
@@ -639,12 +684,12 @@ class AdminApiController
             $fileSize = 0; // cloud files don't have local size
         } elseif ($subPath !== '' && file_exists($prestoPath)) {
             $actualPath = $prestoPath;
-            $fileUrl = '/storage/uploads/' . $subPath;
+            $fileUrl = $this->resolveMediaUrl('/storage/uploads/' . $subPath);
             $source = 'presto';
             $fileSize = filesize($prestoPath);
         } elseif ($subPath !== '' && file_exists($wpPath)) {
             $actualPath = $wpPath;
-            $fileUrl = '/wp-content/uploads/' . $subPath;
+            $fileUrl = $this->resolveMediaUrl('/wp-content/uploads/' . $subPath);
             $fileSize = filesize($wpPath);
         }
 
@@ -666,9 +711,9 @@ class AdminApiController
             $wpThumb = $contentDir . '/uploads/' . $thumbSubPath;
 
             if (file_exists($prestoThumb)) {
-                $thumbnailUrl = '/storage/uploads/' . $thumbSubPath;
+                $thumbnailUrl = $this->resolveMediaUrl('/storage/uploads/' . $thumbSubPath);
             } elseif (file_exists($wpThumb)) {
-                $thumbnailUrl = '/wp-content/uploads/' . $thumbSubPath;
+                $thumbnailUrl = $this->resolveMediaUrl('/wp-content/uploads/' . $thumbSubPath);
             }
         }
 
@@ -760,13 +805,14 @@ class AdminApiController
 
             $mime = mime_content_type($path) ?: 'application/octet-stream';
 
+            $relativeUrl = '/storage/uploads/' . $relative;
             $items[] = [
                 'id' => 0,
                 'postId' => null,
                 'title' => $file->getFilename(),
                 'filename' => $file->getFilename(),
-                'url' => '/storage/uploads/' . $relative,
-                'thumbnailUrl' => '/storage/uploads/' . $relative,
+                'url' => $this->resolveMediaUrl($relativeUrl),
+                'thumbnailUrl' => $this->resolveMediaUrl($relativeUrl),
                 'date' => date('Y-m-d H:i:s', $file->getMTime()),
                 'size' => $file->getSize(),
                 'mimeType' => $mime,
