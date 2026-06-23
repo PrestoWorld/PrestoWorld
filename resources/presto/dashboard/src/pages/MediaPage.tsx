@@ -1,7 +1,7 @@
 import { createSignal, For, Show, onMount } from 'solid-js';
-import { Image, Upload, Trash2, File, Film, Music, Archive, Download, Globe, HardDrive } from 'lucide-solid';
+import { Image, Upload, Trash2, File, Film, Music, Archive, Download, Globe, HardDrive, CloudOff } from 'lucide-solid';
 import { WPMediaItem } from '../api';
-import { fetchMedia, uploadMedia } from '../api';
+import { fetchMedia, uploadMedia, offloadMedia } from '../api';
 
 function formatSize(bytes: number): string {
   if (bytes === 0) return '0 B';
@@ -171,6 +171,15 @@ export default function MediaPage() {
                       <div class="flex items-center justify-between">
                         <span class="text-[9px] font-mono text-slate-400">{formatSize(item.size)}</span>
                         <div class="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Show when={!item.offloaded && item.source === 'wordpress'}>
+                            <button
+                              onClick={() => offloadMedia(item.postId ?? item.id).then(() => loadMedia())}
+                              class="p-1 text-amber-500 hover:text-indigo-600 transition-colors"
+                              title="Offload to Presto storage"
+                            >
+                              <CloudOff size={11} />
+                            </button>
+                          </Show>
                           <Show when={item.url}>
                             <a href={item.url} target="_blank" class="p-1 text-slate-400 hover:text-indigo-600 transition-colors" title="Download">
                               <Download size={11} />

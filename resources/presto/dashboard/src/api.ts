@@ -98,6 +98,7 @@ export interface WPMediaItem {
   mimeType: string;
   dimensions: { width: number; height: number } | null;
   source: 'wordpress' | 'presto';
+  offloaded: boolean;
   alt: string;
 }
 
@@ -111,4 +112,9 @@ export async function uploadMedia(file: File): Promise<WPMediaItem> {
   const res = await fetch(`${BASE}/media/upload`, { method: 'POST', body: form });
   if (!res.ok) throw new Error(`Upload error: ${res.status}`);
   return res.json();
+}
+
+export async function offloadMedia(id: number): Promise<void> {
+  const res = await fetch(`${BASE}/media/${id}/offload`, { method: 'POST' });
+  if (!res.ok) throw new Error(`Offload error: ${res.status}`);
 }

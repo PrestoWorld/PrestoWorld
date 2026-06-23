@@ -439,6 +439,35 @@ class AdminApiController
         return Response::json($items);
     }
 
+    public function offloadMedia(int $id): Response
+    {
+        if (!$this->isWordPress()) {
+            return Response::json(['error' => 'Offload requires WordPress mode'], 400);
+        }
+
+        try {
+            $row = $this->db->select('*')
+                ->from($this->prefix . 'posts')
+                ->where('ID', $id)
+                ->where('post_type', 'attachment')
+                ->limit(1)
+                ->fetch();
+        } catch (\Throwable) {
+            $row = null;
+        }
+
+        if (!$row) {
+            return Response::json(['error' => 'Attachment not found'], 404);
+        }
+
+        $result = $this->copyToPrestoStorage((int) $row['ID']);
+        if ($result === null) {
+            return Response::json(['error' => 'Source file not found'], 404);
+        }
+
+        return Response::json(['success' => true, 'files' => $result]);
+    }
+
     public function uploadMedia(): Response
     {
         $file = $_FILES['file'] ?? null;
@@ -497,6 +526,7 @@ class AdminApiController
             'mimeType' => $mime,
             'dimensions' => $this->getImageDimensions($destPath),
             'source' => 'presto',
+            'offloaded' => true,
             'alt' => '',
         ]);
     }
@@ -593,6 +623,7 @@ class AdminApiController
             'mimeType' => $mime,
             'dimensions' => $dimensions,
             'source' => $source,
+            'offloaded' => $source === 'presto',
             'alt' => $row['post_excerpt'] ?? '',
         ];
     }
@@ -631,6 +662,7 @@ class AdminApiController
                 'mimeType' => $mime,
                 'dimensions' => $this->getImageDimensions($path),
                 'source' => 'presto',
+                'offloaded' => true,
                 'alt' => '',
             ];
         }
@@ -676,6 +708,73 @@ class AdminApiController
         );
 
         return $postId;
+    }
+
+    protected function copyToPrestoStorage(int $postId): ?array
+    {
+        $meta = $this->db->select('meta_value')
+            ->from($this->prefix . 'postmeta')
+            ->where('post_id', $postId)
+            ->where('meta_key', '_wp_attached_file')
+            ->limit(1)
+            ->fetch();
+
+        $subPath = $meta['meta_value'] ?? '';
+        if ($subPath === '') {
+            return null;
+        }
+
+        $basePath = $this->getBasePath();
+        $contentDir = getenv('PW_CONTENT_DIR') ?: $basePath . '/public/wp-content';
+        $wpFile = $contentDir . '/uploads/' . $subPath;
+
+        if (!file_exists($wpFile)) {
+            return null;
+        }
+
+        $prestoFile = $basePath . '/storage/uploads/' . $subPath;
+        $copied = [$this->doCopyFile($wpFile, $prestoFile)];
+
+        // Also copy thumbnail sizes
+        $meta2 = $this->db->select('meta_value')
+            ->from($this->prefix . 'postmeta')
+            ->where('post_id', $postId)
+            ->where('meta_key', '_wp_attachment_metadata')
+            ->limit(1)
+            ->fetch();
+
+        if ($meta2) {
+            $wpMeta = is_string($meta2['meta_value']) ? @unserialize($meta2['meta_value']) : null;
+            if ($wpMeta && isset($wpMeta['sizes'])) {
+                $dir = dirname($subPath);
+                foreach ($wpMeta['sizes'] as $sizeName => $sizeData) {
+                    $thumbFile = $sizeData['file'] ?? '';
+                    if ($thumbFile === '') continue;
+                    $thumbSubPath = ($dir !== '.' ? $dir . '/' : '') . $thumbFile;
+                    $wpThumb = $contentDir . '/uploads/' . $thumbSubPath;
+                    $prestoThumb = $basePath . '/storage/uploads/' . $thumbSubPath;
+                    if (file_exists($wpThumb)) {
+                        $copied[] = $this->doCopyFile($wpThumb, $prestoThumb);
+                    }
+                }
+            }
+        }
+
+        return $copied;
+    }
+
+    protected function doCopyFile(string $from, string $to): array
+    {
+        $toDir = dirname($to);
+        if (!is_dir($toDir)) {
+            mkdir($toDir, 0755, true);
+        }
+        copy($from, $to);
+        $relative = str_replace($this->getBasePath() . '/storage/uploads/', '', $to);
+        return [
+            'file' => $relative,
+            'size' => filesize($to),
+        ];
     }
 
     protected function getBasePath(): string
