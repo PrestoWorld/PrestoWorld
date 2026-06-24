@@ -464,14 +464,20 @@ export default function App() {
                 const hasChildren = section.items.length > 1;
                 const anyChildActive = () => section.items.some(item => screenId() === item.screenId);
                 const [expanded, setExpanded] = createSignal(anyChildActive());
+                const wrapperRef = (el: HTMLElement | null) => {
+                  if (!el || !hasChildren) return;
+                };
+
                 return (
-                  <>
+                  <div
+                    ref={wrapperRef}
+                    style={hasChildren ? { position: 'relative' } : undefined}
+                    onMouseEnter={() => hasChildren && setExpanded(true)}
+                    onMouseLeave={() => hasChildren && setExpanded(false)}
+                  >
                     <button
-                      class={`menu-item menu-parent w-full text-left ${anyChildActive() ? 'active' : ''}`}
-                      onClick={() => {
-                        setExpanded(!expanded());
-                        goTo(parentScreenId);
-                      }}
+                      class={`menu-item w-full text-left ${hasChildren ? 'menu-parent' : ''} ${anyChildActive() ? 'active' : ''}`}
+                      onClick={() => goTo(parentScreenId)}
                     >
                       <span class="icon-wrapper">
                         <parentIcon size={18} />
@@ -484,8 +490,8 @@ export default function App() {
                         <span class="submenu-arrow" data-open={expanded()}>&#9662;</span>
                       </Show>
                     </button>
-                    <Show when={hasChildren && expanded()}>
-                      <div class="submenu-items">
+                    <Show when={hasChildren}>
+                      <div class="submenu-items" data-show={expanded()}>
                         <For each={section.items}>
                           {(item) => {
                             const Icon = resolveIcon(item.icon);
@@ -505,7 +511,7 @@ export default function App() {
                         </For>
                       </div>
                     </Show>
-                  </>
+                  </div>
                 );
               }}
             </For>
