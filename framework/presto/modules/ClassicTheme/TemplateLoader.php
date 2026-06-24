@@ -112,11 +112,18 @@ class TemplateLoader
     private function includeTemplate(string $path, array $post, ?string $type = null): void
     {
         $themePath = $this->themePath;
+        $savedPost = $GLOBALS['post'] ?? null;
 
         (static function () use ($path, $post, $themePath) {
             $GLOBALS['post'] = $post;
             extract($post, EXTR_SKIP);
             require $path;
         })();
+
+        if ($savedPost !== null) {
+            $GLOBALS['post'] = $savedPost;
+        } else {
+            unset($GLOBALS['post']);
+        }
     }
 }

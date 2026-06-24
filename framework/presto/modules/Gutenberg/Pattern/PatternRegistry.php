@@ -14,6 +14,8 @@ namespace PrestoWorld\Modules\Gutenberg\Pattern;
 class PatternRegistry
 {
     protected ?PatternStorageInterface $storage = null;
+    private const MAX_FILE_CACHE = 200;
+
     protected array $files = [];
     protected array $fileCache = [];
     protected bool $discovered = false;
@@ -78,6 +80,11 @@ class PatternRegistry
         } else {
             $base = basename($file, '.php');
             $slug = 'twentytwentyfive/' . $base;
+        }
+
+        if (count($this->fileCache) >= self::MAX_FILE_CACHE) {
+            reset($this->fileCache);
+            unset($this->fileCache[key($this->fileCache)]);
         }
 
         $this->fileCache[$file] = [

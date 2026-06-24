@@ -138,7 +138,12 @@ class Module extends WitalsModule
             return $envPath;
         }
 
+        $pathFromConfig = $app->config('theme.path');
+        if ($pathFromConfig) {
+            return $pathFromConfig;
+        }
+
         $active = $app->config('theme.active', 'jankx');
-        return $app->basePath() . '/public/wp-content/themes/' . $active;
+        return $app->basePath() . '/content/themes/' . $active;
     }
 }

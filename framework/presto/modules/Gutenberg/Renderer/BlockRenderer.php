@@ -35,6 +35,11 @@ class BlockRenderer
         }
     }
 
+    public function clearContext(): void
+    {
+        $this->context = [];
+    }
+
     public function addDecorator(BlockDecoratorInterface $decorator): void
     {
         $this->decorators[] = $decorator;

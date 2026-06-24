@@ -12,6 +12,8 @@ use PrestoWorld\Modules\Gutenberg\Pattern\PatternStorageInterface;
  */
 class TemplatePartRegistry
 {
+    private const MAX_CACHE = 100;
+
     protected string $partsPath;
     protected ?PatternCompiler $compiler = null;
     protected ?PatternStorageInterface $storage = null;
@@ -53,6 +55,11 @@ class TemplatePartRegistry
         $content = $this->renderFile($path);
         $this->storage?->set("part:{$slug}", $content);
 
+        if (count($this->cache) >= self::MAX_CACHE) {
+            reset($this->cache);
+            unset($this->cache[key($this->cache)]);
+        }
+
         return $this->cache[$slug] = $content;
     }
 
@@ -63,9 +70,14 @@ class TemplatePartRegistry
         }
 
         if ($this->compiler === null) {
-             ob_start();
-             include $file;
-             return ob_get_clean();
+            ob_start();
+            try {
+                include $file;
+            } catch (\Throwable $e) {
+                ob_end_clean();
+                return "<!-- Error rendering part: " . htmlspecialchars($e->getMessage()) . " -->";
+            }
+            return ob_get_clean();
         }
 
         if ($this->compiler->isExpired($file)) {

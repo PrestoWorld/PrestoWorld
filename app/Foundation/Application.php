@@ -60,7 +60,7 @@ class Application extends BaseApplication
                 $themePath = $app->config('theme.path');
                 if ($themePath === null) {
                     $active = $app->config('theme.active', 'jankx');
-                    $themePath = $app->basePath('public/wp-content/themes/' . $active);
+                    $themePath = $app->basePath('content/themes/' . $active);
                 }
 
                 $factory->setThemePath($themePath);

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PrestoWorld\Plugin;
 
+use Witals\Framework\Contracts\ResettableInterface;
 use Witals\Framework\Module\Contracts\HookInterface;
 
 /**
@@ -14,7 +15,7 @@ use Witals\Framework\Module\Contracts\HookInterface;
  * - addAction()/addFilter(): 1x isset() + 1x append — O(1) amortized
  * - Built-in array append, no ksort() on hot path
  */
-class HookDispatcher implements HookInterface
+class HookDispatcher implements HookInterface, ResettableInterface
 {
     private array $actions = [];
     private array $filters = [];

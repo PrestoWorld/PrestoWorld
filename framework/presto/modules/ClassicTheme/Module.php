@@ -38,6 +38,10 @@ class Module extends WitalsModule
                 $app,
             );
         });
+
+        // Register the resetter so the framework Kernel can call reset() via ResettableInterface
+        // without knowing any PrestoWorld-specific class names.
+        $this->app->singleton(TransformerRegistryResetter::class);
     }
 
     public function boot(): void
