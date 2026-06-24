@@ -12,6 +12,8 @@ import {
   Sparkles,
   X,
   Check,
+  Upload,
+  ImageIcon,
 } from 'lucide-solid';
 import { WPPost, WPPlugin, WPTheme, WPActivity, WPToast, AdminInitialState, AdminMenuItem, AdminMenuSection, AdminBarItem, DashboardWidgetDefinition } from './types';
 import { fetchPosts, fetchPlugins, fetchThemes, fetchActivities, fetchStats, type DashboardStats } from './api';
@@ -27,6 +29,7 @@ const CommentsPage = lazy(() => import('./pages/CommentsPage'));
 const ToolsPage = lazy(() => import('./pages/ToolsPage'));
 const SettingsPage = lazy(() => import('./pages/SettingsPage'));
 const GenericPage = lazy(() => import('./pages/GenericPage'));
+const MediaUploadModal = lazy(() => import('./components/MediaUploadModal'));
 
 declare global {
   interface Window {
@@ -130,6 +133,7 @@ export default function App() {
   const [stats, setStats] = createSignal<DashboardStats>({ posts: { total: 0, published: 0, draft: 0 }, plugins: { total: 0, active: 0, inactive: 0 }, byPostType: [] });
 
   const [isMobileOpen, setIsMobileOpen] = createSignal(false);
+  const [isMediaUploadOpen, setIsMediaUploadOpen] = createSignal(false);
 
   const [postSearch, setPostSearch] = createSignal('');
   const [postCategoryFilter, setPostCategoryFilter] = createSignal('All');
@@ -564,6 +568,14 @@ export default function App() {
           </div>
 
           <div class="flex items-center gap-3 sm:gap-4">
+            <button
+              onClick={() => setIsMediaUploadOpen(true)}
+              class="flex items-center gap-1.5 text-indigo-600 hover:text-white bg-indigo-50 hover:bg-indigo-600 font-semibold text-xs tracking-tight px-3 py-2 rounded-lg transition-all cursor-pointer shadow-sm border border-indigo-100 hover:border-indigo-600"
+            >
+              <Upload size={13} strokeWidth={2.5} />
+              <span class="hidden sm:inline">Upload</span>
+            </button>
+
             <For each={initialAdminBar.items}>
               {(barItem) => {
                 const BarIcon = resolveIcon(barItem.icon);
@@ -594,6 +606,13 @@ export default function App() {
                 );
               }}
             </For>
+            <div class="h-5 w-px bg-slate-200"></div>
+            <div class="flex items-center gap-2 pl-1">
+              <div class="w-7 h-7 rounded-full bg-indigo-100 flex items-center justify-center text-[10px] font-bold text-indigo-700 uppercase border border-indigo-200">
+                {initialUser.name.slice(0, 2)}
+              </div>
+              <span class="hidden sm:inline text-xs font-semibold text-slate-700">{initialUser.name}</span>
+            </div>
           </div>
         </header>
 
@@ -622,6 +641,7 @@ export default function App() {
                   handleSaveDraft={handleSaveDraft}
                   activities={activities}
                   addToast={addToast}
+                  onOpenMediaUpload={() => setIsMediaUploadOpen(true)}
                 />
               </Match>
 
@@ -827,6 +847,13 @@ export default function App() {
           </div>
         </div>
       </Show>
+
+      <Suspense fallback={null}>
+        <MediaUploadModal
+          isOpen={isMediaUploadOpen()}
+          onClose={() => setIsMediaUploadOpen(false)}
+        />
+      </Suspense>
 
     </div>
   );

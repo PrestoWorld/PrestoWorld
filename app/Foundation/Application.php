@@ -59,7 +59,7 @@ class Application extends BaseApplication
 
                 $themePath = $app->config('theme.path');
                 if ($themePath === null) {
-                    $active = $app->config('theme.active', 'twentytwenty');
+                    $active = $app->config('theme.active', 'jankx');
                     $themePath = $app->basePath('public/wp-content/themes/' . $active);
                 }
 
@@ -97,7 +97,7 @@ class Application extends BaseApplication
         $this->singleton(\Witals\Framework\Context\Contracts\BlockManagerInterface::class, \Witals\Framework\Context\BlockManager::class);
         $this->singleton(\Witals\Framework\Context\Contracts\ContextManagerInterface::class, \Witals\Framework\Context\ContextManager::class);
         $this->singleton(\Witals\Framework\Context\Contracts\ContextLoaderInterface::class, function ($app) {
-            $themeDir = getenv('PW_THEME_DIR') ?: $app->basePath('content/themes/' . ($app->config('theme.active', 'twentytwenty')));
+            $themeDir = getenv('PW_THEME_DIR') ?: $app->basePath('content/themes/' . ($app->config('theme.active', 'jankx')));
             return new \Witals\Framework\Context\ContextLoader(
                 $app->make(\Witals\Framework\Context\Contracts\BlockManagerInterface::class),
                 templateDir: $themeDir . '/templates',

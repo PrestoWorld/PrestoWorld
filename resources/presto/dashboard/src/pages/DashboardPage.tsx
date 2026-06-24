@@ -1,5 +1,5 @@
 import { For, Show, Match, Switch } from 'solid-js';
-import { FileText, MessageSquare, Blocks, Wrench, Sparkles, Activity as ActivityIcon, RefreshCw, ShieldAlert, BookOpen, Check, X } from 'lucide-solid';
+import { FileText, MessageSquare, Blocks, Wrench, Sparkles, Activity as ActivityIcon, RefreshCw, ShieldAlert, BookOpen, Check, X, Upload, Image as ImageIcon } from 'lucide-solid';
 import { WPActivity } from '../types';
 
 interface DashboardPageProps {
@@ -15,6 +15,7 @@ interface DashboardPageProps {
   handleSaveDraft: (e: Event) => void;
   activities: () => WPActivity[];
   addToast: (message: string, type?: 'success' | 'error' | 'info') => void;
+  onOpenMediaUpload?: () => void;
 }
 
 export default function DashboardPage(props: DashboardPageProps) {
@@ -117,6 +118,32 @@ export default function DashboardPage(props: DashboardPageProps) {
                 </div>
               )}
             </For>
+          </div>
+        </div>
+      </Show>
+
+      <Show when={props.onOpenMediaUpload}>
+        <div class="wp-card bg-gradient-to-br from-white to-indigo-50/20 border border-indigo-100/60 overflow-hidden">
+          <div class="p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 rounded-2xl bg-indigo-100 flex items-center justify-center shrink-0 border border-indigo-200/50">
+                <Upload size={20} class="text-indigo-600" />
+              </div>
+              <div class="space-y-1">
+                <h4 class="font-bold text-sm text-slate-800">Quick Media Upload</h4>
+                <p class="text-[11px] text-slate-500 leading-relaxed max-w-md">
+                  Drag and drop images, videos, or documents directly from your desktop. 
+                  Files are stored in Presto storage for ultra-low latency delivery.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={props.onOpenMediaUpload}
+              class="shrink-0 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs tracking-tight px-5 py-3 rounded-xl flex items-center gap-2 cursor-pointer shadow-md shadow-indigo-200 transition-all hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <Upload size={14} strokeWidth={2.5} />
+              <span>Upload Media</span>
+            </button>
           </div>
         </div>
       </Show>

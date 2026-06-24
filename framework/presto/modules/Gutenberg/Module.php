@@ -138,7 +138,7 @@ class Module extends WitalsModule
             return $envPath;
         }
 
-        $active = $app->config('theme.active', 'twentytwenty');
+        $active = $app->config('theme.active', 'jankx');
         return $app->basePath() . '/public/wp-content/themes/' . $active;
     }
 }
