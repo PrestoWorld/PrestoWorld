@@ -3,20 +3,25 @@
 declare(strict_types=1);
 
 use App\Http\Routing\Contracts\RouterInterface;
-use App\Http\Controllers\Admin\AdminApiController;
+use App\Http\Controllers\Admin\PostsController;
+use App\Http\Controllers\Admin\PluginsController;
+use App\Http\Controllers\Admin\ThemesController;
+use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\UsersController;
+use App\Http\Controllers\Admin\MediaController;
 
 /** @var RouterInterface $router */
 
 $router->get('/api/admin/menu', [\App\Http\Controllers\Admin\SpaController::class, 'menu']);
 $router->get('/api/admin/dashboard/widgets', [\App\Http\Controllers\Admin\SpaController::class, 'dashboardWidgets']);
 
-$router->get('/api/admin/posts', [AdminApiController::class, 'posts']);
-$router->get('/api/admin/plugins', [AdminApiController::class, 'plugins']);
-$router->get('/api/admin/themes', [AdminApiController::class, 'themes']);
-$router->post('/api/admin/themes/activate', [AdminApiController::class, 'activateTheme']);
-$router->get('/api/admin/stats', [AdminApiController::class, 'stats']);
-$router->get('/api/admin/activities', [AdminApiController::class, 'activities']);
-$router->get('/api/admin/users', [AdminApiController::class, 'users']);
-$router->get('/api/admin/media', [AdminApiController::class, 'media']);
-$router->post('/api/admin/media/upload', [AdminApiController::class, 'uploadMedia']);
-$router->post('/api/admin/media/{id}/offload', [AdminApiController::class, 'offloadMedia']);
+$router->get('/api/admin/posts', [PostsController::class, 'posts']);
+$router->get('/api/admin/plugins', [PluginsController::class, 'plugins']);
+$router->get('/api/admin/themes', [ThemesController::class, 'themes']);
+$router->post('/api/admin/themes/activate', [ThemesController::class, 'activateTheme']);
+$router->get('/api/admin/stats', [DashboardController::class, 'stats']);
+$router->get('/api/admin/activities', [DashboardController::class, 'activities']);
+$router->get('/api/admin/users', [UsersController::class, 'users']);
+$router->get('/api/admin/media', [MediaController::class, 'media']);
+$router->post('/api/admin/media/upload', [MediaController::class, 'uploadMedia']);
+$router->post('/api/admin/media/{id}/offload', [MediaController::class, 'offloadMedia']);

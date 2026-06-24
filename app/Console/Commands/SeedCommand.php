@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use Witals\Framework\Console\Command;
+use Witals\Framework\Support\ConfigFileWriter;
 use Cycle\Database\DatabaseInterface;
 use PrestoWorld\Modules\Schema\PostRepository;
 
@@ -96,8 +97,8 @@ class SeedCommand extends Command
             if (!isset($config['mapping']['/'])) {
                 $config['mapping']['/'] = 'page';
                 $config['mapping']['/home'] = 'page';
-                file_put_contents($templatesFile, '<?php return ' . var_export($config, true) . ';');
-                $this->line('  - config/templates.php updated.');
+                ConfigFileWriter::write($templatesFile, $config);
+                $this->line('  - config/templates.php updated safely.');
             }
         }
 

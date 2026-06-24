@@ -14,6 +14,9 @@ class S3StorageProvider implements StorageProvider
     private string $cdnUrl;
     private string $provider;
 
+    private const MAX_RETRIES = 3;
+    private const RETRY_DELAY_MS = 200;
+
     public function __construct(array $config)
     {
         $this->bucket = $config['bucket'] ?? '';
@@ -23,6 +26,13 @@ class S3StorageProvider implements StorageProvider
         $this->endpoint = rtrim($config['endpoint'] ?? "https://{$this->bucket}.s3.{$this->region}.amazonaws.com", '/');
         $this->cdnUrl = rtrim($config['cdn_url'] ?? $this->endpoint, '/');
         $this->provider = $config['provider'] ?? 's3';
+
+        if ($this->bucket === '') {
+            throw new \InvalidArgumentException('S3 bucket is required');
+        }
+        if ($this->accessKey === '' || $this->secretKey === '') {
+            throw new \InvalidArgumentException('S3 access key and secret key are required');
+        }
     }
 
     public function driverName(): string
@@ -32,29 +42,41 @@ class S3StorageProvider implements StorageProvider
 
     public function upload(string $path, string $sourceFile): string
     {
+        $this->validatePath($path);
+
+        if (!file_exists($sourceFile) || !is_readable($sourceFile)) {
+            throw StorageException::fileNotFound($sourceFile);
+        }
+
         $content = file_get_contents($sourceFile);
         if ($content === false) {
-            throw new \RuntimeException("Cannot read source file: {$sourceFile}");
+            throw StorageException::uploadFailed($path, "Cannot read source file: {$sourceFile}");
         }
+
         $mime = mime_content_type($sourceFile) ?: 'application/octet-stream';
         $this->s3Request('PUT', $path, $content, [
             'Content-Type' => $mime,
             'x-amz-acl' => 'public-read',
         ]);
+
         return $this->url($path);
     }
 
     public function delete(string $path): bool
     {
+        $this->validatePath($path);
         $this->s3Request('DELETE', $path);
         return true;
     }
 
     public function exists(string $path): bool
     {
+        $this->validatePath($path);
         try {
             $this->s3Request('HEAD', $path);
             return true;
+        } catch (StorageException) {
+            return false;
         } catch (\Throwable) {
             return false;
         }
@@ -62,6 +84,7 @@ class S3StorageProvider implements StorageProvider
 
     public function url(string $path): string
     {
+        $this->validatePath($path);
         return "{$this->cdnUrl}/{$path}";
     }
 
@@ -95,6 +118,23 @@ class S3StorageProvider implements StorageProvider
 
     private function s3Request(string $method, string $path, string $body = '', array $headers = [], string $query = ''): string
     {
+        $attempt = 0;
+
+        while (true) {
+            $attempt++;
+            try {
+                return $this->doS3Request($method, $path, $body, $headers, $query);
+            } catch (\Throwable $e) {
+                if ($attempt >= self::MAX_RETRIES || $this->isNonRetryable($e, $method)) {
+                    throw $e;
+                }
+                usleep(self::RETRY_DELAY_MS * 1000 * $attempt);
+            }
+        }
+    }
+
+    private function doS3Request(string $method, string $path, string $body = '', array $headers = [], string $query = ''): string
+    {
         $path = ltrim($path, '/');
         $url = "{$this->endpoint}/{$path}{$query}";
 
@@ -102,7 +142,7 @@ class S3StorageProvider implements StorageProvider
         $date = substr($now, 0, 8);
 
         $defaultHeaders = [
-            'Host' => parse_url($this->endpoint, PHP_URL_HOST),
+            'Host' => parse_url($this->endpoint, PHP_URL_HOST) ?: throw StorageException::connectionFailed('s3', 'Invalid endpoint URL'),
             'x-amz-date' => $now,
             'x-amz-content-sha256' => $method === 'GET' || $method === 'DELETE' ? hash('sha256', '') : hash('sha256', $body),
         ];
@@ -114,7 +154,6 @@ class S3StorageProvider implements StorageProvider
         $allHeaders = array_merge($defaultHeaders, $headers);
         ksort($allHeaders);
 
-        // Canonical request
         $signedHeaders = implode(';', array_map('strtolower', array_keys($allHeaders)));
         $canonicalHeaders = '';
         foreach ($allHeaders as $k => $v) {
@@ -131,7 +170,6 @@ class S3StorageProvider implements StorageProvider
             $allHeaders['x-amz-content-sha256'],
         ]);
 
-        // String to sign
         $scope = "{$date}/{$this->region}/s3/aws4_request";
         $stringToSign = implode("\n", [
             'AWS4-HMAC-SHA256',
@@ -140,7 +178,6 @@ class S3StorageProvider implements StorageProvider
             hash('sha256', $canonicalRequest),
         ]);
 
-        // Signature
         $signingKey = $this->getSigningKey($this->secretKey, $date, $this->region, 's3');
         $signature = hash_hmac('sha256', $stringToSign, $signingKey);
 
@@ -153,6 +190,7 @@ class S3StorageProvider implements StorageProvider
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HEADER => false,
             CURLOPT_TIMEOUT => 30,
+            CURLOPT_CONNECTTIMEOUT => 10,
             CURLOPT_HTTPHEADER => $this->buildCurlHeaders($allHeaders, $authorization),
         ]);
 
@@ -169,11 +207,29 @@ class S3StorageProvider implements StorageProvider
         $error = curl_error($ch);
         curl_close($ch);
 
+        if ($response === false || $response === '') {
+            if ($httpCode >= 200 && $httpCode < 300) {
+                return '';
+            }
+        }
+
         if ($httpCode < 200 || $httpCode >= 300) {
-            throw new \RuntimeException("S3 {$method} {$path} failed: HTTP {$httpCode} - {$error}");
+            $reason = $error ?: "HTTP {$httpCode}";
+            if ($httpCode === 403) {
+                throw StorageException::authenticationFailed('S3');
+            }
+            throw new StorageException("S3 {$method} {$path} failed: {$reason}", $httpCode);
         }
 
         return $response !== false ? $response : '';
+    }
+
+    private function isNonRetryable(\Throwable $e, string $method): bool
+    {
+        if ($e instanceof StorageException) {
+            return in_array($e->getCode(), [400, 403, 404, 405], true);
+        }
+        return false;
     }
 
     private function buildCurlHeaders(array $headers, string $authorization): array
@@ -191,5 +247,15 @@ class S3StorageProvider implements StorageProvider
         $kRegion = hash_hmac('sha256', $region, $kDate, true);
         $kService = hash_hmac('sha256', $service, $kRegion, true);
         return hash_hmac('sha256', 'aws4_request', $kService, true);
+    }
+
+    private function validatePath(string $path): void
+    {
+        if ($path === '') {
+            throw new \InvalidArgumentException('Storage path must not be empty');
+        }
+        if (str_contains($path, '..')) {
+            throw new \InvalidArgumentException('Storage path must not contain parent directory references');
+        }
     }
 }

@@ -4,3 +4,6 @@
 [submodule "content/themes/twentytwentyfive"]
 	path = content/themes/twentytwentyfive
 	url = git@github.com:WordPress/twentytwentyfive.git
+[submodule "content/themes/jankx"]
+	path = content/themes/jankx
+	url = git@github.com:jankx/jankx.git

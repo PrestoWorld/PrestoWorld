@@ -12,6 +12,9 @@ class GCSStorageProvider implements StorageProvider
     private string $endpoint;
     private string $cdnUrl;
 
+    private const MAX_RETRIES = 3;
+    private const RETRY_DELAY_MS = 200;
+
     public function __construct(array $config)
     {
         $this->bucket = $config['bucket'] ?? '';
@@ -22,6 +25,13 @@ class GCSStorageProvider implements StorageProvider
             $config['endpoint'] ?? "https://storage.googleapis.com/{$this->bucket}",
             '/'
         );
+
+        if ($this->bucket === '') {
+            throw new \InvalidArgumentException('GCS bucket is required');
+        }
+        if ($this->accessKey === '' || $this->secretKey === '') {
+            throw new \InvalidArgumentException('GCS HMAC access key and secret are required');
+        }
     }
 
     public function driverName(): string
@@ -31,10 +41,17 @@ class GCSStorageProvider implements StorageProvider
 
     public function upload(string $path, string $sourceFile): string
     {
+        $this->validatePath($path);
+
+        if (!file_exists($sourceFile) || !is_readable($sourceFile)) {
+            throw StorageException::fileNotFound($sourceFile);
+        }
+
         $content = file_get_contents($sourceFile);
         if ($content === false) {
-            throw new \RuntimeException("Cannot read source file: {$sourceFile}");
+            throw StorageException::uploadFailed($path, "Cannot read source file: {$sourceFile}");
         }
+
         $mime = mime_content_type($sourceFile) ?: 'application/octet-stream';
         $this->gcsRequest('PUT', $path, $content, $mime);
         return $this->url($path);
@@ -42,12 +59,14 @@ class GCSStorageProvider implements StorageProvider
 
     public function delete(string $path): bool
     {
+        $this->validatePath($path);
         $this->gcsRequest('DELETE', $path);
         return true;
     }
 
     public function exists(string $path): bool
     {
+        $this->validatePath($path);
         try {
             $this->gcsRequest('HEAD', $path);
             return true;
@@ -58,6 +77,7 @@ class GCSStorageProvider implements StorageProvider
 
     public function url(string $path): string
     {
+        $this->validatePath($path);
         return "{$this->cdnUrl}/{$path}";
     }
 
@@ -91,11 +111,28 @@ class GCSStorageProvider implements StorageProvider
 
     private function gcsRequest(string $method, string $path, string $body = '', string $contentType = '', string $query = ''): string
     {
+        $attempt = 0;
+
+        while (true) {
+            $attempt++;
+            try {
+                return $this->doGcsRequest($method, $path, $body, $contentType, $query);
+            } catch (\Throwable $e) {
+                if ($attempt >= self::MAX_RETRIES || $this->isNonRetryable($e)) {
+                    throw $e;
+                }
+                usleep(self::RETRY_DELAY_MS * 1000 * $attempt);
+            }
+        }
+    }
+
+    private function doGcsRequest(string $method, string $path, string $body = '', string $contentType = '', string $query = ''): string
+    {
         $path = ltrim($path, '/');
         $url = "{$this->endpoint}/{$path}{$query}";
 
         $headers = [
-            'Host' => parse_url($this->endpoint, PHP_URL_HOST),
+            'Host' => parse_url($this->endpoint, PHP_URL_HOST) ?: throw StorageException::connectionFailed('gcs', 'Invalid endpoint URL'),
             'Date' => gmdate('D, d M Y H:i:s \G\M\T'),
             'Content-Type' => $contentType ?: 'application/octet-stream',
         ];
@@ -105,7 +142,6 @@ class GCSStorageProvider implements StorageProvider
             $headers['Content-MD5'] = base64_encode(md5($body, true));
         }
 
-        // Google Cloud Storage HMAC signature (signed by header)
         $canonicalHeaders = '';
         foreach (['Content-MD5', 'Content-Type', 'Date'] as $h) {
             $canonicalHeaders .= ($headers[$h] ?? '') . "\n";
@@ -123,6 +159,7 @@ class GCSStorageProvider implements StorageProvider
             CURLOPT_CUSTOMREQUEST => $method,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_TIMEOUT => 30,
+            CURLOPT_CONNECTTIMEOUT => 10,
             CURLOPT_HTTPHEADER => $this->buildHeaders($headers),
         ]);
 
@@ -140,10 +177,22 @@ class GCSStorageProvider implements StorageProvider
         curl_close($ch);
 
         if ($httpCode < 200 || $httpCode >= 300) {
-            throw new \RuntimeException("GCS {$method} {$path} failed: HTTP {$httpCode} - {$error}");
+            $reason = $error ?: "HTTP {$httpCode}";
+            if ($httpCode === 403) {
+                throw StorageException::authenticationFailed('GCS');
+            }
+            throw new StorageException("GCS {$method} {$path} failed: {$reason}", $httpCode);
         }
 
         return $response !== false ? $response : '';
+    }
+
+    private function isNonRetryable(\Throwable $e): bool
+    {
+        if ($e instanceof StorageException) {
+            return in_array($e->getCode(), [400, 401, 403, 404, 405], true);
+        }
+        return false;
     }
 
     private function buildHeaders(array $headers): array
@@ -153,5 +202,15 @@ class GCSStorageProvider implements StorageProvider
             $result[] = "{$k}: {$v}";
         }
         return $result;
+    }
+
+    private function validatePath(string $path): void
+    {
+        if ($path === '') {
+            throw new \InvalidArgumentException('Storage path must not be empty');
+        }
+        if (str_contains($path, '..')) {
+            throw new \InvalidArgumentException('Storage path must not contain parent directory references');
+        }
     }
 }
