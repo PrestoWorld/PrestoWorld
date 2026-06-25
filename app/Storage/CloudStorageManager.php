@@ -50,8 +50,12 @@ class CloudStorageManager
             'api_url' => getenv('PW_STORAGE_API_URL') ?: '',
         ];
 
+        $preferSdk = getenv('PW_STORAGE_USE_SDK') === 'true';
+
         return match ($this->driverName) {
-            's3', 'backblaze', 'digitalocean' => new S3StorageProvider($config),
+            's3', 'backblaze', 'digitalocean' => $preferSdk && S3SdkStorageProvider::isAvailable()
+                ? new S3SdkStorageProvider($config)
+                : new S3StorageProvider($config),
             'bunnycdn' => new BunnyCDNStorageProvider($config),
             'gcs' => new GCSStorageProvider($config),
             default => throw new \RuntimeException("Unsupported storage driver: {$this->driverName}"),

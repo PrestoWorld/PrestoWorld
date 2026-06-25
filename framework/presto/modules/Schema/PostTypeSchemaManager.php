@@ -19,12 +19,46 @@ class PostTypeSchemaManager
     protected bool $stateLoaded = false;
     protected bool $stateDirty = false;
 
+    private static bool $liveMigrationAllowed = false;
+
+    public static function allowLiveMigration(): void
+    {
+        self::$liveMigrationAllowed = true;
+    }
+
+    public static function disallowLiveMigration(): void
+    {
+        self::$liveMigrationAllowed = false;
+    }
+
+    public static function isLiveMigrationAllowed(): bool
+    {
+        return self::$liveMigrationAllowed;
+    }
+
     public function __construct(DatabaseInterface $db, string $storagePath = '')
     {
         $this->db = $db;
         $this->tablePrefix = getenv('PW_TABLE_PREFIX') ?: 'pw_';
+
+        // Auto-enable in non-production by default
+        if (getenv('APP_ENV') !== 'production') {
+            self::$liveMigrationAllowed = true;
+        }
+
         if ($storagePath !== '') {
             $this->stateFilePath = $storagePath . '/pw_schema_state.json';
+        }
+    }
+
+    private function guardLiveMigration(): void
+    {
+        if (!self::$liveMigrationAllowed) {
+            throw new \RuntimeException(
+                'Live schema migration is disabled in the current environment. '
+                . 'Use SchemaMigrationManager with migration files, '
+                . 'or call PostTypeSchemaManager::allowLiveMigration() to enable.'
+            );
         }
     }
 
@@ -56,6 +90,7 @@ class PostTypeSchemaManager
      */
     public function register(string $postType, array $args = []): void
     {
+        $this->guardLiveMigration();
         $this->ensureStateLoaded();
 
         $stateHash = md5(serialize($args));
@@ -88,6 +123,7 @@ class PostTypeSchemaManager
      */
     public function registerTaxonomy(string $taxonomy, array $args = []): void
     {
+        $this->guardLiveMigration();
         $this->ensureStateLoaded();
 
         $stateHash = md5(serialize($args));
@@ -123,6 +159,7 @@ class PostTypeSchemaManager
      */
     public function registerMeta(string $postType, string $metaKey, string $type = 'string', array $options = []): void
     {
+        $this->guardLiveMigration();
         $this->ensureStateLoaded();
 
         $stateHash = md5($type . serialize($options));

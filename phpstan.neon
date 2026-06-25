@@ -1,5 +1,5 @@
 parameters:
-    level: 6
+    level: 9
     paths:
         - app
         - framework/presto
@@ -7,12 +7,23 @@ parameters:
     excludePaths:
         - framework/presto/Modules/Gutenberg/Pattern/wp-stubs.php
     tmpDir: storage/framework/cache/phpstan
-    checkMissingIterableValueType: false
-    checkGenericClassInNonGenericObjectType: false
+    checkMissingIterableValueType: true
+    checkGenericClassInNonGenericObjectType: true
     reportUnmatchedIgnoredErrors: false
-    TreatPhpDocTypesAsCertain: false
+    treatPhpDocTypesAsCertain: false
+    checkUninitializedProperties: true
+    checkExplicitMixedMissingReturn: true
+    checkTooWideReturnTypeInProtectedAndPublicMethods: true
+    checkAdvancedIsset: true
 
     autoload_directories:
         - app
         - framework/presto
         - framework/witals/src
+
+    ignoreErrors:
+        # Allow dynamic property access on legacy WordPress objects
+        - '#Access to an undefined property#'
+        # Allow mixed return from WordPress compatibility functions
+        - '#Method .*::resolveUserRole\(\) should return string but returns mixed#'
+        - '#Method .*::extractMeta\(\) should return mixed but returns mixed#'
