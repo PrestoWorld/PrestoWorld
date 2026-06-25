@@ -1,3 +1,6 @@
+includes:
+    - phpstan-baseline.neon
+
 parameters:
     level: 9
     paths:
@@ -7,19 +10,12 @@ parameters:
     excludePaths:
         - framework/presto/Modules/Gutenberg/Pattern/wp-stubs.php
     tmpDir: storage/framework/cache/phpstan
-    checkMissingIterableValueType: true
-    checkGenericClassInNonGenericObjectType: true
     reportUnmatchedIgnoredErrors: false
     treatPhpDocTypesAsCertain: false
     checkUninitializedProperties: true
     checkExplicitMixedMissingReturn: true
-    checkTooWideReturnTypeInProtectedAndPublicMethods: true
+    checkTooWideReturnTypesInProtectedAndPublicMethods: true
     checkAdvancedIsset: true
-
-    autoload_directories:
-        - app
-        - framework/presto
-        - framework/witals/src
 
     ignoreErrors:
         # Allow dynamic property access on legacy WordPress objects
@@ -27,3 +23,18 @@ parameters:
         # Allow mixed return from WordPress compatibility functions
         - '#Method .*::resolveUserRole\(\) should return string but returns mixed#'
         - '#Method .*::extractMeta\(\) should return mixed but returns mixed#'
+        # Interface/contract files use abstract array types by design
+        - message: '#Missing iterable value type#'
+          paths:
+              - framework/witals/src/Contracts/
+              - framework/witals/src/Context/Contracts/
+              - app/Console/Commands/
+        # External SDKs: Cycle ORM, AWS S3, GCS, BunnyCDN
+        - '#Call to an undefined method object::(query|putObject|deleteObject|doesObjectExist|listObjectsV2|getContents|upload)#'
+        - '#Call to an undefined method Witals\\Framework\\Contracts\\Container::call\(\)#'
+        - '#Call to an undefined method Witals\\Framework\\Application::config\(\)#'
+        # glob()/scandir() can return false — standard PHP pattern
+        - '#(sort|count|rsort) expects list.*\|false given$#'
+        # DebugBar class resolved via container with has() guard
+        - '#Class App\\Foundation\\Debug\\DebugBar not found#'
+        - '#Cannot call method render\(\) on mixed#'

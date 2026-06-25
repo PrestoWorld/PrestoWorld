@@ -12,6 +12,7 @@ use PrestoWorld\Plugin\HookDispatcher;
 use PrestoWorld\Plugin\HooksValidator;
 use PrestoWorld\Plugin\PluginManifest;
 use Witals\Framework\Application;
+use Witals\Framework\Contracts\ResettableInterface;
 use Witals\Framework\Module\Contracts\HookInterface;
 use Psr\Log\LoggerInterface;
 
@@ -24,8 +25,9 @@ use Psr\Log\LoggerInterface;
  * - Plugin instances: created ONLY when a hook they registered is triggered
  * - Zero plugin code loaded/parsed for hooks with no listeners
  * - Plugin autoloaders registered once, instances created on demand
+ *
  */
-class PluginManager
+class PluginManager implements ResettableInterface
 {
     private array $manifests = [];
     private array $instances = [];
@@ -46,6 +48,15 @@ class PluginManager
         $this->pluginPaths = [
             $app->basePath('plugins'),
         ];
+    }
+
+    public function reset(): void
+    {
+        $this->manifests = [];
+        $this->instances = [];
+        $this->loading = [];
+        $this->loaded = [];
+        $this->discovered = false;
     }
 
     public function addPluginPath(string $path): void

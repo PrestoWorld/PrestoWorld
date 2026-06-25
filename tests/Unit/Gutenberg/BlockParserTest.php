@@ -55,8 +55,10 @@ class BlockParserTest extends TestCase
 
         $this->assertCount(1, $blocks);
         $this->assertEquals('core/group', $blocks[0]['blockName']);
-        $this->assertCount(3, $blocks[0]['innerBlocks']); // Initial text, Paragraph, and closing text
-        $this->assertEquals('core/paragraph', $blocks[0]['innerBlocks'][1]['blockName']);
+        // Group block contains 1 inner block: the paragraph
+        // Outer wrapper HTML (<div> / </div>) and whitespace are accumulated in innerHTML, not as separate innerBlocks
+        $this->assertCount(1, $blocks[0]['innerBlocks']);
+        $this->assertEquals('core/paragraph', $blocks[0]['innerBlocks'][0]['blockName']);
     }
 
     public function test_it_handles_mixed_content(): void
