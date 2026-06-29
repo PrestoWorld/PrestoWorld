@@ -11,6 +11,7 @@ use App\Contracts\Services\ContentRenderer;
 use App\Exceptions\TemplateNotFoundException;
 use PrestoWorld\Modules\Schema\PostRepository;
 use Cycle\Database\DatabaseInterface;
+use Cycle\Database\Injection\Parameter;
 
 class PageService
 {
@@ -41,7 +42,7 @@ class PageService
                 ->from('pw_posts AS p')
                 ->leftJoin('pw_post_translations AS t')
                 ->on('p.id', 't.post_id')
-                ->andOn('t.locale', 'en')
+                ->andOn('t.locale', '=', new Parameter('en'))
                 ->where('p.slug', $slug)
                 ->where('p.post_type', 'page')
                 ->where('p.status', 'publish')

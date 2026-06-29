@@ -1,6 +1,66 @@
 parameters:
 	ignoreErrors:
 		-
+			message: '#^Call to an undefined method Cycle\\Database\\DatabaseManager\:\:getConfig\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Console/Commands/DbCopyCommand.php
+
+		-
+			message: '#^Method App\\Console\\Commands\\DbCopyCommand\:\:getDatabaseNames\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Console/Commands/DbCopyCommand.php
+
+		-
+			message: '#^Method App\\Console\\Commands\\DbCopyCommand\:\:getPrefixedTables\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Console/Commands/DbCopyCommand.php
+
+		-
+			message: '#^Method App\\Console\\Commands\\DbCopyCommand\:\:handle\(\) has parameter \$args with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Console/Commands/DbCopyCommand.php
+
+		-
+			message: '#^Parameter \#2 \$prefix of method App\\Console\\Commands\\DbCopyCommand\:\:getPrefixedTables\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Console/Commands/DbCopyCommand.php
+
+		-
+			message: '#^Part \$from \(mixed\) of encapsed string cannot be cast to string\.$#'
+			identifier: encapsedStringPart.nonString
+			count: 3
+			path: app/Console/Commands/DbCopyCommand.php
+
+		-
+			message: '#^Part \$prefix \(mixed\) of encapsed string cannot be cast to string\.$#'
+			identifier: encapsedStringPart.nonString
+			count: 2
+			path: app/Console/Commands/DbCopyCommand.php
+
+		-
+			message: '#^Part \$to \(mixed\) of encapsed string cannot be cast to string\.$#'
+			identifier: encapsedStringPart.nonString
+			count: 2
+			path: app/Console/Commands/DbCopyCommand.php
+
+		-
+			message: '#^Property App\\Console\\Commands\\DbCopyCommand\:\:\$options type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Console/Commands/DbCopyCommand.php
+
+		-
+			message: '#^Method App\\Console\\Commands\\DbVerifyCommand\:\:handle\(\) has parameter \$args with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Console/Commands/DbVerifyCommand.php
+
+		-
 			message: '#^Method App\\Console\\Commands\\DemoSchemaCommand\:\:handle\(\) has parameter \$args with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -685,6 +745,84 @@ parameters:
 			path: app/Storage/S3StorageProvider.php
 
 		-
+			message: '#^Cannot call method get\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 3
+			path: framework/presto/Bridge/WordPress/BridgeServiceProvider.php
+
+		-
+			message: '#^Cannot call method getTablePrefix\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: framework/presto/Bridge/WordPress/BridgeServiceProvider.php
+
+		-
+			message: '#^Cannot call method has\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: framework/presto/Bridge/WordPress/BridgeServiceProvider.php
+
+		-
+			message: '#^Cannot call method hasDatabaseConfig\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: framework/presto/Bridge/WordPress/BridgeServiceProvider.php
+
+		-
+			message: '#^Cannot cast mixed to int\.$#'
+			identifier: cast.int
+			count: 1
+			path: framework/presto/Bridge/WordPress/WordPressConfig.php
+
+		-
+			message: '#^Method PrestoWorld\\Bridge\\WordPress\\WordPressConfig\:\:__construct\(\) has parameter \$config with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: framework/presto/Bridge/WordPress/WordPressConfig.php
+
+		-
+			message: '#^Method PrestoWorld\\Bridge\\WordPress\\WordPressConfig\:\:fromArray\(\) has parameter \$config with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: framework/presto/Bridge/WordPress/WordPressConfig.php
+
+		-
+			message: '#^Method PrestoWorld\\Bridge\\WordPress\\WordPressConfig\:\:getDatabaseHost\(\) should return string but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: framework/presto/Bridge/WordPress/WordPressConfig.php
+
+		-
+			message: '#^Method PrestoWorld\\Bridge\\WordPress\\WordPressConfig\:\:getDatabaseName\(\) should return string\|null but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: framework/presto/Bridge/WordPress/WordPressConfig.php
+
+		-
+			message: '#^Method PrestoWorld\\Bridge\\WordPress\\WordPressConfig\:\:getDatabasePassword\(\) should return string but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: framework/presto/Bridge/WordPress/WordPressConfig.php
+
+		-
+			message: '#^Method PrestoWorld\\Bridge\\WordPress\\WordPressConfig\:\:getDatabaseUser\(\) should return string but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: framework/presto/Bridge/WordPress/WordPressConfig.php
+
+		-
+			message: '#^Method PrestoWorld\\Bridge\\WordPress\\WordPressConfig\:\:getTablePrefix\(\) should return string but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: framework/presto/Bridge/WordPress/WordPressConfig.php
+
+		-
+			message: '#^Method PrestoWorld\\Bridge\\WordPress\\WordPressConfig\:\:toArray\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: framework/presto/Bridge/WordPress/WordPressConfig.php
+
+		-
 			message: '#^Method PrestoWorld\\Contracts\\Admin\\AdminBar\\AdminBarContext\:\:getItems\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -1117,6 +1255,36 @@ parameters:
 			path: framework/presto/Foundation/Config/ConfigRepository.php
 
 		-
+			message: '#^Method PrestoWorld\\Foundation\\Providers\\DatabaseServiceProvider\:\:configureWordPressConnection\(\) has parameter \$app with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: framework/presto/Foundation/Providers/DatabaseServiceProvider.php
+
+		-
+			message: '#^Method PrestoWorld\\Foundation\\Providers\\DatabaseServiceProvider\:\:configureWordPressConnection\(\) has parameter \$databases with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: framework/presto/Foundation/Providers/DatabaseServiceProvider.php
+
+		-
+			message: '#^Method PrestoWorld\\Foundation\\Providers\\DatabaseServiceProvider\:\:configureWordPressConnection\(\) has parameter \$drivers with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: framework/presto/Foundation/Providers/DatabaseServiceProvider.php
+
+		-
+			message: '#^Parameter \$host of class Cycle\\Database\\Config\\MySQL\\TcpConnectionConfig constructor expects non\-empty\-string, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: framework/presto/Foundation/Providers/DatabaseServiceProvider.php
+
+		-
+			message: '#^Parameter \$password of class Cycle\\Database\\Config\\MySQL\\TcpConnectionConfig constructor expects non\-empty\-string\|null, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: framework/presto/Foundation/Providers/DatabaseServiceProvider.php
+
+		-
 			message: '#^Parameter \$port of class Cycle\\Database\\Config\\MySQL\\TcpConnectionConfig constructor expects int\<1, max\>\|numeric\-string, int given\.$#'
 			identifier: argument.type
 			count: 1
@@ -1124,6 +1292,12 @@ parameters:
 
 		-
 			message: '#^Parameter \$port of class Cycle\\Database\\Config\\Postgres\\TcpConnectionConfig constructor expects int\<1, max\>\|numeric\-string, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: framework/presto/Foundation/Providers/DatabaseServiceProvider.php
+
+		-
+			message: '#^Parameter \$user of class Cycle\\Database\\Config\\MySQL\\TcpConnectionConfig constructor expects non\-empty\-string\|null, string given\.$#'
 			identifier: argument.type
 			count: 1
 			path: framework/presto/Foundation/Providers/DatabaseServiceProvider.php

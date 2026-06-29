@@ -24,15 +24,15 @@ class DashboardController
         try {
             $baseQuery = $this->db->select('COUNT(*) as count')
                 ->from($this->prefix . 'posts')
-                ->where('post_status', '!=', 'auto-draft');
+                ->where('status', '!=', 'auto-draft');
 
             $pubQuery = $this->db->select('COUNT(*) as count')
                 ->from($this->prefix . 'posts')
-                ->where('post_status', 'publish');
+                ->where('status', 'publish');
 
             $draftQuery = $this->db->select('COUNT(*) as count')
                 ->from($this->prefix . 'posts')
-                ->where('post_status', 'draft');
+                ->where('status', 'draft');
 
             if ($this->isWordPress()) {
                 $baseQuery = $baseQuery->where('post_type', 'post');
@@ -52,7 +52,7 @@ class DashboardController
             try {
                 $rows = $this->db->select(['post_type', 'COUNT(*) as count'])
                     ->from($this->prefix . 'posts')
-                    ->where('post_status', '!=', 'auto-draft')
+                    ->where('status', '!=', 'auto-draft')
                     ->groupBy('post_type')
                     ->fetchAll();
 
@@ -102,13 +102,13 @@ class DashboardController
         try {
             $query = $this->db->select('*')
                 ->from($this->prefix . 'posts')
-                ->where('post_status', '!=', 'auto-draft');
+                ->where('status', '!=', 'auto-draft');
 
             if ($this->isWordPress()) {
                 $query = $query->where('post_type', 'post');
             }
 
-            $rows = $query->orderBy('post_modified', 'DESC')
+            $rows = $query->orderBy('updated_at', 'DESC')
                 ->limit(20)
                 ->fetchAll();
         } catch (\Throwable) {

@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\PostsController;
 use App\Http\Controllers\Admin\PluginsController;
 use App\Http\Controllers\Admin\ThemesController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\DatabaseHealthController;
 use App\Http\Controllers\Admin\UsersController;
 use App\Http\Controllers\Admin\MediaController;
 
@@ -21,6 +22,8 @@ $router->get('/api/admin/themes', [ThemesController::class, 'themes']);
 $router->post('/api/admin/themes/activate', [ThemesController::class, 'activateTheme']);
 $router->get('/api/admin/stats', [DashboardController::class, 'stats']);
 $router->get('/api/admin/activities', [DashboardController::class, 'activities']);
+$router->get('/api/admin/database/health', [DatabaseHealthController::class, 'health']);
+$router->get('/api/admin/database/tables', [DatabaseHealthController::class, 'tables']);
 $router->get('/api/admin/users', [UsersController::class, 'users']);
 $router->get('/api/admin/media', [MediaController::class, 'media']);
 $router->post('/api/admin/media/upload', [MediaController::class, 'uploadMedia']);

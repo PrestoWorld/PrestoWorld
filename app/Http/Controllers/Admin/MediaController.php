@@ -26,8 +26,8 @@ class MediaController
                 $rows = $this->db->select('*')
                     ->from($this->prefix . 'posts')
                     ->where('post_type', 'attachment')
-                    ->where('post_status', '!=', 'auto-draft')
-                    ->orderBy('post_date', 'DESC')
+                    ->where('status', '!=', 'auto-draft')
+                    ->orderBy('created_at', 'DESC')
                     ->fetchAll();
 
                 foreach ($rows as $row) {
@@ -396,20 +396,14 @@ class MediaController
         $title = pathinfo($filename, PATHINFO_FILENAME);
 
         $data = [
-            'post_author' => 1,
-            'post_date' => $now,
-            'post_date_gmt' => gmdate('Y-m-d H:i:s'),
-            'post_title' => $title,
-            'post_status' => 'inherit',
-            'comment_status' => 'closed',
-            'ping_status' => 'closed',
-            'post_name' => strtolower(str_replace([' ', '_'], '-', $title)),
-            'post_modified' => $now,
-            'post_modified_gmt' => gmdate('Y-m-d H:i:s'),
-            'post_parent' => 0,
-            'menu_order' => 0,
+            'author_id' => 1,
+            'created_at' => $now,
+            'title' => $title,
+            'status' => 'inherit',
+            'slug' => strtolower(str_replace([' ', '_'], '-', $title)),
+            'updated_at' => $now,
             'post_type' => 'attachment',
-            'post_mime_type' => $mime,
+            'compact_meta' => json_encode(['mime_type' => $mime]),
         ];
 
         $keys = implode(', ', array_keys($data));

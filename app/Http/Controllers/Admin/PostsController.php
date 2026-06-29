@@ -21,7 +21,7 @@ class PostsController
     {
         $query = $this->db->select('*')
             ->from($this->prefix . 'posts')
-            ->where('post_status', '!=', 'auto-draft');
+            ->where('status', '!=', 'auto-draft');
 
         $type = $_GET['type'] ?? null;
         if ($type !== null) {
@@ -30,7 +30,7 @@ class PostsController
             $query = $query->where('post_type', 'post');
         }
 
-        $rows = $query->orderBy('post_date', 'DESC')->fetchAll();
+        $rows = $query->orderBy('created_at', 'DESC')->fetchAll();
 
         $posts = array_map(fn(array $row) => [
             'id' => (int) ($row['ID'] ?? $row['id']),
