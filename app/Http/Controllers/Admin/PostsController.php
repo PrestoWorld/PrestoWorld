@@ -88,13 +88,14 @@ class PostsController
 
         $meta = $this->buildMeta($request);
 
+        $publishDate = $this->resolvePublishDate($request);
         $data = [
             'post_type' => $this->postString($request, 'post_type', 'post'),
             'title' => $title,
             'slug' => $slug,
             'status' => $status,
             'author_id' => $this->postInt($request, 'author_id', 1),
-            'created_at' => $this->resolvePublishDate($request),
+            'created_at' => $publishDate ?? date('Y-m-d H:i:s'),
             'compact_meta' => json_encode($meta),
         ];
 
@@ -204,36 +205,46 @@ class PostsController
         return [];
     }
 
-    private function resolvePublishDate(Request $request): string
+    private function resolvePublishDate(Request $request): ?string
     {
         $dateStr = $this->postString($request, 'publish_date');
         if ($dateStr === '') {
-            return date('Y-m-d H:i:s');
+            return null;
         }
         $ts = strtotime($dateStr);
-        return $ts !== false ? date('Y-m-d H:i:s', $ts) : date('Y-m-d H:i:s');
+        return $ts !== false ? date('Y-m-d H:i:s', $ts) : null;
     }
 
     private function saveCategories(Request $request, int $postId): void
     {
+        $newCatId = 0;
         $newCatName = $this->postString($request, 'new_category');
         if ($newCatName !== '') {
             $slug = $this->slugify($newCatName);
+            /** @var array{id: int|string}|false $existing */
             $existing = $this->db->select('id')->from($this->prefix . 'terms')
                 ->where('taxonomy', 'category')->where('slug', $slug)->run()->fetch();
-            if (!$existing) {
+            if ($existing) {
+                $newCatId = (int) ($existing['id'] ?? 0);
+            } else {
                 $this->db->insert($this->prefix . 'terms')->values([
                     'taxonomy' => 'category',
                     'name' => $newCatName,
                     'slug' => $slug,
                     'count' => 0,
                 ])->run();
+                $insertId = $this->db->getDriver()->lastInsertID();
+                $newCatId = is_scalar($insertId) ? (int) $insertId : 0;
             }
         }
 
         $catIds = $request->post('categories', []);
         if (!is_array($catIds)) {
-            return;
+            $catIds = [];
+        }
+
+        if ($newCatId > 0) {
+            $catIds[] = (string) $newCatId;
         }
 
         $this->db->delete($this->prefix . 'term_relationships', ['object_id' => $postId])->run();
@@ -265,9 +276,10 @@ class PostsController
                 continue;
             }
             $slug = $this->slugify($name);
+            /** @var array{id: int|string}|false $existing */
             $existing = $this->db->select('id')->from($this->prefix . 'terms')
                 ->where('taxonomy', 'post_tag')->where('slug', $slug)->run()->fetch();
-            if ($existing) {
+            if (is_array($existing)) {
                 $termId = (int) ($existing['id'] ?? 0);
             } else {
                 $this->db->insert($this->prefix . 'terms')->values([
