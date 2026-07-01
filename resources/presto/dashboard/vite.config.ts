@@ -8,16 +8,12 @@ export default defineConfig({
     outDir: '../../../public/assets/admin/spa',
     emptyOutDir: true,
     rollupOptions: {
-      input: {
-        'admin-spa': 'src/main.tsx',
-        'featured-image-picker': 'src/featured-image-picker.tsx',
-      },
       output: {
-        entryFileNames: 'js/[name].js',
+        entryFileNames: 'js/admin-spa.js',
         chunkFileNames: 'js/[name]-[hash].js',
         assetFileNames: (info) => {
           if (info.name && info.name.endsWith('.css')) {
-            return 'css/[name].css';
+            return 'css/admin-spa.css';
           }
           if (info.name && /\.(woff2?|ttf|eot)$/.test(info.name)) {
             return 'fonts/[name][extname]';

@@ -18,6 +18,10 @@ $router->get('/api/admin/dashboard/widgets', [\App\Http\Controllers\Admin\SpaCon
 
 $router->get('/api/admin/posts', [PostsController::class, 'posts']);
 $router->get('/api/admin/plugins', [PluginsController::class, 'plugins']);
+$router->get('/api/admin/plugins/browse', [PluginsController::class, 'browse']);
+$router->post('/api/admin/plugins/install', [PluginsController::class, 'install']);
+$router->post('/api/admin/plugins/toggle', [PluginsController::class, 'toggle']);
+$router->post('/api/admin/plugins/update', [PluginsController::class, 'update']);
 $router->get('/api/admin/themes', [ThemesController::class, 'themes']);
 $router->post('/api/admin/themes/activate', [ThemesController::class, 'activateTheme']);
 $router->get('/api/admin/stats', [DashboardController::class, 'stats']);
