@@ -19,7 +19,11 @@ function mimeIcon(mime: string) {
   return File;
 }
 
-export default function MediaPage() {
+interface MediaPageProps {
+  onOpenUploadModal?: () => void;
+}
+
+export default function MediaPage(props: MediaPageProps) {
   const [items, setItems] = createSignal<WPMediaItem[]>([]);
   const [loading, setLoading] = createSignal(true);
   const [uploading, setUploading] = createSignal(false);
@@ -80,11 +84,13 @@ export default function MediaPage() {
           <h2 class="text-lg font-extrabold text-slate-900 tracking-tight">Media Library</h2>
           <p class="text-xs text-slate-400 font-mono mt-0.5">{items().length} items &middot; {wordpressItems().length} WordPress &middot; {prestoItems().length} Presto</p>
         </div>
-        <label class="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs tracking-tight px-5 py-3 rounded-xl flex items-center gap-2 cursor-pointer shadow-md shadow-indigo-200 transition-all">
+        <button
+          onClick={() => props.onOpenUploadModal?.()}
+          class="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs tracking-tight px-5 py-3 rounded-xl flex items-center gap-2 cursor-pointer shadow-md shadow-indigo-200 transition-all"
+        >
           <Upload size={14} strokeWidth={2.5} />
           <span>Upload File</span>
-          <input type="file" class="hidden" onChange={handleFilePick} />
-        </label>
+        </button>
       </div>
 
       <div
@@ -96,12 +102,7 @@ export default function MediaPage() {
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
-        onClick={() => {
-          const input = document.createElement('input');
-          input.type = 'file';
-          input.onchange = (e) => handleFilePick(e);
-          input.click();
-        }}
+        onClick={() => props.onOpenUploadModal?.()}
       >
         <Upload size={28} class="mx-auto text-slate-300 mb-2" />
         <p class="text-xs font-bold text-slate-500">Drop files here or click to upload</p>

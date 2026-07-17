@@ -606,7 +606,7 @@ export default function App() {
                   <>
                     <Show when={barItem.type === 'button'}>
                       <button
-                        onClick={() => { if (barItem.id === 'new-post') setIsAddPostOpen(true); }}
+                        onClick={() => { if (barItem.id === 'new-post') goTo('post-new'); }}
                         class="flex items-center gap-1.5 bg-slate-900 hover:bg-indigo-600 text-white font-semibold text-xs tracking-tight px-3 py-2 rounded-lg transition-colors cursor-pointer shadow-sm shadow-slate-200"
                       >
                         <BarIcon size={13} strokeWidth={2.5} />
@@ -733,7 +733,7 @@ export default function App() {
               </Match>
 
               <Match when={screenId() === 'upload' || screenId() === 'media-new'}>
-                <MediaPage />
+                <MediaPage onOpenUploadModal={() => setIsMediaUploadOpen(true)} />
               </Match>
 
               <Match when={screenId() === 'users' || screenId() === 'user-new' || screenId() === 'profile'}>
@@ -879,6 +879,9 @@ export default function App() {
         <MediaUploadModal
           isOpen={isMediaUploadOpen()}
           onClose={() => setIsMediaUploadOpen(false)}
+          onUploadComplete={() => {
+            // Force media page refresh by navigating through hash
+          }}
         />
       </Suspense>
 

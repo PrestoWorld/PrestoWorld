@@ -1,5 +1,6 @@
 import { createSignal, createResource, Switch, Match, Show, For, onMount } from 'solid-js';
 import { fetchCategories, fetchTags, savePost, fetchPost, updatePost } from '../api';
+import FeaturedImageModal from '../components/FeaturedImageModal';
 
 interface PostEditorProps {
   screenId: () => string;
@@ -22,6 +23,7 @@ export default function PostEditorPage(props: PostEditorProps) {
   const [tags, setTags] = createSignal<string[]>([]);
   const [saving, setSaving] = createSignal(false);
   const [message, setMessage] = createSignal('');
+  const [featuredModalOpen, setFeaturedModalOpen] = createSignal(false);
 
   const [categories] = createResource(fetchCategories);
   const [allTags] = createResource(fetchTags);
@@ -330,38 +332,35 @@ export default function PostEditorPage(props: PostEditorProps) {
               <div class="pw-meta-box-title">Featured Image</div>
               <div class="pw-meta-box-inside">
                 <Show when={featuredImage()}>
-                  <div class="pw-feat-preview-wrap">
-                    <img src={featuredImage()} class="pw-feat-picker-thumb" />
+                  <div class="pw-feat-preview-wrap" style="position:relative;display:inline-block;margin-bottom:8px;">
+                    <img src={featuredImage()} class="pw-feat-picker-thumb" style="max-width:100%;max-height:150px;display:block;border-radius:4px;border:1px solid #dcdcde;" />
+                    <button
+                      onClick={() => setFeaturedImage('')}
+                      class="pw-feat-remove-btn"
+                      style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.6);color:#fff;border:none;border-radius:50%;width:24px;height:24px;font-size:16px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity 0.15s;"
+                      onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
+                      onMouseLeave={(e) => e.currentTarget.style.opacity = '0'}
+                    >&times;</button>
                   </div>
                 </Show>
-                <div class="pw-editor-side-actions">
-                  <label class="button pw-feat-picker-btn" style="cursor:pointer;">
-                    {featuredImage() ? 'Replace Image' : 'Set featured image'}
-                    <input
-                      type="file"
-                      accept="image/*"
-                      style="display:none"
-                      onChange={async (e) => {
-                        const file = e.currentTarget.files?.[0];
-                        if (!file) return;
-                        const form = new FormData();
-                        form.append('file', file);
-                        try {
-                          const res = await fetch('/api/admin/media/upload', { method: 'POST', body: form });
-                          const data = await res.json();
-                          setFeaturedImage(data.url);
-                        } catch {
-                          setMessage('Upload failed');
-                        }
-                      }}
-                    />
-                  </label>
-                </div>
+                <button
+                  onClick={() => setFeaturedModalOpen(true)}
+                  class="button pw-feat-picker-btn"
+                  style="font-size:12px;"
+                >
+                  {featuredImage() ? 'Replace Image' : 'Set featured image'}
+                </button>
               </div>
             </div>
           </div>
         </div>
       </form>
+
+      <FeaturedImageModal
+        isOpen={featuredModalOpen()}
+        onClose={() => setFeaturedModalOpen(false)}
+        onSelect={(url) => { setFeaturedImage(url); setFeaturedModalOpen(false); }}
+      />
     </div>
   );
 }
