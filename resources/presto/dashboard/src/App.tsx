@@ -20,6 +20,7 @@ import { fetchPosts, fetchPlugins, fetchThemes, fetchActivities, fetchStats, typ
 
 const DashboardPage = lazy(() => import('./pages/DashboardPage'));
 const PostsPage = lazy(() => import('./pages/PostsPage'));
+const PostEditorPage = lazy(() => import('./pages/PostEditorPage'));
 const PagesPage = lazy(() => import('./pages/PagesPage'));
 const PluginsPage = lazy(() => import('./pages/PluginsPage'));
 const ThemesPage = lazy(() => import('./pages/ThemesPage'));
@@ -42,6 +43,8 @@ const initialUser = initialState?.user ?? { name: 'Administrator', role: 'admin'
 const initialScreens = initialState?.screens ?? [
   { id: 'dashboard', title: 'Dashboard', position: 0 },
   { id: 'posts',     title: 'Posts',     position: 10 },
+  { id: 'post-new',  title: 'New Post',  position: 11 },
+  { id: 'post',      title: 'Edit Post', position: 12 },
   { id: 'themes',    title: 'Themes',    position: 15 },
   { id: 'plugins',   title: 'Plugins',   position: 20 },
   { id: 'settings',  title: 'Settings',  position: 30 },
@@ -52,6 +55,7 @@ const initialMenuSections = initialState?.menuSections ?? [
     items: [
       { id: 'dashboard-item', screenId: 'dashboard', label: 'Dashboard', icon: 'LayoutDashboard' },
       { id: 'posts-item',     screenId: 'posts',     label: 'Posts',     icon: 'FileText' },
+      { id: 'post-new-item',  screenId: 'post-new',  label: 'Add New Post', icon: 'Plus' },
       { id: 'pages-item',     screenId: 'edit-pages', label: 'Pages',    icon: 'FileText' },
     ],
   },
@@ -100,14 +104,28 @@ function resolveIcon(name?: string): Component<{ size?: number }> {
 function hashToScreen(hash: string): string {
   const cleaned = hash.replace(/^#\/+/, '').replace(/\/+$/, '');
   if (cleaned && initialScreens.some(s => s.id === cleaned)) return cleaned;
+  // Handle #/post/123
+  const parts = cleaned.split('/');
+  if (parts.length === 2 && parts[0] === 'post' && /^\d+$/.test(parts[1])) return 'post';
   return initialScreens[0]?.id ?? 'dashboard';
+}
+
+function hashToPostId(hash: string): number {
+  const cleaned = hash.replace(/^#\/+/, '').replace(/\/+$/, '');
+  const parts = cleaned.split('/');
+  if (parts.length === 2 && parts[0] === 'post' && /^\d+$/.test(parts[1])) return parseInt(parts[1], 10);
+  return 0;
 }
 
 export default function App() {
   const [screenId, setScreenId] = createSignal<string>(hashToScreen(window.location.hash));
+  const [currentPostId, setCurrentPostId] = createSignal<number>(hashToPostId(window.location.hash));
 
   onMount(() => {
-    const onHashChange = () => setScreenId(hashToScreen(window.location.hash));
+    const onHashChange = () => {
+      setScreenId(hashToScreen(window.location.hash));
+      setCurrentPostId(hashToPostId(window.location.hash));
+    };
     window.addEventListener('hashchange', onHashChange);
     onCleanup(() => window.removeEventListener('hashchange', onHashChange));
 
@@ -120,8 +138,12 @@ export default function App() {
     ]).finally(() => setLoading(false));
   });
 
-  const goTo = (screen: string) => {
-    window.location.hash = screen === initialScreens[0]?.id ? '#' : `#/${screen}`;
+  const goTo = (screen: string, extra?: string) => {
+    if (extra) {
+      window.location.hash = `#/${screen}/${extra}`;
+    } else {
+      window.location.hash = screen === initialScreens[0]?.id ? '#' : `#/${screen}`;
+    }
     setIsMobileOpen(false);
   };
 
@@ -655,7 +677,12 @@ export default function App() {
                   togglePostStatus={togglePostStatus}
                   handleDeletePost={handleDeletePost}
                   setIsAddPostOpen={setIsAddPostOpen}
+                  goTo={goTo}
                 />
+              </Match>
+
+              <Match when={screenId() === 'post-new' || screenId() === 'post'}>
+                <PostEditorPage screenId={screenId} postId={currentPostId} />
               </Match>
 
               <Match when={screenId() === 'edit-pages'}>
@@ -722,7 +749,7 @@ export default function App() {
               </Match>
 
               <Match when={true}>
-                <GenericPage screenId={screenId()} />
+                <GenericPage screenId={screenId} />
               </Match>
             </Switch>
             </Suspense>

@@ -118,3 +118,66 @@ export async function offloadMedia(id: number): Promise<void> {
   const res = await fetch(`${BASE}/media/${id}/offload`, { method: 'POST' });
   if (!res.ok) throw new Error(`Offload error: ${res.status}`);
 }
+
+export interface WPCategory {
+  id: number;
+  name: string;
+  slug: string;
+  count: number;
+}
+
+export interface WPTag {
+  id: number;
+  name: string;
+  slug: string;
+  count: number;
+}
+
+export interface WPSinglePost {
+  id: number;
+  title: string;
+  content: string;
+  excerpt: string;
+  slug: string;
+  status: string;
+  visibility: string;
+  password: string;
+  featured_image: string;
+  categories: number[];
+  tags: string[];
+  created_at: string;
+  allCategories: WPCategory[];
+  allTags: WPTag[];
+}
+
+export async function fetchPost(id: number): Promise<WPSinglePost> {
+  return fetchJSON<WPSinglePost>(`${BASE}/posts/${id}`);
+}
+
+export async function fetchCategories(): Promise<WPCategory[]> {
+  return fetchJSON<WPCategory[]>(`${BASE}/categories`);
+}
+
+export async function fetchTags(): Promise<WPTag[]> {
+  return fetchJSON<WPTag[]>(`${BASE}/tags`);
+}
+
+export async function savePost(data: Record<string, unknown>): Promise<{ id: number }> {
+  const res = await fetch(`${BASE}/posts`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error(`Save error: ${res.status}`);
+  return res.json();
+}
+
+export async function updatePost(id: number, data: Record<string, unknown>): Promise<{ id: number }> {
+  const res = await fetch(`${BASE}/posts/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error(`Update error: ${res.status}`);
+  return res.json();
+}

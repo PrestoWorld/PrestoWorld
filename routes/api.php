@@ -17,6 +17,11 @@ $router->get('/api/admin/menu', [\App\Http\Controllers\Admin\SpaController::clas
 $router->get('/api/admin/dashboard/widgets', [\App\Http\Controllers\Admin\SpaController::class, 'dashboardWidgets']);
 
 $router->get('/api/admin/posts', [PostsController::class, 'posts']);
+$router->get('/api/admin/posts/{id}', [PostsController::class, 'getPost']);
+$router->post('/api/admin/posts', [PostsController::class, 'createPostApi']);
+$router->put('/api/admin/posts/{id}', [PostsController::class, 'updatePostApi']);
+$router->get('/api/admin/categories', [PostsController::class, 'categories']);
+$router->get('/api/admin/tags', [PostsController::class, 'tags']);
 $router->get('/api/admin/plugins', [PluginsController::class, 'plugins']);
 $router->get('/api/admin/plugins/browse', [PluginsController::class, 'browse']);
 $router->post('/api/admin/plugins/install', [PluginsController::class, 'install']);

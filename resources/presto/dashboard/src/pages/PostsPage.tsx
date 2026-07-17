@@ -11,6 +11,7 @@ interface PostsPageProps {
   togglePostStatus: (id: number) => void;
   handleDeletePost: (id: number, title: string) => void;
   setIsAddPostOpen: (v: boolean) => void;
+  goTo: (screen: string, extra?: string) => void;
 }
 
 export default function PostsPage(props: PostsPageProps) {
@@ -47,7 +48,7 @@ export default function PostsPage(props: PostsPageProps) {
           </select>
 
           <button
-            onClick={() => props.setIsAddPostOpen(true)}
+            onClick={() => props.goTo('post-new')}
             class="bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-extrabold text-xs tracking-tight px-5 py-3 rounded-xl flex items-center gap-2 cursor-pointer shadow-md shadow-indigo-200 transition-all duration-200 hover:scale-[1.02]"
           >
             <Plus size={14} strokeWidth={2.5} />
@@ -159,6 +160,7 @@ export default function PostsPage(props: PostsPageProps) {
                           </Show>
                         </button>
                         <button
+                          onClick={() => props.goTo('post', String(post.id))}
                           class="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg border border-transparent hover:border-indigo-100 transition-all cursor-pointer active:scale-90 hover:scale-105"
                           aria-label="Edit post"
                           title="Edit"

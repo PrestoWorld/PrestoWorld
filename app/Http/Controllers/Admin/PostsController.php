@@ -46,6 +46,162 @@ class PostsController
         return Response::json($posts);
     }
 
+    public function getPost(int $id): Response
+    {
+        $row = $this->db->select('*')
+            ->from($this->prefix . 'posts')
+            ->where('id', $id)
+            ->run()
+            ->fetch();
+
+        if (!$row) {
+            return Response::json(['error' => 'Post not found'], 404);
+        }
+
+        $rawMeta = $row['compact_meta'] ?? null;
+        $meta = is_string($rawMeta) ? json_decode($rawMeta, true) : ($rawMeta ?? []);
+        if (!is_array($meta)) $meta = [];
+
+        $assignedTerms = $this->db->select('term_id')
+            ->from($this->prefix . 'term_relationships')
+            ->where('object_id', $id)->fetchAll();
+        $assignedIds = array_map(fn($t) => (int) ($t['term_id'] ?? 0), $assignedTerms);
+
+        $allTags = [];
+        try {
+            $allTags = $this->db->select('*')->from($this->prefix . 'terms')
+                ->where('taxonomy', 'post_tag')->orderBy('name', 'ASC')->fetchAll();
+        } catch (\Throwable) {}
+
+        $tagNames = [];
+        foreach ($assignedTerms as $t) {
+            $tid = (int) ($t['term_id'] ?? 0);
+            foreach ($allTags as $tag) {
+                if ((int) ($tag['id'] ?? 0) === $tid) {
+                    $tagNames[] = $tag['name'] ?? '';
+                }
+            }
+        }
+
+        $allCats = $this->categoriesList();
+        $allTgs = $this->tagsList();
+
+        return Response::json([
+            'id' => (int) ($row['ID'] ?? $row['id']),
+            'title' => $row['post_title'] ?? $row['title'] ?? '',
+            'content' => $meta['content'] ?? '',
+            'excerpt' => $meta['excerpt'] ?? '',
+            'slug' => $row['post_name'] ?? $row['slug'] ?? '',
+            'status' => $row['post_status'] ?? $row['status'] ?? 'draft',
+            'visibility' => $meta['visibility'] ?? ($row['post_status'] === 'private' || $row['status'] === 'private' ? 'private' : 'public'),
+            'password' => $meta['password'] ?? '',
+            'featured_image' => $meta['featured_image'] ?? '',
+            'categories' => $assignedIds,
+            'tags' => $tagNames,
+            'created_at' => $row['post_date'] ?? $row['created_at'] ?? '',
+            'allCategories' => $allCats,
+            'allTags' => $allTgs,
+        ]);
+    }
+
+    public function createPostApi(Request $request): Response
+    {
+        $body = json_decode($request->getBody()?->getContents() ?? '', true) ?? [];
+        $title = $body['title'] ?? '';
+        $slug = !empty($body['slug']) ? $body['slug'] : $this->slugify($title);
+        $status = $body['status'] ?? 'draft';
+        $meta = [
+            'content' => $body['content'] ?? '',
+            'excerpt' => $body['excerpt'] ?? '',
+            'password' => $body['password'] ?? '',
+            'featured_image' => $body['featured_image'] ?? '',
+            'visibility' => $body['visibility'] ?? 'public',
+        ];
+
+        $data = [
+            'post_type' => $body['post_type'] ?? 'post',
+            'title' => $title,
+            'slug' => $slug,
+            'status' => $status,
+            'author_id' => (int) ($body['author_id'] ?? 1),
+            'created_at' => $body['created_at'] ?? date('Y-m-d H:i:s'),
+            'compact_meta' => json_encode($meta),
+        ];
+
+        $this->db->insert($this->prefix . 'posts')->values($data)->run();
+        $insertId = $this->db->getDriver()->lastInsertID();
+        $postId = is_scalar($insertId) ? (int) $insertId : 0;
+
+        return Response::json(['id' => $postId]);
+    }
+
+    public function updatePostApi(int $id, Request $request): Response
+    {
+        $body = json_decode($request->getBody()?->getContents() ?? '', true) ?? [];
+
+        $existingMeta = $this->getExistingMeta($id);
+        $meta = array_merge($existingMeta, [
+            'content' => $body['content'] ?? $existingMeta['content'] ?? '',
+            'excerpt' => $body['excerpt'] ?? $existingMeta['excerpt'] ?? '',
+            'password' => $body['password'] ?? $existingMeta['password'] ?? '',
+            'featured_image' => $body['featured_image'] ?? $existingMeta['featured_image'] ?? '',
+            'visibility' => $body['visibility'] ?? $existingMeta['visibility'] ?? 'public',
+        ]);
+
+        $data = [
+            'title' => $body['title'] ?? '',
+            'slug' => $body['slug'] ?? '',
+            'status' => $body['status'] ?? 'draft',
+            'updated_at' => date('Y-m-d H:i:s'),
+            'compact_meta' => json_encode($meta),
+        ];
+
+        $this->db->update($this->prefix . 'posts', $data, ['id' => $id])->run();
+        return Response::json(['id' => $id]);
+    }
+
+    public function categories(): Response
+    {
+        return Response::json($this->categoriesList());
+    }
+
+    public function tags(): Response
+    {
+        return Response::json($this->tagsList());
+    }
+
+    private function categoriesList(): array
+    {
+        try {
+            $rows = $this->db->select('*')->from($this->prefix . 'terms')
+                ->where('taxonomy', 'category')->orderBy('name', 'ASC')->fetchAll();
+            return array_map(fn($r) => [
+                'id' => (int) ($r['id'] ?? 0),
+                'name' => $r['name'] ?? '',
+                'slug' => $r['slug'] ?? '',
+                'count' => (int) ($r['count'] ?? 0),
+            ], $rows);
+        } catch (\Throwable) {
+            return [];
+        }
+    }
+
+    private function tagsList(): array
+    {
+        try {
+            $rows = $this->db->select('*')->from($this->prefix . 'terms')
+                ->where('taxonomy', 'post_tag')->orderBy('name', 'ASC')->fetchAll();
+            return array_map(fn($r) => [
+                'id' => (int) ($r['id'] ?? 0),
+                'name' => $r['name'] ?? '',
+                'slug' => $r['slug'] ?? '',
+                'count' => (int) ($r['count'] ?? 0),
+            ], $rows);
+        } catch (\Throwable) {
+            return [];
+        }
+    }
+
     protected function resolveAuthor(int $authorId): string
     {
         if ($authorId < 1) return 'admin';
