@@ -7,3 +7,6 @@
 [submodule "content/themes/jankx"]
 	path = content/themes/jankx
 	url = git@github.com:jankx/jankx.git
+[submodule "framework/presto/modules/Headless-CMS"]
+	path = framework/presto/modules/Headless-CMS
+	url = git@github.com:PrestoWorld/Headless-CMS-Module.git
