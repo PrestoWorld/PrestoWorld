@@ -7,8 +7,9 @@ parameters:
         - app
         - framework/presto
         - framework/witals/src
+        - modules
     excludePaths:
-        - framework/presto/Modules/Gutenberg/Pattern/wp-stubs.php
+        - modules/Gutenberg/Pattern/wp-stubs.php
     tmpDir: storage/framework/cache/phpstan
     reportUnmatchedIgnoredErrors: false
     treatPhpDocTypesAsCertain: false

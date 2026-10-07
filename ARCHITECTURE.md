@@ -4,7 +4,8 @@
 
 ```
 App\                    → app/                  — Project-specific code (controllers, console commands)
-PrestoWorld\            → framework/presto/     — Business logic modules (Gutenberg, Schema, Search)
+PrestoWorld\            → framework/presto/     — Business logic foundation (Foundation, providers)
+PrestoWorld\Modules\    → modules/              — Feature modules (Gutenberg, Schema, Search, …)
 Witals\Framework\       → framework/witals/src/ — Framework core (container, HTTP, module system)
 Prestoworld\SearchEngine\ → vendor/              — Search engine package (composer dependency)
 ```
@@ -19,8 +20,14 @@ Prestoworld\SearchEngine\ → vendor/              — Search engine package (co
                │ depends on
                ▼
 ┌─────────────────────────────────────────────────┐
+│  PrestoWorld\Modules\                            │  (modules/)
+│  Gutenberg, Schema, Search, …                   │  Business logic, feature modules
+└──────────────┬──────────────────────────────────┘
+               │ depends on
+               ▼
+┌─────────────────────────────────────────────────┐
 │  PrestoWorld\                                    │  (framework/presto/)
-│  Modules: Gutenberg, Schema, Search              │  Business logic, feature modules
+│  Foundation                                      │  Shared providers, config
 └──────────────┬──────────────────────────────────┘
                │ depends on
                ▼
@@ -45,13 +52,15 @@ prestoworld.org/
 │   ├── Foundation/              #   App bootstrap, service providers
 │   └── Http/                    #   Controllers, middleware
 │
+├── modules/                     # Feature modules (PrestoWorld\Modules\)
+│   ├── Gutenberg/               #   Block renderer, theme JSON
+│   ├── Schema/                  #   Post types, repositories
+│   ├── Search/                  #   PW_Query, search integration
+│   └── …/                       #   Additional feature modules
+│
 ├── framework/
-│   ├── presto/                  # Business logic modules (PrestoWorld\)
-│   │   ├── Foundation/          #   Config, providers
-│   │   └── modules/             #   Feature modules
-│   │       ├── Gutenberg/       #     Block renderer, theme JSON
-│   │       ├── Schema/          #     Post types, repositories
-│   │       └── Search/          #     PW_Query, search integration
+│   ├── presto/                  # Business logic foundation (PrestoWorld\)
+│   │   └── Foundation/          #   Config, providers
 │   │
 │   └── witals/                  # Framework core (Witals\Framework\)
 │       ├── src/                 #   PHP source
@@ -77,6 +86,6 @@ prestoworld.org/
 |-------------------------------|--------------------------------------|-------------------------|
 | A controller or route         | `app/Http/`                          | `App\Http\`             |
 | A console command             | `app/Console/`                       | `App\Console\`          |
-| A new business feature        | `framework/presto/modules/<name>/`   | `PrestoWorld\Modules\<name>\` |
+| A new business feature        | `modules/<name>/`                    | `PrestoWorld\Modules\<name>\` |
 | A generic framework utility   | `framework/witals/src/`              | `Witals\Framework\`     |
 | A reusable package            | Separate repo, require via composer  | As defined by package   |

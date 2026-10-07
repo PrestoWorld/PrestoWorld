@@ -7,10 +7,11 @@ $finder = PhpCsFixer\Finder::create()
         __DIR__ . '/app',
         __DIR__ . '/framework/presto',
         __DIR__ . '/framework/witals/src',
+        __DIR__ . '/modules',
         __DIR__ . '/tests',
     ])
     ->notPath([
-        'framework/presto/Modules/Gutenberg/Pattern/wp-stubs.php',
+        'Gutenberg/Pattern/wp-stubs.php',
     ]);
 
 return (new PhpCsFixer\Config())
