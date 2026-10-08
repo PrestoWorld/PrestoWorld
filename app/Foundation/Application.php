@@ -126,6 +126,10 @@ class Application extends BaseApplication
                 $witalsManager->registerModuleRoutes($registry);
             }
 
+            // AuthMiddleware loads the token from the request cookie into the
+            // shared AuthContext so admin/auth middlewares can trust getToken().
+            $registry->addMiddleware(\Witals\Framework\Auth\Middleware\AuthMiddleware::class);
+
             // Admin auth only applies to admin routes — lazy-load
             $registry->addMiddlewareFor(
                 \App\Http\Middleware\AdminAuthMiddleware::class,
