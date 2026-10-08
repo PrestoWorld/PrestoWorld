@@ -70,4 +70,12 @@ final class QueryRule
     {
         return $this->apply === self::APPLY_COMPILE || $this->apply === self::APPLY_BOTH;
     }
+
+    /**
+     * Có được dùng tại runtime (QueryTransformer) không.
+     */
+    public function appliesAtRuntime(): bool
+    {
+        return $this->apply === self::APPLY_RUNTIME || $this->apply === self::APPLY_BOTH;
+    }
 }

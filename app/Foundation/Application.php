@@ -91,6 +91,7 @@ class Application extends BaseApplication
         $this->register(\Witals\Framework\Auth\AuthServiceProvider::class);
         $this->register(\PrestoWorld\Foundation\Providers\DatabaseServiceProvider::class);
         $this->register(\App\Providers\ConsoleServiceProvider::class);
+        $this->register(\App\Providers\PrestoWorldServiceProvider::class);
         $this->register(\PrestoWorld\Plugin\PluginServiceProvider::class);
 
         // Context system
