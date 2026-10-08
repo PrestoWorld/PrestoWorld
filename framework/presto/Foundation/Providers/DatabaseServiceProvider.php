@@ -15,6 +15,11 @@ class DatabaseServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        // libpq built with GSSAPI support initializes Kerberos on connect,
+        // which can hard-crash the PHP worker under FastCGI/LSAPI (segfault,
+        // no error output, HTTP 503 "oops"). Disable client-side GSS to avoid it.
+        putenv('PGGSSENCMODE=disable');
+
         $this->app->singleton(DatabaseManager::class, function ($app) {
             $drivers = [];
             $databases = [];
