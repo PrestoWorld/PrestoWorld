@@ -25,6 +25,102 @@ class AuthController
     }
 
     /**
+     * Get site name from options
+     */
+    private function getSiteName(): string
+    {
+        try {
+            $dbal = $this->app->make(\Cycle\Database\DatabaseProviderInterface::class);
+            $db = $dbal->database();
+            $prefix = env('WP_TABLE_PREFIX', 'wp_');
+            
+            $option = $db->table("{$prefix}options")
+                ->where('option_name', 'blogname')
+                ->run()
+                ->fetch();
+            
+            if ($option && !empty($option['option_value'])) {
+                return (string) $option['option_value'];
+            }
+        } catch (\Throwable $e) {
+            // Ignore errors, use default
+        }
+        
+        return 'PrestoWorld';
+    }
+
+    /**
+     * Get site logo URL from theme mods
+     */
+    private function getSiteLogoUrl(): ?string
+    {
+        try {
+            $dbal = $this->app->make(\Cycle\Database\DatabaseProviderInterface::class);
+            $db = $dbal->database();
+            $prefix = env('WP_TABLE_PREFIX', 'wp_');
+            $theme = 'jankx'; // Default theme
+            
+            // Get theme mods
+            $themeMods = $db->table("{$prefix}options")
+                ->where('option_name', "theme_mods_{$theme}")
+                ->run()
+                ->fetch();
+            
+            if (!$themeMods || empty($themeMods['option_value'])) {
+                return null;
+            }
+            
+            $mods = @unserialize($themeMods['option_value']);
+            if (!is_array($mods) || empty($mods['custom_logo'])) {
+                return null;
+            }
+            
+            $logoId = (int) $mods['custom_logo'];
+            if ($logoId <= 0) {
+                return null;
+            }
+            
+            // Get attachment URL from wp_posts
+            $attachment = $db->table("{$prefix}posts")
+                ->where('ID', $logoId)
+                ->where('post_type', 'attachment')
+                ->run()
+                ->fetch();
+            
+            if ($attachment && !empty($attachment['guid'])) {
+                return (string) $attachment['guid'];
+            }
+        } catch (\Throwable $e) {
+            // Ignore errors, return null
+        }
+        
+        return null;
+    }
+
+    /**
+     * Render brand HTML with logo or site name
+     */
+    private function renderBrand(string $siteName, ?string $logoUrl): string
+    {
+        if ($logoUrl) {
+            $escapedUrl = htmlspecialchars($logoUrl, ENT_QUOTES, 'UTF-8');
+            $escapedName = htmlspecialchars($siteName, ENT_QUOTES, 'UTF-8');
+            return <<<HTML
+                <img src="{$escapedUrl}" alt="{$escapedName}" style="height: 28px; width: auto; display: block;">
+HTML;
+        }
+        
+        $escapedName = htmlspecialchars($siteName, ENT_QUOTES, 'UTF-8');
+        return <<<HTML
+                <svg width="28" height="28" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink: 0;">
+                    <rect width="32" height="32" rx="8" fill="#6366f1"/>
+                    <path d="M12 10H20C21.1046 10 22 10.8954 22 12V20C22 21.1046 21.1046 22 20 22H12C10.8954 22 10 21.1046 10 20V12C10 10.8954 10.8954 10 12 10Z" stroke="white" stroke-width="2"/>
+                </svg>
+                {$escapedName}
+HTML;
+    }
+
+    /**
      * Show login form
      */
     public function showLogin(Request $request): Response
@@ -40,6 +136,10 @@ class AuthController
         $error = $request->query('error', '');
         $success = $request->query('success', '');
         
+        // Get site name and logo
+        $siteName = $this->getSiteName();
+        $siteLogoUrl = $this->getSiteLogoUrl();
+        
         $errorHtml = $error ? '<div class="alert-error">' . htmlspecialchars($error, ENT_QUOTES) . '</div>' : '';
         $successHtml = $success ? '<div class="alert-success">' . htmlspecialchars($success, ENT_QUOTES) . '</div>' : '';
 
@@ -49,7 +149,7 @@ class AuthController
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Đăng nhập — DigitalCore Admin</title>
+            <title>Đăng nhập — {$siteName} Admin</title>
             <link rel="preconnect" href="https://fonts.googleapis.com">
             <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
             <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -248,11 +348,7 @@ class AuthController
             <div class="login-container">
                 <div class="login-card">
                     <div class="brand">
-                        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <rect width="32" height="32" rx="8" fill="#6366f1"/>
-                            <path d="M12 10H20C21.1046 10 22 10.8954 22 12V20C22 21.1046 21.1046 22 20 22H12C10.8954 22 10 21.1046 10 20V12C10 10.8954 10.8954 10 12 10Z" stroke="white" stroke-width="2"/>
-                        </svg>
-                        Digital<span>Core.</span>
+                        {$this->renderBrand($siteName, $siteLogoUrl)}
                     </div>
 
                     <h1>Đăng nhập</h1>
