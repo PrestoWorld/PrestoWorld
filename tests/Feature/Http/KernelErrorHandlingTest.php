@@ -27,6 +27,14 @@ use Witals\Framework\Http\Response;
 
 class KernelErrorHandlingTest extends TestCase
 {
+    private function makeDb(): DatabaseInterface
+    {
+        $db = $this->createMock(DatabaseInterface::class);
+        $db->method('hasTable')->willReturn(true);
+
+        return $db;
+    }
+
     public function test_template_not_found_returns_404(): void
     {
         $logger = $this->createMock(LoggerInterface::class);
@@ -117,7 +125,7 @@ class KernelErrorHandlingTest extends TestCase
             $contentRenderer,
             new \App\Http\PageRenderer($composer),
             $this->createMock(PostRepository::class),
-            $this->createMock(DatabaseInterface::class),
+            $this->makeDb(),
         );
 
         $kernel = new Kernel($router, $pageService, $logger, $contextManager, $contextLoader);
@@ -153,7 +161,7 @@ class KernelErrorHandlingTest extends TestCase
             $contentRenderer,
             $this->createMock(PageRenderer::class),
             $this->createMock(PostRepository::class),
-            $this->createMock(DatabaseInterface::class),
+            $this->makeDb(),
         );
 
         $kernel = new Kernel($router, $pageService, $logger, $contextManager, $contextLoader);

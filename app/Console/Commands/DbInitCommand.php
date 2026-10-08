@@ -33,7 +33,12 @@ class DbInitCommand extends Command
         $skipped = 0;
 
         foreach ($databases as $name) {
-            $db = $dm->database($name);
+            try {
+                $db = $dm->database($name);
+            } catch (\Throwable) {
+                continue;
+            }
+
             if (!$db instanceof Database) {
                 continue;
             }

@@ -27,6 +27,14 @@ class KernelIntegrationTest extends TestCase
 {
     private Kernel $kernel;
 
+    private function makeDb(): DatabaseInterface
+    {
+        $db = $this->createMock(DatabaseInterface::class);
+        $db->method('hasTable')->willReturn(true);
+
+        return $db;
+    }
+
     protected function setUp(): void
     {
         $logger = $this->createMock(LoggerInterface::class);
@@ -58,7 +66,7 @@ class KernelIntegrationTest extends TestCase
         ]));
         $pageRenderer = new PageRenderer($composer);
 
-        $pageService = new PageService($resolver, $contentRenderer, $pageRenderer, $this->createMock(PostRepository::class), $this->createMock(DatabaseInterface::class));
+        $pageService = new PageService($resolver, $contentRenderer, $pageRenderer, $this->createMock(PostRepository::class), $this->makeDb());
 
         $this->kernel = new Kernel($router, $pageService, $logger, $contextManager, $contextLoader);
     }

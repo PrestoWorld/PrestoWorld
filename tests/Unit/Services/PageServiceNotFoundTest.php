@@ -58,7 +58,7 @@ class PageServiceNotFoundTest extends TestCase
         ])));
     }
 
-    /** @param array<string, bool> $supports template => supported */
+    /** @param array<array-key, bool> $supports template => supported */
     private function makeContentRenderer(array $supports = [], ?string $renderedBody = null): ContentRenderer
     {
         $renderer = $this->createMock(ContentRenderer::class);
@@ -239,5 +239,66 @@ class PageServiceNotFoundTest extends TestCase
         $html = $service->renderNotFound(new Request('GET', '/missing'));
 
         $this->assertStringContainsString('Page not found', $html);
+    }
+
+    public function test_missing_content_tables_do_not_forge_404(): void
+    {
+        $db = $this->createMock(DatabaseInterface::class);
+        $db->method('hasTable')->willReturn(false);
+
+        $service = new PageService(
+            $this->makeResolver(),
+            $this->makeContentRenderer(),
+            $this->makePageRenderer(),
+            $this->createMock(PostRepository::class),
+            $db,
+        );
+
+        $html = $service->handle(new Request('GET', '/category/esports'));
+
+        $this->assertStringContainsString('<main>index</main>', $html);
+    }
+
+    public function test_lookup_failure_does_not_forge_404(): void
+    {
+        $db = $this->createMock(DatabaseInterface::class);
+        $db->method('hasTable')->willReturn(true);
+        $db->method('select')->willThrowException(new \RuntimeException('connection lost'));
+
+        $service = new PageService(
+            $this->makeResolver(),
+            $this->makeContentRenderer(),
+            $this->makePageRenderer(),
+            $this->createMock(PostRepository::class),
+            $db,
+        );
+
+        $html = $service->handle(new Request('GET', '/khong-ton-tai'));
+
+        $this->assertStringContainsString('<main>index</main>', $html);
+    }
+
+    public function test_table_prefix_from_env_is_honored(): void
+    {
+        putenv('PW_TABLE_PREFIX=wp_');
+
+        try {
+            $db = $this->createMock(DatabaseInterface::class);
+            $db->expects($this->once())->method('hasTable')->with('wp_posts')->willReturn(false);
+
+            $service = new PageService(
+                $this->makeResolver(),
+                $this->makeContentRenderer(),
+                $this->makePageRenderer(),
+                $this->createMock(PostRepository::class),
+                $db,
+            );
+
+            $html = $service->handle(new Request('GET', '/khong-ton-tai'));
+
+            $this->assertStringContainsString('<main>index</main>', $html);
+        } finally {
+            putenv('PW_TABLE_PREFIX');
+        }
     }
 }

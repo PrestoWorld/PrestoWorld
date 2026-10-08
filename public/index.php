@@ -20,7 +20,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 // 2. Load Environment Variables from .env
 if (file_exists(__DIR__ . '/../.env')) {
-    $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/..');
+    $dotenv = Dotenv\Dotenv::createUnsafeImmutable(__DIR__ . '/..');
     $dotenv->safeLoad();
 }
 

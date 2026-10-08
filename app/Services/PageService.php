@@ -16,13 +16,24 @@ use Cycle\Database\Injection\Parameter;
 
 class PageService
 {
+    private string $tablePrefix;
+
+    /**
+     * Set when the content tables are unavailable on the default connection
+     * (multi-database setups where content lives on another connection).
+     * While set, a missing row is treated as "unknown" instead of a 404.
+     */
+    private bool $lookupUnavailable = false;
+
     public function __construct(
         private TemplateResolver $resolver,
         private ContentRenderer $contentRenderer,
         private PageRenderer $renderer,
         private PostRepository $posts,
         private DatabaseInterface $db,
-    ) {}
+    ) {
+        $this->tablePrefix = getenv('PW_TABLE_PREFIX') ?: 'pw_';
+    }
 
     public function handle(Request $request): string
     {
@@ -62,7 +73,7 @@ class PageService
                 }
             } elseif ($term !== null) {
                 $template = $this->archiveTemplate($segments[0] ?? '', $template);
-            } else {
+            } elseif (!$this->lookupUnavailable) {
                 throw new NotFoundException("No content matched path [{$path}]");
             }
         }
@@ -104,16 +115,41 @@ class PageService
             return [];
         }
 
-        $row = $this->db->select('p.*', 't.title AS translation_title', 't.content AS translation_content')
-            ->from('pw_posts AS p')
-            ->leftJoin('pw_post_translations AS t')
-            ->on('p.id', 't.post_id')
-            ->andOn('t.locale', '=', new Parameter('en'))
-            ->where('p.slug', $slug)
-            ->where('p.post_type', 'IN', ['page', 'post'])
-            ->where('p.status', 'publish')
-            ->run()
-            ->fetch();
+        try {
+            $posts = $this->tablePrefix . 'posts';
+            if (!$this->db->hasTable($posts)) {
+                $this->lookupUnavailable = true;
+
+                return [];
+            }
+
+            $translations = $this->tablePrefix . 'post_translations';
+            $withTranslations = $this->db->hasTable($translations);
+
+            $columns = ['p.*'];
+            if ($withTranslations) {
+                $columns[] = 't.title AS translation_title';
+                $columns[] = 't.content AS translation_content';
+            }
+
+            $query = $this->db->select(...$columns)->from("{$posts} AS p");
+            if ($withTranslations) {
+                $query->leftJoin("{$translations} AS t")
+                    ->on('p.id', 't.post_id')
+                    ->andOn('t.locale', '=', new Parameter('en'));
+            }
+
+            $row = $query
+                ->where('p.slug', $slug)
+                ->where('p.post_type', 'IN', ['page', 'post'])
+                ->where('p.status', 'publish')
+                ->run()
+                ->fetch();
+        } catch (\Throwable) {
+            $this->lookupUnavailable = true;
+
+            return [];
+        }
 
         if (!is_array($row) || $row === []) {
             return [];
@@ -143,12 +179,25 @@ class PageService
             return null;
         }
 
-        $row = $this->db->select('*')
-            ->from('pw_terms')
-            ->where('taxonomy', $segments[0])
-            ->where('slug', $segments[count($segments) - 1])
-            ->run()
-            ->fetch();
+        try {
+            $terms = $this->tablePrefix . 'terms';
+            if (!$this->db->hasTable($terms)) {
+                $this->lookupUnavailable = true;
+
+                return null;
+            }
+
+            $row = $this->db->select('*')
+                ->from($terms)
+                ->where('taxonomy', $segments[0])
+                ->where('slug', $segments[count($segments) - 1])
+                ->run()
+                ->fetch();
+        } catch (\Throwable) {
+            $this->lookupUnavailable = true;
+
+            return null;
+        }
 
         if (!is_array($row) || $row === []) {
             return null;
