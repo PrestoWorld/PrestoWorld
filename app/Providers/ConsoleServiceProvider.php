@@ -11,6 +11,7 @@ use App\Console\Commands\DbVerifyCommand;
 use App\Console\Commands\DbCopyCommand;
 use App\Console\Commands\DbInitCommand;
 use App\Console\Commands\MigrateCommand;
+use App\Console\Commands\CompileCommand;
 
 class ConsoleServiceProvider extends ServiceProvider
 {
@@ -22,6 +23,7 @@ class ConsoleServiceProvider extends ServiceProvider
             $kernel->register(DbCopyCommand::class);
             $kernel->register(DbInitCommand::class);
             $kernel->register(MigrateCommand::class);
+            $kernel->register(CompileCommand::class);
             return $kernel;
         });
     }

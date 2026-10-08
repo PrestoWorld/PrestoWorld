@@ -1,0 +1,4083 @@
+{
+    "version": "1.0.0",
+    "generated_at": "2026-10-08T11:34:13Z",
+    "source_spec": "10-wordpress-compiler.md",
+    "stats": {
+        "function": 403,
+        "class": 74,
+        "sql": 70,
+        "wpdb": 15
+    },
+    "rules": [
+        {
+            "kind": "sql",
+            "pattern": "/`([^`]+)`/",
+            "replacement": "\"$1\"",
+            "target": "postgresql",
+            "apply": "compile",
+            "phase": "ddl"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\bAUTO_INCREMENT\\b/i",
+            "replacement": "SERIAL",
+            "target": "postgresql",
+            "apply": "compile",
+            "phase": "ddl"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\bTINYINT\\s*\\(\\s*1\\s*\\)/i",
+            "replacement": "BOOLEAN",
+            "target": "postgresql",
+            "apply": "compile",
+            "phase": "ddl"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\bINT\\s*\\(\\s*\\d+\\s*\\)/i",
+            "replacement": "INTEGER",
+            "target": "postgresql",
+            "apply": "compile",
+            "phase": "ddl"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\bBIGINT\\s*\\(\\s*\\d+\\s*\\)/i",
+            "replacement": "BIGINT",
+            "target": "postgresql",
+            "apply": "compile",
+            "phase": "ddl"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\bUNSIGNED\\b/i",
+            "replacement": "",
+            "target": "postgresql",
+            "apply": "compile",
+            "phase": "ddl"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\bBINARY\\b/i",
+            "replacement": "",
+            "target": "postgresql",
+            "apply": "compile",
+            "phase": "ddl"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\s*ENGINE\\s*=\\s*\\S+/i",
+            "replacement": "",
+            "target": "postgresql",
+            "apply": "compile",
+            "phase": "ddl"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\s*DEFAULT\\s+CHARSET\\s*=\\s*\\S+/i",
+            "replacement": "",
+            "target": "postgresql",
+            "apply": "compile",
+            "phase": "ddl"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\bENUM\\s*\\(([^)]*)\\)/i",
+            "replacement": "VARCHAR(8) CHECK (col IN ($1))",
+            "target": "postgresql",
+            "apply": "runtime",
+            "phase": "ddl",
+            "notes": "cần tên cột (context-sensitive) → runtime QueryTransformer"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\bSET\\s*\\(([^)]*)\\)/i",
+            "replacement": "TEXT[]",
+            "target": "postgresql",
+            "apply": "compile",
+            "phase": "ddl"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\bDATETIME\\b/i",
+            "replacement": "TIMESTAMP",
+            "target": "postgresql",
+            "apply": "compile",
+            "phase": "ddl"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\bLONGTEXT\\b/i",
+            "replacement": "TEXT",
+            "target": "postgresql",
+            "apply": "compile",
+            "phase": "ddl"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\bMEDIUMBLOB\\b/i",
+            "replacement": "BYTEA",
+            "target": "postgresql",
+            "apply": "compile",
+            "phase": "ddl"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\bCURRENT_TIMESTAMP\\b/i",
+            "replacement": "CURRENT_TIMESTAMP",
+            "target": "postgresql",
+            "apply": "compile",
+            "phase": "ddl"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\bON\\s+UPDATE\\s+CURRENT_TIMESTAMP\\b/i",
+            "replacement": "",
+            "target": "postgresql",
+            "apply": "compile",
+            "phase": "ddl",
+            "notes": "PW dùng trigger updated_at"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\bSHOW\\s+TABLES\\b/i",
+            "replacement": "SELECT tablename FROM pg_tables",
+            "target": "postgresql",
+            "apply": "compile",
+            "phase": "ddl"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\bDESCRIBE\\s+(\\w+)/i",
+            "replacement": "SELECT * FROM information_schema.columns WHERE table_name = '$1'",
+            "target": "postgresql",
+            "apply": "compile",
+            "phase": "ddl"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/`([^`]+)`/",
+            "replacement": "\"$1\"",
+            "target": "sqlite",
+            "apply": "compile",
+            "phase": "ddl"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\bAUTO_INCREMENT\\b/i",
+            "replacement": "AUTOINCREMENT",
+            "target": "sqlite",
+            "apply": "compile",
+            "phase": "ddl"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\s*(?:ENGINE\\s*=\\s*\\w+|DEFAULT\\s+CHARSET\\s*=\\s*\\w+|CHARACTER\\s+SET\\s*=\\s*\\w+|COLLATE\\s*=\\s*\\w+)/i",
+            "replacement": "",
+            "target": "sqlite",
+            "apply": "compile",
+            "phase": "ddl"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\bUNSIGNED\\b/i",
+            "replacement": "",
+            "target": "sqlite",
+            "apply": "compile",
+            "phase": "ddl"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\bENUM\\s*\\(([^)]*)\\)/i",
+            "replacement": "TEXT CHECK (col IN ($1))",
+            "target": "sqlite",
+            "apply": "runtime",
+            "phase": "ddl",
+            "notes": "cần tên cột (context-sensitive) → runtime QueryTransformer"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\b(?:DATETIME|TIMESTAMP)\\b/i",
+            "replacement": "TEXT (ISO-8601)",
+            "target": "sqlite",
+            "apply": "compile",
+            "phase": "ddl"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\b(?:TINYINT|SMALLINT|INT|BIGINT)(?:\\s*\\(\\s*\\d+\\s*\\))?(?![_A-Z0-9])/i",
+            "replacement": "INTEGER",
+            "target": "sqlite",
+            "apply": "compile",
+            "phase": "ddl"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\bFOREIGN\\s+KEY\\b/i",
+            "replacement": "Giữ nguyên *(không parse sâu)*",
+            "target": "sqlite",
+            "apply": "compile",
+            "phase": "ddl"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\bSHOW\\s+TABLES\\b/i",
+            "replacement": "sqlite_master",
+            "target": "sqlite",
+            "apply": "compile",
+            "phase": "ddl"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\bNOW\\s*\\(\\s*\\)/i",
+            "replacement": "CURRENT_TIMESTAMP",
+            "target": "postgresql",
+            "apply": "compile",
+            "phase": "dml"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\bNOW\\s*\\(\\s*\\)/i",
+            "replacement": "datetime('now')",
+            "target": "sqlite",
+            "apply": "compile",
+            "phase": "dml"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\bIFNULL\\s*\\(/i",
+            "replacement": "COALESCE(",
+            "target": "postgresql",
+            "apply": "compile",
+            "phase": "dml"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\bIFNULL\\s*\\(/i",
+            "replacement": "COALESCE(",
+            "target": "sqlite",
+            "apply": "compile",
+            "phase": "dml"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\bGROUP_CONCAT\\s*\\(/i",
+            "replacement": "STRING_AGG(",
+            "target": "postgresql",
+            "apply": "compile",
+            "phase": "dml",
+            "notes": "SEPARATOR → ', ' bởi rule riêng"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\bGROUP_CONCAT\\s*\\(/i",
+            "replacement": "GROUP_CONCAT(",
+            "target": "sqlite",
+            "apply": "compile",
+            "phase": "dml",
+            "notes": "SEPARATOR → ', ' bởi rule riêng"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\bRAND\\s*\\(\\s*\\)/i",
+            "replacement": "RANDOM()",
+            "target": "postgresql",
+            "apply": "compile",
+            "phase": "dml"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\bRAND\\s*\\(\\s*\\)/i",
+            "replacement": "RANDOM()",
+            "target": "sqlite",
+            "apply": "compile",
+            "phase": "dml"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\bFIND_IN_SET\\s*\\(/i",
+            "replacement": "array_position(string_to_array(b,','), a)",
+            "target": "postgresql",
+            "apply": "runtime",
+            "phase": "dml",
+            "notes": "reorder args → runtime"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\bFIND_IN_SET\\s*\\(/i",
+            "replacement": "INSTR(b, a) > 0",
+            "target": "sqlite",
+            "apply": "runtime",
+            "phase": "dml",
+            "notes": "reorder args → runtime"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\bINSERT\\s+IGNORE\\s+INTO\\b/i",
+            "replacement": "ON CONFLICT DO NOTHING",
+            "target": "postgresql",
+            "apply": "runtime",
+            "phase": "dml",
+            "notes": "pg: ON CONFLICT phải ở cuối câu → runtime"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\bINSERT\\s+IGNORE\\s+INTO\\b/i",
+            "replacement": "INSERT OR IGNORE INTO",
+            "target": "sqlite",
+            "apply": "compile",
+            "phase": "dml",
+            "notes": "pg: ON CONFLICT phải ở cuối câu → runtime"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\bREPLACE\\s+INTO\\b/i",
+            "replacement": "INSERT ... ON CONFLICT ... DO UPDATE",
+            "target": "postgresql",
+            "apply": "runtime",
+            "phase": "dml",
+            "notes": "pg: cần conflict target → runtime"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\bREPLACE\\s+INTO\\b/i",
+            "replacement": "INSERT OR REPLACE INTO",
+            "target": "sqlite",
+            "apply": "compile",
+            "phase": "dml",
+            "notes": "pg: cần conflict target → runtime"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\bSTRAIGHT_JOIN\\b/i",
+            "replacement": "INNER JOIN",
+            "target": "postgresql",
+            "apply": "compile",
+            "phase": "dml"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\bSTRAIGHT_JOIN\\b/i",
+            "replacement": "INNER JOIN",
+            "target": "sqlite",
+            "apply": "compile",
+            "phase": "dml"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\bLIMIT\\s+(\\d+)\\s*,\\s*(\\d+)/i",
+            "replacement": "LIMIT $2 OFFSET $1",
+            "target": "postgresql",
+            "apply": "compile",
+            "phase": "dml"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\bLIMIT\\s+(\\d+)\\s*,\\s*(\\d+)/i",
+            "replacement": "LIMIT $2 OFFSET $1",
+            "target": "sqlite",
+            "apply": "compile",
+            "phase": "dml"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\bDATE_ADD\\s*\\(/i",
+            "replacement": "d + INTERVAL 'n day'",
+            "target": "postgresql",
+            "apply": "runtime",
+            "phase": "dml",
+            "notes": "reorder + quote interval → runtime"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\bDATE_ADD\\s*\\(/i",
+            "replacement": "date(d, '+n days')",
+            "target": "sqlite",
+            "apply": "runtime",
+            "phase": "dml",
+            "notes": "reorder + quote interval → runtime"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\bUNIX_TIMESTAMP\\s*\\(\\s*\\)/i",
+            "replacement": "EXTRACT(EPOCH FROM NOW())",
+            "target": "postgresql",
+            "apply": "compile",
+            "phase": "dml"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\bUNIX_TIMESTAMP\\s*\\(\\s*\\)/i",
+            "replacement": "strftime('%s','now')",
+            "target": "sqlite",
+            "apply": "compile",
+            "phase": "dml"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\bCONCAT\\s*\\(/i",
+            "replacement": "a || b",
+            "target": "postgresql",
+            "apply": "runtime",
+            "phase": "dml",
+            "notes": "infix (a || b) cần parse args → runtime"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\bCONCAT\\s*\\(/i",
+            "replacement": "a || b",
+            "target": "sqlite",
+            "apply": "runtime",
+            "phase": "dml",
+            "notes": "infix (a || b) cần parse args → runtime"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\bSUBSTRING_INDEX\\s*\\(/i",
+            "replacement": "split_part",
+            "target": "postgresql",
+            "apply": "compile",
+            "phase": "dml",
+            "notes": "sqlite: UDF/app-side"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\bSUBSTRING_INDEX\\s*\\(/i",
+            "replacement": "*(UDF / app-side)*",
+            "target": "sqlite",
+            "apply": "runtime",
+            "phase": "dml",
+            "notes": "sqlite: UDF/app-side"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\bLOCATE\\s*\\(/i",
+            "replacement": "POSITION(a IN b)",
+            "target": "postgresql",
+            "apply": "runtime",
+            "phase": "dml",
+            "notes": "reorder args → runtime"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\bLOCATE\\s*\\(/i",
+            "replacement": "INSTR(b, a)",
+            "target": "sqlite",
+            "apply": "runtime",
+            "phase": "dml",
+            "notes": "reorder args → runtime"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\bSQL_CALC_FOUND_ROWS\\s+/i",
+            "replacement": "Subquery COUNT(*)",
+            "target": "postgresql",
+            "apply": "runtime",
+            "phase": "dml",
+            "notes": "subquery COUNT(*) ở statement level → runtime"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\bSQL_CALC_FOUND_ROWS\\s+/i",
+            "replacement": "Subquery COUNT(*)",
+            "target": "sqlite",
+            "apply": "runtime",
+            "phase": "dml",
+            "notes": "subquery COUNT(*) ở statement level → runtime"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\bFOUND_ROWS\\s*\\(\\s*\\)/i",
+            "replacement": "SELECT COUNT(*) (cache)",
+            "target": "postgresql",
+            "apply": "runtime",
+            "phase": "dml",
+            "notes": "SELECT COUNT(*) (cached) → runtime"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\bFOUND_ROWS\\s*\\(\\s*\\)/i",
+            "replacement": "SELECT COUNT(*) (cache)",
+            "target": "sqlite",
+            "apply": "runtime",
+            "phase": "dml",
+            "notes": "SELECT COUNT(*) (cached) → runtime"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/%[sdf]/",
+            "replacement": "/* prepare placeholder → driver-native */",
+            "target": "postgresql",
+            "apply": "runtime",
+            "phase": "dml",
+            "notes": "wpdb::prepare cấp runtime (PrestoWpdb)"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/%[sdf]/",
+            "replacement": "/* prepare placeholder → driver-native */",
+            "target": "sqlite",
+            "apply": "runtime",
+            "phase": "dml",
+            "notes": "wpdb::prepare cấp runtime (PrestoWpdb)"
+        },
+        {
+            "kind": "wpdb",
+            "pattern": "wpdb::get_results",
+            "replacement": "PostRepository::rawSelect(...)",
+            "target": "any",
+            "apply": "runtime",
+            "phase": "api",
+            "notes": "DatabaseInterface::query()"
+        },
+        {
+            "kind": "wpdb",
+            "pattern": "wpdb::get_row",
+            "replacement": "$db->query($sql)->fetch()",
+            "target": "any",
+            "apply": "runtime",
+            "phase": "api"
+        },
+        {
+            "kind": "wpdb",
+            "pattern": "wpdb::get_var",
+            "replacement": "$db->query($sql)->fetchColumn()",
+            "target": "any",
+            "apply": "runtime",
+            "phase": "api"
+        },
+        {
+            "kind": "wpdb",
+            "pattern": "wpdb::get_col",
+            "replacement": "$db->query($sql)->fetchAll(PDO::FETCH_COLUMN)",
+            "target": "any",
+            "apply": "runtime",
+            "phase": "api"
+        },
+        {
+            "kind": "wpdb",
+            "pattern": "wpdb::query",
+            "replacement": "$db->execute($sql)",
+            "target": "any",
+            "apply": "runtime",
+            "phase": "api"
+        },
+        {
+            "kind": "wpdb",
+            "pattern": "wpdb::prepare",
+            "replacement": "$db->query($sql, $params) (parameterized, driver-native)",
+            "target": "any",
+            "apply": "runtime",
+            "phase": "api"
+        },
+        {
+            "kind": "wpdb",
+            "pattern": "wpdb::insert",
+            "replacement": "Cycle ORM Repository::create() hoặc driver insert",
+            "target": "any",
+            "apply": "runtime",
+            "phase": "api"
+        },
+        {
+            "kind": "wpdb",
+            "pattern": "wpdb::update",
+            "replacement": "Cycle ORM Repository::update()",
+            "target": "any",
+            "apply": "runtime",
+            "phase": "api"
+        },
+        {
+            "kind": "wpdb",
+            "pattern": "wpdb::delete",
+            "replacement": "Cycle ORM Repository::delete()",
+            "target": "any",
+            "apply": "runtime",
+            "phase": "api"
+        },
+        {
+            "kind": "wpdb",
+            "pattern": "wpdb::prefix",
+            "replacement": "$config->get('database.prefix') → 'pw_'",
+            "target": "any",
+            "apply": "runtime",
+            "phase": "api"
+        },
+        {
+            "kind": "wpdb",
+            "pattern": "wpdb::insert_id",
+            "replacement": "getLastInsertID()",
+            "target": "any",
+            "apply": "runtime",
+            "phase": "api"
+        },
+        {
+            "kind": "wpdb",
+            "pattern": "wpdb::num_rows",
+            "replacement": "rowCount()",
+            "target": "any",
+            "apply": "runtime",
+            "phase": "api"
+        },
+        {
+            "kind": "wpdb",
+            "pattern": "wpdb::show_errors",
+            "replacement": "QueryMonitor config (05 §5.8)",
+            "target": "any",
+            "apply": "runtime",
+            "phase": "api"
+        },
+        {
+            "kind": "wpdb",
+            "pattern": "wpdb::esc_like",
+            "replacement": "PrestoWpdb::escLike()",
+            "target": "any",
+            "apply": "runtime",
+            "phase": "api"
+        },
+        {
+            "kind": "wpdb",
+            "pattern": "wpdb::dbdelta",
+            "replacement": "Migration system (05 §5.6)",
+            "target": "any",
+            "apply": "runtime",
+            "phase": "api"
+        },
+        {
+            "kind": "function",
+            "source": "esc_html",
+            "target": "PrestoWorld\\Core\\Escape::html",
+            "mode": "sr",
+            "group": "10.4.2 Group 1: Escaping & Sanitization (27)"
+        },
+        {
+            "kind": "function",
+            "source": "esc_html__",
+            "target": "PrestoWorld\\Core\\Escape::html",
+            "mode": "sr",
+            "group": "10.4.2 Group 1: Escaping & Sanitization (27)",
+            "wrap": "PrestoWorld\\Core\\Translator::__"
+        },
+        {
+            "kind": "function",
+            "source": "esc_html_e",
+            "target": "PrestoWorld\\Core\\Escape::html",
+            "mode": "sr",
+            "group": "10.4.2 Group 1: Escaping & Sanitization (27)",
+            "wrap": "PrestoWorld\\Core\\Translator::__",
+            "echo": true
+        },
+        {
+            "kind": "function",
+            "source": "esc_attr",
+            "target": "PrestoWorld\\Core\\Escape::attr",
+            "mode": "sr",
+            "group": "10.4.2 Group 1: Escaping & Sanitization (27)"
+        },
+        {
+            "kind": "function",
+            "source": "esc_attr__",
+            "target": "PrestoWorld\\Core\\Escape::attr",
+            "mode": "sr",
+            "group": "10.4.2 Group 1: Escaping & Sanitization (27)",
+            "wrap": "PrestoWorld\\Core\\Translator::__"
+        },
+        {
+            "kind": "function",
+            "source": "esc_attr_e",
+            "target": "PrestoWorld\\Core\\Escape::attr",
+            "mode": "sr",
+            "group": "10.4.2 Group 1: Escaping & Sanitization (27)",
+            "wrap": "PrestoWorld\\Core\\Translator::__",
+            "echo": true
+        },
+        {
+            "kind": "function",
+            "source": "esc_url",
+            "target": "PrestoWorld\\Core\\Escape::url",
+            "mode": "sr",
+            "group": "10.4.2 Group 1: Escaping & Sanitization (27)"
+        },
+        {
+            "kind": "function",
+            "source": "esc_url_raw",
+            "target": "PrestoWorld\\Core\\Escape::urlRaw",
+            "mode": "sr",
+            "group": "10.4.2 Group 1: Escaping & Sanitization (27)"
+        },
+        {
+            "kind": "function",
+            "source": "esc_js",
+            "target": "PrestoWorld\\Core\\Escape::js",
+            "mode": "sr",
+            "group": "10.4.2 Group 1: Escaping & Sanitization (27)"
+        },
+        {
+            "kind": "function",
+            "source": "esc_textarea",
+            "target": "PrestoWorld\\Core\\Escape::textarea",
+            "mode": "sr",
+            "group": "10.4.2 Group 1: Escaping & Sanitization (27)"
+        },
+        {
+            "kind": "function",
+            "source": "esc_xml",
+            "target": "PrestoWorld\\Core\\Escape::xml",
+            "mode": "sr",
+            "group": "10.4.2 Group 1: Escaping & Sanitization (27)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_kses",
+            "target": "PrestoWorld\\Core\\Kses::filter",
+            "mode": "sr",
+            "group": "10.4.2 Group 1: Escaping & Sanitization (27)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_kses_post",
+            "target": "PrestoWorld\\Core\\Kses::post",
+            "mode": "sr",
+            "group": "10.4.2 Group 1: Escaping & Sanitization (27)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_kses_allowed_html",
+            "target": "PrestoWorld\\Core\\Kses::allowedHtml",
+            "mode": "sr",
+            "group": "10.4.2 Group 1: Escaping & Sanitization (27)"
+        },
+        {
+            "kind": "function",
+            "source": "sanitize_text_field",
+            "target": "PrestoWorld\\Core\\Sanitize::text",
+            "mode": "sr",
+            "group": "10.4.2 Group 1: Escaping & Sanitization (27)"
+        },
+        {
+            "kind": "function",
+            "source": "sanitize_textarea_field",
+            "target": "PrestoWorld\\Core\\Sanitize::textarea",
+            "mode": "sr",
+            "group": "10.4.2 Group 1: Escaping & Sanitization (27)"
+        },
+        {
+            "kind": "function",
+            "source": "sanitize_title",
+            "target": "PrestoWorld\\Core\\Sanitize::title",
+            "mode": "sr",
+            "group": "10.4.2 Group 1: Escaping & Sanitization (27)"
+        },
+        {
+            "kind": "function",
+            "source": "sanitize_file_name",
+            "target": "PrestoWorld\\Core\\Sanitize::fileName",
+            "mode": "sr",
+            "group": "10.4.2 Group 1: Escaping & Sanitization (27)"
+        },
+        {
+            "kind": "function",
+            "source": "sanitize_email",
+            "target": "PrestoWorld\\Core\\Sanitize::email",
+            "mode": "sr",
+            "group": "10.4.2 Group 1: Escaping & Sanitization (27)"
+        },
+        {
+            "kind": "function",
+            "source": "sanitize_key",
+            "target": "PrestoWorld\\Core\\Sanitize::key",
+            "mode": "sr",
+            "group": "10.4.2 Group 1: Escaping & Sanitization (27)"
+        },
+        {
+            "kind": "function",
+            "source": "sanitize_user",
+            "target": "PrestoWorld\\Core\\Sanitize::user",
+            "mode": "sr",
+            "group": "10.4.2 Group 1: Escaping & Sanitization (27)"
+        },
+        {
+            "kind": "function",
+            "source": "sanitize_mime_type",
+            "target": "PrestoWorld\\Core\\Sanitize::mimeType",
+            "mode": "sr",
+            "group": "10.4.2 Group 1: Escaping & Sanitization (27)"
+        },
+        {
+            "kind": "function",
+            "source": "sanitize_html_class",
+            "target": "PrestoWorld\\Core\\Sanitize::htmlClass",
+            "mode": "sr",
+            "group": "10.4.2 Group 1: Escaping & Sanitization (27)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_strip_all_tags",
+            "target": "PrestoWorld\\Core\\Sanitize::stripTags",
+            "mode": "sr",
+            "group": "10.4.2 Group 1: Escaping & Sanitization (27)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_check_invalid_utf8",
+            "target": "PrestoWorld\\Core\\Sanitize::checkUtf8",
+            "mode": "sr",
+            "group": "10.4.2 Group 1: Escaping & Sanitization (27)"
+        },
+        {
+            "kind": "function",
+            "source": "_wp_specialchars",
+            "target": "PrestoWorld\\Core\\Escape::specialChars",
+            "mode": "s",
+            "group": "10.4.2 Group 1: Escaping & Sanitization (27)"
+        },
+        {
+            "kind": "function",
+            "source": "absint",
+            "target": "PrestoWorld\\Core\\Sanitize::absInt",
+            "mode": "sr",
+            "group": "10.4.2 Group 1: Escaping & Sanitization (27)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_create_nonce",
+            "target": "PrestoWorld\\Core\\Nonce::create",
+            "mode": "sr",
+            "group": "10.4.3 Group 2: Security & Nonces (13)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_verify_nonce",
+            "target": "PrestoWorld\\Core\\Nonce::verify",
+            "mode": "sr",
+            "group": "10.4.3 Group 2: Security & Nonces (13)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_nonce_field",
+            "target": "PrestoWorld\\Core\\Nonce::field",
+            "mode": "sr",
+            "group": "10.4.3 Group 2: Security & Nonces (13)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_nonce_url",
+            "target": "PrestoWorld\\Core\\Nonce::url",
+            "mode": "sr",
+            "group": "10.4.3 Group 2: Security & Nonces (13)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_referer_field",
+            "target": "PrestoWorld\\Core\\Security::refererField",
+            "mode": "sr",
+            "group": "10.4.3 Group 2: Security & Nonces (13)"
+        },
+        {
+            "kind": "function",
+            "source": "check_admin_referer",
+            "target": "PrestoWorld\\Core\\Nonce::checkAdmin",
+            "mode": "sr",
+            "group": "10.4.3 Group 2: Security & Nonces (13)"
+        },
+        {
+            "kind": "function",
+            "source": "check_ajax_referer",
+            "target": "PrestoWorld\\Core\\Nonce::checkAjax",
+            "mode": "sr",
+            "group": "10.4.3 Group 2: Security & Nonces (13)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_get_referer",
+            "target": "PrestoWorld\\Core\\Request::referer",
+            "mode": "sr",
+            "group": "10.4.3 Group 2: Security & Nonces (13)"
+        },
+        {
+            "kind": "function",
+            "source": "auth_redirect",
+            "target": "PrestoWorld\\Core\\AuthService::requireLogin",
+            "mode": "sr",
+            "group": "10.4.3 Group 2: Security & Nonces (13)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_set_auth_cookie",
+            "target": "PrestoWorld\\Core\\AuthService::setCookie",
+            "mode": "sr",
+            "group": "10.4.3 Group 2: Security & Nonces (13)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_clear_auth_cookie",
+            "target": "PrestoWorld\\Core\\AuthService::clearCookie",
+            "mode": "sr",
+            "group": "10.4.3 Group 2: Security & Nonces (13)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_parse_auth_cookie",
+            "target": "PrestoWorld\\Core\\AuthService::parseCookie",
+            "mode": "s",
+            "group": "10.4.3 Group 2: Security & Nonces (13)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_validate_auth_cookie",
+            "target": "PrestoWorld\\Core\\AuthService::validateCookie",
+            "mode": "sr",
+            "group": "10.4.3 Group 2: Security & Nonces (13)"
+        },
+        {
+            "kind": "function",
+            "source": "number_format_i18n",
+            "target": "PrestoWorld\\Core\\Format::number",
+            "mode": "sr",
+            "group": "10.4.4 Group 3: Formatting, Text & Dates (32)"
+        },
+        {
+            "kind": "function",
+            "source": "date_i18n",
+            "target": "PrestoWorld\\Core\\Format::date",
+            "mode": "sr",
+            "group": "10.4.4 Group 3: Formatting, Text & Dates (32)"
+        },
+        {
+            "kind": "function",
+            "source": "mysql2date",
+            "target": "PrestoWorld\\Core\\Format::mysqlDate",
+            "mode": "sr",
+            "group": "10.4.4 Group 3: Formatting, Text & Dates (32)"
+        },
+        {
+            "kind": "function",
+            "source": "human_time_diff",
+            "target": "PrestoWorld\\Core\\Format::humanTimeDiff",
+            "mode": "sr",
+            "group": "10.4.4 Group 3: Formatting, Text & Dates (32)"
+        },
+        {
+            "kind": "function",
+            "source": "get_gmt_from_date",
+            "target": "PrestoWorld\\Core\\Format::toGmt",
+            "mode": "sr",
+            "group": "10.4.4 Group 3: Formatting, Text & Dates (32)"
+        },
+        {
+            "kind": "function",
+            "source": "get_date_from_gmt",
+            "target": "PrestoWorld\\Core\\Format::fromGmt",
+            "mode": "sr",
+            "group": "10.4.4 Group 3: Formatting, Text & Dates (32)"
+        },
+        {
+            "kind": "function",
+            "source": "current_time",
+            "target": "PrestoWorld\\Core\\Clock::current",
+            "mode": "sr",
+            "group": "10.4.4 Group 3: Formatting, Text & Dates (32)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_date",
+            "target": "PrestoWorld\\Core\\Clock::date",
+            "mode": "sr",
+            "group": "10.4.4 Group 3: Formatting, Text & Dates (32)"
+        },
+        {
+            "kind": "function",
+            "source": "current_datetime",
+            "target": "PrestoWorld\\Core\\Clock::now",
+            "mode": "sr",
+            "group": "10.4.4 Group 3: Formatting, Text & Dates (32)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_timezone",
+            "target": "PrestoWorld\\Core\\Clock::timezone",
+            "mode": "sr",
+            "group": "10.4.4 Group 3: Formatting, Text & Dates (32)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_timezone_offset",
+            "target": "PrestoWorld\\Core\\Clock::offset",
+            "mode": "sr",
+            "group": "10.4.4 Group 3: Formatting, Text & Dates (32)"
+        },
+        {
+            "kind": "function",
+            "source": "size_format",
+            "target": "PrestoWorld\\Core\\Format::size",
+            "mode": "sr",
+            "group": "10.4.4 Group 3: Formatting, Text & Dates (32)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_html_excerpt",
+            "target": "PrestoWorld\\Core\\Format::htmlExcerpt",
+            "mode": "sr",
+            "group": "10.4.4 Group 3: Formatting, Text & Dates (32)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_trim_words",
+            "target": "PrestoWorld\\Core\\Format::trimWords",
+            "mode": "sr",
+            "group": "10.4.4 Group 3: Formatting, Text & Dates (32)"
+        },
+        {
+            "kind": "function",
+            "source": "trailingslashit",
+            "target": "PrestoWorld\\Core\\Format::trailingslash",
+            "mode": "sr",
+            "group": "10.4.4 Group 3: Formatting, Text & Dates (32)"
+        },
+        {
+            "kind": "function",
+            "source": "untrailingslashit",
+            "target": "PrestoWorld\\Core\\Format::untrailingslash",
+            "mode": "sr",
+            "group": "10.4.4 Group 3: Formatting, Text & Dates (32)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_basename",
+            "target": "PrestoWorld\\Core\\Format::basename",
+            "mode": "sr",
+            "group": "10.4.4 Group 3: Formatting, Text & Dates (32)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_normalize_path",
+            "target": "PrestoWorld\\Core\\Format::normalizePath",
+            "mode": "sr",
+            "group": "10.4.4 Group 3: Formatting, Text & Dates (32)"
+        },
+        {
+            "kind": "function",
+            "source": "path_join",
+            "target": "PrestoWorld\\Core\\Format::pathJoin",
+            "mode": "sr",
+            "group": "10.4.4 Group 3: Formatting, Text & Dates (32)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_json_encode",
+            "target": "json_encode",
+            "mode": "r",
+            "group": "10.4.4 Group 3: Formatting, Text & Dates (32)"
+        },
+        {
+            "kind": "function",
+            "source": "maybe_serialize",
+            "target": "PrestoWorld\\Core\\Format::serialize",
+            "mode": "sr",
+            "group": "10.4.4 Group 3: Formatting, Text & Dates (32)"
+        },
+        {
+            "kind": "function",
+            "source": "maybe_unserialize",
+            "target": "PrestoWorld\\Core\\Format::unserialize",
+            "mode": "sr",
+            "group": "10.4.4 Group 3: Formatting, Text & Dates (32)"
+        },
+        {
+            "kind": "function",
+            "source": "is_serialized",
+            "target": "PrestoWorld\\Core\\Format::isSerialized",
+            "mode": "sr",
+            "group": "10.4.4 Group 3: Formatting, Text & Dates (32)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_rand",
+            "target": "PrestoWorld\\Core\\Security::rand",
+            "mode": "sr",
+            "group": "10.4.4 Group 3: Formatting, Text & Dates (32)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_generate_password",
+            "target": "PrestoWorld\\Core\\Security::generatePassword",
+            "mode": "sr",
+            "group": "10.4.4 Group 3: Formatting, Text & Dates (32)"
+        },
+        {
+            "kind": "function",
+            "source": "strip_shortcodes",
+            "target": "PrestoWorld\\Core\\Shortcode::strip",
+            "mode": "sr",
+            "group": "10.4.4 Group 3: Formatting, Text & Dates (32)"
+        },
+        {
+            "kind": "function",
+            "source": "do_shortcode",
+            "target": "PrestoWorld\\Core\\Shortcode::render",
+            "mode": "sr",
+            "group": "10.4.4 Group 3: Formatting, Text & Dates (32)"
+        },
+        {
+            "kind": "function",
+            "source": "has_shortcode",
+            "target": "PrestoWorld\\Core\\Shortcode::has",
+            "mode": "sr",
+            "group": "10.4.4 Group 3: Formatting, Text & Dates (32)"
+        },
+        {
+            "kind": "function",
+            "source": "shortcode_atts",
+            "target": "PrestoWorld\\Core\\Shortcode::atts",
+            "mode": "sr",
+            "group": "10.4.4 Group 3: Formatting, Text & Dates (32)"
+        },
+        {
+            "kind": "function",
+            "source": "wptexturize",
+            "target": "PrestoWorld\\Core\\Format::texturize",
+            "mode": "n",
+            "group": "10.4.4 Group 3: Formatting, Text & Dates (32)"
+        },
+        {
+            "kind": "function",
+            "source": "wpautop",
+            "target": "PrestoWorld\\Core\\Format::autop",
+            "mode": "sr",
+            "group": "10.4.4 Group 3: Formatting, Text & Dates (32)"
+        },
+        {
+            "kind": "function",
+            "source": "convert_smilies",
+            "target": "PrestoWorld\\Core\\Format::smilies",
+            "mode": "n",
+            "group": "10.4.4 Group 3: Formatting, Text & Dates (32)"
+        },
+        {
+            "kind": "function",
+            "source": "get_option",
+            "target": "PrestoWorld\\Core\\OptionRepository::get",
+            "mode": "sr",
+            "group": "10.4.5 Group 4: Options & Transients (20)"
+        },
+        {
+            "kind": "function",
+            "source": "update_option",
+            "target": "PrestoWorld\\Core\\OptionRepository::update",
+            "mode": "sr",
+            "group": "10.4.5 Group 4: Options & Transients (20)"
+        },
+        {
+            "kind": "function",
+            "source": "add_option",
+            "target": "PrestoWorld\\Core\\OptionRepository::add",
+            "mode": "sr",
+            "group": "10.4.5 Group 4: Options & Transients (20)"
+        },
+        {
+            "kind": "function",
+            "source": "delete_option",
+            "target": "PrestoWorld\\Core\\OptionRepository::delete",
+            "mode": "sr",
+            "group": "10.4.5 Group 4: Options & Transients (20)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_load_alloptions",
+            "target": "PrestoWorld\\Core\\OptionRepository::loadAll",
+            "mode": "sr",
+            "group": "10.4.5 Group 4: Options & Transients (20)"
+        },
+        {
+            "kind": "function",
+            "source": "set_transient",
+            "target": "PrestoWorld\\Core\\CacheRepository::set",
+            "mode": "sr",
+            "group": "10.4.5 Group 4: Options & Transients (20)"
+        },
+        {
+            "kind": "function",
+            "source": "get_transient",
+            "target": "PrestoWorld\\Core\\CacheRepository::get",
+            "mode": "sr",
+            "group": "10.4.5 Group 4: Options & Transients (20)"
+        },
+        {
+            "kind": "function",
+            "source": "delete_transient",
+            "target": "PrestoWorld\\Core\\CacheRepository::delete",
+            "mode": "sr",
+            "group": "10.4.5 Group 4: Options & Transients (20)"
+        },
+        {
+            "kind": "function",
+            "source": "set_site_transient",
+            "target": "PrestoWorld\\Core\\CacheRepository::set",
+            "mode": "s",
+            "group": "10.4.5 Group 4: Options & Transients (20)"
+        },
+        {
+            "kind": "function",
+            "source": "get_site_transient",
+            "target": "PrestoWorld\\Core\\CacheRepository::get",
+            "mode": "s",
+            "group": "10.4.5 Group 4: Options & Transients (20)"
+        },
+        {
+            "kind": "function",
+            "source": "delete_site_transient",
+            "target": "PrestoWorld\\Core\\CacheRepository::delete",
+            "mode": "s",
+            "group": "10.4.5 Group 4: Options & Transients (20)"
+        },
+        {
+            "kind": "function",
+            "source": "get_site_option",
+            "target": "PrestoWorld\\Core\\OptionRepository::getNetwork",
+            "mode": "s",
+            "group": "10.4.5 Group 4: Options & Transients (20)"
+        },
+        {
+            "kind": "function",
+            "source": "update_site_option",
+            "target": "PrestoWorld\\Core\\OptionRepository::updateNetwork",
+            "mode": "s",
+            "group": "10.4.5 Group 4: Options & Transients (20)"
+        },
+        {
+            "kind": "function",
+            "source": "delete_site_option",
+            "target": "PrestoWorld\\Core\\OptionRepository::deleteNetwork",
+            "mode": "s",
+            "group": "10.4.5 Group 4: Options & Transients (20)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_cache_get",
+            "target": "PrestoWorld\\Core\\CacheRepository::get",
+            "mode": "sr",
+            "group": "10.4.5 Group 4: Options & Transients (20)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_cache_set",
+            "target": "PrestoWorld\\Core\\CacheRepository::set",
+            "mode": "sr",
+            "group": "10.4.5 Group 4: Options & Transients (20)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_cache_delete",
+            "target": "PrestoWorld\\Core\\CacheRepository::delete",
+            "mode": "sr",
+            "group": "10.4.5 Group 4: Options & Transients (20)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_cache_flush",
+            "target": "PrestoWorld\\Core\\CacheRepository::flush",
+            "mode": "sr",
+            "group": "10.4.5 Group 4: Options & Transients (20)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_cache_incr",
+            "target": "PrestoWorld\\Core\\CacheRepository::increment",
+            "mode": "sr",
+            "group": "10.4.5 Group 4: Options & Transients (20)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_using_ext_object_cache",
+            "target": "PrestoWorld\\Core\\CacheRepository::usingExternal",
+            "mode": "sr",
+            "group": "10.4.5 Group 4: Options & Transients (20)"
+        },
+        {
+            "kind": "function",
+            "source": "get_post",
+            "target": "PrestoWorld\\Core\\PostRepository::find",
+            "mode": "sr",
+            "group": "10.4.6 Group 5: Posts & Content (35)"
+        },
+        {
+            "kind": "function",
+            "source": "get_posts",
+            "target": "PrestoWorld\\Core\\PostRepository::query",
+            "mode": "sr",
+            "group": "10.4.6 Group 5: Posts & Content (35)"
+        },
+        {
+            "kind": "function",
+            "source": "query_posts",
+            "target": "PrestoWorld\\Core\\PostRepository::query",
+            "mode": "r",
+            "group": "10.4.6 Group 5: Posts & Content (35)"
+        },
+        {
+            "kind": "function",
+            "source": "the_post",
+            "target": "PrestoWorld\\Core\\PostLoop::thePost",
+            "mode": "sr",
+            "group": "10.4.6 Group 5: Posts & Content (35)"
+        },
+        {
+            "kind": "function",
+            "source": "the_content",
+            "target": "PrestoWorld\\Core\\PostView::content",
+            "mode": "sr",
+            "group": "10.4.6 Group 5: Posts & Content (35)"
+        },
+        {
+            "kind": "function",
+            "source": "the_title",
+            "target": "PrestoWorld\\Core\\PostView::title",
+            "mode": "sr",
+            "group": "10.4.6 Group 5: Posts & Content (35)"
+        },
+        {
+            "kind": "function",
+            "source": "the_excerpt",
+            "target": "PrestoWorld\\Core\\PostView::excerpt",
+            "mode": "sr",
+            "group": "10.4.6 Group 5: Posts & Content (35)"
+        },
+        {
+            "kind": "function",
+            "source": "get_the_content",
+            "target": "PrestoWorld\\Core\\PostView::getContent",
+            "mode": "sr",
+            "group": "10.4.6 Group 5: Posts & Content (35)"
+        },
+        {
+            "kind": "function",
+            "source": "get_the_title",
+            "target": "PrestoWorld\\Core\\PostView::getTitle",
+            "mode": "sr",
+            "group": "10.4.6 Group 5: Posts & Content (35)"
+        },
+        {
+            "kind": "function",
+            "source": "get_the_excerpt",
+            "target": "PrestoWorld\\Core\\PostView::getExcerpt",
+            "mode": "sr",
+            "group": "10.4.6 Group 5: Posts & Content (35)"
+        },
+        {
+            "kind": "function",
+            "source": "get_post_field",
+            "target": "PrestoWorld\\Core\\PostRepository::field",
+            "mode": "sr",
+            "group": "10.4.6 Group 5: Posts & Content (35)"
+        },
+        {
+            "kind": "function",
+            "source": "get_post_status",
+            "target": "PrestoWorld\\Core\\PostRepository::status",
+            "mode": "sr",
+            "group": "10.4.6 Group 5: Posts & Content (35)"
+        },
+        {
+            "kind": "function",
+            "source": "get_post_type",
+            "target": "PrestoWorld\\Core\\PostRepository::type",
+            "mode": "sr",
+            "group": "10.4.6 Group 5: Posts & Content (35)"
+        },
+        {
+            "kind": "function",
+            "source": "get_post_types",
+            "target": "PrestoWorld\\Core\\PostTypeRegistry::all",
+            "mode": "sr",
+            "group": "10.4.6 Group 5: Posts & Content (35)"
+        },
+        {
+            "kind": "function",
+            "source": "get_post_type_object",
+            "target": "PrestoWorld\\Core\\PostTypeRegistry::get",
+            "mode": "sr",
+            "group": "10.4.6 Group 5: Posts & Content (35)"
+        },
+        {
+            "kind": "function",
+            "source": "register_post_type",
+            "target": "PrestoWorld\\Core\\PostTypeRegistry::register",
+            "mode": "sr",
+            "group": "10.4.6 Group 5: Posts & Content (35)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_insert_post",
+            "target": "PrestoWorld\\Core\\PostService::create",
+            "mode": "sr",
+            "group": "10.4.6 Group 5: Posts & Content (35)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_update_post",
+            "target": "PrestoWorld\\Core\\PostService::update",
+            "mode": "sr",
+            "group": "10.4.6 Group 5: Posts & Content (35)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_delete_post",
+            "target": "PrestoWorld\\Core\\PostService::delete",
+            "mode": "sr",
+            "group": "10.4.6 Group 5: Posts & Content (35)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_publish_post",
+            "target": "PrestoWorld\\Core\\PostService::publish",
+            "mode": "sr",
+            "group": "10.4.6 Group 5: Posts & Content (35)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_trash_post",
+            "target": "PrestoWorld\\Core\\PostService::trash",
+            "mode": "sr",
+            "group": "10.4.6 Group 5: Posts & Content (35)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_untrash_post",
+            "target": "PrestoWorld\\Core\\PostService::untrash",
+            "mode": "sr",
+            "group": "10.4.6 Group 5: Posts & Content (35)"
+        },
+        {
+            "kind": "function",
+            "source": "sanitize_post",
+            "target": "PrestoWorld\\Core\\PostService::sanitize",
+            "mode": "sr",
+            "group": "10.4.6 Group 5: Posts & Content (35)"
+        },
+        {
+            "kind": "function",
+            "source": "setup_postdata",
+            "target": "PrestoWorld\\Core\\PostLoop::setup",
+            "mode": "sr",
+            "group": "10.4.6 Group 5: Posts & Content (35)"
+        },
+        {
+            "kind": "function",
+            "source": "have_posts",
+            "target": "PrestoWorld\\Core\\PostLoop::havePosts",
+            "mode": "sr",
+            "group": "10.4.6 Group 5: Posts & Content (35)"
+        },
+        {
+            "kind": "function",
+            "source": "the_ID",
+            "target": "PrestoWorld\\Core\\PostView::id",
+            "mode": "sr",
+            "group": "10.4.6 Group 5: Posts & Content (35)"
+        },
+        {
+            "kind": "function",
+            "source": "get_the_ID",
+            "target": "PrestoWorld\\Core\\PostView::getId",
+            "mode": "sr",
+            "group": "10.4.6 Group 5: Posts & Content (35)"
+        },
+        {
+            "kind": "function",
+            "source": "get_the_author",
+            "target": "PrestoWorld\\Core\\PostView::author",
+            "mode": "sr",
+            "group": "10.4.6 Group 5: Posts & Content (35)"
+        },
+        {
+            "kind": "function",
+            "source": "get_avatar",
+            "target": "PrestoWorld\\Core\\MediaService::avatar",
+            "mode": "sr",
+            "group": "10.4.6 Group 5: Posts & Content (35)"
+        },
+        {
+            "kind": "function",
+            "source": "get_avatar_url",
+            "target": "PrestoWorld\\Core\\MediaService::avatarUrl",
+            "mode": "sr",
+            "group": "10.4.6 Group 5: Posts & Content (35)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_trim_excerpt",
+            "target": "PrestoWorld\\Core\\Format::trimExcerpt",
+            "mode": "sr",
+            "group": "10.4.6 Group 5: Posts & Content (35)"
+        },
+        {
+            "kind": "function",
+            "source": "get_pages",
+            "target": "PrestoWorld\\Core\\PostRepository::pages",
+            "mode": "sr",
+            "group": "10.4.6 Group 5: Posts & Content (35)"
+        },
+        {
+            "kind": "function",
+            "source": "get_next_post",
+            "target": "PrestoWorld\\Core\\PostRepository::next",
+            "mode": "sr",
+            "group": "10.4.6 Group 5: Posts & Content (35)"
+        },
+        {
+            "kind": "function",
+            "source": "get_previous_post",
+            "target": "PrestoWorld\\Core\\PostRepository::previous",
+            "mode": "sr",
+            "group": "10.4.6 Group 5: Posts & Content (35)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_get_post_revisions",
+            "target": "PrestoWorld\\Core\\PostRepository::revisions",
+            "mode": "sr",
+            "group": "10.4.6 Group 5: Posts & Content (35)"
+        },
+        {
+            "kind": "function",
+            "source": "is_user_logged_in",
+            "target": "PrestoWorld\\Core\\AuthService::isLoggedIn",
+            "mode": "sr",
+            "group": "10.4.7 Group 6: Users & Capabilities (22)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_get_current_user",
+            "target": "PrestoWorld\\Core\\AuthService::currentUser",
+            "mode": "sr",
+            "group": "10.4.7 Group 6: Users & Capabilities (22)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_set_current_user",
+            "target": "PrestoWorld\\Core\\AuthService::setCurrentUser",
+            "mode": "sr",
+            "group": "10.4.7 Group 6: Users & Capabilities (22)"
+        },
+        {
+            "kind": "function",
+            "source": "get_current_user_id",
+            "target": "PrestoWorld\\Core\\AuthService::currentUserId",
+            "mode": "sr",
+            "group": "10.4.7 Group 6: Users & Capabilities (22)"
+        },
+        {
+            "kind": "function",
+            "source": "current_user_can",
+            "target": "PrestoWorld\\Core\\CapabilityService::can",
+            "mode": "sr",
+            "group": "10.4.7 Group 6: Users & Capabilities (22)"
+        },
+        {
+            "kind": "function",
+            "source": "current_user_can_for_blog",
+            "target": "PrestoWorld\\Core\\CapabilityService::can",
+            "mode": "s",
+            "group": "10.4.7 Group 6: Users & Capabilities (22)"
+        },
+        {
+            "kind": "function",
+            "source": "user_can",
+            "target": "PrestoWorld\\Core\\CapabilityService::userCan",
+            "mode": "sr",
+            "group": "10.4.7 Group 6: Users & Capabilities (22)"
+        },
+        {
+            "kind": "function",
+            "source": "get_userdata",
+            "target": "PrestoWorld\\Core\\UserRepository::find",
+            "mode": "sr",
+            "group": "10.4.7 Group 6: Users & Capabilities (22)"
+        },
+        {
+            "kind": "function",
+            "source": "get_user_by",
+            "target": "PrestoWorld\\Core\\UserRepository::findBy",
+            "mode": "sr",
+            "group": "10.4.7 Group 6: Users & Capabilities (22)"
+        },
+        {
+            "kind": "function",
+            "source": "get_users",
+            "target": "PrestoWorld\\Core\\UserRepository::query",
+            "mode": "sr",
+            "group": "10.4.7 Group 6: Users & Capabilities (22)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_create_user",
+            "target": "PrestoWorld\\Core\\UserService::create",
+            "mode": "sr",
+            "group": "10.4.7 Group 6: Users & Capabilities (22)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_insert_user",
+            "target": "PrestoWorld\\Core\\UserService::insert",
+            "mode": "sr",
+            "group": "10.4.7 Group 6: Users & Capabilities (22)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_update_user",
+            "target": "PrestoWorld\\Core\\UserService::update",
+            "mode": "sr",
+            "group": "10.4.7 Group 6: Users & Capabilities (22)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_delete_user",
+            "target": "PrestoWorld\\Core\\UserService::delete",
+            "mode": "sr",
+            "group": "10.4.7 Group 6: Users & Capabilities (22)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_signon",
+            "target": "PrestoWorld\\Core\\AuthService::signIn",
+            "mode": "sr",
+            "group": "10.4.7 Group 6: Users & Capabilities (22)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_logout",
+            "target": "PrestoWorld\\Core\\AuthService::signOut",
+            "mode": "sr",
+            "group": "10.4.7 Group 6: Users & Capabilities (22)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_authenticate",
+            "target": "PrestoWorld\\Core\\AuthService::authenticate",
+            "mode": "sr",
+            "group": "10.4.7 Group 6: Users & Capabilities (22)"
+        },
+        {
+            "kind": "function",
+            "source": "get_role",
+            "target": "PrestoWorld\\Core\\RoleRegistry::get",
+            "mode": "sr",
+            "group": "10.4.7 Group 6: Users & Capabilities (22)"
+        },
+        {
+            "kind": "function",
+            "source": "add_role",
+            "target": "PrestoWorld\\Core\\RoleRegistry::add",
+            "mode": "sr",
+            "group": "10.4.7 Group 6: Users & Capabilities (22)"
+        },
+        {
+            "kind": "function",
+            "source": "remove_role",
+            "target": "PrestoWorld\\Core\\RoleRegistry::remove",
+            "mode": "sr",
+            "group": "10.4.7 Group 6: Users & Capabilities (22)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_roles",
+            "target": "PrestoWorld\\Core\\RoleRegistry::instance",
+            "mode": "sr",
+            "group": "10.4.7 Group 6: Users & Capabilities (22)"
+        },
+        {
+            "kind": "function",
+            "source": "is_super_admin",
+            "target": "PrestoWorld\\Core\\CapabilityService::isSuperAdmin",
+            "mode": "sr",
+            "group": "10.4.7 Group 6: Users & Capabilities (22)"
+        },
+        {
+            "kind": "function",
+            "source": "home_url",
+            "target": "PrestoWorld\\Core\\Url::home",
+            "mode": "sr",
+            "group": "10.4.8 Group 7: URLs & Redirects (28)"
+        },
+        {
+            "kind": "function",
+            "source": "site_url",
+            "target": "PrestoWorld\\Core\\Url::site",
+            "mode": "sr",
+            "group": "10.4.8 Group 7: URLs & Redirects (28)"
+        },
+        {
+            "kind": "function",
+            "source": "admin_url",
+            "target": "PrestoWorld\\Core\\Url::admin",
+            "mode": "sr",
+            "group": "10.4.8 Group 7: URLs & Redirects (28)"
+        },
+        {
+            "kind": "function",
+            "source": "self_admin_url",
+            "target": "PrestoWorld\\Core\\Url::selfAdmin",
+            "mode": "sr",
+            "group": "10.4.8 Group 7: URLs & Redirects (28)"
+        },
+        {
+            "kind": "function",
+            "source": "content_url",
+            "target": "PrestoWorld\\Core\\Url::content",
+            "mode": "sr",
+            "group": "10.4.8 Group 7: URLs & Redirects (28)"
+        },
+        {
+            "kind": "function",
+            "source": "includes_url",
+            "target": "PrestoWorld\\Core\\Url::includes",
+            "mode": "sr",
+            "group": "10.4.8 Group 7: URLs & Redirects (28)"
+        },
+        {
+            "kind": "function",
+            "source": "get_home_path",
+            "target": "PrestoWorld\\Core\\Path::home",
+            "mode": "sr",
+            "group": "10.4.8 Group 7: URLs & Redirects (28)"
+        },
+        {
+            "kind": "function",
+            "source": "get_permalink",
+            "target": "PrestoWorld\\Core\\Url::permalink",
+            "mode": "sr",
+            "group": "10.4.8 Group 7: URLs & Redirects (28)"
+        },
+        {
+            "kind": "function",
+            "source": "get_attachment_link",
+            "target": "PrestoWorld\\Core\\Url::attachment",
+            "mode": "sr",
+            "group": "10.4.8 Group 7: URLs & Redirects (28)"
+        },
+        {
+            "kind": "function",
+            "source": "get_author_posts_url",
+            "target": "PrestoWorld\\Core\\Url::authorArchive",
+            "mode": "sr",
+            "group": "10.4.8 Group 7: URLs & Redirects (28)"
+        },
+        {
+            "kind": "function",
+            "source": "get_category_link",
+            "target": "PrestoWorld\\Core\\Url::category",
+            "mode": "sr",
+            "group": "10.4.8 Group 7: URLs & Redirects (28)"
+        },
+        {
+            "kind": "function",
+            "source": "get_tag_link",
+            "target": "PrestoWorld\\Core\\Url::tag",
+            "mode": "sr",
+            "group": "10.4.8 Group 7: URLs & Redirects (28)"
+        },
+        {
+            "kind": "function",
+            "source": "get_term_link",
+            "target": "PrestoWorld\\Core\\Url::term",
+            "mode": "sr",
+            "group": "10.4.8 Group 7: URLs & Redirects (28)"
+        },
+        {
+            "kind": "function",
+            "source": "get_search_link",
+            "target": "PrestoWorld\\Core\\Url::search",
+            "mode": "sr",
+            "group": "10.4.8 Group 7: URLs & Redirects (28)"
+        },
+        {
+            "kind": "function",
+            "source": "get_post_type_archive_link",
+            "target": "PrestoWorld\\Core\\Url::postTypeArchive",
+            "mode": "sr",
+            "group": "10.4.8 Group 7: URLs & Redirects (28)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_login_url",
+            "target": "PrestoWorld\\Core\\Url::login",
+            "mode": "sr",
+            "group": "10.4.8 Group 7: URLs & Redirects (28)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_logout_url",
+            "target": "PrestoWorld\\Core\\Url::logout",
+            "mode": "sr",
+            "group": "10.4.8 Group 7: URLs & Redirects (28)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_registration_url",
+            "target": "PrestoWorld\\Core\\Url::register",
+            "mode": "sr",
+            "group": "10.4.8 Group 7: URLs & Redirects (28)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_lostpassword_url",
+            "target": "PrestoWorld\\Core\\Url::lostPassword",
+            "mode": "sr",
+            "group": "10.4.8 Group 7: URLs & Redirects (28)"
+        },
+        {
+            "kind": "function",
+            "source": "set_url_scheme",
+            "target": "PrestoWorld\\Core\\Url::setScheme",
+            "mode": "sr",
+            "group": "10.4.8 Group 7: URLs & Redirects (28)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_redirect",
+            "target": "PrestoWorld\\Core\\RedirectService::to",
+            "mode": "sr",
+            "group": "10.4.8 Group 7: URLs & Redirects (28)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_safe_redirect",
+            "target": "PrestoWorld\\Core\\RedirectService::safe",
+            "mode": "sr",
+            "group": "10.4.8 Group 7: URLs & Redirects (28)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_sanitize_redirect",
+            "target": "PrestoWorld\\Core\\RedirectService::sanitize",
+            "mode": "sr",
+            "group": "10.4.8 Group 7: URLs & Redirects (28)"
+        },
+        {
+            "kind": "function",
+            "source": "nocache_headers",
+            "target": "PrestoWorld\\Core\\Response::noCache",
+            "mode": "sr",
+            "group": "10.4.8 Group 7: URLs & Redirects (28)"
+        },
+        {
+            "kind": "function",
+            "source": "status_header",
+            "target": "PrestoWorld\\Core\\Response::status",
+            "mode": "sr",
+            "group": "10.4.8 Group 7: URLs & Redirects (28)"
+        },
+        {
+            "kind": "function",
+            "source": "add_query_arg",
+            "target": "PrestoWorld\\Core\\Url::addQueryArg",
+            "mode": "sr",
+            "group": "10.4.8 Group 7: URLs & Redirects (28)"
+        },
+        {
+            "kind": "function",
+            "source": "remove_query_arg",
+            "target": "PrestoWorld\\Core\\Url::removeQueryArg",
+            "mode": "sr",
+            "group": "10.4.8 Group 7: URLs & Redirects (28)"
+        },
+        {
+            "kind": "function",
+            "source": "get_query_arg",
+            "target": "PrestoWorld\\Core\\Url::getQueryArg",
+            "mode": "sr",
+            "group": "10.4.8 Group 7: URLs & Redirects (28)"
+        },
+        {
+            "kind": "function",
+            "source": "is_admin",
+            "target": "PrestoWorld\\Core\\Request::isAdmin",
+            "mode": "sr",
+            "group": "10.4.9 Group 8: Conditional Tags & Template (21)"
+        },
+        {
+            "kind": "function",
+            "source": "is_front_page",
+            "target": "PrestoWorld\\Core\\QueryState::isFrontPage",
+            "mode": "sr",
+            "group": "10.4.9 Group 8: Conditional Tags & Template (21)"
+        },
+        {
+            "kind": "function",
+            "source": "is_home",
+            "target": "PrestoWorld\\Core\\QueryState::isHome",
+            "mode": "sr",
+            "group": "10.4.9 Group 8: Conditional Tags & Template (21)"
+        },
+        {
+            "kind": "function",
+            "source": "is_single",
+            "target": "PrestoWorld\\Core\\QueryState::isSingle",
+            "mode": "sr",
+            "group": "10.4.9 Group 8: Conditional Tags & Template (21)"
+        },
+        {
+            "kind": "function",
+            "source": "is_page",
+            "target": "PrestoWorld\\Core\\QueryState::isPage",
+            "mode": "sr",
+            "group": "10.4.9 Group 8: Conditional Tags & Template (21)"
+        },
+        {
+            "kind": "function",
+            "source": "is_singular",
+            "target": "PrestoWorld\\Core\\QueryState::isSingular",
+            "mode": "sr",
+            "group": "10.4.9 Group 8: Conditional Tags & Template (21)"
+        },
+        {
+            "kind": "function",
+            "source": "is_attachment",
+            "target": "PrestoWorld\\Core\\QueryState::isAttachment",
+            "mode": "sr",
+            "group": "10.4.9 Group 8: Conditional Tags & Template (21)"
+        },
+        {
+            "kind": "function",
+            "source": "is_sticky",
+            "target": "PrestoWorld\\Core\\QueryState::isSticky",
+            "mode": "sr",
+            "group": "10.4.9 Group 8: Conditional Tags & Template (21)"
+        },
+        {
+            "kind": "function",
+            "source": "is_archive",
+            "target": "PrestoWorld\\Core\\QueryState::isArchive",
+            "mode": "sr",
+            "group": "10.4.9 Group 8: Conditional Tags & Template (21)"
+        },
+        {
+            "kind": "function",
+            "source": "is_category",
+            "target": "PrestoWorld\\Core\\QueryState::isCategory",
+            "mode": "sr",
+            "group": "10.4.9 Group 8: Conditional Tags & Template (21)"
+        },
+        {
+            "kind": "function",
+            "source": "is_tag",
+            "target": "PrestoWorld\\Core\\QueryState::isTag",
+            "mode": "sr",
+            "group": "10.4.9 Group 8: Conditional Tags & Template (21)"
+        },
+        {
+            "kind": "function",
+            "source": "is_tax",
+            "target": "PrestoWorld\\Core\\QueryState::isTax",
+            "mode": "sr",
+            "group": "10.4.9 Group 8: Conditional Tags & Template (21)"
+        },
+        {
+            "kind": "function",
+            "source": "is_author",
+            "target": "PrestoWorld\\Core\\QueryState::isAuthor",
+            "mode": "sr",
+            "group": "10.4.9 Group 8: Conditional Tags & Template (21)"
+        },
+        {
+            "kind": "function",
+            "source": "is_date",
+            "target": "PrestoWorld\\Core\\QueryState::isDate",
+            "mode": "sr",
+            "group": "10.4.9 Group 8: Conditional Tags & Template (21)"
+        },
+        {
+            "kind": "function",
+            "source": "is_404",
+            "target": "PrestoWorld\\Core\\QueryState::is404",
+            "mode": "sr",
+            "group": "10.4.9 Group 8: Conditional Tags & Template (21)"
+        },
+        {
+            "kind": "function",
+            "source": "is_search",
+            "target": "PrestoWorld\\Core\\QueryState::isSearch",
+            "mode": "sr",
+            "group": "10.4.9 Group 8: Conditional Tags & Template (21)"
+        },
+        {
+            "kind": "function",
+            "source": "is_feed",
+            "target": "PrestoWorld\\Core\\QueryState::isFeed",
+            "mode": "n",
+            "group": "10.4.9 Group 8: Conditional Tags & Template (21)"
+        },
+        {
+            "kind": "function",
+            "source": "is_paged",
+            "target": "PrestoWorld\\Core\\QueryState::isPaged",
+            "mode": "sr",
+            "group": "10.4.9 Group 8: Conditional Tags & Template (21)"
+        },
+        {
+            "kind": "function",
+            "source": "is_main_query",
+            "target": "PrestoWorld\\Core\\QueryState::isMainQuery",
+            "mode": "sr",
+            "group": "10.4.9 Group 8: Conditional Tags & Template (21)"
+        },
+        {
+            "kind": "function",
+            "source": "is_customize_preview",
+            "target": "PrestoWorld\\Core\\QueryState::isCustomizePreview",
+            "mode": "n",
+            "group": "10.4.9 Group 8: Conditional Tags & Template (21)"
+        },
+        {
+            "kind": "function",
+            "source": "get_bloginfo",
+            "target": "PrestoWorld\\Core\\SiteInfo::get",
+            "mode": "sr",
+            "group": "10.4.9 Group 8: Conditional Tags & Template (21)"
+        },
+        {
+            "kind": "function",
+            "source": "__",
+            "target": "PrestoWorld\\Core\\Translator::__",
+            "mode": "sr",
+            "group": "10.4.10 Group 9: i18n (18)"
+        },
+        {
+            "kind": "function",
+            "source": "_e",
+            "target": "PrestoWorld\\Core\\Translator::_e",
+            "mode": "sr",
+            "group": "10.4.10 Group 9: i18n (18)"
+        },
+        {
+            "kind": "function",
+            "source": "_x",
+            "target": "PrestoWorld\\Core\\Translator::_x",
+            "mode": "sr",
+            "group": "10.4.10 Group 9: i18n (18)"
+        },
+        {
+            "kind": "function",
+            "source": "_ex",
+            "target": "PrestoWorld\\Core\\Translator::_ex",
+            "mode": "sr",
+            "group": "10.4.10 Group 9: i18n (18)"
+        },
+        {
+            "kind": "function",
+            "source": "_n",
+            "target": "PrestoWorld\\Core\\Translator::_n",
+            "mode": "sr",
+            "group": "10.4.10 Group 9: i18n (18)"
+        },
+        {
+            "kind": "function",
+            "source": "_nx",
+            "target": "PrestoWorld\\Core\\Translator::_nx",
+            "mode": "sr",
+            "group": "10.4.10 Group 9: i18n (18)"
+        },
+        {
+            "kind": "function",
+            "source": "_n_noop",
+            "target": "PrestoWorld\\Core\\Translator::_nNoop",
+            "mode": "sr",
+            "group": "10.4.10 Group 9: i18n (18)"
+        },
+        {
+            "kind": "function",
+            "source": "_nx_noop",
+            "target": "PrestoWorld\\Core\\Translator::_nxNoop",
+            "mode": "sr",
+            "group": "10.4.10 Group 9: i18n (18)"
+        },
+        {
+            "kind": "function",
+            "source": "translate",
+            "target": "PrestoWorld\\Core\\Translator::translate",
+            "mode": "sr",
+            "group": "10.4.10 Group 9: i18n (18)"
+        },
+        {
+            "kind": "function",
+            "source": "translate_with_gettext_context",
+            "target": "PrestoWorld\\Core\\Translator::withContext",
+            "mode": "sr",
+            "group": "10.4.10 Group 9: i18n (18)"
+        },
+        {
+            "kind": "function",
+            "source": "load_plugin_textdomain",
+            "target": "PrestoWorld\\Core\\Translator::loadPluginDomain",
+            "mode": "sr",
+            "group": "10.4.10 Group 9: i18n (18)"
+        },
+        {
+            "kind": "function",
+            "source": "load_theme_textdomain",
+            "target": "PrestoWorld\\Core\\Translator::loadThemeDomain",
+            "mode": "sr",
+            "group": "10.4.10 Group 9: i18n (18)"
+        },
+        {
+            "kind": "function",
+            "source": "load_textdomain",
+            "target": "PrestoWorld\\Core\\Translator::load",
+            "mode": "sr",
+            "group": "10.4.10 Group 9: i18n (18)"
+        },
+        {
+            "kind": "function",
+            "source": "unload_textdomain",
+            "target": "PrestoWorld\\Core\\Translator::unload",
+            "mode": "sr",
+            "group": "10.4.10 Group 9: i18n (18)"
+        },
+        {
+            "kind": "function",
+            "source": "is_textdomain_loaded",
+            "target": "PrestoWorld\\Core\\Translator::isLoaded",
+            "mode": "sr",
+            "group": "10.4.10 Group 9: i18n (18)"
+        },
+        {
+            "kind": "function",
+            "source": "dgettext",
+            "target": "PrestoWorld\\Core\\Translator::dget",
+            "mode": "sr",
+            "group": "10.4.10 Group 9: i18n (18)"
+        },
+        {
+            "kind": "function",
+            "source": "dngettext",
+            "target": "PrestoWorld\\Core\\Translator::dnget",
+            "mode": "sr",
+            "group": "10.4.10 Group 9: i18n (18)"
+        },
+        {
+            "kind": "function",
+            "source": "determine_locale",
+            "target": "PrestoWorld\\Core\\Translator::locale",
+            "mode": "sr",
+            "group": "10.4.10 Group 9: i18n (18)"
+        },
+        {
+            "kind": "function",
+            "source": "add_action",
+            "target": "PrestoWorld\\Core\\Legacy\\LegacyRegistry::recordHook",
+            "mode": "s",
+            "group": "10.4.11 Group 10: Hooks (18) - cross-ref [06 §6.2](./06-legacy-support.md)"
+        },
+        {
+            "kind": "function",
+            "source": "add_filter",
+            "target": "PrestoWorld\\Core\\Legacy\\LegacyRegistry::recordHook",
+            "mode": "s",
+            "group": "10.4.11 Group 10: Hooks (18) - cross-ref [06 §6.2](./06-legacy-support.md)"
+        },
+        {
+            "kind": "function",
+            "source": "remove_action",
+            "target": "PrestoWorld\\Core\\Legacy\\LegacyRegistry::removeHook",
+            "mode": "s",
+            "group": "10.4.11 Group 10: Hooks (18) - cross-ref [06 §6.2](./06-legacy-support.md)"
+        },
+        {
+            "kind": "function",
+            "source": "remove_filter",
+            "target": "PrestoWorld\\Core\\Legacy\\LegacyRegistry::removeHook",
+            "mode": "s",
+            "group": "10.4.11 Group 10: Hooks (18) - cross-ref [06 §6.2](./06-legacy-support.md)"
+        },
+        {
+            "kind": "function",
+            "source": "remove_all_actions",
+            "target": "PrestoWorld\\Core\\Legacy\\LegacyRegistry::removeAll",
+            "mode": "s",
+            "group": "10.4.11 Group 10: Hooks (18) - cross-ref [06 §6.2](./06-legacy-support.md)"
+        },
+        {
+            "kind": "function",
+            "source": "remove_all_filters",
+            "target": "PrestoWorld\\Core\\Legacy\\LegacyRegistry::removeAll",
+            "mode": "s",
+            "group": "10.4.11 Group 10: Hooks (18) - cross-ref [06 §6.2](./06-legacy-support.md)"
+        },
+        {
+            "kind": "function",
+            "source": "do_action",
+            "target": "PrestoWorld\\Core\\Legacy\\LegacyInvoker::trigger",
+            "mode": "s",
+            "group": "10.4.11 Group 10: Hooks (18) - cross-ref [06 §6.2](./06-legacy-support.md)"
+        },
+        {
+            "kind": "function",
+            "source": "do_action_ref_array",
+            "target": "PrestoWorld\\Core\\Legacy\\LegacyInvoker::trigger",
+            "mode": "s",
+            "group": "10.4.11 Group 10: Hooks (18) - cross-ref [06 §6.2](./06-legacy-support.md)"
+        },
+        {
+            "kind": "function",
+            "source": "apply_filters",
+            "target": "PrestoWorld\\Core\\Legacy\\LegacyInvoker::trigger",
+            "mode": "s",
+            "group": "10.4.11 Group 10: Hooks (18) - cross-ref [06 §6.2](./06-legacy-support.md)"
+        },
+        {
+            "kind": "function",
+            "source": "apply_filters_ref_array",
+            "target": "PrestoWorld\\Core\\Legacy\\LegacyInvoker::trigger",
+            "mode": "s",
+            "group": "10.4.11 Group 10: Hooks (18) - cross-ref [06 §6.2](./06-legacy-support.md)"
+        },
+        {
+            "kind": "function",
+            "source": "doing_action",
+            "target": "PrestoWorld\\Core\\Legacy\\LegacyInvoker::doing",
+            "mode": "s",
+            "group": "10.4.11 Group 10: Hooks (18) - cross-ref [06 §6.2](./06-legacy-support.md)"
+        },
+        {
+            "kind": "function",
+            "source": "doing_filter",
+            "target": "PrestoWorld\\Core\\Legacy\\LegacyInvoker::doing",
+            "mode": "s",
+            "group": "10.4.11 Group 10: Hooks (18) - cross-ref [06 §6.2](./06-legacy-support.md)"
+        },
+        {
+            "kind": "function",
+            "source": "did_action",
+            "target": "PrestoWorld\\Core\\Legacy\\LegacyInvoker::did",
+            "mode": "s",
+            "group": "10.4.11 Group 10: Hooks (18) - cross-ref [06 §6.2](./06-legacy-support.md)"
+        },
+        {
+            "kind": "function",
+            "source": "has_action",
+            "target": "PrestoWorld\\Core\\Legacy\\LegacyRegistry::has",
+            "mode": "s",
+            "group": "10.4.11 Group 10: Hooks (18) - cross-ref [06 §6.2](./06-legacy-support.md)"
+        },
+        {
+            "kind": "function",
+            "source": "has_filter",
+            "target": "PrestoWorld\\Core\\Legacy\\LegacyRegistry::has",
+            "mode": "s",
+            "group": "10.4.11 Group 10: Hooks (18) - cross-ref [06 §6.2](./06-legacy-support.md)"
+        },
+        {
+            "kind": "function",
+            "source": "current_filter",
+            "target": "PrestoWorld\\Core\\Legacy\\LegacyInvoker::current",
+            "mode": "s",
+            "group": "10.4.11 Group 10: Hooks (18) - cross-ref [06 §6.2](./06-legacy-support.md)"
+        },
+        {
+            "kind": "function",
+            "source": "current_action",
+            "target": "PrestoWorld\\Core\\Legacy\\LegacyInvoker::current",
+            "mode": "s",
+            "group": "10.4.11 Group 10: Hooks (18) - cross-ref [06 §6.2](./06-legacy-support.md)"
+        },
+        {
+            "kind": "function",
+            "source": "default_filters",
+            "target": "",
+            "mode": "n",
+            "group": "10.4.11 Group 10: Hooks (18) - cross-ref [06 §6.2](./06-legacy-support.md)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_enqueue_script",
+            "target": "PrestoWorld\\Core\\AssetManager::enqueueScript",
+            "mode": "sr",
+            "group": "10.4.12 Group 11: Assets (16)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_register_script",
+            "target": "PrestoWorld\\Core\\AssetManager::registerScript",
+            "mode": "sr",
+            "group": "10.4.12 Group 11: Assets (16)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_dequeue_script",
+            "target": "PrestoWorld\\Core\\AssetManager::dequeueScript",
+            "mode": "sr",
+            "group": "10.4.12 Group 11: Assets (16)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_deregister_script",
+            "target": "PrestoWorld\\Core\\AssetManager::deregisterScript",
+            "mode": "sr",
+            "group": "10.4.12 Group 11: Assets (16)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_enqueue_style",
+            "target": "PrestoWorld\\Core\\AssetManager::enqueueStyle",
+            "mode": "sr",
+            "group": "10.4.12 Group 11: Assets (16)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_register_style",
+            "target": "PrestoWorld\\Core\\AssetManager::registerStyle",
+            "mode": "sr",
+            "group": "10.4.12 Group 11: Assets (16)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_dequeue_style",
+            "target": "PrestoWorld\\Core\\AssetManager::dequeueStyle",
+            "mode": "sr",
+            "group": "10.4.12 Group 11: Assets (16)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_deregister_style",
+            "target": "PrestoWorld\\Core\\AssetManager::deregisterStyle",
+            "mode": "sr",
+            "group": "10.4.12 Group 11: Assets (16)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_script_is",
+            "target": "PrestoWorld\\Core\\AssetManager::scriptIs",
+            "mode": "sr",
+            "group": "10.4.12 Group 11: Assets (16)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_style_is",
+            "target": "PrestoWorld\\Core\\AssetManager::styleIs",
+            "mode": "sr",
+            "group": "10.4.12 Group 11: Assets (16)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_localize_script",
+            "target": "PrestoWorld\\Core\\AssetManager::localize",
+            "mode": "sr",
+            "group": "10.4.12 Group 11: Assets (16)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_add_inline_script",
+            "target": "PrestoWorld\\Core\\AssetManager::addInlineScript",
+            "mode": "sr",
+            "group": "10.4.12 Group 11: Assets (16)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_add_inline_style",
+            "target": "PrestoWorld\\Core\\AssetManager::addInlineStyle",
+            "mode": "sr",
+            "group": "10.4.12 Group 11: Assets (16)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_enqueue_block_style",
+            "target": "PrestoWorld\\Core\\AssetManager::enqueueStyle",
+            "mode": "r",
+            "group": "10.4.12 Group 11: Assets (16)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_register_script_module",
+            "target": "PrestoWorld\\Core\\AssetManager::registerModule",
+            "mode": "sr",
+            "group": "10.4.12 Group 11: Assets (16)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_default_scripts",
+            "target": "",
+            "mode": "n",
+            "group": "10.4.12 Group 11: Assets (16)"
+        },
+        {
+            "kind": "function",
+            "source": "get_template_directory",
+            "target": "PrestoWorld\\Core\\ThemeManager::directory",
+            "mode": "sr",
+            "group": "10.4.13 Group 12: Theme (14)"
+        },
+        {
+            "kind": "function",
+            "source": "get_stylesheet_directory",
+            "target": "PrestoWorld\\Core\\ThemeManager::stylesheetDirectory",
+            "mode": "sr",
+            "group": "10.4.13 Group 12: Theme (14)"
+        },
+        {
+            "kind": "function",
+            "source": "get_template_directory_uri",
+            "target": "PrestoWorld\\Core\\ThemeManager::directoryUri",
+            "mode": "sr",
+            "group": "10.4.13 Group 12: Theme (14)"
+        },
+        {
+            "kind": "function",
+            "source": "get_stylesheet_directory_uri",
+            "target": "PrestoWorld\\Core\\ThemeManager::stylesheetUri",
+            "mode": "sr",
+            "group": "10.4.13 Group 12: Theme (14)"
+        },
+        {
+            "kind": "function",
+            "source": "get_stylesheet",
+            "target": "PrestoWorld\\Core\\ThemeManager::stylesheet",
+            "mode": "sr",
+            "group": "10.4.13 Group 12: Theme (14)"
+        },
+        {
+            "kind": "function",
+            "source": "get_template",
+            "target": "PrestoWorld\\Core\\ThemeManager::template",
+            "mode": "sr",
+            "group": "10.4.13 Group 12: Theme (14)"
+        },
+        {
+            "kind": "function",
+            "source": "template_uri",
+            "target": "PrestoWorld\\Core\\ThemeManager::templateUri",
+            "mode": "sr",
+            "group": "10.4.13 Group 12: Theme (14)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_get_theme",
+            "target": "PrestoWorld\\Core\\ThemeManager::get",
+            "mode": "sr",
+            "group": "10.4.13 Group 12: Theme (14)"
+        },
+        {
+            "kind": "function",
+            "source": "locate_template",
+            "target": "PrestoWorld\\Core\\ThemeManager::locate",
+            "mode": "sr",
+            "group": "10.4.13 Group 12: Theme (14)"
+        },
+        {
+            "kind": "function",
+            "source": "load_template",
+            "target": "PrestoWorld\\Core\\ThemeManager::load",
+            "mode": "sr",
+            "group": "10.4.13 Group 12: Theme (14)"
+        },
+        {
+            "kind": "function",
+            "source": "get_header",
+            "target": "PrestoWorld\\Core\\ThemeManager::header",
+            "mode": "sr",
+            "group": "10.4.13 Group 12: Theme (14)"
+        },
+        {
+            "kind": "function",
+            "source": "get_footer",
+            "target": "PrestoWorld\\Core\\ThemeManager::footer",
+            "mode": "sr",
+            "group": "10.4.13 Group 12: Theme (14)"
+        },
+        {
+            "kind": "function",
+            "source": "get_sidebar",
+            "target": "PrestoWorld\\Core\\ThemeManager::sidebar",
+            "mode": "sr",
+            "group": "10.4.13 Group 12: Theme (14)"
+        },
+        {
+            "kind": "function",
+            "source": "get_template_part",
+            "target": "PrestoWorld\\Core\\ThemeManager::templatePart",
+            "mode": "sr",
+            "group": "10.4.13 Group 12: Theme (14)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_upload_dir",
+            "target": "PrestoWorld\\Core\\UploadService::dir",
+            "mode": "sr",
+            "group": "10.4.14 Group 13: Files & Uploads (15)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_upload_bits",
+            "target": "PrestoWorld\\Core\\UploadService::bits",
+            "mode": "sr",
+            "group": "10.4.14 Group 13: Files & Uploads (15)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_handle_upload",
+            "target": "PrestoWorld\\Core\\UploadService::handle",
+            "mode": "sr",
+            "group": "10.4.14 Group 13: Files & Uploads (15)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_handle_sideload",
+            "target": "PrestoWorld\\Core\\UploadService::sideload",
+            "mode": "sr",
+            "group": "10.4.14 Group 13: Files & Uploads (15)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_check_filetype",
+            "target": "PrestoWorld\\Core\\UploadService::checkFileType",
+            "mode": "sr",
+            "group": "10.4.14 Group 13: Files & Uploads (15)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_check_filetype_and_ext",
+            "target": "PrestoWorld\\Core\\UploadService::checkFiletypeExt",
+            "mode": "sr",
+            "group": "10.4.14 Group 13: Files & Uploads (15)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_unique_filename",
+            "target": "PrestoWorld\\Core\\UploadService::uniqueFilename",
+            "mode": "sr",
+            "group": "10.4.14 Group 13: Files & Uploads (15)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_mkdir_p",
+            "target": "PrestoWorld\\Core\\Filesystem::mkdirP",
+            "mode": "sr",
+            "group": "10.4.14 Group 13: Files & Uploads (15)"
+        },
+        {
+            "kind": "function",
+            "source": "download_url",
+            "target": "PrestoWorld\\Core\\HttpService::download",
+            "mode": "sr",
+            "group": "10.4.14 Group 13: Files & Uploads (15)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_tempnam",
+            "target": "PrestoWorld\\Core\\Filesystem::tempName",
+            "mode": "sr",
+            "group": "10.4.14 Group 13: Files & Uploads (15)"
+        },
+        {
+            "kind": "function",
+            "source": "copy_dir",
+            "target": "PrestoWorld\\Core\\Filesystem::copyDir",
+            "mode": "sr",
+            "group": "10.4.14 Group 13: Files & Uploads (15)"
+        },
+        {
+            "kind": "function",
+            "source": "move_dir",
+            "target": "PrestoWorld\\Core\\Filesystem::moveDir",
+            "mode": "sr",
+            "group": "10.4.14 Group 13: Files & Uploads (15)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_is_writable",
+            "target": "PrestoWorld\\Core\\Filesystem::isWritable",
+            "mode": "sr",
+            "group": "10.4.14 Group 13: Files & Uploads (15)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_is_file_mod_allowed",
+            "target": "PrestoWorld\\Core\\Filesystem::modAllowed",
+            "mode": "sr",
+            "group": "10.4.14 Group 13: Files & Uploads (15)"
+        },
+        {
+            "kind": "function",
+            "source": "validate_file",
+            "target": "PrestoWorld\\Core\\Filesystem::validate",
+            "mode": "sr",
+            "group": "10.4.14 Group 13: Files & Uploads (15)"
+        },
+        {
+            "kind": "function",
+            "source": "get_attached_file",
+            "target": "PrestoWorld\\Core\\MediaService::file",
+            "mode": "sr",
+            "group": "10.4.15 Group 14: Media / Attachments (13)"
+        },
+        {
+            "kind": "function",
+            "source": "update_attached_file",
+            "target": "PrestoWorld\\Core\\MediaService::updateFile",
+            "mode": "sr",
+            "group": "10.4.15 Group 14: Media / Attachments (13)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_get_attachment_url",
+            "target": "PrestoWorld\\Core\\MediaService::url",
+            "mode": "sr",
+            "group": "10.4.15 Group 14: Media / Attachments (13)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_get_attachment_metadata",
+            "target": "PrestoWorld\\Core\\MediaService::metadata",
+            "mode": "sr",
+            "group": "10.4.15 Group 14: Media / Attachments (13)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_update_attachment_metadata",
+            "target": "PrestoWorld\\Core\\MediaService::updateMetadata",
+            "mode": "sr",
+            "group": "10.4.15 Group 14: Media / Attachments (13)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_generate_attachment_metadata",
+            "target": "PrestoWorld\\Core\\MediaService::generateMetadata",
+            "mode": "sr",
+            "group": "10.4.15 Group 14: Media / Attachments (13)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_insert_attachment",
+            "target": "PrestoWorld\\Core\\MediaService::insert",
+            "mode": "sr",
+            "group": "10.4.15 Group 14: Media / Attachments (13)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_delete_attachment",
+            "target": "PrestoWorld\\Core\\MediaService::delete",
+            "mode": "sr",
+            "group": "10.4.15 Group 14: Media / Attachments (13)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_get_attachment_image",
+            "target": "PrestoWorld\\Core\\MediaService::image",
+            "mode": "sr",
+            "group": "10.4.15 Group 14: Media / Attachments (13)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_get_attachment_image_src",
+            "target": "PrestoWorld\\Core\\MediaService::imageSrc",
+            "mode": "sr",
+            "group": "10.4.15 Group 14: Media / Attachments (13)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_create_image_subsizes",
+            "target": "PrestoWorld\\Core\\MediaService::subsizes",
+            "mode": "sr",
+            "group": "10.4.15 Group 14: Media / Attachments (13)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_crop_image",
+            "target": "PrestoWorld\\Core\\MediaService::crop",
+            "mode": "sr",
+            "group": "10.4.15 Group 14: Media / Attachments (13)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_get_attachment_caption",
+            "target": "PrestoWorld\\Core\\MediaService::caption",
+            "mode": "sr",
+            "group": "10.4.15 Group 14: Media / Attachments (13)"
+        },
+        {
+            "kind": "function",
+            "source": "get_post_meta",
+            "target": "PrestoWorld\\Core\\MetaRepository::get",
+            "mode": "sr",
+            "group": "10.4.16 Group 15: Meta & Taxonomy (36)"
+        },
+        {
+            "kind": "function",
+            "source": "add_post_meta",
+            "target": "PrestoWorld\\Core\\MetaRepository::add",
+            "mode": "sr",
+            "group": "10.4.16 Group 15: Meta & Taxonomy (36)"
+        },
+        {
+            "kind": "function",
+            "source": "update_post_meta",
+            "target": "PrestoWorld\\Core\\MetaRepository::update",
+            "mode": "sr",
+            "group": "10.4.16 Group 15: Meta & Taxonomy (36)"
+        },
+        {
+            "kind": "function",
+            "source": "delete_post_meta",
+            "target": "PrestoWorld\\Core\\MetaRepository::delete",
+            "mode": "sr",
+            "group": "10.4.16 Group 15: Meta & Taxonomy (36)"
+        },
+        {
+            "kind": "function",
+            "source": "get_post_custom",
+            "target": "PrestoWorld\\Core\\MetaRepository::all",
+            "mode": "sr",
+            "group": "10.4.16 Group 15: Meta & Taxonomy (36)"
+        },
+        {
+            "kind": "function",
+            "source": "get_post_custom_keys",
+            "target": "PrestoWorld\\Core\\MetaRepository::keys",
+            "mode": "sr",
+            "group": "10.4.16 Group 15: Meta & Taxonomy (36)"
+        },
+        {
+            "kind": "function",
+            "source": "get_post_custom_values",
+            "target": "PrestoWorld\\Core\\MetaRepository::values",
+            "mode": "sr",
+            "group": "10.4.16 Group 15: Meta & Taxonomy (36)"
+        },
+        {
+            "kind": "function",
+            "source": "register_post_meta",
+            "target": "PrestoWorld\\Core\\MetaRepository::register",
+            "mode": "sr",
+            "group": "10.4.16 Group 15: Meta & Taxonomy (36)"
+        },
+        {
+            "kind": "function",
+            "source": "register_meta",
+            "target": "PrestoWorld\\Core\\MetaRepository::register",
+            "mode": "sr",
+            "group": "10.4.16 Group 15: Meta & Taxonomy (36)"
+        },
+        {
+            "kind": "function",
+            "source": "get_metadata",
+            "target": "PrestoWorld\\Core\\MetaRepository::getGeneric",
+            "mode": "sr",
+            "group": "10.4.16 Group 15: Meta & Taxonomy (36)"
+        },
+        {
+            "kind": "function",
+            "source": "update_metadata",
+            "target": "PrestoWorld\\Core\\MetaRepository::updateGeneric",
+            "mode": "sr",
+            "group": "10.4.16 Group 15: Meta & Taxonomy (36)"
+        },
+        {
+            "kind": "function",
+            "source": "delete_metadata",
+            "target": "PrestoWorld\\Core\\MetaRepository::deleteGeneric",
+            "mode": "sr",
+            "group": "10.4.16 Group 15: Meta & Taxonomy (36)"
+        },
+        {
+            "kind": "function",
+            "source": "metadata_exists",
+            "target": "PrestoWorld\\Core\\MetaRepository::exists",
+            "mode": "sr",
+            "group": "10.4.16 Group 15: Meta & Taxonomy (36)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_get_object_terms",
+            "target": "PrestoWorld\\Core\\TermRepository::objectTerms",
+            "mode": "sr",
+            "group": "10.4.16 Group 15: Meta & Taxonomy (36)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_set_object_terms",
+            "target": "PrestoWorld\\Core\\TermRepository::setObjectTerms",
+            "mode": "sr",
+            "group": "10.4.16 Group 15: Meta & Taxonomy (36)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_set_post_terms",
+            "target": "PrestoWorld\\Core\\TermRepository::setPostTerms",
+            "mode": "sr",
+            "group": "10.4.16 Group 15: Meta & Taxonomy (36)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_get_post_terms",
+            "target": "PrestoWorld\\Core\\TermRepository::getPostTerms",
+            "mode": "sr",
+            "group": "10.4.16 Group 15: Meta & Taxonomy (36)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_remove_object_terms",
+            "target": "PrestoWorld\\Core\\TermRepository::removeObjectTerms",
+            "mode": "sr",
+            "group": "10.4.16 Group 15: Meta & Taxonomy (36)"
+        },
+        {
+            "kind": "function",
+            "source": "get_terms",
+            "target": "PrestoWorld\\Core\\TermRepository::query",
+            "mode": "sr",
+            "group": "10.4.16 Group 15: Meta & Taxonomy (36)"
+        },
+        {
+            "kind": "function",
+            "source": "get_term",
+            "target": "PrestoWorld\\Core\\TermRepository::find",
+            "mode": "sr",
+            "group": "10.4.16 Group 15: Meta & Taxonomy (36)"
+        },
+        {
+            "kind": "function",
+            "source": "get_term_children",
+            "target": "PrestoWorld\\Core\\TermRepository::children",
+            "mode": "sr",
+            "group": "10.4.16 Group 15: Meta & Taxonomy (36)"
+        },
+        {
+            "kind": "function",
+            "source": "get_category",
+            "target": "PrestoWorld\\Core\\TermRepository::category",
+            "mode": "sr",
+            "group": "10.4.16 Group 15: Meta & Taxonomy (36)"
+        },
+        {
+            "kind": "function",
+            "source": "get_categories",
+            "target": "PrestoWorld\\Core\\TermRepository::categories",
+            "mode": "sr",
+            "group": "10.4.16 Group 15: Meta & Taxonomy (36)"
+        },
+        {
+            "kind": "function",
+            "source": "get_tags",
+            "target": "PrestoWorld\\Core\\TermRepository::tags",
+            "mode": "sr",
+            "group": "10.4.16 Group 15: Meta & Taxonomy (36)"
+        },
+        {
+            "kind": "function",
+            "source": "term_exists",
+            "target": "PrestoWorld\\Core\\TermRepository::exists",
+            "mode": "sr",
+            "group": "10.4.16 Group 15: Meta & Taxonomy (36)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_insert_term",
+            "target": "PrestoWorld\\Core\\TermService::create",
+            "mode": "sr",
+            "group": "10.4.16 Group 15: Meta & Taxonomy (36)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_update_term",
+            "target": "PrestoWorld\\Core\\TermService::update",
+            "mode": "sr",
+            "group": "10.4.16 Group 15: Meta & Taxonomy (36)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_delete_term",
+            "target": "PrestoWorld\\Core\\TermService::delete",
+            "mode": "sr",
+            "group": "10.4.16 Group 15: Meta & Taxonomy (36)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_delete_category",
+            "target": "PrestoWorld\\Core\\TermService::deleteCategory",
+            "mode": "sr",
+            "group": "10.4.16 Group 15: Meta & Taxonomy (36)"
+        },
+        {
+            "kind": "function",
+            "source": "register_taxonomy",
+            "target": "PrestoWorld\\Core\\TaxonomyRegistry::register",
+            "mode": "sr",
+            "group": "10.4.16 Group 15: Meta & Taxonomy (36)"
+        },
+        {
+            "kind": "function",
+            "source": "register_taxonomy_for_object_type",
+            "target": "PrestoWorld\\Core\\TaxonomyRegistry::forObjectType",
+            "mode": "sr",
+            "group": "10.4.16 Group 15: Meta & Taxonomy (36)"
+        },
+        {
+            "kind": "function",
+            "source": "get_taxonomies",
+            "target": "PrestoWorld\\Core\\TaxonomyRegistry::all",
+            "mode": "sr",
+            "group": "10.4.16 Group 15: Meta & Taxonomy (36)"
+        },
+        {
+            "kind": "function",
+            "source": "get_taxonomy",
+            "target": "PrestoWorld\\Core\\TaxonomyRegistry::get",
+            "mode": "sr",
+            "group": "10.4.16 Group 15: Meta & Taxonomy (36)"
+        },
+        {
+            "kind": "function",
+            "source": "is_object_in_taxonomy",
+            "target": "PrestoWorld\\Core\\TaxonomyRegistry::has",
+            "mode": "sr",
+            "group": "10.4.16 Group 15: Meta & Taxonomy (36)"
+        },
+        {
+            "kind": "function",
+            "source": "get_the_terms",
+            "target": "PrestoWorld\\Core\\TermRepository::theTerms",
+            "mode": "sr",
+            "group": "10.4.16 Group 15: Meta & Taxonomy (36)"
+        },
+        {
+            "kind": "function",
+            "source": "has_term",
+            "target": "PrestoWorld\\Core\\TermRepository::hasTerm",
+            "mode": "sr",
+            "group": "10.4.16 Group 15: Meta & Taxonomy (36)"
+        },
+        {
+            "kind": "function",
+            "source": "is_object_in_term",
+            "target": "PrestoWorld\\Core\\TermRepository::hasTerm",
+            "mode": "sr",
+            "group": "10.4.16 Group 15: Meta & Taxonomy (36)"
+        },
+        {
+            "kind": "function",
+            "source": "get_comments",
+            "target": "PrestoWorld\\Core\\CommentRepository::query",
+            "mode": "sr",
+            "group": "10.4.17 Group 16: Comments (17)"
+        },
+        {
+            "kind": "function",
+            "source": "get_comment",
+            "target": "PrestoWorld\\Core\\CommentRepository::find",
+            "mode": "sr",
+            "group": "10.4.17 Group 16: Comments (17)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_get_comments",
+            "target": "PrestoWorld\\Core\\CommentRepository::query",
+            "mode": "sr",
+            "group": "10.4.17 Group 16: Comments (17)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_insert_comment",
+            "target": "PrestoWorld\\Core\\CommentService::create",
+            "mode": "sr",
+            "group": "10.4.17 Group 16: Comments (17)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_update_comment",
+            "target": "PrestoWorld\\Core\\CommentService::update",
+            "mode": "sr",
+            "group": "10.4.17 Group 16: Comments (17)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_delete_comment",
+            "target": "PrestoWorld\\Core\\CommentService::delete",
+            "mode": "sr",
+            "group": "10.4.17 Group 16: Comments (17)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_get_comment_status",
+            "target": "PrestoWorld\\Core\\CommentService::status",
+            "mode": "sr",
+            "group": "10.4.17 Group 16: Comments (17)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_set_comment_status",
+            "target": "PrestoWorld\\Core\\CommentService::setStatus",
+            "mode": "sr",
+            "group": "10.4.17 Group 16: Comments (17)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_allow_comment",
+            "target": "PrestoWorld\\Core\\CommentService::allow",
+            "mode": "sr",
+            "group": "10.4.17 Group 16: Comments (17)"
+        },
+        {
+            "kind": "function",
+            "source": "check_comment",
+            "target": "PrestoWorld\\Core\\CommentService::check",
+            "mode": "sr",
+            "group": "10.4.17 Group 16: Comments (17)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_new_comment",
+            "target": "PrestoWorld\\Core\\CommentService::insert",
+            "mode": "sr",
+            "group": "10.4.17 Group 16: Comments (17)"
+        },
+        {
+            "kind": "function",
+            "source": "comment_form",
+            "target": "PrestoWorld\\Core\\CommentView::form",
+            "mode": "sr",
+            "group": "10.4.17 Group 16: Comments (17)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_list_comments",
+            "target": "PrestoWorld\\Core\\CommentView::list",
+            "mode": "sr",
+            "group": "10.4.17 Group 16: Comments (17)"
+        },
+        {
+            "kind": "function",
+            "source": "get_comment_author",
+            "target": "PrestoWorld\\Core\\CommentView::author",
+            "mode": "sr",
+            "group": "10.4.17 Group 16: Comments (17)"
+        },
+        {
+            "kind": "function",
+            "source": "get_comment_text",
+            "target": "PrestoWorld\\Core\\CommentView::text",
+            "mode": "sr",
+            "group": "10.4.17 Group 16: Comments (17)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_count_comments",
+            "target": "PrestoWorld\\Core\\CommentRepository::count",
+            "mode": "sr",
+            "group": "10.4.17 Group 16: Comments (17)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_get_comment_timestamp",
+            "target": "PrestoWorld\\Core\\CommentRepository::timestamp",
+            "mode": "sr",
+            "group": "10.4.17 Group 16: Comments (17)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_send_json",
+            "target": "PrestoWorld\\Core\\JsonResponse::send",
+            "mode": "sr",
+            "group": "10.4.18 Group 17: AJAX, REST & Cron (20)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_send_json_success",
+            "target": "PrestoWorld\\Core\\JsonResponse::success",
+            "mode": "sr",
+            "group": "10.4.18 Group 17: AJAX, REST & Cron (20)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_send_json_error",
+            "target": "PrestoWorld\\Core\\JsonResponse::error",
+            "mode": "sr",
+            "group": "10.4.18 Group 17: AJAX, REST & Cron (20)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_doing_ajax",
+            "target": "PrestoWorld\\Core\\Request::doingAjax",
+            "mode": "sr",
+            "group": "10.4.18 Group 17: AJAX, REST & Cron (20)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_doing_cron",
+            "target": "PrestoWorld\\Core\\Request::doingCron",
+            "mode": "sr",
+            "group": "10.4.18 Group 17: AJAX, REST & Cron (20)"
+        },
+        {
+            "kind": "function",
+            "source": "register_rest_route",
+            "target": "PrestoWorld\\Core\\RestController::register",
+            "mode": "sr",
+            "group": "10.4.18 Group 17: AJAX, REST & Cron (20)"
+        },
+        {
+            "kind": "function",
+            "source": "rest_ensure_response",
+            "target": "PrestoWorld\\Core\\RestController::ensureResponse",
+            "mode": "sr",
+            "group": "10.4.18 Group 17: AJAX, REST & Cron (20)"
+        },
+        {
+            "kind": "function",
+            "source": "rest_get_server",
+            "target": "PrestoWorld\\Core\\RestController::server",
+            "mode": "sr",
+            "group": "10.4.18 Group 17: AJAX, REST & Cron (20)"
+        },
+        {
+            "kind": "function",
+            "source": "rest_do_request",
+            "target": "PrestoWorld\\Core\\RestController::dispatch",
+            "mode": "sr",
+            "group": "10.4.18 Group 17: AJAX, REST & Cron (20)"
+        },
+        {
+            "kind": "function",
+            "source": "rest_filter_response_by_context",
+            "target": "PrestoWorld\\Core\\RestController::filterContext",
+            "mode": "sr",
+            "group": "10.4.18 Group 17: AJAX, REST & Cron (20)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_schedule_single_event",
+            "target": "PrestoWorld\\Core\\Scheduler::once",
+            "mode": "sr",
+            "group": "10.4.18 Group 17: AJAX, REST & Cron (20)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_schedule_event",
+            "target": "PrestoWorld\\Core\\Scheduler::recurring",
+            "mode": "sr",
+            "group": "10.4.18 Group 17: AJAX, REST & Cron (20)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_schedule_recurring_event",
+            "target": "PrestoWorld\\Core\\Scheduler::recurring",
+            "mode": "sr",
+            "group": "10.4.18 Group 17: AJAX, REST & Cron (20)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_clear_scheduled_hook",
+            "target": "PrestoWorld\\Core\\Scheduler::clear",
+            "mode": "sr",
+            "group": "10.4.18 Group 17: AJAX, REST & Cron (20)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_unschedule_event",
+            "target": "PrestoWorld\\Core\\Scheduler::unschedule",
+            "mode": "sr",
+            "group": "10.4.18 Group 17: AJAX, REST & Cron (20)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_next_scheduled",
+            "target": "PrestoWorld\\Core\\Scheduler::next",
+            "mode": "sr",
+            "group": "10.4.18 Group 17: AJAX, REST & Cron (20)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_get_scheduled_event",
+            "target": "PrestoWorld\\Core\\Scheduler::event",
+            "mode": "sr",
+            "group": "10.4.18 Group 17: AJAX, REST & Cron (20)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_get_schedules",
+            "target": "PrestoWorld\\Core\\Scheduler::schedules",
+            "mode": "sr",
+            "group": "10.4.18 Group 17: AJAX, REST & Cron (20)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_cron",
+            "target": "PrestoWorld\\Core\\Scheduler::run",
+            "mode": "sr",
+            "group": "10.4.18 Group 17: AJAX, REST & Cron (20)"
+        },
+        {
+            "kind": "function",
+            "source": "spawn_cron",
+            "target": "PrestoWorld\\Core\\Scheduler::spawn",
+            "mode": "sr",
+            "group": "10.4.18 Group 17: AJAX, REST & Cron (20)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_die",
+            "target": "PrestoWorld\\Core\\Legacy\\LegacyTerminationException",
+            "mode": "sr",
+            "group": "10.4.19 Group 18: Misc & Pluggable (27)",
+            "throws": true
+        },
+        {
+            "kind": "function",
+            "source": "wp_slash",
+            "target": "PrestoWorld\\Core\\Sanitize::slash",
+            "mode": "sr",
+            "group": "10.4.19 Group 18: Misc & Pluggable (27)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_unslash",
+            "target": "PrestoWorld\\Core\\Sanitize::unslash",
+            "mode": "sr",
+            "group": "10.4.19 Group 18: Misc & Pluggable (27)"
+        },
+        {
+            "kind": "function",
+            "source": "stripslashes_deep",
+            "target": "PrestoWorld\\Core\\Sanitize::stripslashesDeep",
+            "mode": "sr",
+            "group": "10.4.19 Group 18: Misc & Pluggable (27)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_magic_quotes",
+            "target": "",
+            "mode": "n",
+            "group": "10.4.19 Group 18: Misc & Pluggable (27)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_mail",
+            "target": "PrestoWorld\\Core\\MailService::send",
+            "mode": "sr",
+            "group": "10.4.19 Group 18: Misc & Pluggable (27)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_installing",
+            "target": "PrestoWorld\\Core\\ApplicationState::installing",
+            "mode": "sr",
+            "group": "10.4.19 Group 18: Misc & Pluggable (27)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_get_environment_type",
+            "target": "PrestoWorld\\Core\\AppInfo::environment",
+            "mode": "sr",
+            "group": "10.4.19 Group 18: Misc & Pluggable (27)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_raise_memory_limit",
+            "target": "PrestoWorld\\Core\\AppInfo::raiseMemory",
+            "mode": "n",
+            "group": "10.4.19 Group 18: Misc & Pluggable (27)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_suspend_cache_addition",
+            "target": "PrestoWorld\\Core\\CacheRepository::suspend",
+            "mode": "sr",
+            "group": "10.4.19 Group 18: Misc & Pluggable (27)"
+        },
+        {
+            "kind": "function",
+            "source": "wp_get_current_screen",
+            "target": "PrestoWorld\\Core\\ScreenRegistry::current",
+            "mode": "sr",
+            "group": "10.4.19 Group 18: Misc & Pluggable (27)"
+        },
+        {
+            "kind": "function",
+            "source": "get_current_screen",
+            "target": "PrestoWorld\\Core\\ScreenRegistry::current",
+            "mode": "sr",
+            "group": "10.4.19 Group 18: Misc & Pluggable (27)"
+        },
+        {
+            "kind": "function",
+            "source": "add_meta_box",
+            "target": "PrestoWorld\\Core\\MetaBoxRegistry::add",
+            "mode": "sr",
+            "group": "10.4.19 Group 18: Misc & Pluggable (27)"
+        },
+        {
+            "kind": "function",
+            "source": "remove_meta_box",
+            "target": "PrestoWorld\\Core\\MetaBoxRegistry::remove",
+            "mode": "sr",
+            "group": "10.4.19 Group 18: Misc & Pluggable (27)"
+        },
+        {
+            "kind": "function",
+            "source": "do_meta_boxes",
+            "target": "PrestoWorld\\Core\\MetaBoxRegistry::render",
+            "mode": "sr",
+            "group": "10.4.19 Group 18: Misc & Pluggable (27)"
+        },
+        {
+            "kind": "function",
+            "source": "add_screen_option",
+            "target": "PrestoWorld\\Core\\ScreenRegistry::addOption",
+            "mode": "sr",
+            "group": "10.4.19 Group 18: Misc & Pluggable (27)"
+        },
+        {
+            "kind": "function",
+            "source": "plugin_basename",
+            "target": "PrestoWorld\\Core\\PluginInfo::basename",
+            "mode": "s",
+            "group": "10.4.19 Group 18: Misc & Pluggable (27)"
+        },
+        {
+            "kind": "function",
+            "source": "plugin_dir_path",
+            "target": "PrestoWorld\\Core\\PluginInfo::path",
+            "mode": "s",
+            "group": "10.4.19 Group 18: Misc & Pluggable (27)"
+        },
+        {
+            "kind": "function",
+            "source": "plugin_dir_url",
+            "target": "PrestoWorld\\Core\\PluginInfo::url",
+            "mode": "s",
+            "group": "10.4.19 Group 18: Misc & Pluggable (27)"
+        },
+        {
+            "kind": "function",
+            "source": "is_plugin_active",
+            "target": "PrestoWorld\\Core\\PluginState::isActive",
+            "mode": "s",
+            "group": "10.4.19 Group 18: Misc & Pluggable (27)"
+        },
+        {
+            "kind": "function",
+            "source": "is_plugin_inactive",
+            "target": "PrestoWorld\\Core\\PluginState::isInactive",
+            "mode": "s",
+            "group": "10.4.19 Group 18: Misc & Pluggable (27)"
+        },
+        {
+            "kind": "function",
+            "source": "activate_plugin",
+            "target": "PrestoWorld\\Core\\PluginActivator::activate",
+            "mode": "s",
+            "group": "10.4.19 Group 18: Misc & Pluggable (27)"
+        },
+        {
+            "kind": "function",
+            "source": "deactivate_plugin",
+            "target": "PrestoWorld\\Core\\PluginActivator::deactivate",
+            "mode": "s",
+            "group": "10.4.19 Group 18: Misc & Pluggable (27)"
+        },
+        {
+            "kind": "function",
+            "source": "deactivate_plugins",
+            "target": "PrestoWorld\\Core\\PluginActivator::deactivateMany",
+            "mode": "s",
+            "group": "10.4.19 Group 18: Misc & Pluggable (27)"
+        },
+        {
+            "kind": "function",
+            "source": "register_activation_hook",
+            "target": "PrestoWorld\\Core\\PluginActivator::onActivation",
+            "mode": "s",
+            "group": "10.4.19 Group 18: Misc & Pluggable (27)"
+        },
+        {
+            "kind": "function",
+            "source": "register_deactivation_hook",
+            "target": "PrestoWorld\\Core\\PluginActivator::onDeactivation",
+            "mode": "s",
+            "group": "10.4.19 Group 18: Misc & Pluggable (27)"
+        },
+        {
+            "kind": "function",
+            "source": "register_uninstall_hook",
+            "target": "PrestoWorld\\Core\\PluginActivator::onUninstall",
+            "mode": "s",
+            "group": "10.4.19 Group 18: Misc & Pluggable (27)"
+        },
+        {
+            "kind": "function",
+            "source": "mysql_connect",
+            "target": "",
+            "mode": "x",
+            "group": "10.4.19 Group 18: Misc & Pluggable (27)",
+            "notes": "PW không expose MySQL socket trực tiếp — thay thế: `PrestoWpdb`"
+        },
+        {
+            "kind": "function",
+            "source": "mysqli_*",
+            "target": "",
+            "mode": "x",
+            "group": "10.4.19 Group 18: Misc & Pluggable (27)",
+            "notes": "PW không expose MySQL socket trực tiếp — thay thế: `PrestoWpdb`"
+        },
+        {
+            "kind": "function",
+            "source": "get_currentuserinfo",
+            "target": "",
+            "mode": "x",
+            "group": "10.4.19 Group 18: Misc & Pluggable (27)",
+            "notes": "Deprecated từ WP 4.5 — thay thế: `wp_get_current_user`"
+        },
+        {
+            "kind": "function",
+            "source": "convert_chars",
+            "target": "",
+            "mode": "x",
+            "group": "10.4.19 Group 18: Misc & Pluggable (27)",
+            "notes": "Không còn cần (UTF-8 everywhere) — thay thế: —"
+        },
+        {
+            "kind": "function",
+            "source": "wp_get_sites",
+            "target": "",
+            "mode": "x",
+            "group": "10.4.19 Group 18: Misc & Pluggable (27)",
+            "notes": "Multisite-only — thay thế: —"
+        },
+        {
+            "kind": "function",
+            "source": "switch_to_blog",
+            "target": "",
+            "mode": "x",
+            "group": "10.4.19 Group 18: Misc & Pluggable (27)",
+            "notes": "Đơn tenant — thay thế: `TenantContext` (SaaS)"
+        },
+        {
+            "kind": "function",
+            "source": "is_multisite",
+            "target": "",
+            "mode": "x",
+            "group": "10.4.19 Group 18: Misc & Pluggable (27)",
+            "notes": "Đơn tenant — thay thế: `false` (shim trả `false`)"
+        },
+        {
+            "kind": "function",
+            "source": "wpmu_*",
+            "target": "",
+            "mode": "x",
+            "group": "10.4.19 Group 18: Misc & Pluggable (27)",
+            "notes": "Multisite functions — thay thế: Unsupported"
+        },
+        {
+            "kind": "function",
+            "source": "ms_.*",
+            "target": "",
+            "mode": "x",
+            "group": "10.4.19 Group 18: Misc & Pluggable (27)",
+            "notes": "Multisite functions — thay thế: Unsupported"
+        },
+        {
+            "kind": "function",
+            "source": "wpdb::get_blog_prefix",
+            "target": "",
+            "mode": "x",
+            "group": "10.4.19 Group 18: Misc & Pluggable (27)",
+            "notes": "Đơn tenant — thay thế: `getPrefix()`"
+        },
+        {
+            "kind": "class",
+            "source": "wpdb",
+            "target": "PrestoWorld\\Core\\Database\\PrestoWpdb",
+            "mode": "s",
+            "group": "10.5.3 Database & Query (9)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_Query",
+            "target": "PrestoWorld\\Core\\Post\\PostQuery",
+            "mode": "sr",
+            "group": "10.5.3 Database & Query (9)",
+            "structural": {
+                "constructor": "ioc",
+                "static_methods": "instance",
+                "global_state": "scoped"
+            }
+        },
+        {
+            "kind": "class",
+            "source": "WP_Tax_Query",
+            "target": "PrestoWorld\\Core\\Taxonomy\\TaxQuery",
+            "mode": "sr",
+            "group": "10.5.3 Database & Query (9)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_Meta_Query",
+            "target": "PrestoWorld\\Core\\Post\\MetaQuery",
+            "mode": "sr",
+            "group": "10.5.3 Database & Query (9)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_User_Query",
+            "target": "PrestoWorld\\Core\\User\\UserQuery",
+            "mode": "sr",
+            "group": "10.5.3 Database & Query (9)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_Comment_Query",
+            "target": "PrestoWorld\\Core\\Comment\\CommentQuery",
+            "mode": "sr",
+            "group": "10.5.3 Database & Query (9)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_Term_Query",
+            "target": "PrestoWorld\\Core\\Term\\TermQuery",
+            "mode": "sr",
+            "group": "10.5.3 Database & Query (9)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_Date_Query",
+            "target": "PrestoWorld\\Core\\Query\\DateQuery",
+            "mode": "sr",
+            "group": "10.5.3 Database & Query (9)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_Block_Query",
+            "target": "",
+            "mode": "x",
+            "group": "10.5.3 Database & Query (9)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_Post",
+            "target": "PrestoWorld\\Core\\Post\\PostEntity",
+            "mode": "sr",
+            "group": "10.5.4 Content, Posts & Blocks (9)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_Post_Type",
+            "target": "PrestoWorld\\Core\\Post\\PostType",
+            "mode": "sr",
+            "group": "10.5.4 Content, Posts & Blocks (9)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_Embed",
+            "target": "PrestoWorld\\Core\\Post\\Embed",
+            "mode": "s",
+            "group": "10.5.4 Content, Posts & Blocks (9)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_Block",
+            "target": "PrestoWorld\\Core\\Elementor\\BlockWrapper",
+            "mode": "sr",
+            "group": "10.5.4 Content, Posts & Blocks (9)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_Block_Type",
+            "target": "PrestoWorld\\Core\\Elementor\\BlockType",
+            "mode": "sr",
+            "group": "10.5.4 Content, Posts & Blocks (9)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_Block_Patterns_Registry",
+            "target": "PrestoWorld\\Core\\Elementor\\PatternRegistry",
+            "mode": "s",
+            "group": "10.5.4 Content, Posts & Blocks (9)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_HTML_Tag_Processor",
+            "target": "PrestoWorld\\Core\\Html\\TagProcessor",
+            "mode": "sr",
+            "group": "10.5.4 Content, Posts & Blocks (9)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_HTML_Processor",
+            "target": "PrestoWorld\\Core\\Html\\HtmlProcessor",
+            "mode": "sr",
+            "group": "10.5.4 Content, Posts & Blocks (9)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_SimplePie_Sanitize_KSES",
+            "target": "",
+            "mode": "x",
+            "group": "10.5.4 Content, Posts & Blocks (9)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_User",
+            "target": "PrestoWorld\\Core\\User\\UserEntity",
+            "mode": "sr",
+            "group": "10.5.5 Users & Roles (7)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_Roles",
+            "target": "PrestoWorld\\Core\\User\\RoleRegistry",
+            "mode": "sr",
+            "group": "10.5.5 Users & Roles (7)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_Role",
+            "target": "PrestoWorld\\Core\\User\\Role",
+            "mode": "sr",
+            "group": "10.5.5 Users & Roles (7)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_Session_Tokens",
+            "target": "PrestoWorld\\Core\\Auth\\SessionTokenManager",
+            "mode": "sr",
+            "group": "10.5.5 Users & Roles (7)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_User_Meta_Session_Tokens",
+            "target": "PrestoWorld\\Core\\Auth\\MetaSessionTokens",
+            "mode": "sr",
+            "group": "10.5.5 Users & Roles (7)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_Application_Passwords",
+            "target": "PrestoWorld\\Core\\Auth\\ApplicationPasswords",
+            "mode": "sr",
+            "group": "10.5.5 Users & Roles (7)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_Term",
+            "target": "PrestoWorld\\Core\\Term\\TermEntity",
+            "mode": "sr",
+            "group": "10.5.6 Terms, Comments & Meta (6)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_Taxonomy",
+            "target": "PrestoWorld\\Core\\Taxonomy\\Taxonomy",
+            "mode": "sr",
+            "group": "10.5.6 Terms, Comments & Meta (6)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_Comment",
+            "target": "PrestoWorld\\Core\\Comment\\CommentEntity",
+            "mode": "sr",
+            "group": "10.5.6 Terms, Comments & Meta (6)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_List_Util",
+            "target": "PrestoWorld\\Core\\Collection\\ListUtil",
+            "mode": "sr",
+            "group": "10.5.6 Terms, Comments & Meta (6)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_Object_Cache",
+            "target": "PrestoWorld\\Core\\Cache\\CacheRepository",
+            "mode": "sr",
+            "group": "10.5.6 Terms, Comments & Meta (6)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_Metadata_Lazyloader",
+            "target": "PrestoWorld\\Core\\Meta\\LazyLoader",
+            "mode": "s",
+            "group": "10.5.6 Terms, Comments & Meta (6)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_Http",
+            "target": "PrestoWorld\\Core\\Http\\HttpClient",
+            "mode": "sr",
+            "group": "10.5.7 HTTP, Files & Upgrader (9)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_Http_Curl",
+            "target": "",
+            "mode": "n",
+            "group": "10.5.7 HTTP, Files & Upgrader (9)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_Http_Streams",
+            "target": "",
+            "mode": "n",
+            "group": "10.5.7 HTTP, Files & Upgrader (9)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_HTTP_Proxy",
+            "target": "PrestoWorld\\Core\\Http\\Proxy",
+            "mode": "s",
+            "group": "10.5.7 HTTP, Files & Upgrader (9)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_Filesystem_Base",
+            "target": "PrestoWorld\\Core\\Filesystem\\Filesystem",
+            "mode": "sr",
+            "group": "10.5.7 HTTP, Files & Upgrader (9)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_Filesystem_Direct",
+            "target": "PrestoWorld\\Core\\Filesystem\\LocalAdapter",
+            "mode": "sr",
+            "group": "10.5.7 HTTP, Files & Upgrader (9)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_Filesystem_FTPext",
+            "target": "PrestoWorld\\Core\\Filesystem\\FtpAdapter",
+            "mode": "s",
+            "group": "10.5.7 HTTP, Files & Upgrader (9)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_Filesystem_SSH2",
+            "target": "PrestoWorld\\Core\\Filesystem\\SshAdapter",
+            "mode": "s",
+            "group": "10.5.7 HTTP, Files & Upgrader (9)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_Upgrader",
+            "target": "PrestoWorld\\Core\\Plugin\\Upgrader",
+            "mode": "sr",
+            "group": "10.5.7 HTTP, Files & Upgrader (9)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_REST_Request",
+            "target": "PrestoWorld\\Core\\Rest\\RestRequest",
+            "mode": "sr",
+            "group": "10.5.8 REST API (7)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_REST_Response",
+            "target": "PrestoWorld\\Core\\Rest\\RestResponse",
+            "mode": "sr",
+            "group": "10.5.8 REST API (7)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_REST_Server",
+            "target": "PrestoWorld\\Core\\Rest\\RestServer",
+            "mode": "sr",
+            "group": "10.5.8 REST API (7)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_REST_Controller",
+            "target": "PrestoWorld\\Core\\Rest\\BaseController",
+            "mode": "sr",
+            "group": "10.5.8 REST API (7)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_REST_Posts_Controller",
+            "target": "PrestoWorld\\Core\\Rest\\PostsController",
+            "mode": "sr",
+            "group": "10.5.8 REST API (7)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_REST_Users_Controller",
+            "target": "PrestoWorld\\Core\\Rest\\UsersController",
+            "mode": "sr",
+            "group": "10.5.8 REST API (7)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_REST_Meta_Fields",
+            "target": "PrestoWorld\\Core\\Rest\\MetaFieldsController",
+            "mode": "sr",
+            "group": "10.5.8 REST API (7)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_Theme",
+            "target": "PrestoWorld\\Core\\Theme\\ThemeEntity",
+            "mode": "sr",
+            "group": "10.5.9 Theme, Customizer & Admin UI (13)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_Customize_Manager",
+            "target": "PrestoWorld\\Core\\Elementor\\CustomizerBridge",
+            "mode": "x",
+            "group": "10.5.9 Theme, Customizer & Admin UI (13)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_Customize_Panel",
+            "target": "",
+            "mode": "x",
+            "group": "10.5.9 Theme, Customizer & Admin UI (13)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_Customize_Section",
+            "target": "",
+            "mode": "x",
+            "group": "10.5.9 Theme, Customizer & Admin UI (13)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_Customize_Control",
+            "target": "",
+            "mode": "x",
+            "group": "10.5.9 Theme, Customizer & Admin UI (13)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_Customize_Setting",
+            "target": "PrestoWorld\\Core\\OptionRepository",
+            "mode": "r",
+            "group": "10.5.9 Theme, Customizer & Admin UI (13)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_Customize_Image_Control",
+            "target": "",
+            "mode": "x",
+            "group": "10.5.9 Theme, Customizer & Admin UI (13)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_Widget",
+            "target": "PrestoWorld\\Core\\Elementor\\WidgetBridge",
+            "mode": "sr",
+            "group": "10.5.9 Theme, Customizer & Admin UI (13)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_Widget_Factory",
+            "target": "PrestoWorld\\Core\\Elementor\\WidgetFactory",
+            "mode": "s",
+            "group": "10.5.9 Theme, Customizer & Admin UI (13)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_List_Table",
+            "target": "PrestoWorld\\Core\\Dashboard\\TableComponent",
+            "mode": "sr",
+            "group": "10.5.9 Theme, Customizer & Admin UI (13)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_Admin_Bar",
+            "target": "",
+            "mode": "x",
+            "group": "10.5.9 Theme, Customizer & Admin UI (13)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_Screen",
+            "target": "PrestoWorld\\Core\\Screen\\Screen",
+            "mode": "sr",
+            "group": "10.5.9 Theme, Customizer & Admin UI (13)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_Nav_Walker",
+            "target": "PrestoWorld\\Core\\Theme\\NavWalker",
+            "mode": "sr",
+            "group": "10.5.9 Theme, Customizer & Admin UI (13)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_Image_Editor",
+            "target": "PrestoWorld\\Core\\Media\\ImageEditor",
+            "mode": "sr",
+            "group": "10.5.10 Media, Scripts & Style (8)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_Image_Editor_GD",
+            "target": "PrestoWorld\\Core\\Media\\GdEditor",
+            "mode": "sr",
+            "group": "10.5.10 Media, Scripts & Style (8)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_Image_Editor_Imagick",
+            "target": "PrestoWorld\\Core\\Media\\ImagickEditor",
+            "mode": "sr",
+            "group": "10.5.10 Media, Scripts & Style (8)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_Scripts",
+            "target": "PrestoWorld\\Core\\Asset\\ScriptRegistry",
+            "mode": "sr",
+            "group": "10.5.10 Media, Scripts & Style (8)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_Styles",
+            "target": "PrestoWorld\\Core\\Asset\\StyleRegistry",
+            "mode": "sr",
+            "group": "10.5.10 Media, Scripts & Style (8)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_Dependencies",
+            "target": "PrestoWorld\\Core\\Asset\\DependencyGraph",
+            "mode": "sr",
+            "group": "10.5.10 Media, Scripts & Style (8)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_Script_Module_Registry",
+            "target": "PrestoWorld\\Core\\Asset\\ModuleRegistry",
+            "mode": "sr",
+            "group": "10.5.10 Media, Scripts & Style (8)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_Locale",
+            "target": "PrestoWorld\\Core\\I18n\\Locale",
+            "mode": "sr",
+            "group": "10.5.10 Media, Scripts & Style (8)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_Error",
+            "target": "PrestoWorld\\Core\\Error\\PrestoError",
+            "mode": "sr",
+            "group": "10.5.11 Core Utilities & Recovery (8)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_Textdomain_Registry",
+            "target": "PrestoWorld\\Core\\I18n\\TextdomainRegistry",
+            "mode": "sr",
+            "group": "10.5.11 Core Utilities & Recovery (8)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_Translation_Controller",
+            "target": "PrestoWorld\\Core\\I18n\\TranslationController",
+            "mode": "sr",
+            "group": "10.5.11 Core Utilities & Recovery (8)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_Recovery_Mode",
+            "target": "PrestoWorld\\Core\\Recovery\\RecoveryMode",
+            "mode": "sr",
+            "group": "10.5.11 Core Utilities & Recovery (8)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_Fatal_Error_Handler",
+            "target": "PrestoWorld\\Core\\Recovery\\FatalHandler",
+            "mode": "sr",
+            "group": "10.5.11 Core Utilities & Recovery (8)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_Paused_Extensions_Storage",
+            "target": "PrestoWorld\\Core\\Recovery\\PausedStorage",
+            "mode": "sr",
+            "group": "10.5.11 Core Utilities & Recovery (8)"
+        },
+        {
+            "kind": "class",
+            "source": "WP_Navigation",
+            "target": "PrestoWorld\\Core\\Theme\\Navigation",
+            "mode": "sr",
+            "group": "10.5.11 Core Utilities & Recovery (8)"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\bwp_users\\b/i",
+            "replacement": "pw_users",
+            "target": "any",
+            "apply": "compile",
+            "phase": "table"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\bwp_posts\\b/i",
+            "replacement": "pw_posts",
+            "target": "any",
+            "apply": "compile",
+            "phase": "table"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\bwp_postmeta\\b/i",
+            "replacement": "pw_posts.meta",
+            "target": "any",
+            "apply": "runtime",
+            "phase": "table",
+            "notes": "meta → JSONB: cần rewrite cấu trúc JOIN (runtime QueryTransformer)"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\bwp_options\\b/i",
+            "replacement": "pw_options",
+            "target": "any",
+            "apply": "compile",
+            "phase": "table"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\bwp_comments\\b/i",
+            "replacement": "pw_comments",
+            "target": "any",
+            "apply": "compile",
+            "phase": "table"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\bwp_terms\\b/i",
+            "replacement": "pw_terms",
+            "target": "any",
+            "apply": "compile",
+            "phase": "table"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\bwp_term_taxonomy\\b/i",
+            "replacement": "pw_terms",
+            "target": "any",
+            "apply": "compile",
+            "phase": "table"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\bwp_termmeta\\b/i",
+            "replacement": "pw_terms.meta",
+            "target": "any",
+            "apply": "runtime",
+            "phase": "table",
+            "notes": "meta → JSONB: cần rewrite cấu trúc JOIN (runtime QueryTransformer)"
+        },
+        {
+            "kind": "sql",
+            "pattern": "/\\s+SEPARATOR\\s+/i",
+            "replacement": ", ",
+            "target": "any",
+            "apply": "compile",
+            "phase": "dml",
+            "notes": "GROUP_CONCAT(x SEPARATOR ',') → STRING_AGG/GROUP_CONCAT(x, ',')"
+        }
+    ]
+}
