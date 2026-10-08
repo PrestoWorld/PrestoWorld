@@ -117,6 +117,39 @@ class TemplateResolverTest extends TestCase
         $this->assertNull($resolver->resolve($this->request('/any')));
     }
 
+    public function test_matches_explicitly_true_for_mapped_paths(): void
+    {
+        $resolver = $this->makeResolver();
+
+        $this->assertTrue($resolver->matchesExplicitly($this->request('/')));
+        $this->assertTrue($resolver->matchesExplicitly($this->request('/search')));
+        $this->assertTrue($resolver->matchesExplicitly($this->request('/search/products')));
+    }
+
+    public function test_matches_explicitly_false_for_default_fallback(): void
+    {
+        $resolver = $this->makeResolver();
+
+        $this->assertFalse($resolver->matchesExplicitly($this->request('/about')));
+        $this->assertFalse($resolver->matchesExplicitly($this->request('/category/esports')));
+    }
+
+    public function test_matches_explicitly_false_for_empty_mapping(): void
+    {
+        $resolver = $this->makeResolver(mapping: []);
+
+        $this->assertFalse($resolver->matchesExplicitly($this->request('/')));
+    }
+
+    public function test_matches_explicitly_false_for_prefix_rule_children(): void
+    {
+        $resolver = $this->makeResolver(mapping: ['/' => 'index', '/about' => 'page-no-title']);
+
+        $this->assertTrue($resolver->matchesExplicitly($this->request('/about')));
+        // A plain prefix rule picks the template but does not declare the URL as known.
+        $this->assertFalse($resolver->matchesExplicitly($this->request('/about/team')));
+    }
+
     private function request(string $uri): Request
     {
         return new Request('GET', $uri, [], [], [], [], [], [], null);

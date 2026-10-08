@@ -20,4 +20,13 @@ class ContentRenderer implements ContentRendererContract
 
         return $engine->render($template, $post);
     }
+
+    public function supports(string $template): bool
+    {
+        try {
+            return $this->factory->create()->supports($template);
+        } catch (\Throwable) {
+            return false;
+        }
+    }
 }

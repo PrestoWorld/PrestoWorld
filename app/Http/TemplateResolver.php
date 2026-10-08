@@ -15,9 +15,22 @@ class TemplateResolver
 
     public function resolve(Request $request): ?string
     {
-        $path = rtrim($request->path(), '/');
-        $normalized = $path === '' ? '/' : $path;
+        return $this->policy->match($this->normalize($request));
+    }
 
-        return $this->policy->match($normalized);
+    /**
+     * True when the path matched an explicit rule in the mapping config
+     * (i.e. it did not fall through to the default template).
+     */
+    public function matchesExplicitly(Request $request): bool
+    {
+        return $this->policy->isExplicit($this->normalize($request));
+    }
+
+    private function normalize(Request $request): string
+    {
+        $path = rtrim($request->path(), '/');
+
+        return $path === '' ? '/' : $path;
     }
 }

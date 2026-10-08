@@ -82,7 +82,7 @@ class ThemeEngineFactory
                 );
             }
 
-            $this->blockEngine = new BlockThemeEngineAdapter($gutenberg);
+            $this->blockEngine = new BlockThemeEngineAdapter($gutenberg, $this->themePath ?: null);
         }
 
         return $this->blockEngine;

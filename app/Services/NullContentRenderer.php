@@ -13,4 +13,9 @@ class NullContentRenderer implements ContentRendererContract
     {
         return RenderedContent::empty();
     }
+
+    public function supports(string $template): bool
+    {
+        return false;
+    }
 }

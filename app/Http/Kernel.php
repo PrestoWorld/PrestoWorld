@@ -13,6 +13,7 @@ use Witals\Framework\Context\Contracts\ContextLoaderInterface;
 use App\Http\Routing\Contracts\RouterInterface;
 use App\Services\PageService;
 use App\Exceptions\TemplateNotFoundException;
+use App\Exceptions\NotFoundException;
 use App\Exceptions\RenderException;
 
 class Kernel implements KernelContract
@@ -119,9 +120,15 @@ class Kernel implements KernelContract
                 'Content-Type' => 'text/html; charset=utf-8',
                 ...self::SECURITY_HEADERS,
             ]);
-        } catch (TemplateNotFoundException) {
-            $this->logger->warning('Kernel: Page not found: {path}', ['path' => $request->path()]);
-            return new Response('Page not found', 404, self::SECURITY_HEADERS);
+        } catch (TemplateNotFoundException | NotFoundException $e) {
+            $this->logger->warning('Kernel: Page not found: {path} ({reason})', [
+                'path' => $request->path(),
+                'reason' => $e->getMessage(),
+            ]);
+            return new Response($this->pageService->renderNotFound($request), 404, [
+                'Content-Type' => 'text/html; charset=utf-8',
+                ...self::SECURITY_HEADERS,
+            ]);
         } catch (RenderException $e) {
             $this->logger->error('Kernel: Render error: {message}', [
                 'message' => $e->getMessage(),

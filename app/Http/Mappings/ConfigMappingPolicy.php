@@ -8,14 +8,21 @@ use App\Contracts\Http\TemplateMappingPolicy;
 
 class ConfigMappingPolicy implements TemplateMappingPolicy
 {
-    /** @var list<array{type:string, pattern?:string, prefix?:string, template:string}> */
+    /**
+     * @var list<array{type: string, pattern: string, template: string}>
+     */
     private array $exactRules;
 
-    /** @var list<array{type:string, pattern?:string, prefix?:string, template:string}> */
+    /**
+     * @var list<array{type: 'prefix', pattern: string, template: string}|array{type: 'wildcard', prefix: string, template: string}>
+     */
     private array $prefixRules;
 
     private string $defaultTemplate;
 
+    /**
+     * @param array<string, string> $mapping
+     */
     public function __construct(array $mapping, string $defaultTemplate = 'index')
     {
         $this->defaultTemplate = $defaultTemplate;
@@ -24,7 +31,34 @@ class ConfigMappingPolicy implements TemplateMappingPolicy
         $this->prefixRules = $parsed['prefix'];
     }
 
-    public function match(string $path): ?string
+    public function match(string $path): string
+    {
+        return $this->findTemplate($path) ?? $this->defaultTemplate;
+    }
+
+    /**
+     * Only exact and wildcard rules declare a known URL. Plain prefix rules
+     * merely pick a template for child paths — content lookup decides whether
+     * such a path actually exists (WordPress-style 404).
+     */
+    public function isExplicit(string $path): bool
+    {
+        foreach ($this->exactRules as $rule) {
+            if ($path === $rule['pattern']) {
+                return true;
+            }
+        }
+
+        foreach ($this->prefixRules as $rule) {
+            if ($rule['type'] === 'wildcard' && str_starts_with($path, $rule['prefix'])) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function findTemplate(string $path): ?string
     {
         foreach ($this->exactRules as $rule) {
             if ($path === $rule['pattern']) {
@@ -41,11 +75,15 @@ class ConfigMappingPolicy implements TemplateMappingPolicy
             }
         }
 
-        return $this->defaultTemplate;
+        return null;
     }
 
     /**
-     * @return array{exact: list<array>, prefix: list<array>}
+     * @param array<string, string> $mapping
+     * @return array{
+     *     exact: list<array{type: string, pattern: string, template: string}>,
+     *     prefix: list<array{type: 'prefix', pattern: string, template: string}|array{type: 'wildcard', prefix: string, template: string}>
+     * }
      */
     private function compileRules(array $mapping): array
     {
@@ -67,9 +105,20 @@ class ConfigMappingPolicy implements TemplateMappingPolicy
             }
         }
 
-        usort($prefix, fn(array $a, array $b): int => (strlen($b['prefix'] ?? $b['pattern']) <=> strlen($a['prefix'] ?? $a['pattern'])));
+        usort(
+            $prefix,
+            static fn (array $a, array $b): int => strlen(self::ruleKey($b)) <=> strlen(self::ruleKey($a))
+        );
 
         return ['exact' => $exact, 'prefix' => $prefix];
+    }
+
+    /**
+     * @param array{type: 'prefix', pattern: string, template: string}|array{type: 'wildcard', prefix: string, template: string} $rule
+     */
+    private static function ruleKey(array $rule): string
+    {
+        return $rule['type'] === 'wildcard' ? $rule['prefix'] : $rule['pattern'];
     }
 
     private function isPrefixMatch(string $path, string $prefix): bool

@@ -90,12 +90,12 @@ class KernelIntegrationTest extends TestCase
         $this->assertStringContainsString('<main>search</main>', $response->getContent());
     }
 
-    public function test_unknown_route_falls_back_to_index(): void
+    public function test_unknown_path_returns_404(): void
     {
         $response = $this->kernel->handle(new Request('GET', '/about'));
 
-        $this->assertSame(200, $response->getStatusCode());
-        $this->assertStringContainsString('<main>index</main>', $response->getContent());
+        $this->assertSame(404, $response->getStatusCode());
+        $this->assertStringContainsString('Page not found', $response->getContent());
     }
 
     public function test_response_has_security_headers(): void

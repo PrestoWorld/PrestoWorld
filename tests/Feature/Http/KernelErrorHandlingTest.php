@@ -11,6 +11,7 @@ use App\Contracts\Services\ContentRenderer;
 use App\Contracts\Services\RenderedContent;
 use App\Http\TemplateResolver;
 use App\Http\Mappings\ConfigMappingPolicy;
+use App\Services\HtmlComposer;
 use App\Contracts\Http\PageRenderer;
 use App\Contracts\Http\ThemeConfig;
 use App\Exceptions\TemplateNotFoundException;
@@ -85,6 +86,49 @@ class KernelErrorHandlingTest extends TestCase
         $this->assertStringContainsString('Internal server error', $response->getContent());
     }
 
+    public function test_not_found_renders_themed_404_page(): void
+    {
+        $logger = $this->createMock(LoggerInterface::class);
+        $router = $this->createMock(RouterInterface::class);
+        $router->method('dispatch')->willReturn(null);
+        $contextManager = $this->createMock(ContextManagerInterface::class);
+        $contextManager->method('resolveContext')->willReturn(null);
+        $contextLoader = $this->createMock(ContextLoaderInterface::class);
+
+        $resolver = new TemplateResolver(
+            new ConfigMappingPolicy(mapping: ['/' => 'index'], defaultTemplate: 'index'),
+        );
+
+        $contentRenderer = $this->createMock(ContentRenderer::class);
+        $contentRenderer->method('supports')->willReturnCallback(
+            fn (string $template): bool => $template === '404',
+        );
+        $contentRenderer->method('render')->willReturn(
+            new RenderedContent('<main>theme-404</main>', ''),
+        );
+
+        $composer = new HtmlComposer(ThemeConfig::fromArray([
+            'default_title' => 'PrestoWorld',
+            'css_reset' => '',
+        ]));
+
+        $pageService = new PageService(
+            $resolver,
+            $contentRenderer,
+            new \App\Http\PageRenderer($composer),
+            $this->createMock(PostRepository::class),
+            $this->createMock(DatabaseInterface::class),
+        );
+
+        $kernel = new Kernel($router, $pageService, $logger, $contextManager, $contextLoader);
+        $response = $kernel->handle(new Request('GET', '/category/esports'));
+
+        $this->assertSame(404, $response->getStatusCode());
+        $this->assertStringContainsString('<main>theme-404</main>', $response->getContent());
+        $this->assertStringContainsString('<title>Page not found</title>', $response->getContent());
+        $this->assertStringContainsString('text/html', $response->getHeader('Content-Type'));
+    }
+
     public function test_custom_template_mapping(): void
     {
         $logger = $this->createMock(LoggerInterface::class);
@@ -118,8 +162,9 @@ class KernelErrorHandlingTest extends TestCase
         $response = $kernel->handle(new Request('GET', '/blog'));
         $this->assertSame(200, $response->getStatusCode());
 
-        // Unknown path uses configured fallback
+        // Unknown path renders the 404 page
         $response = $kernel->handle(new Request('GET', '/unknown'));
-        $this->assertSame(200, $response->getStatusCode());
+        $this->assertSame(404, $response->getStatusCode());
+        $this->assertStringContainsString('Page not found', $response->getContent());
     }
 }

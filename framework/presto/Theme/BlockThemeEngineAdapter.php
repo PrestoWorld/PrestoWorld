@@ -12,6 +12,7 @@ class BlockThemeEngineAdapter implements ThemeEngineInterface
 {
     public function __construct(
         private GutenbergModule $gutenberg,
+        private ?string $themePath = null,
     ) {}
 
     public function render(string $template, array $post = []): RenderedContent
@@ -35,6 +36,11 @@ class BlockThemeEngineAdapter implements ThemeEngineInterface
 
     private function getThemePath(): string
     {
-        return getenv('PW_THEME_DIR') ?: '';
+        $envPath = getenv('PW_THEME_DIR');
+        if ($envPath !== false && $envPath !== '') {
+            return $envPath;
+        }
+
+        return $this->themePath ?? '';
     }
 }
