@@ -34,7 +34,7 @@ class HookDispatcher implements HookInterface, ResettableInterface
         $this->lazyLoaders[$hook][] = $loader;
     }
 
-    public function addAction(string $hook, callable $callback, int $priority = 10): void
+    public function addAction(string $hook, callable $callback, int $priority = 10, int $acceptedArgs = 1): void
     {
         if ($this->compiledMap !== null && !isset($this->compiledMap['actions'][$hook])) {
             return;
@@ -70,7 +70,7 @@ class HookDispatcher implements HookInterface, ResettableInterface
         }
     }
 
-    public function addFilter(string $hook, callable $callback, int $priority = 10): void
+    public function addFilter(string $hook, callable $callback, int $priority = 10, int $acceptedArgs = 1): void
     {
         if ($this->compiledMap !== null && !isset($this->compiledMap['filters'][$hook])) {
             return;
