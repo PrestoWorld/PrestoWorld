@@ -84,6 +84,100 @@ class Application extends BaseApplication
             \App\Services\PageService::class,
         );
 
+        // Config Manager — reads from WordPress config or environment
+        $this->singleton(\App\Config\ConfigManager::class, function ($app) {
+            return new \App\Config\ConfigManager($app->basePath());
+        });
+
+        // Smart URL routing — fast content type detection
+        $this->singleton(\App\Http\UrlParser::class, function ($app) {
+            return new \App\Http\UrlParser(
+                taxonomyLoader: function () use ($app) {
+                    $db = $app->make(\Cycle\Database\DatabaseInterface::class);
+                    $prefix = getenv('PW_TABLE_PREFIX') ?: 'pw_';
+                    $table = $prefix . 'terms';
+                    if (!$db->hasTable($table)) {
+                        return [];
+                    }
+                    try {
+                        $rows = $db->select('taxonomy')->from($table)->distinct()->fetchAll();
+                        return array_values(array_filter(array_column($rows, 'taxonomy')));
+                    } catch (\Throwable) {
+                        return [];
+                    }
+                },
+                postTypeLoader: function () use ($app) {
+                    $db = $app->make(\Cycle\Database\DatabaseInterface::class);
+                    $prefix = getenv('PW_TABLE_PREFIX') ?: 'pw_';
+                    $table = $prefix . 'posts';
+                    if (!$db->hasTable($table)) {
+                        return [];
+                    }
+                    try {
+                        $rows = $db->select('post_type')->from($table)->distinct()->fetchAll();
+                        return array_values(array_filter(array_column($rows, 'post_type'), fn ($t) => $t !== 'page'));
+                    } catch (\Throwable) {
+                        return [];
+                    }
+                },
+                pageSlugLoader: function () use ($app) {
+                    $db = $app->make(\Cycle\Database\DatabaseInterface::class);
+                    $prefix = getenv('PW_TABLE_PREFIX') ?: 'pw_';
+                    $table = $prefix . 'posts';
+                    if (!$db->hasTable($table)) {
+                        return [];
+                    }
+                    try {
+                        $rows = $db->select('slug')->from($table)
+                            ->where('post_type', 'page')
+                            ->where('status', 'publish')
+                            ->fetchAll();
+                        return array_values(array_filter(array_column($rows, 'slug')));
+                    } catch (\Throwable) {
+                        return [];
+                    }
+                },
+            );
+        });
+
+        $this->singleton(\App\Http\RewriteRuleRegistry::class, function ($app) {
+            $db = $app->make(\Cycle\Database\DatabaseInterface::class);
+            $prefix = getenv('PW_TABLE_PREFIX') ?: 'pw_';
+            $cachePath = $app->storagePath('framework/cache/rewrite-rules.json');
+            $registry = new \App\Http\RewriteRuleRegistry($db, $prefix, $cachePath);
+
+            // Try to load from cache first
+            if (!$registry->loadFromCache()) {
+                $registry->loadFromDatabase();
+                $registry->saveToCache();
+            }
+
+            return $registry;
+        });
+
+        $this->singleton(\App\Http\ContentTypeDetector::class, function ($app) {
+            $db = $app->make(\Cycle\Database\DatabaseInterface::class);
+            $prefix = getenv('PW_TABLE_PREFIX') ?: 'pw_';
+            return new \App\Http\ContentTypeDetector(
+                $db,
+                $app->make(\PrestoWorld\Modules\Schema\PostRepository::class),
+                $prefix,
+            );
+        });
+
+        $this->singleton(\App\Http\SmartRouter::class, function ($app) {
+            return new \App\Http\SmartRouter(
+                $app->make(\App\Http\UrlParser::class),
+                $app->make(\App\Http\RewriteRuleRegistry::class),
+                $app->make(\App\Http\ContentTypeDetector::class),
+                $app->make(\App\Http\TemplateResolver::class),
+                $app->make(\App\Contracts\Services\ContentRenderer::class),
+                $app->make(\App\Contracts\Http\PageRenderer::class),
+                $app->make(\PrestoWorld\Modules\Schema\PostRepository::class),
+                $app->make(\Cycle\Database\DatabaseInterface::class),
+            );
+        });
+
         // WordPress bridge must register BEFORE DatabaseServiceProvider
         // so it can detect wp-config.php and set DB env vars early.
         $this->register(\PrestoWorld\Bridge\WordPress\BridgeServiceProvider::class);

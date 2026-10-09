@@ -102,10 +102,114 @@ class SeedCommand extends Command
             }
         }
 
+        // Create categories
+        $this->line('  Creating categories...');
+        $categories = [
+            ['name' => 'Tin Game', 'slug' => 'tin-game'],
+            ['name' => 'Công Nghệ', 'slug' => 'cong-nghe'],
+            ['name' => 'Esports', 'slug' => 'esports'],
+        ];
+
+        foreach ($categories as $cat) {
+            $existing = $db->select('id')
+                ->from('pw_terms')
+                ->where('slug', $cat['slug'])
+                ->where('taxonomy', 'category')
+                ->run()
+                ->fetch();
+
+            if ($existing) {
+                $this->line("  - {$cat['name']}: already exists, skipping.");
+                continue;
+            }
+
+            $db->insert('pw_terms')->values([
+                'name' => $cat['name'],
+                'slug' => $cat['slug'],
+                'taxonomy' => 'category',
+            ])->run();
+
+            $this->line("  - {$cat['name']}: created.");
+        }
+
+        // Create demo posts
+        $this->line('  Creating demo posts...');
+        $posts = [
+            [
+                'title' => 'Tin Game Mới Nhất 2026',
+                'slug' => 'tin-game-moi-nhat-2026',
+                'content' => '<p>Cập nhật tin tức game mới nhất trong năm 2026.</p>',
+                'category' => 'tin-game',
+            ],
+            [
+                'title' => 'Công Nghệ AI Trong Game',
+                'slug' => 'cong-nghe-ai-trong-game',
+                'content' => '<p>AI đang thay đổi ngành công nghiệp game như thế nào.</p>',
+                'category' => 'cong-nghe',
+            ],
+            [
+                'title' => 'Giải Đấu Esports Quốc Tế',
+                'slug' => 'giai-dau-esports-quoc-te',
+                'content' => '<p>Tổng hợp các giải đấu esports quốc tế lớn nhất.</p>',
+                'category' => 'esports',
+            ],
+        ];
+
+        foreach ($posts as $postData) {
+            $existing = $db->select('id')
+                ->from('pw_posts')
+                ->where('slug', $postData['slug'])
+                ->where('post_type', 'post')
+                ->run()
+                ->fetch();
+
+            if ($existing) {
+                $this->line("  - {$postData['title']}: already exists, skipping.");
+                continue;
+            }
+
+            $db->insert('pw_posts')->values([
+                'id' => $db->select('MAX(id)')->from('pw_posts')->run()->fetchColumn() + 1,
+                'post_type' => 'post',
+                'title' => $postData['title'],
+                'slug' => $postData['slug'],
+                'content' => $postData['content'],
+                'status' => 'publish',
+                'author_id' => 1,
+            ])->run();
+
+            $post = $db->select('id')
+                ->from('pw_posts')
+                ->where('slug', $postData['slug'])
+                ->run()
+                ->fetch();
+
+            $postId = (int) $post['id'];
+
+            // Get category term id
+            $term = $db->select('id')
+                ->from('pw_terms')
+                ->where('slug', $postData['category'])
+                ->where('taxonomy', 'category')
+                ->run()
+                ->fetch();
+
+            if ($term) {
+                $db->insert('pw_term_relationships')->values([
+                    'object_id' => $postId,
+                    'term_id' => (int) $term['id'],
+                ])->run();
+            }
+
+            $this->line("  - {$postData['title']}: created.");
+        }
+
         $this->info('Seed complete!');
         $this->line('Created:');
         $this->line('  - Home / Trang chủ');
         $this->line('  - About Us / Về chúng tôi');
+        $this->line('  - Categories: Tin Game, Công Nghệ, Esports');
+        $this->line('  - Posts: 3 demo posts');
 
         return 0;
     }

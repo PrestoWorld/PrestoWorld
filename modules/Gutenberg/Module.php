@@ -108,7 +108,7 @@ class Module extends WitalsModule
         }
     }
 
-    public function renderTemplate(string $template): string
+    public function renderTemplate(string $template, array $data = []): string
     {
         $themePath = $this->getThemePath($this->app);
         $path = $themePath . "/templates/{$template}.html";
@@ -121,8 +121,28 @@ class Module extends WitalsModule
         $parser = $this->app->make(BlockParser::class);
         $renderer = $this->app->make(BlockRenderer::class);
 
+        // Merge template data into renderer context
+        if (!empty($data)) {
+            $renderer->mergeContext($data);
+        }
+
         $blocks = $parser->parse($html);
-        return $renderer->render($blocks);
+        $output = $renderer->render($blocks);
+
+        // Clean up merged context after render
+        if (!empty($data)) {
+            $renderer->clearContext();
+            // Restore base context
+            $renderer->setContext([
+                'theme_path' => $this->getThemePath($this->app),
+                'site_title' => 'PrestoWorld',
+                'site_url' => '/',
+                'post_repository' => $this->app->make(PostRepository::class),
+                'template_part_registry' => $this->app->make(TemplatePartRegistry::class),
+            ]);
+        }
+
+        return $output;
     }
 
     public function getStyles(): string

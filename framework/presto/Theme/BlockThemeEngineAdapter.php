@@ -18,7 +18,7 @@ class BlockThemeEngineAdapter implements ThemeEngineInterface
     public function render(string $template, array $post = []): RenderedContent
     {
         return new RenderedContent(
-            body: $this->gutenberg->renderTemplate($template) ?? '',
+            body: $this->gutenberg->renderTemplate($template, $post) ?? '',
             styles: $this->gutenberg->getStyles(),
         );
     }

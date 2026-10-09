@@ -12,6 +12,8 @@ use App\Console\Commands\DbCopyCommand;
 use App\Console\Commands\DbInitCommand;
 use App\Console\Commands\MigrateCommand;
 use App\Console\Commands\CompileCommand;
+use App\Console\Commands\RewriteCacheClearCommand;
+use App\Console\Commands\ConfigShowCommand;
 
 class ConsoleServiceProvider extends ServiceProvider
 {
@@ -24,6 +26,8 @@ class ConsoleServiceProvider extends ServiceProvider
             $kernel->register(DbInitCommand::class);
             $kernel->register(MigrateCommand::class);
             $kernel->register(CompileCommand::class);
+            $kernel->register(RewriteCacheClearCommand::class);
+            $kernel->register(ConfigShowCommand::class);
             return $kernel;
         });
     }

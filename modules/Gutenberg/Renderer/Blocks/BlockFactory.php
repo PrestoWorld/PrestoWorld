@@ -49,6 +49,11 @@ class BlockFactory
         'core/social-link'              => SocialLinkBlock::class,
         'core/widget-area'              => WidgetAreaBlock::class,
 
+        // Jankx custom blocks
+        'jankx/human-readable-post-date' => HumanReadablePostDateBlock::class,
+        'jankx/dynamic-data-layout'      => DynamicDataLayoutBlock::class,
+        'jankx/dynamic-data-template'    => DynamicDataTemplateBlock::class,
+
     ];
 
     public static function create(array $data): AbstractBlock
