@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\MediaController;
 $router->get('/api/admin/initial-state', [\App\Http\Controllers\Admin\SpaController::class, 'initialState']);
 $router->get('/api/admin/menu', [\App\Http\Controllers\Admin\SpaController::class, 'menu']);
 $router->get('/api/admin/dashboard/widgets', [\App\Http\Controllers\Admin\SpaController::class, 'dashboardWidgets']);
+$router->get('/api/admin/screens/{screenId}', [\App\Http\Controllers\Admin\SpaController::class, 'screenData']);
 
 $router->get('/api/admin/posts', [PostsController::class, 'posts']);
 $router->get('/api/admin/posts/{id}', [PostsController::class, 'getPost']);

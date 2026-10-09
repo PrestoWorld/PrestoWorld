@@ -213,16 +213,58 @@ class Module extends WitalsModule
         ));
     }
 
-    // ── Dashboard & Widgets ──────────────────────────────────────
+    // ── Dashboard, Widgets & Screens ─────────────────────────────
 
     protected function registerDashboard(): void
     {
+        $this->app->singleton(
+            \PrestoWorld\Contracts\Admin\Dashboard\DashboardScreenRegistryInterface::class,
+            fn() => new \PrestoWorld\Modules\Admin\Dashboard\DashboardScreenRegistry(),
+        );
+        $this->app->alias(\PrestoWorld\Contracts\Admin\Dashboard\DashboardScreenRegistryInterface::class, 'admin.screens');
+
         $this->app->singleton(
             \PrestoWorld\Contracts\Admin\Dashboard\DashboardWidgetRepository::class,
             fn() => new \PrestoWorld\Modules\Admin\Dashboard\DashboardWidgetRepository(),
         );
 
+        $this->registerDefaultScreens();
         $this->registerDashboardWidgets();
+    }
+
+    /**
+     * Seed the screen registry with the core screens derived from the
+     * registered admin menu. Modules/plugins/themes can override or add
+     * screens through DashboardScreenRegistry or the 'admin.screen.register'
+     * action later.
+     */
+    protected function registerDefaultScreens(): void
+    {
+        /** @var \PrestoWorld\Contracts\Admin\Dashboard\DashboardScreenRegistryInterface $registry */
+        $registry = $this->app->make(\PrestoWorld\Contracts\Admin\Dashboard\DashboardScreenRegistryInterface::class);
+        /** @var MenuContract $menu */
+        $menu = $this->app->make(MenuContract::class);
+
+        $position = 10;
+        foreach ($menu->getTree() as $group) {
+            foreach ($group->getChildren() as $item) {
+                $screenId = $item->getScreenId();
+                if ($screenId === null || $screenId === '') {
+                    continue;
+                }
+
+                $registry->registerScreen(new \PrestoWorld\Modules\Admin\Screen\Screen(
+                    id: $screenId,
+                    title: $item->getLabel(),
+                    icon: $item->getIcon() ?? 'Circle',
+                    position: $position,
+                    component: null,
+                    source: 'core',
+                ));
+
+                $position += 10;
+            }
+        }
     }
 
     protected function registerDashboardWidgets(): void

@@ -1,5 +1,36 @@
 import React from 'react';
-import { ArrowLeft, BarChart2, Layers, Sparkles, X } from 'lucide-react';
+import {
+  ArrowLeft,
+  BarChart2,
+  Layers,
+  Sparkles,
+  X,
+  Circle,
+  FileText,
+  Image,
+  File,
+  MessageSquare,
+  Palette,
+  Puzzle,
+  User,
+  Wrench,
+  Settings,
+  LayoutDashboard,
+  Activity,
+  Download,
+  Upload,
+  Link,
+  Shield,
+  Edit,
+  BookOpen,
+  Tags,
+  Plus,
+  Code,
+  Menu,
+  Blocks,
+  Globe,
+} from 'lucide-react';
+import type { MenuSection } from '../types';
 
 interface NavItem {
   id: string;
@@ -8,21 +39,63 @@ interface NavItem {
   icon: React.ComponentType<{ className?: string }>;
 }
 
+interface CoreItem {
+  id: string;
+  label: string;
+  icon?: string;
+  screenId?: string;
+  url?: string;
+}
+
 interface SellerCenterSidebarProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
   navItems: NavItem[];
   isTabActive: (tabId: string) => boolean;
+  coreSections?: MenuSection[];
+  onSelectScreen: (screenId: string) => void;
   showMobileMoreMenu: boolean;
   setShowMobileMoreMenu: (show: boolean) => void;
   onBackToMain: () => void;
   mobileMoreClick: (tabId: string) => void;
 }
 
+const coreIcons: Record<string, React.ComponentType<{ className?: string }>> = {
+  FileText,
+  Image,
+  File,
+  MessageSquare,
+  Palette,
+  Puzzle,
+  User,
+  Wrench,
+  Settings,
+  LayoutDashboard,
+  Activity,
+  Download,
+  Upload,
+  Link,
+  Shield,
+  Edit,
+  BookOpen,
+  Tags,
+  Plus,
+  Code,
+  Menu,
+  Blocks,
+  Globe,
+  Circle,
+};
+
+const resolveIcon = (name?: string): React.ComponentType<{ className?: string }> =>
+  (name && coreIcons[name]) || Circle;
+
 export const SellerCenterSidebar: React.FC<SellerCenterSidebarProps> = ({
   onTabChange,
   navItems,
   isTabActive,
+  coreSections = [],
+  onSelectScreen,
   showMobileMoreMenu,
   setShowMobileMoreMenu,
   onBackToMain,
@@ -141,7 +214,7 @@ export const SellerCenterSidebar: React.FC<SellerCenterSidebarProps> = ({
         <div className="px-3.5 pt-3 pb-1.5 flex items-center justify-between text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
           <span>Danh Mục Phân Hệ</span>
           <span className="text-[9px] bg-blue-50 text-blue-700 px-1.5 py-0.2 rounded-full font-extrabold border border-blue-200/60">
-            6 Phân Hệ
+            {navItems.length} Phân Hệ
           </span>
         </div>
 
@@ -166,6 +239,51 @@ export const SellerCenterSidebar: React.FC<SellerCenterSidebarProps> = ({
               </button>
             );
           })}
+
+          {coreSections.length > 0 && (
+            <div className="pt-3 mt-2 border-t border-slate-200/80">
+              <div className="px-1.5 pb-1.5 flex items-center justify-between text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                <span>Quản Lý Nội Dung</span>
+                <span className="text-[9px] bg-slate-100 text-slate-600 px-1.5 py-0.2 rounded-full font-extrabold border border-slate-200/60">
+                  {coreSections.length} Nhóm
+                </span>
+              </div>
+
+              {coreSections.map((section) => {
+                const Icon = resolveIcon(section.icon);
+                return (
+                  <div key={section.id} className="mb-1.5">
+                    <div className="flex items-center gap-2 px-3 py-1.5 text-[10.5px] font-extrabold text-slate-500">
+                      <Icon className="w-3.5 h-3.5 text-slate-400" />
+                      <span className="truncate">{section.title}</span>
+                    </div>
+
+                    <div className="space-y-0.5">
+                      {(section.items ?? []).map((item: CoreItem) => {
+                        const ItemIcon = resolveIcon(item.icon ?? section.icon);
+                        const itemId = item.screenId ?? item.id;
+                        const isActive = itemId !== '' && isTabActive(itemId);
+                        return (
+                          <button
+                            key={item.id}
+                            onClick={() => onSelectScreen(itemId)}
+                            className={`w-full flex items-center space-x-2.5 px-3 py-1.5 rounded-lg text-left transition-all cursor-pointer ${
+                              isActive
+                                ? 'bg-blue-50 text-blue-700 ring-1 ring-blue-200/70'
+                                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/90'
+                            }`}
+                          >
+                            <ItemIcon className={`w-3.5 h-3.5 flex-shrink-0 ${isActive ? 'text-blue-600' : 'text-slate-400'}`} />
+                            <span className="text-xs font-medium truncate">{item.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </nav>
 
         <div className="p-2.5 border-t border-slate-100 space-y-1.5 bg-slate-50/50 flex-shrink-0">

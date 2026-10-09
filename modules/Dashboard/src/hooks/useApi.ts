@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { api, type InitialState } from '../api/client';
-import type { MenuSection, DashboardWidget } from '../types';
+import { api } from '../api/client';
+import type { InitialState, MenuSection, DashboardWidget } from '../types';
 
 export function useInitialState() {
   const [state, setState] = useState<InitialState | null>(null);

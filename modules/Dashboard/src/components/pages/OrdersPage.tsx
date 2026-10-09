@@ -1,11 +1,6 @@
 import React from 'react';
-import { type DashboardWidget } from '../../types';
 
-interface OrdersPageProps {
-  widgets: DashboardWidget[];
-}
-
-export const OrdersPage: React.FC<OrdersPageProps> = ({ widgets }) => {
+export const OrdersPage: React.FC = () => {
   const INITIAL_ORDERS = [
     {
       id: 'ORD-882910',
@@ -50,10 +45,6 @@ export const OrdersPage: React.FC<OrdersPageProps> = ({ widgets }) => {
       source: 'Website',
     },
   ];
-
-  const orders = widgets
-    .filter((w) => w.component === 'OrdersWidget' || w.component === '')
-    .map(() => INITIAL_ORDERS);
 
   return (
     <div className="space-y-4 animate-in fade-in duration-200 max-w-7xl mx-auto">

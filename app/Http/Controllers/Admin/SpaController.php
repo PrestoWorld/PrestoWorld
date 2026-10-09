@@ -8,6 +8,7 @@ use Witals\Framework\Http\Request;
 use Witals\Framework\Http\Response;
 use PrestoWorld\Modules\Admin\SkinManager;
 use PrestoWorld\Contracts\Admin\Menu\MenuContextRepository;
+use PrestoWorld\Contracts\Admin\Dashboard\DashboardScreenRegistryInterface;
 use PrestoWorld\Contracts\Admin\Dashboard\DashboardWidgetRepository;
 use PrestoWorld\Modules\Admin\ScreenOptions\ScreenOption;
 use PrestoWorld\Modules\Admin\ScreenOptions\ScreenOptionsContext;
@@ -16,6 +17,8 @@ use PrestoWorld\Modules\Admin\AdminBar\AdminBarContext;
 
 class SpaController
 {
+    protected bool $adminHooksDispatched = false;
+
     /** Widget-to-component mapping */
     protected const WIDGET_COMPONENTS = [
         'at-a-glance'  => 'StatCards',
@@ -28,6 +31,7 @@ class SpaController
         protected SkinManager $skins,
         protected MenuContextRepository $menu,
         protected DashboardWidgetRepository $widgets,
+        protected DashboardScreenRegistryInterface $screens,
     ) {}
 
     protected const WP_SCREEN_MAP = [
@@ -338,33 +342,74 @@ class SpaController
         return Response::json($this->menu->getTreeAsArray());
     }
 
-    /** Build screens list from registered menu items */
-    protected function buildScreens(array $menuSections): array
+    public function screenData(Request $request, string $screenId): Response
     {
-        $screens = [];
-        $seen = [];
-
-        foreach ($menuSections as $section) {
-            foreach ($section['items'] ?? [] as $item) {
-                $screenId = $item['screenId'] ?? null;
-                if ($screenId !== null && !isset($seen[$screenId])) {
-                    $seen[$screenId] = true;
-                    $screens[] = [
-                        'id' => $screenId,
-                        'title' => $item['label'],
-                        'icon' => $item['icon'] ?? 'Circle',
-                        'position' => $item['priority'] ?? count($screens) * 10,
-                    ];
-                }
+        foreach ($this->buildScreens($this->buildMenuSections()) as $screen) {
+            if (($screen['id'] ?? '') === $screenId) {
+                return Response::json(['success' => true, 'data' => $screen]);
             }
         }
 
-        return $screens;
+        return Response::json(['success' => false, 'error' => "Screen '{$screenId}' not found."], 404);
+    }
+
+    /**
+     * Fire WordPress-compatible admin registration actions so plugins, modules
+     * and themes can add nav items, screens and dashboard widgets through
+     * add_action() before the SPA state is serialized.
+     */
+    protected function dispatchAdminHooks(): void
+    {
+        if ($this->adminHooksDispatched) {
+            return;
+        }
+
+        $this->adminHooksDispatched = true;
+
+        do_action('admin.dashboard.nav', $this->menu);
+        do_action('admin.screen.register', $this->screens);
+        do_action('admin.dashboard.widgets', $this->widgets);
+    }
+
+    /** Build screens list from the screen registry plus registered menu items */
+    protected function buildScreens(array $menuSections): array
+    {
+        $this->dispatchAdminHooks();
+
+        $screens = [];
+        foreach ($this->screens->getScreens() as $screen) {
+            $screens[$screen->getId()] = $screen->toArray();
+        }
+
+        // Fall back to menu items for screens not present in the registry
+        $seen = [];
+        foreach ($menuSections as $section) {
+            foreach ($section['items'] ?? [] as $item) {
+                $screenId = $item['screenId'] ?? null;
+                if ($screenId === null || $screenId === '' || isset($screens[$screenId]) || isset($seen[$screenId])) {
+                    continue;
+                }
+                $seen[$screenId] = true;
+                $screens[$screenId] = [
+                    'id' => $screenId,
+                    'title' => $item['label'] ?? $screenId,
+                    'icon' => $item['icon'] ?? 'Circle',
+                    'position' => $item['priority'] ?? count($screens) * 10,
+                    'component' => null,
+                    'source' => 'core',
+                    'settings' => [],
+                ];
+            }
+        }
+
+        return array_values($screens);
     }
 
     /** Build sidebar sections from the registered menu tree */
     protected function buildMenuSections(): array
     {
+        $this->dispatchAdminHooks();
+
         $menuTree = $this->menu->getTreeAsArray();
         $sections = [];
 

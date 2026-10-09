@@ -15,6 +15,9 @@ class Screen implements ScreenInterface
         protected ?string $capability = null,
         protected ?string $icon = null,
         protected int $position = 10,
+        protected ?string $component = null,
+        protected string $source = 'core',
+        protected array $settings = [],
     ) {}
 
     public function getId(): string
@@ -47,6 +50,21 @@ class Screen implements ScreenInterface
         return $this->position;
     }
 
+    public function getComponent(): ?string
+    {
+        return $this->component;
+    }
+
+    public function getSource(): string
+    {
+        return $this->source;
+    }
+
+    public function getSettings(): array
+    {
+        return $this->settings;
+    }
+
     public function toArray(): array
     {
         return [
@@ -56,6 +74,9 @@ class Screen implements ScreenInterface
             'capability' => $this->capability,
             'icon' => $this->icon,
             'position' => $this->position,
+            'component' => $this->component,
+            'source' => $this->source,
+            'settings' => $this->settings,
         ];
     }
 }

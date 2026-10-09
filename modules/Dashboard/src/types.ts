@@ -43,6 +43,9 @@ export interface Screen {
   title: string;
   icon: string;
   position: number;
+  component?: string | null;
+  source?: string;
+  settings?: Record<string, unknown>;
 }
 
 export interface ScreenOption {
@@ -91,3 +94,11 @@ export interface ApiResponse<T> {
   data: T;
   error?: string;
 }
+
+declare global {
+  interface Window {
+    __INITIAL_DASHBOARD_STATE__?: InitialState;
+  }
+}
+
+export {};

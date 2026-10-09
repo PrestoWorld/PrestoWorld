@@ -3,25 +3,39 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import { SellerCenterPage } from './components/SellerCenterPage';
 import { api } from './api/client';
+import './screens';
+import type { InitialState } from './types';
 
- // Fetch initial state from Admin module API
- async function initializeApp() {
-   try {
-     const initialState = await api.getInitialState();
-     console.log('Initial state loaded', initialState.user);
-   } catch (err) {
-     console.error('Failed to load initial state', err);
-   }
- }
+const fallbackInitialState: InitialState = {
+  user: { id: '1', name: 'Administrator', role: 'admin' },
+  screens: [],
+  menuSections: [],
+  widgets: [],
+  screenOptions: [],
+  adminBar: { items: [] },
+  page: { path: '/dashboard', title: 'Dashboard', screenId: 'overview' },
+};
 
- initializeApp();
+async function boot() {
+  let initialState = fallbackInitialState;
 
-const root = ReactDOM.createRoot(document.getElementById('root')!);
-root.render(
-  <React.StrictMode>
-    <SellerCenterPage
-      initialState={{ user: { id: '1', name: 'Admin', role: 'admin' }, screens: [], menuSections: [], widgets: [], page: { title: 'Dashboard', screenId: 'overview' } } }
-      onBackToMain={() => console.log('Back to main')}
-    />
-  </React.StrictMode>
-);
+  try {
+    initialState = await api.getInitialState();
+  } catch (err) {
+    console.error('Failed to load initial state, using fallback', err);
+  }
+
+  const root = ReactDOM.createRoot(document.getElementById('root')!);
+  root.render(
+    <React.StrictMode>
+      <SellerCenterPage
+        initialState={initialState}
+        onBackToMain={() => {
+          window.location.href = '/';
+        }}
+      />
+    </React.StrictMode>,
+  );
+}
+
+boot();

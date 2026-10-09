@@ -2,8 +2,7 @@ import type {
   InitialState,
   MenuSection,
   DashboardWidget,
-  ApiResponse,
-} from './types';
+} from '../types';
 
 const API_BASE = '/api/admin';
 
