@@ -5,7 +5,7 @@ interface StatCardProps {
   content: string;
 }
 
-export const StatCard: React.FC<StatCardProps> = ({ content }) => {
+export const StatCard: React.FC<StatCardProps> = () => {
   const stats = [
     { label: 'Tổng Bài Viết', value: '1,234', icon: FileText, color: 'text-blue-600 bg-blue-50', change: '+12%', trend: 'up' },
     { label: 'Người Dùng', value: '567', icon: Users, color: 'text-emerald-600 bg-emerald-50', change: '+8%', trend: 'up' },

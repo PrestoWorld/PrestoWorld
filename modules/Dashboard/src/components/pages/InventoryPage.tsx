@@ -1,12 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Boxes, Book, DollarSign } from 'lucide-react';
-import type { DashboardWidget } from '../../types';
 
-interface InventoryPageProps {
-  widgets: DashboardWidget[];
-}
-
-export const InventoryPage: React.FC<InventoryPageProps> = ({ widgets }) => {
+export const InventoryPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');

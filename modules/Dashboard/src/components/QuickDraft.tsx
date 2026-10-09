@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Save, Edit } from 'lucide-react';
+import { Save } from 'lucide-react';
 
 interface QuickDraftProps {
   content: string;

@@ -1,11 +1,6 @@
 import React from 'react';
-import type { DashboardWidget } from '../../types';
 
-interface AnalyticsPageProps {
-  widgets: DashboardWidget[];
-}
-
-export const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ widgets }) => {
+export const AnalyticsPage: React.FC = () => {
   const performanceData = useMemo(() => {
     return [
       { label: 'CVR (Conversion Rate)', data: [65, 68, 72, 60, 67, 75, 80], color: 'text-emerald-600' },
