@@ -81,7 +81,7 @@ class SpaController
         'options-reading.php' => 'options-reading',
         'options-discussion.php' => 'options-discussion',
         'options-media.php'   => 'options-media',
-        'options-permalink.php' => 'options-permalink',
+        'options-permalink.php' => 'options-privacy',
         'options-privacy.php' => 'options-privacy',
 
         // Updates
@@ -91,6 +91,12 @@ class SpaController
     public function __invoke(Request $request): Response
     {
         $path = $request->path();
+
+        // Serve new Dashboard module for /dashboard path
+        if ($path === '/dashboard') {
+            return $this->serveNewDashboard($request);
+        }
+
         $skin = $this->resolveSkin($path, $request);
         $screenId = $this->resolveScreenId($request);
 
@@ -125,6 +131,131 @@ class SpaController
         ]);
 
         return Response::html($html);
+    }
+
+    protected function serveNewDashboard(Request $request): Response
+    {
+        $dashboardDir = __DIR__ . '/../../../../public/assets/dashboard';
+
+        if (is_dir($dashboardDir)) {
+            // Find all CSS and JS files
+            $cssFiles = [];
+            $jsFiles = [];
+
+            // Gather CSS files
+            $cssDir = $dashboardDir . '/css';
+            if (is_dir($cssDir)) {
+                foreach (glob($cssDir . '/*.css') as $cssFile) {
+                    $cssFiles[] = '/assets/dashboard/css/' . basename($cssFile);
+                }
+            }
+
+            // Gather JS files (ordered: vendor-react, vendor-lucide, vendor, dashboard.js)
+            $jsDir = $dashboardDir . '/js';
+            if (is_dir($jsDir)) {
+                $files = glob($jsDir . '/*.js');
+                // Sort to ensure vendor files come before main bundle
+                usort($files, function ($a, $b) {
+                    $aMain = strpos(basename($a), 'dashboard.js') !== false;
+                    $bMain = strpos(basename($b), 'dashboard.js') !== false;
+                    if ($aMain && !$bMain) return 1;
+                    if (!$aMain && $bMain) return -1;
+                    return strcmp($a, $b);
+                });
+                foreach ($files as $jsFile) {
+                    $jsFiles[] = '/assets/dashboard/js/' . basename($jsFile);
+                }
+            }
+
+            // Build HTML with proper asset tags
+            $html = '<!DOCTYPE html>' . "\n";
+            $html .= '<html lang="en">' . "\n";
+            $html .= '<head>' . "\n";
+            $html .= '  <meta charset="UTF-8" />' . "\n";
+            $html .= '  <meta name="viewport" content="width=device-width, initial-scale=1.0" />' . "\n";
+            $html .= '  <title>PrestoWorld Dashboard</title>' . "\n";
+
+            // Inject CSS
+            foreach ($cssFiles as $cssFile) {
+                $html .= '  <link rel="stylesheet" href="' . $cssFile . '" />' . "\n";
+            }
+
+            $html .= '</head>' . "\n";
+            $html .= '<body>' . "\n";
+            $html .= '  <div id="root"></div>' . "\n";
+
+            // Inject initial state
+            $initialState = $this->getNewDashboardInitialState();
+            $html .= '  <script>window.__INITIAL_DASHBOARD_STATE__ = ' . json_encode($initialState, JSON_UNESCAPED_UNICODE) . ';</script>' . "\n";
+
+            // Inject JS files
+            foreach ($jsFiles as $jsFile) {
+                $html .= '  <script src="' . $jsFile . '" type="module" defer></script>' . "\n";
+            }
+
+            $html .= '</body>' . "\n";
+            $html .= '</html>';
+
+            return Response::html($html);
+        }
+
+        // Fall back to old behavior
+        return $this->__invoke($request);
+    }
+
+    protected function getNewDashboardInitialState(): array
+    {
+        $menuSections = $this->buildMenuSections();
+        $screens = $this->buildScreens($menuSections);
+
+        // Update widget component mapping for new dashboard
+        $newWidgetComponents = [
+            'at-a-glance'  => 'StatCards',
+            'quick-draft'  => 'QuickDraft',
+            'activity'     => 'ActivityLog',
+            'events-news'  => 'EventsNews',
+        ];
+
+        $widgets = [];
+        foreach ($this->widgets->getWidgets() as $widget) {
+            $id = $widget->getId();
+            $component = $newWidgetComponents[$id] ?? '';
+
+            $grid = match ($widget->getColumn()) {
+                1 => 'half',
+                2 => 'half',
+                default => 'full',
+            };
+
+            $widgets[] = [
+                'id' => $widget->getId(),
+                'title' => $widget->getTitle(),
+                'component' => $component,
+                'grid' => $grid,
+                'priority' => $widget->getPriority(),
+                'visible' => $widget->isVisible(),
+                'props' => [
+                    'content' => $widget->getContent(),
+                    'column' => $widget->getColumn(),
+                ],
+            ];
+        }
+
+        return [
+            'user' => [
+                'name' => 'Administrator',
+                'role' => 'admin',
+                'avatar' => null,
+            ],
+            'screens' => $screens,
+            'menuSections' => $menuSections,
+            'widgets' => $widgets,
+            'page' => [
+                'path' => '/dashboard',
+                'title' => 'Dashboard',
+                'screenId' => 'overview',
+            ],
+        ];
     }
 
     protected function resolveSkin(string $path, Request $request): mixed
