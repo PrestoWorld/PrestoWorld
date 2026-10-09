@@ -1393,3 +1393,611 @@ if (!function_exists('determine_locale')) {
         return Translator::locale();
     }
 }
+
+/* ---------------------------------------------------------------------------
+ * Group 2: Security & Nonces (10.4.3) — bổ sung
+ * ------------------------------------------------------------------------- */
+
+if (!function_exists('wp_referer_field')) {
+    function wp_referer_field(bool $display = true): string
+    {
+        return Security::refererField($display);
+    }
+}
+
+if (!function_exists('wp_get_referer')) {
+    function wp_get_referer(): string|false
+    {
+        return \PrestoWorld\Core\Request::referer() ?: false;
+    }
+}
+
+if (!function_exists('auth_redirect')) {
+    function auth_redirect(): void
+    {
+        \PrestoWorld\Core\AuthService::requireLogin();
+    }
+}
+
+if (!function_exists('wp_set_auth_cookie')) {
+    function wp_set_auth_cookie(int $userId, bool $remember = false, string $secure = '', string $token = ''): void
+    {
+        \PrestoWorld\Core\AuthService::setCookie('wordpress_logged_in', (string) $userId, $remember ? time() + 1209600 : 0);
+    }
+}
+
+if (!function_exists('wp_clear_auth_cookie')) {
+    function wp_clear_auth_cookie(): void
+    {
+        \PrestoWorld\Core\AuthService::clearCookie('wordpress_logged_in');
+    }
+}
+
+if (!function_exists('wp_parse_auth_cookie')) {
+    /** @return array<string, mixed>|false */
+    function wp_parse_auth_cookie(string $cookie = '', string $scheme = ''): array|false
+    {
+        $value = \PrestoWorld\Core\AuthService::parseCookie($cookie !== '' ? $cookie : 'wordpress_logged_in');
+
+        return $value === null ? false : ['username' => $value];
+    }
+}
+
+if (!function_exists('wp_validate_auth_cookie')) {
+    function wp_validate_auth_cookie(string $cookie = '', string $scheme = ''): int|false
+    {
+        $userId = \PrestoWorld\Core\AuthService::currentUserId();
+
+        return $userId > 0 ? $userId : false;
+    }
+}
+
+/* ---------------------------------------------------------------------------
+ * Group 6: Users & Capabilities (10.4.7) — bổ sung
+ * ------------------------------------------------------------------------- */
+
+if (!function_exists('wp_get_current_user')) {
+    function wp_get_current_user(): \PrestoWorld\Core\User\UserEntity
+    {
+        return \PrestoWorld\Core\AuthService::currentUser() ?? new \PrestoWorld\Core\User\UserEntity();
+    }
+}
+
+if (!function_exists('wp_set_current_user')) {
+    function wp_set_current_user(int $id, string $name = ''): \PrestoWorld\Core\User\UserEntity
+    {
+        \PrestoWorld\Core\AuthService::setCurrentUser($id);
+
+        return \PrestoWorld\Core\AuthService::currentUser() ?? new \PrestoWorld\Core\User\UserEntity();
+    }
+}
+
+if (!function_exists('current_user_can_for_blog')) {
+    function current_user_can_for_blog(int $blogId, string $capability): bool
+    {
+        return \PrestoWorld\Core\CapabilityService::can($capability, null);
+    }
+}
+
+if (!function_exists('user_can')) {
+    function user_can(int|\PrestoWorld\Core\User\UserEntity $user, string $capability, mixed ...$args): bool
+    {
+        $userId = $user instanceof \PrestoWorld\Core\User\UserEntity ? $user->id : $user;
+
+        return \PrestoWorld\Core\CapabilityService::userCan($userId, $capability, $args);
+    }
+}
+
+if (!function_exists('get_user_by')) {
+    function get_user_by(string $field, mixed $value): \PrestoWorld\Core\User\UserEntity|false
+    {
+        return \PrestoWorld\Core\UserRepository::findBy([$field => $value]);
+    }
+}
+
+if (!function_exists('get_users')) {
+    /**
+     * @param array<string, mixed> $args
+     * @return array<int, \PrestoWorld\Core\User\UserEntity>
+     */
+    function get_users(array $args = []): array
+    {
+        return \PrestoWorld\Core\UserRepository::query($args);
+    }
+}
+
+if (!function_exists('wp_signon')) {
+    /**
+     * @param array<string, mixed> $credentials
+     */
+    function wp_signon(array $credentials = [], string $secureCookie = ''): \PrestoWorld\Core\User\UserEntity|false
+    {
+        $login = $credentials['user_login'] ?? '';
+        $password = $credentials['user_password'] ?? '';
+
+        $ok = \PrestoWorld\Core\AuthService::signIn(
+            is_string($login) ? $login : '',
+            is_string($password) ? $password : '',
+        );
+
+        return $ok ? (\PrestoWorld\Core\AuthService::currentUser() ?? false) : false;
+    }
+}
+
+if (!function_exists('wp_logout')) {
+    function wp_logout(): void
+    {
+        \PrestoWorld\Core\AuthService::signOut();
+    }
+}
+
+if (!function_exists('wp_authenticate')) {
+    function wp_authenticate(string $username, string $password): \PrestoWorld\Core\User\UserEntity|false
+    {
+        return \PrestoWorld\Core\AuthService::authenticate($username, $password)
+            ? (\PrestoWorld\Core\AuthService::currentUser() ?? false)
+            : false;
+    }
+}
+
+if (!function_exists('get_role')) {
+    function get_role(string $role): ?object
+    {
+        return \PrestoWorld\Core\RoleRegistry::get($role);
+    }
+}
+
+if (!function_exists('add_role')) {
+    /** @param array<string, bool> $capabilities */
+    function add_role(string $role, string $displayName, array $capabilities = []): void
+    {
+        \PrestoWorld\Core\RoleRegistry::add($role, $displayName, $capabilities);
+    }
+}
+
+if (!function_exists('remove_role')) {
+    function remove_role(string $role): void
+    {
+        \PrestoWorld\Core\RoleRegistry::remove($role);
+    }
+}
+
+if (!function_exists('wp_roles')) {
+    function wp_roles(): \PrestoWorld\Core\RoleRegistry
+    {
+        return \PrestoWorld\Core\RoleRegistry::instance();
+    }
+}
+
+if (!function_exists('is_super_admin')) {
+    function is_super_admin(int|false $userId = false): bool
+    {
+        $id = $userId === false ? \PrestoWorld\Core\AuthService::currentUserId() : $userId;
+
+        return \PrestoWorld\Core\CapabilityService::isSuperAdmin($id);
+    }
+}
+
+/* ---------------------------------------------------------------------------
+ * Group 11: Assets (10.4.12) — bổ sung
+ * ------------------------------------------------------------------------- */
+
+if (!function_exists('wp_register_script')) {
+    /** @param array<int, string> $deps */
+    function wp_register_script(string $handle, string $src = '', array $deps = [], string|bool|null $ver = false, bool $inFooter = false): void
+    {
+        AssetManager::registerScript($handle, $src, $deps, $ver, $inFooter);
+    }
+}
+
+if (!function_exists('wp_dequeue_script')) {
+    function wp_dequeue_script(string $handle): void
+    {
+        AssetManager::dequeueScript($handle);
+    }
+}
+
+if (!function_exists('wp_deregister_script')) {
+    function wp_deregister_script(string $handle): void
+    {
+        AssetManager::deregisterScript($handle);
+    }
+}
+
+if (!function_exists('wp_register_style')) {
+    /** @param array<int, string> $deps */
+    function wp_register_style(string $handle, string $src = '', array $deps = [], string|bool|null $ver = false, string $media = 'all'): void
+    {
+        AssetManager::registerStyle($handle, $src, $deps, $ver, $media);
+    }
+}
+
+if (!function_exists('wp_dequeue_style')) {
+    function wp_dequeue_style(string $handle): void
+    {
+        AssetManager::dequeueStyle($handle);
+    }
+}
+
+if (!function_exists('wp_deregister_style')) {
+    function wp_deregister_style(string $handle): void
+    {
+        AssetManager::deregisterStyle($handle);
+    }
+}
+
+if (!function_exists('wp_script_is')) {
+    function wp_script_is(string $handle, string $list = 'enqueued'): bool
+    {
+        return AssetManager::scriptIs($handle, $list);
+    }
+}
+
+if (!function_exists('wp_style_is')) {
+    function wp_style_is(string $handle, string $list = 'enqueued'): bool
+    {
+        return AssetManager::styleIs($handle, $list);
+    }
+}
+
+if (!function_exists('wp_add_inline_script')) {
+    function wp_add_inline_script(string $handle, string $data, string $position = 'after'): bool
+    {
+        return AssetManager::addInlineScript($handle, $data, $position);
+    }
+}
+
+if (!function_exists('wp_add_inline_style')) {
+    function wp_add_inline_style(string $handle, string $data): bool
+    {
+        return AssetManager::addInlineStyle($handle, $data);
+    }
+}
+
+if (!function_exists('wp_enqueue_block_style')) {
+    /** @param array<string, mixed> $args */
+    function wp_enqueue_block_style(string $blockName, array $args): void
+    {
+        $src = $args['src'] ?? '';
+
+        AssetManager::enqueueStyle($blockName, is_string($src) ? $src : '');
+    }
+}
+
+if (!function_exists('wp_register_script_module')) {
+    /** @param array<int, string> $deps */
+    function wp_register_script_module(string $id, string $src, array $deps = [], string|bool|null $ver = null): void
+    {
+        AssetManager::registerModule($id, ['src' => $src, 'deps' => $deps, 'version' => $ver]);
+    }
+}
+
+/* ---------------------------------------------------------------------------
+ * Group 12: Theme (10.4.13) — bổ sung
+ * ------------------------------------------------------------------------- */
+
+if (!function_exists('template_uri')) {
+    function template_uri(): string
+    {
+        return ThemeManager::templateUri();
+    }
+}
+
+if (!function_exists('locate_template')) {
+    /**
+     * @param string|array<int, string> $templateNames
+     * @param array<string, mixed>     $args
+     */
+    function locate_template(string|array $templateNames, bool $load = false, bool $requireOnce = false, array $args = []): string
+    {
+        $names = is_array($templateNames) ? $templateNames : [$templateNames];
+
+        foreach ($names as $name) {
+            $located = ThemeManager::locate($name);
+            if ($located !== null) {
+                if ($load) {
+                    ThemeManager::load($located);
+                }
+
+                return $located;
+            }
+        }
+
+        return '';
+    }
+}
+
+if (!function_exists('load_template')) {
+    /** @param array<string, mixed> $args */
+    function load_template(string $template, bool $requireOnce = true, array $args = []): void
+    {
+        ThemeManager::load($template);
+    }
+}
+
+if (!function_exists('get_header')) {
+    function get_header(?string $name = null): void
+    {
+        ThemeManager::header($name ?? 'header');
+    }
+}
+
+if (!function_exists('get_footer')) {
+    function get_footer(?string $name = null): void
+    {
+        ThemeManager::footer($name ?? 'footer');
+    }
+}
+
+if (!function_exists('get_sidebar')) {
+    function get_sidebar(?string $name = null): void
+    {
+        ThemeManager::sidebar($name ?? 'sidebar');
+    }
+}
+
+if (!function_exists('get_template_part')) {
+    /** @param array<string, mixed> $args */
+    function get_template_part(string $slug, ?string $name = null, array $args = []): void
+    {
+        ThemeManager::templatePart($slug, $name ?? '');
+    }
+}
+
+/* ---------------------------------------------------------------------------
+ * Group 13: Files & Uploads (10.4.14) — bổ sung
+ * ------------------------------------------------------------------------- */
+
+if (!function_exists('wp_mkdir_p')) {
+    function wp_mkdir_p(string $target): bool
+    {
+        return \PrestoWorld\Core\Filesystem::mkdirP($target);
+    }
+}
+
+if (!function_exists('wp_tempnam')) {
+    function wp_tempnam(string $filename = '', string $dir = ''): string|false
+    {
+        $name = \PrestoWorld\Core\Filesystem::tempName($dir, $filename !== '' ? $filename : 'pwtmp');
+
+        return $name === '' ? false : $name;
+    }
+}
+
+if (!function_exists('copy_dir')) {
+    /** @param array<int, string> $skipList */
+    function copy_dir(string $from, string $to, array $skipList = []): bool
+    {
+        return \PrestoWorld\Core\Filesystem::copyDir($from, $to);
+    }
+}
+
+if (!function_exists('move_dir')) {
+    /** @param array<int, string> $skipList */
+    function move_dir(string $from, string $to, array $skipList = []): bool
+    {
+        return \PrestoWorld\Core\Filesystem::moveDir($from, $to);
+    }
+}
+
+if (!function_exists('wp_is_writable')) {
+    function wp_is_writable(string $path): bool
+    {
+        return \PrestoWorld\Core\Filesystem::isWritable($path);
+    }
+}
+
+if (!function_exists('wp_is_file_mod_allowed')) {
+    function wp_is_file_mod_allowed(string $context): bool
+    {
+        return \PrestoWorld\Core\Filesystem::modAllowed($context);
+    }
+}
+
+if (!function_exists('validate_file')) {
+    /** @param array<int, string> $allowedFiles */
+    function validate_file(string $file, array $allowedFiles = []): int
+    {
+        return \PrestoWorld\Core\Filesystem::validate($file) ? 0 : 1;
+    }
+}
+
+if (!function_exists('wp_unique_filename')) {
+    function wp_unique_filename(string $dir, string $filename): string
+    {
+        return \PrestoWorld\Core\UploadService::uniqueFilename($dir, $filename);
+    }
+}
+
+if (!function_exists('wp_upload_bits')) {
+    /**
+     * @return array<string, mixed>
+     */
+    function wp_upload_bits(string $name, ?string $deprecated, mixed $bits, ?string $time = null): array
+    {
+        $dir = \PrestoWorld\Core\UploadService::dir($time ?? '');
+        $path = $dir['path'] ?? '';
+
+        if (!is_string($path) || !\PrestoWorld\Core\Filesystem::mkdirP($path)) {
+            return ['error' => 'Upload directory is not writable.', 'file' => false];
+        }
+
+        $filename = \PrestoWorld\Core\UploadService::uniqueFilename($path, $name);
+        $target = rtrim($path, '/\\') . '/' . $filename;
+        $bytes = file_put_contents($target, is_string($bits) ? $bits : '');
+
+        if ($bytes === false) {
+            return ['error' => 'Could not write file to disk.', 'file' => false];
+        }
+
+        return [
+            'file' => $target,
+            'url' => rtrim((string) ($dir['url'] ?? ''), '/') . '/' . $filename,
+            'type' => '',
+            'error' => false,
+        ];
+    }
+}
+
+if (!function_exists('download_url')) {
+    function download_url(string $url, int $timeout = 300): string|\PrestoWorld\Core\Error\PrestoError
+    {
+        $response = \PrestoWorld\Core\HttpService::download($url, ['timeout' => $timeout]);
+
+        if ($response === false) {
+            return new \PrestoWorld\Core\Error\PrestoError('download_failed', 'Download failed.');
+        }
+
+        $body = $response['body'] ?? '';
+        if (!is_string($body)) {
+            return new \PrestoWorld\Core\Error\PrestoError('download_failed', 'Invalid download body.');
+        }
+
+        $tmp = \PrestoWorld\Core\Filesystem::tempName('', 'pwdownload');
+        if (file_put_contents($tmp, $body) === false) {
+            return new \PrestoWorld\Core\Error\PrestoError('download_failed', 'Could not write temporary file.');
+        }
+
+        return $tmp;
+    }
+}
+
+/* ---------------------------------------------------------------------------
+ * Group 18: Misc & Pluggable (10.4.19) — bổ sung
+ * ------------------------------------------------------------------------- */
+
+if (!function_exists('wp_slash')) {
+    function wp_slash(mixed $value): mixed
+    {
+        return Sanitize::slash($value);
+    }
+}
+
+if (!function_exists('wp_unslash')) {
+    function wp_unslash(mixed $value): mixed
+    {
+        return Sanitize::unslash($value);
+    }
+}
+
+if (!function_exists('stripslashes_deep')) {
+    function stripslashes_deep(mixed $value): mixed
+    {
+        return Sanitize::stripslashesDeep($value);
+    }
+}
+
+if (!function_exists('wp_installing')) {
+    function wp_installing(?bool $isInstalling = null): bool
+    {
+        if ($isInstalling !== null) {
+            \PrestoWorld\Core\ApplicationState::setInstalling($isInstalling);
+        }
+
+        return \PrestoWorld\Core\ApplicationState::installing();
+    }
+}
+
+if (!function_exists('wp_get_environment_type')) {
+    function wp_get_environment_type(): string
+    {
+        return \PrestoWorld\Core\AppInfo::environment();
+    }
+}
+
+if (!function_exists('wp_raise_memory_limit')) {
+    function wp_raise_memory_limit(string $context = 'core'): string|false
+    {
+        $bytes = \PrestoWorld\Core\AppInfo::raiseMemory($context);
+
+        return $bytes > 0 ? (string) $bytes : false;
+    }
+}
+
+if (!function_exists('wp_suspend_cache_addition')) {
+    function wp_suspend_cache_addition(?bool $suspend = null): bool
+    {
+        if ($suspend !== null) {
+            \PrestoWorld\Core\CacheRepository::suspend($suspend);
+        }
+
+        return \PrestoWorld\Core\CacheRepository::isSuspended();
+    }
+}
+
+if (!function_exists('wp_get_current_screen')) {
+    function wp_get_current_screen(): ?\PrestoWorld\Core\ScreenRegistry
+    {
+        return \PrestoWorld\Core\ScreenRegistry::current();
+    }
+}
+
+if (!function_exists('add_meta_box')) {
+    /** @param array<int, mixed>|null $callbackArgs */
+    function add_meta_box(
+        string $id,
+        string $title,
+        callable $callback,
+        mixed $screen = null,
+        string $context = 'advanced',
+        string $priority = 'default',
+        ?array $callbackArgs = null,
+    ): void {
+        \PrestoWorld\Core\MetaBoxRegistry::add($id, $title, $callback, is_string($screen) ? $screen : '', $context, $priority);
+    }
+}
+
+if (!function_exists('remove_meta_box')) {
+    function remove_meta_box(string $id, mixed $screen, string $context): void
+    {
+        \PrestoWorld\Core\MetaBoxRegistry::remove($id);
+    }
+}
+
+if (!function_exists('do_meta_boxes')) {
+    function do_meta_boxes(mixed $screen, string $context, mixed $dataObject): void
+    {
+        foreach (\PrestoWorld\Core\MetaBoxRegistry::ids() as $id) {
+            echo \PrestoWorld\Core\MetaBoxRegistry::render($id, $dataObject);
+        }
+    }
+}
+
+if (!function_exists('add_screen_option')) {
+    /** @param array<string, mixed> $args */
+    function add_screen_option(string $option, array $args = []): void
+    {
+        \PrestoWorld\Core\ScreenRegistry::addOption($option, $args);
+    }
+}
+
+if (!function_exists('is_plugin_active')) {
+    function is_plugin_active(string $plugin): bool
+    {
+        return \PrestoWorld\Core\PluginState::isActive($plugin);
+    }
+}
+
+if (!function_exists('is_plugin_inactive')) {
+    function is_plugin_inactive(string $plugin): bool
+    {
+        return \PrestoWorld\Core\PluginState::isInactive($plugin);
+    }
+}
+
+if (!function_exists('deactivate_plugin')) {
+    function deactivate_plugin(string $plugin, bool $silent = false): void
+    {
+        \PrestoWorld\Core\PluginState::deactivate($plugin);
+    }
+}
+
+if (!function_exists('deactivate_plugins')) {
+    /** @param string|array<int, string> $plugins */
+    function deactivate_plugins(string|array $plugins, bool $silent = false): void
+    {
+        foreach ((array) $plugins as $plugin) {
+            \PrestoWorld\Core\PluginState::deactivate((string) $plugin);
+        }
+    }
+}
