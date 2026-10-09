@@ -2,11 +2,10 @@
 
 declare(strict_types=1);
 
-namespace PrestoWorld\Core\Post;
+namespace PrestoWorld\Core;
 
-use PrestoWorld\Core\Format;
+use PrestoWorld\Core\Post\PostEntity;
 use PrestoWorld\Core\User\UserEntity;
-use PrestoWorld\Core\UserRepository;
 
 /**
  * PostView — output helpers cho vòng lặp (the_content/the_title/get_the_ID...).

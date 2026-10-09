@@ -2,10 +2,9 @@
 
 declare(strict_types=1);
 
-namespace PrestoWorld\Core\Post;
+namespace PrestoWorld\Core;
 
 use PrestoWorld\Core\Error\PrestoError;
-use PrestoWorld\Core\PostRepository;
 
 /**
  * PostService — wp_insert_post/wp_update_post/wp_delete_post + publish/trash
@@ -22,7 +21,16 @@ final class PostService
      */
     public static function create(array $data): int
     {
-        $post = PostRepository::create($data);
+        $now = date('Y-m-d H:i:s');
+        $nowGmt = gmdate('Y-m-d H:i:s');
+        $defaults = [
+            'post_date' => $now,
+            'post_date_gmt' => $nowGmt,
+            'post_modified' => $now,
+            'post_modified_gmt' => $nowGmt,
+        ];
+
+        $post = PostRepository::create($data + $defaults);
 
         return $post->ID;
     }

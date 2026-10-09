@@ -279,7 +279,7 @@ final class PrestoWpdb
      * @param array<string, mixed> $values
      * @param array<string, mixed> $where
      */
-    public function update(string $table, array $values, array $where, array $_format = null): int|false
+    public function update(string $table, array $values, array $where, ?array $_format = null): int|false
     {
         if ($this->db === null) {
             return false;
@@ -297,7 +297,7 @@ final class PrestoWpdb
      *
      * @param array<string, mixed> $where
      */
-    public function delete(string $table, array $where, array $_format = null): int|false
+    public function delete(string $table, array $where, ?array $_format = null): int|false
     {
         if ($this->db === null) {
             return false;

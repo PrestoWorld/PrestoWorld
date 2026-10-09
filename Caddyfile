@@ -6,17 +6,15 @@
 {$APP_URL:http://localhost:8080} {
 	root * public/
 	encode zstd gzip
-	
+
+	# Route everything through the front controller unless the file exists
+	@notFile not file
+	rewrite @notFile /index.php?{query}
+
 	php_server {
 		index public/index.php
 		resolve_root_symlink
 	}
-	
-	# FrankenPHP worker mode configuration
-	# To use: frankenphp run --config Caddyfile
-	# frankenphp {
-	# 	worker public/index.php
-	# }
-	
+
 	file_server
 }

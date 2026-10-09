@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace PrestoWorld\Core;
 
 use PrestoWorld\Core\Error\PrestoError;
-use PrestoWorld\Core\Post\PostService;
-use PrestoWorld\Core\PostRepository;
 use PrestoWorld\Core\User\UserEntity;
 
 /**
@@ -62,23 +60,14 @@ final class MediaService
 
     public static function file(int $postId): string|false
     {
-        $post = PostRepository::find($postId);
-        if ($post === null) {
-            return false;
-        }
-
-        $file = $post->_wp_attached_file ?? false;
+        $file = MetaRepository::get('post', $postId, '_wp_attached_file', true);
 
         return is_string($file) && $file !== '' ? $file : false;
     }
 
     public static function updateFile(int $postId, string $file): void
     {
-        $post = PostRepository::find($postId);
-        if ($post !== null) {
-            $post->_wp_attached_file = $file;
-            PostRepository::save($post);
-        }
+        MetaRepository::update('post', $postId, '_wp_attached_file', $file);
     }
 
     public static function url(int $postId): string|false
@@ -99,12 +88,7 @@ final class MediaService
      */
     public static function metadata(int $postId): array
     {
-        $post = PostRepository::find($postId);
-        if ($post === null) {
-            return [];
-        }
-
-        $meta = $post->_wp_attachment_metadata;
+        $meta = MetaRepository::get('post', $postId, '_wp_attachment_metadata', true);
 
         return is_array($meta) ? $meta : [];
     }
@@ -114,11 +98,7 @@ final class MediaService
      */
     public static function updateMetadata(int $postId, array $data): void
     {
-        $post = PostRepository::find($postId);
-        if ($post !== null) {
-            $post->_wp_attachment_metadata = $data;
-            PostRepository::save($post);
-        }
+        MetaRepository::update('post', $postId, '_wp_attachment_metadata', $data);
     }
 
     public static function caption(int $postId): string
@@ -189,11 +169,11 @@ final class MediaService
     {
     }
 
-    public static function createImageSubsizes(int $postId): void
+    public static function subsizes(int $postId): void
     {
     }
 
-    public static function cropImage(string $src, int $srcX, int $srcY, int $srcW, int $srcH, int $dstW = 0, int $dstH = 0): PrestoError
+    public static function crop(string $src, int $srcX, int $srcY, int $srcW, int $srcH, int $dstW = 0, int $dstH = 0): PrestoError
     {
         return new PrestoError('not_supported', 'Image cropping is not supported.');
     }
@@ -210,12 +190,7 @@ final class MediaService
 
     private static function altText(int $postId): string
     {
-        $post = PostRepository::find($postId);
-        if ($post === null) {
-            return '';
-        }
-
-        $alt = $post->_wp_attachment_image_alt;
+        $alt = MetaRepository::get('post', $postId, '_wp_attachment_image_alt', true);
 
         return is_string($alt) ? $alt : '';
     }

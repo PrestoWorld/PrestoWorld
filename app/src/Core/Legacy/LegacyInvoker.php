@@ -71,6 +71,19 @@ class LegacyInvoker
         return in_array($tag, $this->stack, true);
     }
 
+    /**
+     * doing_action / doing_filter (spec 10 §10.4.11): không tag → có đang chạy
+     * hook nào không; có tag → tag đó có trong stack không.
+     */
+    public function doing(?string $tag = null): bool
+    {
+        if ($tag === null) {
+            return $this->current() !== null;
+        }
+
+        return $this->isDoing($tag);
+    }
+
     public function did(string $tag): int
     {
         return $this->didCount[$tag] ?? 0;

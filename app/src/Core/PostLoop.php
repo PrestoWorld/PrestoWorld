@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
-namespace PrestoWorld\Core\Post;
+namespace PrestoWorld\Core;
+
+use PrestoWorld\Core\Post\PostQuery;
 
 /**
  * PostLoop — vòng lặp chính (the_post/have_posts/setup_postdata/query_posts).
