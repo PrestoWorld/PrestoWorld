@@ -54,7 +54,7 @@ class TwentyTwentyIntegrationTest extends TestCase
             $this->markTestSkipped();
         }
 
-        $engine = self::$app->make(\PrestoWorld\Theme\ThemeEngineFactory::class)->create();
+        $engine = self::$app->make(\PrestoWorld\Modules\ClassicTheme\ClassicThemeEngine::class);
         $loader = $engine->getFunctionsLoader();
         $loader->load();
 
@@ -82,8 +82,8 @@ class TwentyTwentyIntegrationTest extends TestCase
             $this->markTestSkipped();
         }
 
-        $factory = self::$app->make(\PrestoWorld\Theme\ThemeEngineFactory::class);
-        $result = $factory->create()->render('index');
+        $renderer = self::$app->make(\App\Contracts\Services\ContentRenderer::class);
+        $result = $renderer->render('index');
 
         $this->assertInstanceOf(\App\Contracts\Services\RenderedContent::class, $result);
         $this->assertTrue($result->complete);
@@ -99,8 +99,8 @@ class TwentyTwentyIntegrationTest extends TestCase
             $this->markTestSkipped();
         }
 
-        $factory = self::$app->make(\PrestoWorld\Theme\ThemeEngineFactory::class);
-        $result = $factory->create()->render('index');
+        $renderer = self::$app->make(\App\Contracts\Services\ContentRenderer::class);
+        $result = $renderer->render('index');
         $body = $result->body;
 
         $this->assertStringContainsString('<header id="site-header"', $body, 'Page should have a header');
@@ -114,8 +114,8 @@ class TwentyTwentyIntegrationTest extends TestCase
             $this->markTestSkipped();
         }
 
-        $factory = self::$app->make(\PrestoWorld\Theme\ThemeEngineFactory::class);
-        $result = $factory->create()->render('index');
+        $renderer = self::$app->make(\App\Contracts\Services\ContentRenderer::class);
+        $result = $renderer->render('index');
         $body = $result->body;
 
         $this->assertStringContainsString('primary-menu', $body, 'Page should contain primary menu');
@@ -129,8 +129,8 @@ class TwentyTwentyIntegrationTest extends TestCase
             $this->markTestSkipped();
         }
 
-        $factory = self::$app->make(\PrestoWorld\Theme\ThemeEngineFactory::class);
-        $result = $factory->create()->render('index');
+        $renderer = self::$app->make(\App\Contracts\Services\ContentRenderer::class);
+        $result = $renderer->render('index');
         $body = $result->body;
 
         $openHtml = substr_count($body, '<html');
@@ -150,8 +150,8 @@ class TwentyTwentyIntegrationTest extends TestCase
             $this->markTestSkipped();
         }
 
-        $factory = self::$app->make(\PrestoWorld\Theme\ThemeEngineFactory::class);
-        $result = $factory->create()->render('index');
+        $renderer = self::$app->make(\App\Contracts\Services\ContentRenderer::class);
+        $result = $renderer->render('index');
         $body = $result->body;
 
         $this->assertStringContainsString(
@@ -167,8 +167,8 @@ class TwentyTwentyIntegrationTest extends TestCase
             $this->markTestSkipped();
         }
 
-        $factory = self::$app->make(\PrestoWorld\Theme\ThemeEngineFactory::class);
-        $result = $factory->create()->render('index');
+        $renderer = self::$app->make(\App\Contracts\Services\ContentRenderer::class);
+        $result = $renderer->render('index');
         $body = $result->body;
 
         $this->assertStringContainsString(
@@ -189,8 +189,8 @@ class TwentyTwentyIntegrationTest extends TestCase
             $this->markTestSkipped();
         }
 
-        $factory = self::$app->make(\PrestoWorld\Theme\ThemeEngineFactory::class);
-        $result = $factory->create()->render('index');
+        $renderer = self::$app->make(\App\Contracts\Services\ContentRenderer::class);
+        $result = $renderer->render('index');
         $body = $result->body;
 
         $this->assertStringContainsString(
@@ -211,8 +211,7 @@ class TwentyTwentyIntegrationTest extends TestCase
             $this->markTestSkipped();
         }
 
-        $factory = self::$app->make(\PrestoWorld\Theme\ThemeEngineFactory::class);
-        $engine = $factory->create();
+        $engine = self::$app->make(\PrestoWorld\Modules\ClassicTheme\ClassicThemeEngine::class);
         $parser = $engine->getStyleParser();
 
         $this->assertSame('Twenty Twenty', $parser->name());
@@ -226,8 +225,8 @@ class TwentyTwentyIntegrationTest extends TestCase
             $this->markTestSkipped();
         }
 
-        $factory = self::$app->make(\PrestoWorld\Theme\ThemeEngineFactory::class);
-        $result = $factory->create()->render('single', [
+        $renderer = self::$app->make(\App\Contracts\Services\ContentRenderer::class);
+        $result = $renderer->render('single', [
             'post_title' => 'Test Post',
             'post_content' => '<p>Hello World</p>',
             'post_type' => 'post',
@@ -242,8 +241,8 @@ class TwentyTwentyIntegrationTest extends TestCase
             $this->markTestSkipped();
         }
 
-        $factory = self::$app->make(\PrestoWorld\Theme\ThemeEngineFactory::class);
-        $result = $factory->create()->render('page', [
+        $renderer = self::$app->make(\App\Contracts\Services\ContentRenderer::class);
+        $result = $renderer->render('page', [
             'post_title' => 'About Us',
             'post_content' => '<p>About page content</p>',
             'post_type' => 'page',

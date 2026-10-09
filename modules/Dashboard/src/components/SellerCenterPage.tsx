@@ -144,7 +144,7 @@ export const SellerCenterPage: React.FC<SellerCenterPageProps> = ({
       case 'overview':
         return <OverviewPage widgets={initialState.widgets} />;
       case 'orders':
-        return <OrdersPage />;
+        return <OrdersPage widgets={initialState.widgets} />;
       case 'inventory':
         return <InventoryPage />;
       case 'messages':

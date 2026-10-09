@@ -53,27 +53,13 @@ class Application extends BaseApplication
         });
 
         $this->singleton(
-            \PrestoWorld\Theme\ThemeEngineFactory::class,
-            function ($app) {
-                $factory = new \PrestoWorld\Theme\ThemeEngineFactory($app);
-
-                $themePath = $app->config('theme.path');
-                if ($themePath === null) {
-                    $active = $app->config('theme.active', 'jankx');
-                    $themePath = $app->basePath('content/themes/' . $active);
-                }
-
-                $factory->setThemePath($themePath);
-                return $factory;
-            },
-        );
-
-        $this->singleton(
             \App\Contracts\Services\ContentRenderer::class,
             function ($app) {
-                if ($app->has(\PrestoWorld\Theme\ThemeEngineFactory::class)) {
+                if ($app->has(\PrestoWorld\Modules\ContextBuilder\ContextLoader::class)) {
                     return new \App\Services\ContentRenderer(
-                        $app->make(\PrestoWorld\Theme\ThemeEngineFactory::class),
+                        $app->make(\PrestoWorld\Modules\ContextBuilder\ContextLoader::class),
+                        $app,
+                        self::resolveThemePath($app),
                     );
                 }
                 return new \App\Services\NullContentRenderer();
@@ -295,6 +281,29 @@ class Application extends BaseApplication
         return str_starts_with($path, '/') || str_starts_with($path, '.')
             ? $path
             : $this->basePath($path);
+    }
+
+    /**
+     * Resolve the active theme directory (env override → config path → default).
+     */
+    private static function resolveThemePath(self $app): string
+    {
+        $envPath = getenv('PW_THEME_DIR');
+        if (is_string($envPath) && $envPath !== '') {
+            return $envPath;
+        }
+
+        $themePath = $app->config('theme.path');
+        if (is_string($themePath) && $themePath !== '') {
+            return $themePath;
+        }
+
+        $active = $app->config('theme.active', 'jankx');
+        if (!is_string($active) || $active === '') {
+            $active = 'jankx';
+        }
+
+        return $app->basePath('content/themes/' . $active);
     }
 
     protected function initializeTranslator(): void

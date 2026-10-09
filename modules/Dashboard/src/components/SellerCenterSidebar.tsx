@@ -1,6 +1,5 @@
 import React from 'react';
 import { ArrowLeft, BarChart2, Layers, Sparkles, X } from 'lucide-react';
-import type { MenuSection } from '../types';
 
 interface NavItem {
   id: string;
@@ -21,7 +20,6 @@ interface SellerCenterSidebarProps {
 }
 
 export const SellerCenterSidebar: React.FC<SellerCenterSidebarProps> = ({
-  activeTab,
   onTabChange,
   navItems,
   isTabActive,

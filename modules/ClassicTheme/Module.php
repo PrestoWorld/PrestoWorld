@@ -10,31 +10,31 @@ class Module extends WitalsModule
 {
     public function register(): void
     {
-        $themePath = $this->resolveThemePath();
-
-        $this->app->singleton(StyleParser::class, function () use ($themePath) {
-            return new StyleParser($themePath . '/style.css');
+        // The active theme path is resolved lazily so the classic engine is only
+        // initialised when a legacy (pre-Gutenberg, PHP-template) theme is active.
+        $this->app->singleton(StyleParser::class, function () {
+            return new StyleParser($this->resolveThemePath() . '/style.css');
         });
 
-        $this->app->singleton(FunctionsLoader::class, function () use ($themePath) {
-            return new FunctionsLoader($themePath);
+        $this->app->singleton(FunctionsLoader::class, function () {
+            return new FunctionsLoader($this->resolveThemePath());
         });
 
         $this->app->singleton(TemplateHierarchy::class, function () {
             return new TemplateHierarchy();
         });
 
-        $this->app->singleton(TemplateLoader::class, function ($app) use ($themePath) {
+        $this->app->singleton(TemplateLoader::class, function ($app) {
             return new TemplateLoader(
-                $themePath,
+                $this->resolveThemePath(),
                 $app->make(FunctionsLoader::class),
                 $app->make(TemplateHierarchy::class),
             );
         });
 
-        $this->app->singleton(ClassicThemeEngine::class, function ($app) use ($themePath) {
+        $this->app->singleton(ClassicThemeEngine::class, function ($app) {
             return new ClassicThemeEngine(
-                $themePath,
+                $this->resolveThemePath(),
                 $app,
             );
         });

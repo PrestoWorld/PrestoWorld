@@ -146,7 +146,7 @@ class SpaController
             $cssDir = $dashboardDir . '/css';
             if (is_dir($cssDir)) {
                 foreach (glob($cssDir . '/*.css') as $cssFile) {
-                    $cssFiles[] = '/assets/dashboard/css/' . basename($cssFile);
+                    $cssFiles[$cssFile] = '/assets/dashboard/css/' . basename($cssFile) . '?v=' . filemtime($cssFile);
                 }
             }
 
@@ -163,7 +163,7 @@ class SpaController
                     return strcmp($a, $b);
                 });
                 foreach ($files as $jsFile) {
-                    $jsFiles[] = '/assets/dashboard/js/' . basename($jsFile);
+                    $jsFiles[] = '/assets/dashboard/js/' . basename($jsFile) . '?v=' . filemtime($jsFile);
                 }
             }
 
@@ -188,7 +188,7 @@ class SpaController
             $initialState = $this->getNewDashboardInitialState();
             $html .= '  <script>window.__INITIAL_DASHBOARD_STATE__ = ' . json_encode($initialState, JSON_UNESCAPED_UNICODE) . ';</script>' . "\n";
 
-            // Inject JS files
+            // Inject JS files (cache-busted via filemtime)
             foreach ($jsFiles as $jsFile) {
                 $html .= '  <script src="' . $jsFile . '" type="module" defer></script>' . "\n";
             }
@@ -196,7 +196,8 @@ class SpaController
             $html .= '</body>' . "\n";
             $html .= '</html>';
 
-            return Response::html($html);
+            // Never cache the HTML so the latest bundle is always referenced
+            return Response::html($html, 200, ['Cache-Control' => 'no-cache']);
         }
 
         // Fall back to old behavior

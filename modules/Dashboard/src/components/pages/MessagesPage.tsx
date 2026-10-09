@@ -1,11 +1,6 @@
 import React from 'react';
-import type { DashboardWidget } from '../../types';
 
-interface MessagesPageProps {
-  widgets: DashboardWidget[];
-}
-
-export const MessagesPage: React.FC<MessagesPageProps> = ({ widgets }) => {
+export const MessagesPage: React.FC = () => {
   const initialConversations = [
     {
       id: 'conv-1',

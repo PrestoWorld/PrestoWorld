@@ -17,18 +17,14 @@
 - Hỗ trợ nested blocks (recursive parsing)
 - Tương thích với format của jankx theme
 
-### 2. Engine Switcher (Design Pattern)
+### 2. Template Engine
 
-**File:** `modules/ContextBuilder/Engine/`
+`ContextLoader` (`modules/ContextBuilder/ContextLoader.php`) là template engine
+chính. Frontend render đi qua `App\Services\ContentRenderer`, chọn engine theo
+loại theme:
 
-Design Pattern: **Strategy + Factory**
-
-- `ThemeEngine` (interface) — contract cho theme engine
-- `PrestoWorldEngine` — implementation cho PrestoWorld
-- `WordPressEngine` — implementation cho WordPress
-- `EngineSwitcher` — tự động detect và switch engine
-
-Cho phép jankx theme chạy trên cả WordPress và PrestoWorld mà không cần sửa code.
+- Block theme (`theme.json` + `templates/`, không `index.php`) → `ContextLoader`.
+- Classic theme (pre-Gutenberg, có `index.php`) → `ClassicThemeEngine`.
 
 ### 3. Context Builder (Gutenberg integration)
 
@@ -148,10 +144,6 @@ try {
 - Block/DynamicDataLayoutBlock.php
 - Block/DynamicDataTemplateBlock.php
 - Block/HumanReadablePostDateBlock.php
-- Engine/ThemeEngine.php
-- Engine/PrestoWorldEngine.php
-- Engine/WordPressEngine.php
-- Engine/EngineSwitcher.php
 - Gutenberg/GutenbergIntegration.php
 - Rest/ContextBuilderController.php
 - Rest/GutenbergRestController.php

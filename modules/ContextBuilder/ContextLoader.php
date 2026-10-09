@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace PrestoWorld\Modules\ContextBuilder;
 
-use PrestoWorld\Modules\ContextBuilder\Engine\EngineSwitcher;
-use PrestoWorld\Modules\ContextBuilder\Engine\ThemeEngine;
 use PrestoWorld\Modules\ContextBuilder\Parser\BlockParser;
 use PrestoWorld\Modules\Gutenberg\Renderer\BlockRenderer;
 
@@ -94,11 +92,23 @@ class ContextLoader
         $blocks = BlockParser::parseFile($resolvedPath);
 
         if ($this->blockRenderer !== null) {
+            if ($data !== []) {
+                $this->blockRenderer->mergeContext($data);
+            }
+
             return $this->blockRenderer->render($blocks);
         }
 
         // Fallback: render blocks manually
         return $this->renderParsedBlocks($blocks, $data);
+    }
+
+    /**
+     * Whether the theme (or storage) provides the given template.
+     */
+    public function supports(string $template): bool
+    {
+        return $this->resolveTemplatePath($template) !== null;
     }
 
     /**
@@ -393,6 +403,10 @@ class ContextLoader
         foreach ($candidates as $path) {
             if (is_file($path)) {
                 return $path;
+            }
+
+            if (is_file($path . '.html')) {
+                return $path . '.html';
             }
         }
 

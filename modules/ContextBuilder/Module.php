@@ -38,10 +38,15 @@ class Module extends WitalsModule
         });
 
         $this->app->singleton(ContextLoader::class, function ($app) {
+            $themePath = getenv('PW_THEME_DIR');
+            if (!is_string($themePath) || $themePath === '') {
+                $themePath = $app->basePath('content/themes/' . $app->config('theme.active', 'jankx'));
+            }
+
             $loader = new ContextLoader(
                 $app->make(BlockRegistry::class),
                 $app->basePath('storage/contexts'),
-                \PrestoWorld\Core\ThemeManager::stylesheetDirectory()
+                $themePath
             );
 
             // Inject BlockRenderer if available
@@ -61,10 +66,6 @@ class Module extends WitalsModule
                 $app->make(BlockRegistry::class),
             );
         });
-
-        $this->app->singleton(Engine\EngineSwitcher::class, function ($app) {
-            return new Engine\EngineSwitcher();
-        });
     }
 
     public function boot(): void
@@ -75,6 +76,10 @@ class Module extends WitalsModule
 
     protected function registerRestRoutes(): void
     {
+        if (!function_exists('register_rest_route')) {
+            return;
+        }
+
         $controller = new Rest\ContextBuilderController(
             $this->app->make(ContextBuilder::class),
         );

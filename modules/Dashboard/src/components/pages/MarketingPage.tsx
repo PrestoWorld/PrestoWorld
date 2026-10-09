@@ -1,12 +1,11 @@
-import React, { useState, useMemo } from 'react';
-import type { DashboardWidget } from '../../types';
+import React from 'react';
 
 interface MarketingPageProps {
   subTab: 'bookpress' | 'promotions' | 'events';
   onSubTabChange: (tab: 'bookpress' | 'promotions' | 'events') => void;
 }
 
-export const MarketingPage: React.FC<MarketingPageProps> = ({ subTab, onSubTabChange }) => {
+export const MarketingPage: React.FC<MarketingPageProps> = ({ subTab }) => {
   if (subTab === 'bookpress') {
     return (
       <div>

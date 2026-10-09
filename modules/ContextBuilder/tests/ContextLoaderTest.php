@@ -19,7 +19,6 @@ class ContextLoaderTest
 
         $this->testBlockParser();
         $this->testContextLoader();
-        $this->testEngineSwitcher();
 
         echo "\n=== All tests passed ===\n";
     }
@@ -98,27 +97,6 @@ HTML;
         echo "  ✓ ContextLoader works correctly\n";
     }
 
-    protected function testEngineSwitcher(): void
-    {
-        echo "Testing EngineSwitcher...\n";
-
-        // Test PrestoWorld engine
-        $engine = new Engine\PrestoWorldEngine(
-            new \PrestoWorld\Modules\Gutenberg\Renderer\BlockRenderer(),
-            '/tmp/prestoworld-test/themes/jankx',
-            '/tmp/prestoworld-test/storage/contexts',
-        );
-
-        assert($engine->getName() === 'prestoworld', 'Engine name should be prestoworld');
-        assert($engine->isAvailable() === true, 'PrestoWorld engine should be available');
-
-        // Test human readable date
-        $date = date('c', strtotime('-2 hours'));
-        $humanDate = $engine->getHumanReadableDate($date);
-        assert(strpos($humanDate, 'hour') !== false, 'Human date should contain "hour"');
-
-        echo "  ✓ EngineSwitcher works correctly\n";
-    }
 }
 
 // Run tests if executed directly
@@ -138,10 +116,6 @@ if (php_sapi_name() === 'cli' && basename(__FILE__) === basename($_SERVER['PHP_S
     require_once __DIR__ . '/../Block/DynamicDataLayoutBlock.php';
     require_once __DIR__ . '/../Block/DynamicDataTemplateBlock.php';
     require_once __DIR__ . '/../Block/HumanReadablePostDateBlock.php';
-    require_once __DIR__ . '/../Engine/ThemeEngine.php';
-    require_once __DIR__ . '/../Engine/PrestoWorldEngine.php';
-    require_once __DIR__ . '/../Engine/WordPressEngine.php';
-    require_once __DIR__ . '/../Engine/EngineSwitcher.php';
     require_once __DIR__ . '/../../Gutenberg/Renderer/BlockRenderer.php';
     require_once __DIR__ . '/../../Gutenberg/Renderer/Blocks/BlockFactory.php';
     require_once __DIR__ . '/../../Gutenberg/Renderer/Blocks/AbstractBlock.php';

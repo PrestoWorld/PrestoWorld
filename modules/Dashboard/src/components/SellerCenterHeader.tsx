@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, Search, MessageSquare, Globe, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Search, MessageSquare, Globe } from 'lucide-react';
 import type { User } from '../types';
 
 interface SellerCenterHeaderProps {
@@ -15,7 +15,6 @@ export const SellerCenterHeader: React.FC<SellerCenterHeaderProps> = ({
   activeTab,
   onTabChange,
   user,
-  pageTitle,
 }) => {
   const unreadMessagesCount = 3; // Mock data - would come from API
 
