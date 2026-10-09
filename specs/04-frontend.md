@@ -345,7 +345,7 @@ self.addEventListener('fetch', event => {
 
 ## 4.5 Gutenberg (Fork) Integration
 
-PrestoWorld fork repo [wordpress/gutenberg](https://github.com/WordPress/gutenberg) để dùng làm Page Builder — thay thế hoàn toàn Elementor 2. Gutenberg fork chạy độc lập với WordPress core, kết nối vào PrestoWorld thông qua Block API và PHP block renderer của Witals.
+PrestoWorld fork repo [wordpress/gutenberg](https://github.com/WordPress/gutenberg) để dùng làm Page Builder — thay thế các page builder bên thứ ba. Gutenberg fork chạy độc lập với WordPress core, kết nối vào PrestoWorld thông qua Block API và PHP block renderer của Witals.
 
 ### 4.5.1 Fork Strategy
 

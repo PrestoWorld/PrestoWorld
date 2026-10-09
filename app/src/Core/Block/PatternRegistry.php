@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PrestoWorld\Core\Elementor;
+namespace PrestoWorld\Core\Block;
 
 /**
  * PatternRegistry — replaces WP_Block_Patterns_Registry (spec 10 §10.5).

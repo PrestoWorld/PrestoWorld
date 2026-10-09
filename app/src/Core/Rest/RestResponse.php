@@ -17,6 +17,9 @@ class RestResponse implements JsonSerializable
     /** @var array<string, array<string, string>> */
     private array $links = [];
 
+    /**
+     * @param array<string, mixed> $headers
+     */
     public function __construct(
         private mixed $data = null,
         private int $status = 200,

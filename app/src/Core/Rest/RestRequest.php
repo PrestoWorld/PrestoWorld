@@ -21,6 +21,11 @@ class RestRequest
     /** @var array<string, mixed> */
     private array $bodyParams = [];
 
+    /**
+     * @param array<string, mixed> $attributes
+     * @param array<string, mixed> $params
+     * @param array<string, string> $headers
+     */
     public function __construct(
         private string $method = 'GET',
         private string $route = '',

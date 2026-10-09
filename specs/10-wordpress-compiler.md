@@ -897,9 +897,9 @@ deprecated (`mysql_*`, `create_function`, ...) được treo ở mục phía dư
 | `WP_Post` | `Post\PostEntity` | sr | `__get` → meta fallback |
 | `WP_Post_Type` | `Post\PostType` | sr | |
 | `WP_Embed` | `Post\Embed` | s | |
-| `WP_Block` | `Elementor\BlockWrapper` | sr | FSE trên Elementor 2 |
-| `WP_Block_Type` | `Elementor\BlockType` | sr | |
-| `WP_Block_Patterns_Registry` | `Elementor\PatternRegistry` | s | |
+| `WP_Block` | `Block\BlockWrapper` | sr | Gutenberg block wrapper |
+| `WP_Block_Type` | `Block\BlockType` | sr | |
+| `WP_Block_Patterns_Registry` | `Block\PatternRegistry` | s | |
 | `WP_HTML_Tag_Processor` | `Html\TagProcessor` | sr | Re-implement |
 | `WP_HTML_Processor` | `Html\HtmlProcessor` | sr | |
 | `WP_SimplePie_Sanitize_KSES` | *(x)* | x | Feed sanitize → `Kses` |
@@ -958,14 +958,14 @@ deprecated (`mysql_*`, `create_function`, ...) được treo ở mục phía dư
 | Source | Target | Mode | Ghi chú |
 |--------|--------|------|---------|
 | `WP_Theme` | `Theme\ThemeEntity` | sr | |
-| `WP_Customize_Manager` | `Elementor\CustomizerBridge` | x | FSE thay thế Customizer |
+| `WP_Customize_Manager` | *(x)* | x | Gutenberg/FSE thay thế Customizer |
 | `WP_Customize_Panel` | *(x)* | x | |
 | `WP_Customize_Section` | *(x)* | x | |
 | `WP_Customize_Control` | *(x)* | x | |
 | `WP_Customize_Setting` | `OptionRepository` | r | Setting → option |
 | `WP_Customize_Image_Control` | *(x)* | x | |
-| `WP_Widget` | `Elementor\WidgetBridge` | sr | Legacy widget shim |
-| `WP_Widget_Factory` | `Elementor\WidgetFactory` | s | |
+| `WP_Widget` | `Widget\WidgetBridge` | sr | Legacy widget shim (Gutenberg) |
+| `WP_Widget_Factory` | `Widget\WidgetFactory` | s | |
 | `WP_List_Table` | `Dashboard\TableComponent` | sr | SolidJS table (08) |
 | `WP_Admin_Bar` | *(x)* | x | |
 | `WP_Screen` | `Screen\Screen` | sr | |

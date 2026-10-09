@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PrestoWorld\Core\Elementor;
+namespace PrestoWorld\Core\Widget;
 
 /**
  * WidgetBridge — replaces WP_Widget (spec 10 §10.5).

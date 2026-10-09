@@ -33,16 +33,16 @@ Build the foundational runtime and basic compatibility layer.
 - Database schema for core tables
 - Basic HTTP endpoints
 
-#### Milestone 1.2: Elementor 2 Integration
+#### Milestone 1.2: Gutenberg Integration
 **Deadline**: Week 8
-- [x] Refactor Elementor 2 core for PrestoWorld
+- [x] Refactor Gutenberg core for PrestoWorld
 - [x] Implement BaseControl system
 - [x] Create Widget Registry
 - [x] Build PHP Template rendering engine
 - [x] Integrate with Spiral View layer
 
 **Deliverables**:
-- Elementor 2 ported codebase
+- Gutenberg ported codebase
 - Controls library (Text, Color, Number, etc.)
 - Widget registration system
 - Template rendering examples
@@ -91,7 +91,7 @@ Build the foundational runtime and basic compatibility layer.
 
 ### Success Criteria
 - ✅ RoadRunner runs Spiral app with <30ms TTFB
-- ✅ Elementor 2 renders widgets correctly
+- ✅ Gutenberg renders blocks correctly
 - ✅ SQLite registry stores and retrieves hooks
 - ✅ $wpdb executes queries on both PostgreSQL and SQLite
 - ✅ Top 100 plugins run via shim layer without fatal errors

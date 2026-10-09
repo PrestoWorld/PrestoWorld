@@ -391,7 +391,7 @@ final class ProductController extends BaseApiController
 ### 11.6.2 Workflow Develop-API-1 lần, dùng nhiều nơi
 
 ```
-User viết API quản lý kho → User kéo 1 Widget Elementor → Widget CSR gọi API đó → 
+User viết API quản lý kho → User kéo 1 Block Gutenberg → Block CSR gọi API đó → 
 App Mobile cũng gọi cùng API. Một lần logic backend chạy cho mọi mặt trận.
 ```
 

@@ -10,7 +10,7 @@
 - [Overview](./01-overview.md) - Bối cảnh, vấn đề và cơ hội
 - [Architecture](./02-architecture.md) - Kiến trúc tổng thể
 - [Backend](./03-backend.md) - Spiral Framework & RoadRunner
-- [Frontend](./04-frontend.md) - SolidJS, Elementor 2, Hybrid Rendering
+- [Frontend](./04-frontend.md) - SolidJS, Gutenberg, Hybrid Rendering
 - [Database](./05-database.md) - PostgreSQL & SQLite Strategy
 - [Legacy Support](./06-legacy-support.md) - WordPress.org Compatibility
 - [Cloudflare](./07-cloudflare.md) - R2 & Workers Infrastructure
@@ -70,7 +70,7 @@ PrestoWorld (PW) is a complete rebuild of the CMS concept. We preserve the user 
 
 ### Frontend
 - **UI Framework**: SolidJS + TSX
-- **Page Builder**: Elementor 2 (Refactored)
+- **Page Builder**: Gutenberg (Refactored)
 - **Rendering**: Hybrid SSR/CSR with PHP Templates
 - **State Management**: IndexedDB + SolidJS Signals
 
