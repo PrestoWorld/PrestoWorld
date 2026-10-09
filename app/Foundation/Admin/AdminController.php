@@ -21,13 +21,15 @@ use Witals\Framework\Http\Response;
  */
 abstract class AdminController
 {
-    protected mixed $app;
+    protected \Witals\Framework\Application $app;
     protected \Witals\Framework\Support\AssetManager $assets;
 
-    public function __construct(mixed $app)
+    public function __construct(\Witals\Framework\Application $app)
     {
         $this->app = $app;
-        $this->assets = $app->make(\Witals\Framework\Support\AssetManager::class);
+        /** @var \Witals\Framework\Support\AssetManager $assets */
+        $assets = $app->make(\Witals\Framework\Support\AssetManager::class);
+        $this->assets = $assets;
     }
 
     // =========================================================================
@@ -39,12 +41,17 @@ abstract class AdminController
      *
      * @param string $title    Page/section title
      * @param string $content  Body HTML
-     * @param array  $options  ['new_url' => '/dashboard/x/create', 'breadcrumbs' => [...]]
+     * @param array<string, mixed> $options  ['new_url' => '/dashboard/x/create', 'breadcrumbs' => [...]]
      */
     protected function adminPage(string $title, string $content, array $options = []): string
     {
-        $newUrl      = $options['new_url'] ?? '';
-        $newLabel    = $options['new_label'] ?? 'Add New';
+        $newUrlRaw = $options['new_url'] ?? '';
+        $newUrl = is_string($newUrlRaw) ? $newUrlRaw : '';
+
+        $newLabelRaw = $options['new_label'] ?? 'Add New';
+        $newLabel = is_string($newLabelRaw) ? $newLabelRaw : 'Add New';
+
+        /** @var array<int|string, string> $breadcrumbs */
         $breadcrumbs = $options['breadcrumbs'] ?? [];
 
         $addBtn  = $newUrl
@@ -145,6 +152,7 @@ abstract class AdminController
 
     protected function adminNav(): string
     {
+        /** @var array<int|string, array{label?:string, url?:string, icon?:string, children?:list<array{label:string, url:string, icon:string}>}> $groups */
         $groups = [
             ['label' => 'Bảng điều khiển', 'url' => '/dashboard', 'icon' => '📊'],
             'Kinh doanh' => [
@@ -184,15 +192,18 @@ abstract class AdminController
             ]
         ];
 
-        $current = $_SERVER['REQUEST_URI'] ?? '';
+        $currentRaw = $_SERVER['REQUEST_URI'] ?? '';
+        $current = is_string($currentRaw) ? $currentRaw : '';
         $html = '<div class="admin-nav-groups">';
-        
+
         // Check if any submenu child is active
         $anySubmenuActive = false;
         foreach ($groups as $data) {
-            if (isset($data['children'])) {
+            if (is_array($data) && isset($data['children']) && is_array($data['children'])) {
                 foreach ($data['children'] as $child) {
-                    if ($current === $child['url'] || str_starts_with($current, $child['url'] . '?')) {
+                    $childUrlRaw = $child['url'] ?? '';
+                    $childUrl = is_string($childUrlRaw) ? $childUrlRaw : '';
+                    if ($current === $childUrl || str_starts_with($current, $childUrl . '?')) {
                         $anySubmenuActive = true;
                         break 2;
                     }
@@ -201,11 +212,21 @@ abstract class AdminController
         }
 
         foreach ($groups as $groupLabel => $data) {
+            if (!is_array($data)) {
+                continue;
+            }
+
             // Case 1: Simple Link (Indexed or has 'url')
             if (isset($data['url'])) {
-                $active = ($current === $data['url'] || str_starts_with($current, $data['url'] . '?')) ? ' active' : '';
-                $html .= "<a href=\"{$data['url']}\" class=\"admin-nav-item{$active}\">";
-                $html .= "  <span class='nav-icon'>{$data['icon']}</span> <span class='nav-label'>{$data['label']}</span>";
+                $dataUrlRaw = $data['url'];
+                $dataUrl = is_string($dataUrlRaw) ? $dataUrlRaw : '';
+                $active = ($current === $dataUrl || str_starts_with($current, $dataUrl . '?')) ? ' active' : '';
+                $dataLabelRaw = $data['label'] ?? '';
+                $dataLabel = is_string($dataLabelRaw) ? $dataLabelRaw : '';
+                $dataIconRaw = $data['icon'] ?? '';
+                $dataIcon = is_string($dataIconRaw) ? $dataIconRaw : '';
+                $html .= "<a href=\"{$dataUrl}\" class=\"admin-nav-item{$active}\">";
+                $html .= "  <span class='nav-icon'>{$dataIcon}</span> <span class='nav-label'>{$dataLabel}</span>";
                 $html .= "</a>";
                 continue;
             }
@@ -217,7 +238,9 @@ abstract class AdminController
 
             $hasActiveChild = false;
             foreach ($data['children'] as $child) {
-                if ($current === $child['url'] || str_starts_with($current, $child['url'] . '?')) {
+                $childUrlRaw = $child['url'] ?? '';
+                $childUrl = is_string($childUrlRaw) ? $childUrlRaw : '';
+                if ($current === $childUrl || str_starts_with($current, $childUrl . '?')) {
                     $hasActiveChild = true;
                     break;
                 }
@@ -227,26 +250,36 @@ abstract class AdminController
             $shouldOpen = $hasActiveChild || (!$anySubmenuActive && $groupLabel === 'Kinh doanh');
             $openClass = $shouldOpen ? ' is-open' : '';
             $activeParentClass = $hasActiveChild ? ' active-parent' : '';
-            
+
+            $groupLabelStr = is_string($groupLabel) ? $groupLabel : '';
+            $groupIconRaw = $data['icon'] ?? '';
+            $groupIcon = is_string($groupIconRaw) ? $groupIconRaw : '';
+
             $html .= "<div class=\"admin-nav-group-wrapper{$openClass}\">";
             $html .= "  <div class=\"admin-nav-item has-children{$activeParentClass}\" data-toggle=\"submenu\">";
-            $html .= "      <span class='nav-icon'>{$data['icon']}</span>";
-            $html .= "      <span class='nav-label'>{$groupLabel}</span>";
+            $html .= "      <span class='nav-icon'>{$groupIcon}</span>";
+            $html .= "      <span class='nav-label'>{$groupLabelStr}</span>";
             $html .= "      <span class='nav-chevron'><svg width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9l6 6 6-6'/></svg></span>";
             $html .= "  </div>";
             $html .= "  <div class=\"admin-submenu\">";
-            
+
             foreach ($data['children'] as $child) {
-                $childActive = ($current === $child['url'] || str_starts_with($current, $child['url'] . '?')) ? ' active' : '';
-                $html .= "      <a href=\"{$child['url']}\" class=\"admin-submenu-item{$childActive}\">";
-                $html .= "          <span class='sub-icon'>{$child['icon']}</span> <span class='sub-label'>{$child['label']}</span>";
+                $childUrlRaw = $child['url'] ?? '';
+                $childUrl = is_string($childUrlRaw) ? $childUrlRaw : '';
+                $childLabelRaw = $child['label'] ?? '';
+                $childLabel = is_string($childLabelRaw) ? $childLabelRaw : '';
+                $childIconRaw = $child['icon'] ?? '';
+                $childIcon = is_string($childIconRaw) ? $childIconRaw : '';
+                $childActive = ($current === $childUrl || str_starts_with($current, $childUrl . '?')) ? ' active' : '';
+                $html .= "      <a href=\"{$childUrl}\" class=\"admin-submenu-item{$childActive}\">";
+                $html .= "          <span class='sub-icon'>{$childIcon}</span> <span class='sub-label'>{$childLabel}</span>";
                 $html .= "      </a>";
             }
-            
+
             $html .= "  </div>";
             $html .= "</div>";
         }
-        
+
         $html .= '</div>';
         return $html;
     }
@@ -303,50 +336,66 @@ abstract class AdminController
     ): string {
         $req   = $required ? ' required' : '';
         $ph    = $placeholder ? " placeholder=\"{$placeholder}\"" : '';
-        $val   = htmlspecialchars((string)$value, ENT_QUOTES);
+        $valStr = is_string($value) || is_numeric($value) ? (string) $value : '';
+        $val   = htmlspecialchars($valStr, ENT_QUOTES);
         return "<input type=\"{$type}\" name=\"{$name}\" id=\"field-{$name}\" value=\"{$val}\" class=\"admin-input\" autocomplete=\"off\"{$ph}{$req}>";
     }
 
     protected function textarea(string $name, mixed $value = '', string $placeholder = '', int $rows = 4): string
     {
         $ph  = $placeholder ? " placeholder=\"{$placeholder}\"" : '';
-        $val = htmlspecialchars((string)$value, ENT_QUOTES);
+        $valStr = is_string($value) || is_numeric($value) ? (string) $value : '';
+        $val = htmlspecialchars($valStr, ENT_QUOTES);
         return "<textarea name=\"{$name}\" id=\"field-{$name}\" rows=\"{$rows}\" class=\"admin-input admin-textarea\"{$ph}>{$val}</textarea>";
     }
 
+    /**
+     * @param array<string|int, string> $options
+     */
     protected function select(string $name, array $options, mixed $selected = '', bool $searchable = false, string $placeholder = 'Search...'): string
     {
         if ($searchable) {
             $formattedOptions = [];
             foreach ($options as $val => $lbl) {
-                $formattedOptions[] = ['value' => (string)$val, 'label' => (string)$lbl];
+                $valStr = is_int($val) ? (string) $val : $val;
+                $formattedOptions[] = ['value' => $valStr, 'label' => $lbl];
             }
             return $this->searchableSelect($name, $formattedOptions, $selected, $placeholder);
         }
 
         $html = "<select name=\"{$name}\" id=\"field-{$name}\" class=\"admin-select\">";
         foreach ($options as $val => $label) {
-            $sel   = (string)$val === (string)$selected ? ' selected' : '';
-            $html .= "<option value=\"{$val}\"{$sel}>{$label}</option>";
+            $valStr = is_int($val) ? (string) $val : $val;
+            $selStr = is_string($selected) ? $selected : (is_int($selected) ? (string) $selected : '');
+            $sel   = $valStr === $selStr ? ' selected' : '';
+            $html .= "<option value=\"{$valStr}\"{$sel}>{$label}</option>";
         }
         $html .= '</select>';
         return $html;
     }
 
+    /**
+     * @param list<array{value:string, label:string}> $options
+     */
     protected function searchableSelect(string $name, array $options, mixed $value = '', string $placeholder = 'Search...'): string
     {
         $jsonOptions = json_encode($options);
+        $valueStr = is_string($value) || is_numeric($value) ? (string) $value : '';
         return <<<HTML
-        <div data-solid-component="ComboBox" data-config='{"name":"{$name}", "options":{$jsonOptions}, "value":"{$value}", "placeholder":"{$placeholder}"}'></div>
+        <div data-solid-component="ComboBox" data-config='{"name":"{$name}", "options":{$jsonOptions}, "value":"{$valueStr}", "placeholder":"{$placeholder}"}'></div>
 HTML;
     }
 
+    /**
+     * @param list<array{value:string, label:string}> $options
+     */
     protected function searchableFieldGroup(string $label, string $name, array $options, mixed $value = '', string $placeholder = 'Search...'): string
     {
+        $valueStr = is_string($value) || is_numeric($value) ? (string) $value : '';
         return <<<HTML
         <div class="admin-field-group">
             <label class="admin-field-label">{$label}</label>
-            <div class="admin-field-control">{$this->searchableSelect($name, $options, $value, $placeholder)}</div>
+            <div class="admin-field-control">{$this->searchableSelect($name, $options, $valueStr, $placeholder)}</div>
         </div>
 HTML;
     }
@@ -390,14 +439,17 @@ HTML;
         return Response::html($html, $status);
     }
 
-    protected function jsonResponse(mixed $data, int $status = 200): Response
+    /**
+     * @param array<string, mixed> $data
+     */
+    protected function jsonResponse(array $data, int $status = 200): Response
     {
         return Response::json($data, $status);
     }
 
     protected function redirect(string $url, int $status = 302): Response
     {
-        return new Response($status, ['Location' => $url], '');
+        return new Response('', $status, ['Location' => $url]);
     }
 
     // =========================================================================
@@ -406,7 +458,9 @@ HTML;
 
     protected function db(): \Cycle\Database\DatabaseInterface
     {
-        return $this->app->make(\Cycle\Database\DatabaseInterface::class);
+        $db = $this->app->make(\Cycle\Database\DatabaseInterface::class);
+        assert($db instanceof \Cycle\Database\DatabaseInterface);
+        return $db;
     }
 
     // =========================================================================

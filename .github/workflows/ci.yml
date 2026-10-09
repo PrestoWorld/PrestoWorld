@@ -122,8 +122,15 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
+          cache-dependency-path: |
+            package-lock.json
+            resources/presto/dashboard/package-lock.json
 
-      - name: Install npm dependencies
+      - name: Install root npm dependencies
+        run: npm ci
+
+      - name: Install dashboard npm dependencies
+        working-directory: resources/presto/dashboard
         run: npm ci
 
       - name: Build Admin Dashboard

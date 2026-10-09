@@ -23,6 +23,7 @@ class WordPressConfigReader implements ConfigReaderInterface
 {
     private ?string $configPath = null;
 
+    /** @var array<string, mixed>|null */
     private ?array $config = null;
 
     private ?bool $supported = null;
@@ -264,13 +265,21 @@ class WordPressConfigReader implements ConfigReaderInterface
 
         // Map content directory
         if (isset($config['WP_CONTENT_DIR'])) {
-            $mapped['PW_CONTENT_DIR'] = $config['WP_CONTENT_DIR'];
-            $mapped['PW_CONTENT_URL'] = '/' . basename($config['WP_CONTENT_DIR']);
+            $wpContentDir = $config['WP_CONTENT_DIR'];
+            $wpContentDir = is_string($wpContentDir) ? $wpContentDir : '';
+            if ($wpContentDir !== '') {
+                $mapped['PW_CONTENT_DIR'] = $wpContentDir;
+                $mapped['PW_CONTENT_URL'] = '/' . basename($wpContentDir);
+            }
         }
 
         // Detect theme
-        $contentDir = $config['WP_CONTENT_DIR'] ?? null;
-        if ($contentDir !== null && is_dir($contentDir . '/themes')) {
+        $contentDir = null;
+        if (isset($config['WP_CONTENT_DIR'])) {
+            $candidate = $config['WP_CONTENT_DIR'];
+            $contentDir = is_string($candidate) ? $candidate : null;
+        }
+        if ($contentDir !== null && $contentDir !== '' && is_dir($contentDir . '/themes')) {
             $themesDir = $contentDir . '/themes';
             $theme = $this->detectActiveTheme($themesDir);
             if ($theme !== null) {
@@ -284,9 +293,9 @@ class WordPressConfigReader implements ConfigReaderInterface
         // This allows .env to override WordPress config
         $envVars = ['PW_ACTIVE_THEME', 'PW_THEME_ACTIVE', 'PW_THEME_DIR', 'PW_TABLE_PREFIX', 'PW_CONTENT_DIR', 'PW_CONTENT_URL'];
         foreach ($envVars as $envVar) {
-            // Check $_ENV first (from .env file), then getenv
+            // Check $_ENV first (from .env file), then $_SERVER, then getenv
             $envValue = $_ENV[$envVar] ?? $_SERVER[$envVar] ?? getenv($envVar);
-            if ($envValue !== false && $envValue !== '' && $envValue !== null) {
+            if (is_string($envValue) && $envValue !== '') {
                 $mapped[$envVar] = $envValue;
             }
         }

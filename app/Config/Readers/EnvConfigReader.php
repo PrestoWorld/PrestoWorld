@@ -16,6 +16,7 @@ use App\Contracts\Config\ConfigReaderInterface;
  */
 class EnvConfigReader implements ConfigReaderInterface
 {
+    /** @var array<string, mixed> */
     private array $cache = [];
 
     public function supports(): bool

@@ -12,9 +12,14 @@ class RewriteCacheClearCommand extends Command
     protected string $name = 'rewrite:clear';
     protected string $description = 'Clear the rewrite rules cache';
 
+    /**
+     * @param list<string> $args
+     */
     public function handle(array $args): int
     {
-        $cachePath = $this->app->storagePath('framework/cache/rewrite-rules.json');
+        /** @var \Witals\Framework\Application $app */
+        $app = $this->app;
+        $cachePath = $app->storagePath('framework/cache/rewrite-rules.json');
         $cache = new RewriteRuleCache($cachePath);
 
         if ($cache->isValid()) {

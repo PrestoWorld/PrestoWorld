@@ -4,9 +4,9 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev:dashboard": "cd resources/presto/dashboard && vite",
-    "build:dashboard": "cd resources/presto/dashboard && vite build",
-    "preview:dashboard": "cd resources/presto/dashboard && vite preview"
+    "dev:dashboard": "cd resources/presto/dashboard && npm run dev",
+    "build:dashboard": "cd resources/presto/dashboard && npm run build",
+    "preview:dashboard": "cd resources/presto/dashboard && npm run preview"
   },
   "dependencies": {
     "solid-js": "^1.9.0"

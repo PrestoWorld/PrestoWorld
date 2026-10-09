@@ -12,8 +12,12 @@ class ConfigShowCommand extends Command
     protected string $name = 'config:show';
     protected string $description = 'Show configuration info and active config reader';
 
+    /**
+     * @param list<string> $args
+     */
     public function handle(array $args): int
     {
+        /** @var ConfigManager $config */
         $config = $this->app->make(ConfigManager::class);
 
         $this->info('Configuration Info');

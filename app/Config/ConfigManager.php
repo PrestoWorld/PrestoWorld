@@ -21,6 +21,7 @@ class ConfigManager
 {
     private ConfigReaderRegistry $registry;
 
+    /** @var array<string, mixed> */
     private array $cache = [];
 
     public function __construct(string $basePath)
@@ -138,25 +139,36 @@ class ConfigManager
     public function getDatabaseConfig(): array
     {
         $connection = $this->get('DB_CONNECTION', 'pgsql');
+        $connection = is_string($connection) ? $connection : 'pgsql';
 
         if ($connection === 'mysql') {
+            $database = $this->get('DB_MYSQL_DATABASE', '');
+            $host = $this->get('DB_MYSQL_HOST', '127.0.0.1');
+            $port = $this->get('DB_MYSQL_PORT', 3306);
+            $username = $this->get('DB_MYSQL_USERNAME', 'root');
+            $password = $this->get('DB_MYSQL_PASSWORD', '');
             return [
                 'connection' => 'mysql',
-                'database' => $this->get('DB_MYSQL_DATABASE', ''),
-                'host' => $this->get('DB_MYSQL_HOST', '127.0.0.1'),
-                'port' => (int) $this->get('DB_MYSQL_PORT', 3306),
-                'username' => $this->get('DB_MYSQL_USERNAME', 'root'),
-                'password' => $this->get('DB_MYSQL_PASSWORD', ''),
+                'database' => is_string($database) ? $database : '',
+                'host' => is_string($host) ? $host : '127.0.0.1',
+                'port' => is_numeric($port) ? (int) $port : 3306,
+                'username' => is_string($username) ? $username : 'root',
+                'password' => is_string($password) ? $password : '',
             ];
         }
 
+        $database = $this->get('DB_PGSQL_DATABASE', '');
+        $host = $this->get('DB_PGSQL_HOST', '127.0.0.1');
+        $port = $this->get('DB_PGSQL_PORT', 5432);
+        $username = $this->get('DB_PGSQL_USERNAME', '');
+        $password = $this->get('DB_PGSQL_PASSWORD', '');
         return [
             'connection' => 'pgsql',
-            'database' => $this->get('DB_PGSQL_DATABASE', ''),
-            'host' => $this->get('DB_PGSQL_HOST', '127.0.0.1'),
-            'port' => (int) $this->get('DB_PGSQL_PORT', 5432),
-            'username' => $this->get('DB_PGSQL_USERNAME', ''),
-            'password' => $this->get('DB_PGSQL_PASSWORD', ''),
+            'database' => is_string($database) ? $database : '',
+            'host' => is_string($host) ? $host : '127.0.0.1',
+            'port' => is_numeric($port) ? (int) $port : 5432,
+            'username' => is_string($username) ? $username : '',
+            'password' => is_string($password) ? $password : '',
         ];
     }
 
@@ -167,20 +179,29 @@ class ConfigManager
      */
     public function getThemeConfig(): array
     {
-        $active = $this->get('PW_ACTIVE_THEME', $this->get('PW_THEME_ACTIVE', 'jankx'));
+        $activeDefault = $this->get('PW_THEME_ACTIVE', 'jankx');
+        $activeDefault = is_string($activeDefault) ? $activeDefault : 'jankx';
+        $active = $this->get('PW_ACTIVE_THEME', $activeDefault);
+        $active = is_string($active) ? $active : $activeDefault;
+
         $path = $this->get('PW_THEME_DIR', '');
+        $path = is_string($path) ? $path : '';
 
         if ($path === '') {
             $contentDir = $this->get('PW_CONTENT_DIR', '');
+            $contentDir = is_string($contentDir) ? $contentDir : '';
             if ($contentDir !== '') {
                 $path = $contentDir . '/themes/' . $active;
             }
         }
 
+        $contentUrl = $this->get('PW_CONTENT_URL', '/content');
+        $contentUrl = is_string($contentUrl) ? $contentUrl : '/content';
+
         return [
             'active' => $active,
             'path' => $path,
-            'url' => $this->get('PW_CONTENT_URL', '/content') . '/themes/' . $active,
+            'url' => $contentUrl . '/themes/' . $active,
         ];
     }
 
@@ -189,7 +210,8 @@ class ConfigManager
      */
     public function getTablePrefix(): string
     {
-        return $this->get('PW_TABLE_PREFIX', 'pw_');
+        $prefix = $this->get('PW_TABLE_PREFIX', 'pw_');
+        return is_string($prefix) ? $prefix : 'pw_';
     }
 
     /**
