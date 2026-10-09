@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 namespace PrestoWorld\Modules\ClassicTheme;
 
-use PrestoWorld\Contracts\Theme\ThemeEngineInterface;
 use App\Contracts\Services\RenderedContent;
 use Witals\Framework\Contracts\Container;
 
-class ClassicThemeEngine implements ThemeEngineInterface
+class ClassicThemeEngine
 {
     private string $themePath;
 

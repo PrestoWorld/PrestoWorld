@@ -51,21 +51,18 @@ Mỗi block có property `renderMode`:
 - `'ssr'` — PHP render server-side
 - `'csr'` — placeholder + Bridge.js fetch từ `/pw-api/v1/render-block`
 
-## Engine Switcher
+## Template Engine
 
-Design Pattern: **Strategy + Factory**
+`ContextLoader` là template engine chính (single engine). Frontend render
+đi qua `App\Services\ContentRenderer`, engine này chọn:
 
-Cho phép theme (jankx) chạy trên cả WordPress và PrestoWorld:
+1. `ClassicThemeEngine` — nếu theme active là theme WordPress cấu trúc cũ
+   (pre-Gutenberg, có `index.php`/`style.css`, không có `theme.json`).
+2. `ContextLoader` — nếu là block theme (có `theme.json` + `templates/`).
 
 ```php
-$engine = EngineSwitcher::getEngine();
-$html = $engine->renderTemplate('index.html', $data);
+$html = $contextLoader->renderTemplate('index.html', $data);
 ```
-
-### Priority
-
-1. **PrestoWorld** (nếu chạy trên PrestoWorld)
-2. **WordPress** (nếu chạy trên WordPress)
 
 ## Gutenberg Integration
 
@@ -130,11 +127,6 @@ modules/ContextBuilder/
 │   ├── DynamicDataLayoutBlock.php    # jankx/dynamic-data-layout
 │   ├── DynamicDataTemplateBlock.php  # jankx/dynamic-data-template
 │   └── HumanReadablePostDateBlock.php # jankx/human-readable-post-date
-├── Engine/
-│   ├── ThemeEngine.php           # Interface cho theme engine
-│   ├── PrestoWorldEngine.php     # PrestoWorld implementation
-│   ├── WordPressEngine.php       # WordPress implementation
-│   └── EngineSwitcher.php        # Switch giữa 2 engines
 ├── Gutenberg/
 │   └── GutenbergIntegration.php  # Integrate Gutenberg vào PrestoWorld
 ├── Rest/
@@ -164,11 +156,10 @@ $html = $contextLoader->render($contextType, [
 $html = $contextLoader->renderTemplate('index.html', $data);
 ```
 
-### Query posts với engine
+### Query posts
 
 ```php
-$engine = EngineSwitcher::getEngine();
-$posts = $engine->queryPosts([
+$posts = $app->make(\PrestoWorld\Modules\Schema\PostRepository::class)->findAll([
     'post_type' => 'post',
     'posts_per_page' => 10,
 ]);

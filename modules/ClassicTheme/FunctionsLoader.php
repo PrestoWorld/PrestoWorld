@@ -30,6 +30,7 @@ class FunctionsLoader
         $this->loaded = true;
 
         putenv('PW_THEME_DIR=' . $this->themePath);
+        $this->configureLegacyTheme();
         $this->loadTransformers();
         $this->loadStubs();
 
@@ -42,6 +43,25 @@ class FunctionsLoader
         // Mark as loaded even if the file failed — partial loading may have
         // registered some functions/classes before the error.
         $this->loaded = true;
+    }
+
+    /**
+     * Point the Core legacy layer (get_template_directory/get_stylesheet_directory)
+     * at the classic theme being loaded. The global shims resolve those calls
+     * through PrestoWorld\Core\ThemeManager, which reads Config/SiteInfo.
+     */
+    private function configureLegacyTheme(): void
+    {
+        if (!class_exists(\PrestoWorld\Core\Config::class)) {
+            return;
+        }
+
+        $themePath = rtrim($this->themePath, '/');
+        $name = basename($themePath);
+
+        \PrestoWorld\Core\Config::set('theme_dir', dirname($themePath));
+        \PrestoWorld\Core\Config::set('template', $name);
+        \PrestoWorld\Core\Config::set('stylesheet', $name);
     }
 
     public function loadTransformers(): void
