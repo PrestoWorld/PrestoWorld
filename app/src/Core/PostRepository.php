@@ -108,6 +108,84 @@ final class PostRepository
         self::$store = [];
     }
 
+    public static function field(int|PostEntity $post, string $field, string $context = 'display'): mixed
+    {
+        $entity = $post instanceof PostEntity ? $post : self::find($post);
+
+        return $entity?->get($field);
+    }
+
+    public static function status(int|PostEntity $post): string
+    {
+        $entity = $post instanceof PostEntity ? $post : self::find($post);
+        if ($entity === null) {
+            return '';
+        }
+
+        return $entity->post_status;
+    }
+
+    public static function type(int|PostEntity $post): string
+    {
+        $entity = $post instanceof PostEntity ? $post : self::find($post);
+        if ($entity === null) {
+            return '';
+        }
+
+        return $entity->post_type;
+    }
+
+    /**
+     * @param array<string, mixed> $args
+     * @return list<PostEntity>
+     */
+    public static function pages(array $args = []): array
+    {
+        return self::query($args + ['post_type' => 'page']);
+    }
+
+    public static function next(int $postId, bool $inSameTerm = true, mixed $excluded = null, string $taxonomy = 'category'): ?PostEntity
+    {
+        return self::adjacent($postId, 1);
+    }
+
+    public static function previous(int $postId, bool $inSameTerm = true, mixed $excluded = null, string $taxonomy = 'category'): ?PostEntity
+    {
+        return self::adjacent($postId, -1);
+    }
+
+    /**
+     * @return list<PostEntity>
+     */
+    public static function revisions(int $postId): array
+    {
+        return array_values(array_filter(
+            array_values(self::$store),
+            static fn (PostEntity $post): bool => $post->post_type === 'revision' && $post->post_parent === $postId,
+        ));
+    }
+
+    private static function adjacent(int $postId, int $direction): ?PostEntity
+    {
+        $current = self::find($postId);
+        if ($current === null) {
+            return null;
+        }
+
+        $ordered = array_values(array_filter(
+            array_values(self::$store),
+            static fn (PostEntity $post): bool => $post->post_type === $current->post_type && $post->post_status === 'publish',
+        ));
+        usort($ordered, static fn (PostEntity $a, PostEntity $b): int => $a->post_date <=> $b->post_date);
+
+        $index = array_search($postId, array_map(static fn (PostEntity $p): int => $p->ID, $ordered), true);
+        if ($index === false) {
+            return null;
+        }
+
+        return $ordered[$index + $direction] ?? null;
+    }
+
     private static function nextId(): int
     {
         $max = 0;

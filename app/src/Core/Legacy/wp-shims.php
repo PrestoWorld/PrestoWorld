@@ -2001,3 +2001,445 @@ if (!function_exists('deactivate_plugins')) {
         }
     }
 }
+
+/* ---------------------------------------------------------------------------
+ * Group 5: Posts & Content (10.4.6) — bổ sung
+ * ------------------------------------------------------------------------- */
+
+if (!function_exists('get_post')) {
+    function get_post(mixed $post = null, string $output = 'OBJECT', string $filter = 'raw'): ?\PrestoWorld\Core\Post\PostEntity
+    {
+        if ($post instanceof \PrestoWorld\Core\Post\PostEntity) {
+            return $post;
+        }
+
+        if (is_object($post) && isset($post->ID)) {
+            return \PrestoWorld\Core\PostRepository::find((int) $post->ID);
+        }
+
+        $id = is_numeric($post) ? (int) $post : \PrestoWorld\Core\Post\PostView::getId();
+
+        return $id > 0 ? \PrestoWorld\Core\PostRepository::find($id) : null;
+    }
+}
+
+if (!function_exists('get_posts')) {
+    /**
+     * @param array<string, mixed> $args
+     * @return list<\PrestoWorld\Core\Post\PostEntity>
+     */
+    function get_posts(array $args = []): array
+    {
+        return \PrestoWorld\Core\PostRepository::query($args);
+    }
+}
+
+if (!function_exists('query_posts')) {
+    /** @param array<int|string, mixed>|string $args */
+    function query_posts(array|string $args = ''): void
+    {
+        if (is_string($args)) {
+            parse_str($args, $parsed);
+            $args = $parsed;
+        }
+
+        \PrestoWorld\Core\Post\PostLoop::query($args);
+    }
+}
+
+if (!function_exists('the_post')) {
+    function the_post(): void
+    {
+        \PrestoWorld\Core\Post\PostLoop::thePost();
+    }
+}
+
+if (!function_exists('the_content')) {
+    function the_content(string $moreLink = ''): void
+    {
+        \PrestoWorld\Core\Post\PostView::content($moreLink);
+    }
+}
+
+if (!function_exists('the_title')) {
+    function the_title(string $before = '', string $after = '', bool $display = true): void
+    {
+        \PrestoWorld\Core\Post\PostView::title($before, $after, $display);
+    }
+}
+
+if (!function_exists('the_ID')) {
+    function the_ID(): void
+    {
+        \PrestoWorld\Core\Post\PostView::id();
+    }
+}
+
+if (!function_exists('get_the_content')) {
+    function get_the_content(string $moreLink = '', bool $stripTeaser = false): string
+    {
+        return \PrestoWorld\Core\Post\PostView::getContent($moreLink, $stripTeaser);
+    }
+}
+
+if (!function_exists('get_the_title')) {
+    function get_the_title(mixed $post = 0): string
+    {
+        return \PrestoWorld\Core\Post\PostView::getTitle($post === 0 ? null : $post);
+    }
+}
+
+if (!function_exists('get_the_excerpt')) {
+    function get_the_excerpt(mixed $post = null): string
+    {
+        return \PrestoWorld\Core\Post\PostView::getExcerpt($post);
+    }
+}
+
+if (!function_exists('get_post_field')) {
+    function get_post_field(string $field, mixed $post = null, string $context = 'display'): mixed
+    {
+        $id = is_numeric($post) ? (int) $post : (is_object($post) && isset($post->ID) ? (int) $post->ID : \PrestoWorld\Core\Post\PostView::getId());
+
+        return \PrestoWorld\Core\PostRepository::field($id, $field, $context);
+    }
+}
+
+if (!function_exists('get_post_status')) {
+    function get_post_status(mixed $post = null): string|false
+    {
+        $id = is_numeric($post) ? (int) $post : \PrestoWorld\Core\Post\PostView::getId();
+        $status = \PrestoWorld\Core\PostRepository::status($id);
+
+        return $status === '' ? false : $status;
+    }
+}
+
+if (!function_exists('get_post_type')) {
+    function get_post_type(mixed $post = null): string|false
+    {
+        $id = is_numeric($post) ? (int) $post : \PrestoWorld\Core\Post\PostView::getId();
+        $type = \PrestoWorld\Core\PostRepository::type($id);
+
+        return $type === '' ? false : $type;
+    }
+}
+
+if (!function_exists('get_post_types')) {
+    /**
+     * @param array<string, mixed> $args
+     * @return array<string, mixed>
+     */
+    function get_post_types(array $args = [], string $output = 'names', string $operator = 'and'): array
+    {
+        return \PrestoWorld\Core\PostTypeRegistry::all();
+    }
+}
+
+if (!function_exists('get_post_type_object')) {
+    function get_post_type_object(string $postType): ?object
+    {
+        $registered = \PrestoWorld\Core\PostTypeRegistry::get($postType);
+
+        return $registered === null ? null : (object) $registered;
+    }
+}
+
+if (!function_exists('register_post_type')) {
+    /**
+     * @param array<string, mixed> $args
+     */
+    function register_post_type(string $postType, array $args = []): object
+    {
+        \PrestoWorld\Core\PostTypeRegistry::register($postType, $args);
+
+        return (object) ($args + ['name' => $postType]);
+    }
+}
+
+if (!function_exists('wp_insert_post')) {
+    /**
+     * @param array<string, mixed> $postarr
+     */
+    function wp_insert_post(array $postarr, bool $wpError = false, bool $fireAfter = false): int
+    {
+        return \PrestoWorld\Core\Post\PostService::create($postarr);
+    }
+}
+
+if (!function_exists('wp_update_post')) {
+    /**
+     * @param array<string, mixed> $postarr
+     */
+    function wp_update_post(array $postarr = [], bool $wpError = false, bool $fireAfter = false): int|\PrestoWorld\Core\Error\PrestoError
+    {
+        return \PrestoWorld\Core\Post\PostService::update($postarr);
+    }
+}
+
+if (!function_exists('wp_delete_post')) {
+    function wp_delete_post(int $postId = 0, bool $forceDelete = false): mixed
+    {
+        return \PrestoWorld\Core\Post\PostService::delete($postId, $forceDelete);
+    }
+}
+
+if (!function_exists('wp_publish_post')) {
+    function wp_publish_post(int|\PrestoWorld\Core\Post\PostEntity $post): void
+    {
+        \PrestoWorld\Core\Post\PostService::publish($post instanceof \PrestoWorld\Core\Post\PostEntity ? $post->ID : $post);
+    }
+}
+
+if (!function_exists('wp_trash_post')) {
+    function wp_trash_post(int $postId = 0): mixed
+    {
+        return \PrestoWorld\Core\Post\PostService::trash($postId);
+    }
+}
+
+if (!function_exists('wp_untrash_post')) {
+    function wp_untrash_post(int $postId = 0): mixed
+    {
+        return \PrestoWorld\Core\Post\PostService::untrash($postId);
+    }
+}
+
+if (!function_exists('sanitize_post')) {
+    function sanitize_post(mixed $post, string $context = 'display'): mixed
+    {
+        return \PrestoWorld\Core\Post\PostService::sanitize($post, $context);
+    }
+}
+
+if (!function_exists('setup_postdata')) {
+    function setup_postdata(mixed $post): bool
+    {
+        return \PrestoWorld\Core\Post\PostLoop::setup($post);
+    }
+}
+
+if (!function_exists('have_posts')) {
+    function have_posts(): bool
+    {
+        return \PrestoWorld\Core\Post\PostLoop::havePosts();
+    }
+}
+
+if (!function_exists('the_ID')) {
+    function the_ID(): void
+    {
+        \PrestoWorld\Core\Post\PostView::id();
+    }
+}
+
+if (!function_exists('get_the_ID')) {
+    function get_the_ID(): int|false
+    {
+        $id = \PrestoWorld\Core\Post\PostView::getId();
+
+        return $id > 0 ? $id : false;
+    }
+}
+
+if (!function_exists('get_the_author')) {
+    function get_the_author(): string
+    {
+        return \PrestoWorld\Core\Post\PostView::author();
+    }
+}
+
+if (!function_exists('get_avatar')) {
+    /** @param array<string, mixed> $args */
+    function get_avatar(int|string $idOrEmail, int $size = 96, string $default = '', string $alt = '', array $args = []): string
+    {
+        return \PrestoWorld\Core\MediaService::avatar($idOrEmail, $size, $default, $alt, $args);
+    }
+}
+
+if (!function_exists('get_avatar_url')) {
+    /** @param array<string, mixed> $args */
+    function get_avatar_url(int|string $idOrEmail, array $args = []): string|false
+    {
+        $size = $args['size'] ?? 96;
+        $default = $args['default'] ?? '';
+        $rating = $args['rating'] ?? '';
+
+        return \PrestoWorld\Core\MediaService::avatarUrl(
+            $idOrEmail,
+            is_numeric($size) ? (int) $size : 96,
+            is_scalar($default) ? (string) $default : '',
+            is_scalar($rating) ? (string) $rating : '',
+        );
+    }
+}
+
+if (!function_exists('wp_trim_excerpt')) {
+    function wp_trim_excerpt(string $text = '', mixed $post = null): string
+    {
+        return \PrestoWorld\Core\Format::trimExcerpt($text);
+    }
+}
+
+if (!function_exists('get_pages')) {
+    /**
+     * @param array<string, mixed> $args
+     * @return list<\PrestoWorld\Core\Post\PostEntity>
+     */
+    function get_pages(array $args = []): array
+    {
+        return \PrestoWorld\Core\PostRepository::pages($args);
+    }
+}
+
+if (!function_exists('get_next_post')) {
+    function get_next_post(bool $inSameTerm = true, mixed $excluded = null, string $taxonomy = 'category'): ?\PrestoWorld\Core\Post\PostEntity
+    {
+        return \PrestoWorld\Core\PostRepository::next(\PrestoWorld\Core\Post\PostView::getId());
+    }
+}
+
+if (!function_exists('get_previous_post')) {
+    function get_previous_post(bool $inSameTerm = true, mixed $excluded = null, string $taxonomy = 'category'): ?\PrestoWorld\Core\Post\PostEntity
+    {
+        return \PrestoWorld\Core\PostRepository::previous(\PrestoWorld\Core\Post\PostView::getId());
+    }
+}
+
+if (!function_exists('wp_get_post_revisions')) {
+    /**
+     * @param array<string, mixed>|null $args
+     * @return array<int, \PrestoWorld\Core\Post\PostEntity>
+     */
+    function wp_get_post_revisions(int $postId = 0, ?array $args = null): array
+    {
+        $revisions = \PrestoWorld\Core\PostRepository::revisions($postId);
+        $result = [];
+        foreach ($revisions as $revision) {
+            $result[$revision->ID] = $revision;
+        }
+
+        return $result;
+    }
+}
+
+/* ---------------------------------------------------------------------------
+ * Group 14: Media / Attachments (10.4.15) — bổ sung
+ * ------------------------------------------------------------------------- */
+
+if (!function_exists('get_attached_file')) {
+    function get_attached_file(int $attachmentId, bool $unfiltered = false): string|false
+    {
+        return \PrestoWorld\Core\MediaService::file($attachmentId);
+    }
+}
+
+if (!function_exists('update_attached_file')) {
+    function update_attached_file(int $attachmentId, string $file): bool
+    {
+        \PrestoWorld\Core\MediaService::updateFile($attachmentId, $file);
+
+        return true;
+    }
+}
+
+if (!function_exists('wp_get_attachment_url')) {
+    function wp_get_attachment_url(int $attachmentId = 0): string|false
+    {
+        return \PrestoWorld\Core\MediaService::url($attachmentId);
+    }
+}
+
+if (!function_exists('wp_get_attachment_metadata')) {
+    /**
+     * @return array<string, mixed>|false
+     */
+    function wp_get_attachment_metadata(int $attachmentId = 0, bool $unfiltered = false): array|false
+    {
+        $meta = \PrestoWorld\Core\MediaService::metadata($attachmentId);
+
+        return $meta === [] ? false : $meta;
+    }
+}
+
+if (!function_exists('wp_update_attachment_metadata')) {
+    /** @param array<string, mixed> $data */
+    function wp_update_attachment_metadata(int $attachmentId, array $data): bool
+    {
+        \PrestoWorld\Core\MediaService::updateMetadata($attachmentId, $data);
+
+        return true;
+    }
+}
+
+if (!function_exists('wp_generate_attachment_metadata')) {
+    /**
+     * @return array<string, mixed>
+     */
+    function wp_generate_attachment_metadata(int $attachmentId, string $file): array
+    {
+        return [];
+    }
+}
+
+if (!function_exists('wp_insert_attachment')) {
+    /**
+     * @param array<string, mixed> $args
+     */
+    function wp_insert_attachment(array $args, string|false $file = false, int $parent = 0): int
+    {
+        $args['post_parent'] = $parent;
+
+        return \PrestoWorld\Core\MediaService::insert($args);
+    }
+}
+
+if (!function_exists('wp_delete_attachment')) {
+    function wp_delete_attachment(int $postId = 0, bool $forceDelete = false): mixed
+    {
+        return \PrestoWorld\Core\MediaService::delete($postId, $forceDelete);
+    }
+}
+
+if (!function_exists('wp_get_attachment_image')) {
+    /** @param array<string, mixed>|string $attr */
+    function wp_get_attachment_image(int $attachmentId, string $size = 'thumbnail', bool $icon = false, array|string $attr = ''): string
+    {
+        return \PrestoWorld\Core\MediaService::image($attachmentId, $size, $icon, $attr);
+    }
+}
+
+if (!function_exists('wp_get_attachment_image_src')) {
+    /** @return array{0: string, 1: int, 2: int, 3: bool}|false */
+    function wp_get_attachment_image_src(int $attachmentId, string $size = 'thumbnail', bool $icon = false): array|false
+    {
+        return \PrestoWorld\Core\MediaService::imageSrc($attachmentId, $size, $icon);
+    }
+}
+
+if (!function_exists('wp_create_image_subsizes')) {
+    /**
+     * @param array<string, mixed> $metadata
+     * @return array<string, mixed>
+     */
+    function wp_create_image_subsizes(int $attachmentId, array $metadata): array
+    {
+        return $metadata;
+    }
+}
+
+if (!function_exists('wp_crop_image')) {
+    function wp_crop_image(string $src, int $srcX, int $srcY, int $srcW, int $srcH, int $dstW = 0, int $dstH = 0, bool $srcAbs = false, string $dstFile = '', bool $deleteSrc = false): \PrestoWorld\Core\Error\PrestoError
+    {
+        return \PrestoWorld\Core\MediaService::cropImage($src, $srcX, $srcY, $srcW, $srcH, $dstW, $dstH);
+    }
+}
+
+if (!function_exists('wp_get_attachment_caption')) {
+    function wp_get_attachment_caption(int $postId = 0): string|false
+    {
+        $caption = \PrestoWorld\Core\MediaService::caption($postId);
+
+        return $caption === '' ? false : $caption;
+    }
+}
