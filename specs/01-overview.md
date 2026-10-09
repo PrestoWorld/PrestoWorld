@@ -12,8 +12,8 @@
 
 **Trình dựng trang (Page Builders)**:
 - Gutenberg (Block Editor): UX thô, chưa đủ mượt
-- Elementor, Divi, Bricks, Oxygen: quá nhiều lựa chọn không tương thích
-- Nếu đổi từ Elementor sang Gutenberg → phải làm lại từ đầu
+- Divi, Bricks, Oxygen: quá nhiều lựa chọn không tương thích
+- Nếu đổi page builder → phải làm lại từ đầu
 
 **Plugin/Theme ecosystem**:
 - Hàng chục nghìn plugin cho cùng một tính năng

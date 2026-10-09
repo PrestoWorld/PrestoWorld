@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PrestoWorld\Core\Elementor;
+namespace PrestoWorld\Core\Widget;
 
 /**
  * WidgetFactory — replaces WP_Widget_Factory (spec 10 §10.5).

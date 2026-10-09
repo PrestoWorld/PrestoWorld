@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PrestoWorld\Core\Elementor;
+namespace PrestoWorld\Core\Block;
 
 /**
  * BlockType — replaces WP_Block_Type (spec 10 §10.5).

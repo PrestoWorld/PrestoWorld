@@ -34,13 +34,9 @@ class RestServer
      */
     public function register_route(string $namespace, string $route, array $args = []): bool
     {
-        if (method_exists(RestController::class, 'register')) {
-            return RestController::register($namespace, $route, $args);
-        }
-
         $this->routes[$this->key($namespace, $route)] = $args;
 
-        return true;
+        return RestController::register($namespace, $route, $args);
     }
 
     /**
@@ -48,7 +44,7 @@ class RestServer
      */
     public function get_routes(): array
     {
-        return method_exists(RestController::class, 'server') ? RestController::server() : $this->routes;
+        return RestController::server();
     }
 
     /**
@@ -73,19 +69,7 @@ class RestServer
 
     public function dispatch(mixed $request): mixed
     {
-        if (method_exists(RestController::class, 'dispatch')) {
-            return RestController::dispatch($request);
-        }
-
-        if ($request instanceof RestRequest) {
-            return $this->respond_to_request($request);
-        }
-
-        if (is_array($request)) {
-            return $this->respond_to_request($request);
-        }
-
-        return $request;
+        return RestController::dispatch($request);
     }
 
     public function dispatch_request(mixed $request): mixed
@@ -95,19 +79,13 @@ class RestServer
 
     public function respond_to_request(mixed $request): mixed
     {
-        if (method_exists(RestController::class, 'filterContext')) {
-            return RestController::filterContext($request);
-        }
-
-        return $request;
+        return RestController::filterContext($request);
     }
 
     public static function reset(): void
     {
         self::$instance = null;
-        if (method_exists(RestController::class, 'reset')) {
-            RestController::reset();
-        }
+        RestController::reset();
     }
 
     private function key(string $namespace, string $route): string

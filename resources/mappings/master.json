@@ -3573,21 +3573,21 @@
         {
             "kind": "class",
             "source": "WP_Block",
-            "target": "PrestoWorld\\Core\\Elementor\\BlockWrapper",
+            "target": "PrestoWorld\\Core\\Block\\BlockWrapper",
             "mode": "sr",
             "group": "10.5.4 Content, Posts & Blocks (9)"
         },
         {
             "kind": "class",
             "source": "WP_Block_Type",
-            "target": "PrestoWorld\\Core\\Elementor\\BlockType",
+            "target": "PrestoWorld\\Core\\Block\\BlockType",
             "mode": "sr",
             "group": "10.5.4 Content, Posts & Blocks (9)"
         },
         {
             "kind": "class",
             "source": "WP_Block_Patterns_Registry",
-            "target": "PrestoWorld\\Core\\Elementor\\PatternRegistry",
+            "target": "PrestoWorld\\Core\\Block\\PatternRegistry",
             "mode": "s",
             "group": "10.5.4 Content, Posts & Blocks (9)"
         },
@@ -3818,7 +3818,7 @@
         {
             "kind": "class",
             "source": "WP_Customize_Manager",
-            "target": "PrestoWorld\\Core\\Elementor\\CustomizerBridge",
+            "target": "",
             "mode": "x",
             "group": "10.5.9 Theme, Customizer & Admin UI (13)"
         },
@@ -3860,14 +3860,14 @@
         {
             "kind": "class",
             "source": "WP_Widget",
-            "target": "PrestoWorld\\Core\\Elementor\\WidgetBridge",
+            "target": "PrestoWorld\\Core\\Widget\\WidgetBridge",
             "mode": "sr",
             "group": "10.5.9 Theme, Customizer & Admin UI (13)"
         },
         {
             "kind": "class",
             "source": "WP_Widget_Factory",
-            "target": "PrestoWorld\\Core\\Elementor\\WidgetFactory",
+            "target": "PrestoWorld\\Core\\Widget\\WidgetFactory",
             "mode": "s",
             "group": "10.5.9 Theme, Customizer & Admin UI (13)"
         },
