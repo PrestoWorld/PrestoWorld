@@ -1,0 +1,13 @@
+{
+  "name": "context-builder",
+  "version": "1.0.0",
+  "description": "PrestoWorld Context Builder — Gutenberg-based full site & content editor with hybrid SSR/CSR rendering",
+  "type": "core",
+  "priority": 40,
+  "enabled": true,
+  "depends": ["schema"],
+  "requires": {
+    "php": ">=8.1",
+    "modules": ["schema"]
+  }
+}
