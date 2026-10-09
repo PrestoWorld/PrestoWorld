@@ -53,18 +53,57 @@ final class LegacyState
 
         PrestoWpdb::resetInstance();
 
-        if (isset($GLOBALS['wp_query'])) {
-            unset($GLOBALS['wp_query']);
-        }
-        if (isset($GLOBALS['post'])) {
-            unset($GLOBALS['post']);
-        }
+        \PrestoWorld\Core\Translator::reset();
+        \PrestoWorld\Core\CacheRepository::flush();
+        \PrestoWorld\Core\AssetManager::flush();
+
+        self::$resetRequested = true;
+    }
+
+    /**
+     * Reset per-request (lifecycle long-running, spec 10 §10.7.2).
+     *
+     * KHÔNG xoá registry: hooks đăng ký lúc boot/activation phải sống qua
+     * worker (RoadRunner boot 1 lần). Chỉ dọn transient state.
+     */
+    public static function resetRequest(): void
+    {
+        self::invoker()->reset();
+
+        self::resetQuery();
 
         \PrestoWorld\Core\Translator::reset();
         \PrestoWorld\Core\CacheRepository::flush();
         \PrestoWorld\Core\AssetManager::flush();
 
         self::$resetRequested = true;
+    }
+
+    /**
+     * Reset CHỈ trạng thái query/post (spec 06 — wp_reset_query/wp_reset_postdata).
+     * KHÔNG xoá registry/invoker: hooks đã đăng ký phải sống qua toàn request.
+     */
+    public static function resetQuery(): void
+    {
+        $GLOBALS['wp_query'] = new WPQuery();
+        if (isset($GLOBALS['post'])) {
+            unset($GLOBALS['post']);
+        }
+    }
+
+    /**
+     * Khởi tạo global WordPress (spec 06 §6.2.2): $wpdb, $wp_query.
+     * Gọi khi nạp shim (boot + sandbox plugin).
+     */
+    public static function initGlobals(): void
+    {
+        if (!isset($GLOBALS['wpdb'])) {
+            $GLOBALS['wpdb'] = PrestoWpdb::instance();
+        }
+
+        if (!($GLOBALS['wp_query'] ?? null) instanceof WPQuery) {
+            $GLOBALS['wp_query'] = new WPQuery();
+        }
     }
 
     public static function wasReset(): bool

@@ -19,4 +19,9 @@ class LegacyTerminationException extends \RuntimeException
     ) {
         parent::__construct($message, $status, $previous);
     }
+
+    public function getStatusCode(): int
+    {
+        return $this->getCode();
+    }
 }

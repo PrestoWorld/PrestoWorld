@@ -8,13 +8,40 @@ use Witals\Framework\Contracts\ResettableInterface;
 
 class DebugBar implements ResettableInterface
 {
+    /** @var array<string, mixed> */
     private array $entries = [];
+
+    /** @var list<array{sql: string, elapsed: float, context: array<string, mixed>}> */
+    private array $queries = [];
 
     public function add(string $key, mixed $value): void
     {
         $this->entries[$key] = $value;
     }
 
+    /**
+     * Ghi một query (gọi từ QueryInterceptor, spec 05 §5.8).
+     *
+     * @param array<string, mixed> $context
+     */
+    public function logQuery(string $sql, float $elapsed, array $context = []): void
+    {
+        $this->queries[] = [
+            'sql' => $sql,
+            'elapsed' => $elapsed,
+            'context' => $context,
+        ];
+
+        $this->entries['queries'] = count($this->queries) . ' queries';
+    }
+
+    /** @return list<array{sql: string, elapsed: float, context: array<string, mixed>}> */
+    public function getQueries(): array
+    {
+        return $this->queries;
+    }
+
+    /** @return array<string, mixed> */
     public function getEntries(): array
     {
         return $this->entries;
@@ -43,5 +70,6 @@ class DebugBar implements ResettableInterface
     public function reset(): void
     {
         $this->entries = [];
+        $this->queries = [];
     }
 }

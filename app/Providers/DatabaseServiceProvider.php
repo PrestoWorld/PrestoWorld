@@ -90,7 +90,7 @@ class DatabaseServiceProvider extends AbstractDatabaseServiceProvider
         });
 
         $this->singleton('wpdb', function ($app) {
-            return $app->make(\Cycle\Database\DatabaseInterface::class);
+            return $app->make(\PrestoWorld\Core\Database\PrestoWpdb::class);
         });
 
         $this->singleton(ORMInterface::class, function ($app) {

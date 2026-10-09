@@ -86,6 +86,20 @@ class DbInitCommand extends Command
     {
         $tables = [
             [
+                'name' => "{$prefix}users",
+                'columns' => [
+                    ['type' => 'primary', 'name' => 'id'],
+                    ['type' => 'string(255)', 'name' => 'email', 'nullable' => false],
+                    ['type' => 'string(255)', 'name' => 'password_hash', 'nullable' => false],
+                    ['type' => 'string(100)', 'name' => 'display_name', 'nullable' => true],
+                    ['type' => 'string(50)', 'name' => 'role', 'nullable' => false, 'default' => 'subscriber'],
+                    ['type' => 'datetime', 'name' => 'created_at', 'nullable' => false, 'default' => 'CURRENT_TIMESTAMP'],
+                    ['type' => 'datetime', 'name' => 'updated_at', 'nullable' => false, 'default' => 'CURRENT_TIMESTAMP'],
+                ],
+                'indexes' => [['email'], ['role']],
+                'uniques' => [['email']],
+            ],
+            [
                 'name' => "{$prefix}posts",
                 'columns' => [
                     ['type' => 'primary', 'name' => 'id'],
@@ -93,13 +107,16 @@ class DbInitCommand extends Command
                     ['type' => 'string(255)', 'name' => 'title', 'nullable' => false],
                     ['type' => 'string(255)', 'name' => 'slug', 'nullable' => false],
                     ['type' => 'string(20)', 'name' => 'status', 'nullable' => false, 'default' => 'publish'],
+                    ['type' => 'text', 'name' => 'content', 'nullable' => true],
                     ['type' => 'integer', 'name' => 'author_id', 'nullable' => true],
                     ['type' => 'bigInteger', 'name' => 'trid', 'nullable' => true],
                     ['type' => 'datetime', 'name' => 'created_at', 'nullable' => false, 'default' => 'CURRENT_TIMESTAMP'],
                     ['type' => 'datetime', 'name' => 'updated_at', 'nullable' => true],
-                    ['type' => 'json', 'name' => 'compact_meta', 'nullable' => true],
+                    ['type' => 'datetime', 'name' => 'published_at', 'nullable' => true],
+                    ['type' => 'jsonb', 'name' => 'meta', 'nullable' => true, 'default' => '{}'],
                 ],
-                'indexes' => [['post_type'], ['slug'], ['status'], ['author_id'], ['trid']],
+                'indexes' => [['post_type'], ['slug'], ['status'], ['author_id'], ['trid'], ['meta']],
+                'uniques' => [['slug']],
             ],
             [
                 'name' => "{$prefix}terms",
@@ -287,6 +304,8 @@ class DbInitCommand extends Command
                     $column->type('boolean');
                 } elseif ($type === 'json') {
                     $column->type('json');
+                } elseif ($type === 'jsonb') {
+                    $column->type('jsonb');
                 } else {
                     $column->type('string');
                 }

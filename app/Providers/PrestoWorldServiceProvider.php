@@ -9,6 +9,7 @@ use PrestoWorld\Core\Database\PrestoWpdb;
 use PrestoWorld\Core\Legacy\LegacyHook;
 use PrestoWorld\Core\Legacy\LegacyRegistry;
 use PrestoWorld\Core\Legacy\LegacyState;
+use PrestoWorld\Core\Legacy\LegacyStateResetter;
 use PrestoWorld\Core\Legacy\ShimLoader;
 use PrestoWorld\Core\OptionRepository;
 use Witals\Framework\Module\Contracts\HookInterface;
@@ -44,6 +45,11 @@ class PrestoWorldServiceProvider extends ServiceProvider
         $this->singleton(PrestoWpdb::class, function (): PrestoWpdb {
             return PrestoWpdb::instance();
         });
+
+        // Lifecycle adapter: quét ResettableInterface gọi LegacyState::reset()
+        // sau mỗi request (spec 10 §10.7.2).
+        $this->singleton(LegacyStateResetter::class);
+        $this->app->instance(LegacyStateResetter::class, new LegacyStateResetter());
     }
 
     public function boot(): void
@@ -55,9 +61,15 @@ class PrestoWorldServiceProvider extends ServiceProvider
             $shims->registerAutoload();
         }
 
+        LegacyState::initGlobals();
+        LegacyState::registry();
+
         $db = null;
         try {
-            $db = $this->app->make(\Cycle\Database\DatabaseInterface::class);
+            $resolved = $this->app->make(\Cycle\Database\DatabaseInterface::class);
+            if ($resolved instanceof \Cycle\Database\DatabaseInterface) {
+                $db = $resolved;
+            }
         } catch (\Throwable) {
             $db = null;
         }
@@ -65,7 +77,5 @@ class PrestoWorldServiceProvider extends ServiceProvider
         if ($db !== null) {
             OptionRepository::setDatabase($db);
         }
-
-        LegacyState::registry();
     }
 }

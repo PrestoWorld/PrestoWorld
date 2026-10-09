@@ -403,7 +403,7 @@ class MediaController
             'slug' => strtolower(str_replace([' ', '_'], '-', $title)),
             'updated_at' => $now,
             'post_type' => 'attachment',
-            'compact_meta' => json_encode(['mime_type' => $mime]),
+            'meta' => json_encode(['mime_type' => $mime]),
         ];
 
         $keys = implode(', ', array_keys($data));

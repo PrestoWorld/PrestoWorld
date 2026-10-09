@@ -104,11 +104,14 @@ class SchemaMigrationManager
     {
         $this->ensureMigrationsTable();
 
-        $lastBatch = $this->db->select('MAX(batch) as batch')
+        $lastBatch = $this->db->select('batch')
             ->from(self::MIGRATIONS_TABLE)
-            ->fetch();
+            ->orderBy('id', 'DESC')
+            ->limit(1)
+            ->run()->fetch();
 
-        $batch = (int) ($lastBatch['batch'] ?? 0);
+        $value = is_array($lastBatch) ? ($lastBatch['batch'] ?? 0) : 0;
+        $batch = is_numeric($value) ? (int) $value : 0;
         if ($batch === 0) {
             return [];
         }
@@ -139,10 +142,14 @@ class SchemaMigrationManager
 
     private function getNextBatch(): int
     {
-        $lastBatch = $this->db->select('MAX(batch) as batch')
+        $lastBatch = $this->db->select('batch')
             ->from(self::MIGRATIONS_TABLE)
-            ->fetch();
+            ->orderBy('id', 'DESC')
+            ->limit(1)
+            ->run()->fetch();
 
-        return ((int) ($lastBatch['batch'] ?? 0)) + 1;
+        $value = is_array($lastBatch) ? ($lastBatch['batch'] ?? 0) : 0;
+
+        return (is_numeric($value) ? (int) $value : 0) + 1;
     }
 }

@@ -4,22 +4,28 @@ declare(strict_types=1);
 
 namespace PrestoWorld\Plugin;
 
+use PrestoWorld\Core\Legacy\LegacyRegistry;
+use PrestoWorld\Core\Legacy\LegacyState;
 use Witals\Framework\Contracts\ResettableInterface;
 use Witals\Framework\Module\Contracts\HookInterface;
 
 /**
- * Hook dispatcher with compiled map for O(1) lookup.
+ * Hook dispatcher — plugin-side adapter (spec 06 §6.2.1 + §6.5).
  *
- * Performance guarantees:
- * - doAction() with no listeners: 1x isset() check — O(1), zero allocation
- * - addAction()/addFilter(): 1x isset() + 1x append — O(1) amortized
- * - Built-in array append, no ksort() on hot path
+ * Bridge: mọi hook mà plugin đăng ký (addAction/addFilter) và mọi hook được
+ * trigger (doAction/applyFilters) đều route về canonical store LegacyState
+ * (LegacyRegistry/LegacyInvoker) — CÙNG store với shim WP global
+ * (add_action/do_action trong wp-compatibility.php). Nhờ đó:
+ *   - Plugin hook 'admin.sidebar.menu' đăng ký qua đây sẽ được do_action()
+ *     ở bất kỳ đâu (shim / LegacyHook / theme) kích hoạt.
+ *   - Lazy loading vẫn hoạt động: plugin chỉ được nạp khi hook của nó chạm
+ *     tới (ensureLazyLoaded chạy trước trigger).
+ *   - compiledMap chỉ dùng để fast-path hasAction/hasFilter (O(1)), KHÔNG
+ *     drop hook ở addAction/addFilter như trước (tránh mất hook WP-core
+ *     không nằm trong manifest).
  */
 class HookDispatcher implements HookInterface, ResettableInterface
 {
-    private array $actions = [];
-    private array $filters = [];
-
     private ?array $compiledMap = null;
 
     private array $lazyLoaders = [];
@@ -36,124 +42,68 @@ class HookDispatcher implements HookInterface, ResettableInterface
 
     public function addAction(string $hook, callable $callback, int $priority = 10, int $acceptedArgs = 1): void
     {
-        if ($this->compiledMap !== null && !isset($this->compiledMap['actions'][$hook])) {
-            return;
-        }
-
-        if (!isset($this->actions[$hook])) {
-            $this->actions[$hook] = [];
-        }
-
-        if (!isset($this->actions[$hook][$priority])) {
-            $this->actions[$hook][$priority] = [];
-        }
-
-        $this->actions[$hook][$priority][] = $callback;
+        LegacyState::registry()->recordHook($hook, $callback, $priority, $acceptedArgs, LegacyRegistry::HOOK_ACTION);
     }
 
     public function doAction(string $hook, mixed ...$args): void
     {
-        if (!isset($this->actions[$hook]) && !isset($this->compiledMap['actions'][$hook])) {
-            return;
-        }
-
         $this->ensureLazyLoaded($hook);
 
-        if (!isset($this->actions[$hook])) {
-            return;
-        }
-
-        foreach ($this->actions[$hook] as $priority => $callbacks) {
-            foreach ($callbacks as $callback) {
-                $callback(...$args);
-            }
-        }
+        LegacyState::invoker()->trigger($hook, array_values($args), LegacyRegistry::HOOK_ACTION);
     }
 
     public function addFilter(string $hook, callable $callback, int $priority = 10, int $acceptedArgs = 1): void
     {
-        if ($this->compiledMap !== null && !isset($this->compiledMap['filters'][$hook])) {
-            return;
-        }
-
-        if (!isset($this->filters[$hook])) {
-            $this->filters[$hook] = [];
-        }
-
-        if (!isset($this->filters[$hook][$priority])) {
-            $this->filters[$hook][$priority] = [];
-        }
-
-        $this->filters[$hook][$priority][] = $callback;
+        LegacyState::registry()->recordHook($hook, $callback, $priority, $acceptedArgs, LegacyRegistry::HOOK_FILTER);
     }
 
     public function applyFilters(string $hook, mixed $value, mixed ...$args): mixed
     {
-        if (!isset($this->filters[$hook]) && !isset($this->compiledMap['filters'][$hook])) {
-            return $value;
-        }
-
         $this->ensureLazyLoaded($hook);
 
-        if (!isset($this->filters[$hook])) {
-            return $value;
-        }
-
-        array_unshift($args, $value);
-
-        foreach ($this->filters[$hook] as $priority => $callbacks) {
-            foreach ($callbacks as $callback) {
-                $value = $callback(...$args);
-                $args[0] = $value;
-            }
-        }
-
-        return $value;
+        return LegacyState::invoker()->trigger(
+            $hook,
+            array_values(array_merge([$value], $args)),
+            LegacyRegistry::HOOK_FILTER,
+        );
     }
 
     public function hasAction(string $hook): bool
     {
-        return isset($this->actions[$hook]) || isset($this->compiledMap['actions'][$hook]);
+        return LegacyState::registry()->has($hook, null, LegacyRegistry::HOOK_ACTION) !== false
+            || isset($this->compiledMap['actions'][$hook]);
     }
 
     public function hasFilter(string $hook): bool
     {
-        return isset($this->filters[$hook]) || isset($this->compiledMap['filters'][$hook]);
+        return LegacyState::registry()->has($hook, null, LegacyRegistry::HOOK_FILTER) !== false
+            || isset($this->compiledMap['filters'][$hook]);
     }
 
     public function removeAction(string $hook, callable $callback, int $priority = 10): void
     {
-        $this->removeFromPriority($this->actions, $hook, $callback, $priority);
+        LegacyState::registry()->removeHook($hook, $callback, $priority, LegacyRegistry::HOOK_ACTION);
     }
 
     public function removeFilter(string $hook, callable $callback, int $priority = 10): void
     {
-        $this->removeFromPriority($this->filters, $hook, $callback, $priority);
+        LegacyState::registry()->removeHook($hook, $callback, $priority, LegacyRegistry::HOOK_FILTER);
     }
 
     public function compileMap(): array
     {
-        $map = [
+        return [
             'actions' => [],
             'filters' => [],
         ];
-
-        foreach ($this->actions as $hook => $priorities) {
-            $map['actions'][$hook] = array_keys($priorities);
-        }
-
-        foreach ($this->filters as $hook => $priorities) {
-            $map['filters'][$hook] = array_keys($priorities);
-        }
-
-        return $map;
     }
 
     public function reset(): void
     {
-        $this->actions = [];
-        $this->filters = [];
-        $this->lazyLoaders = [];
+        // Canonical store được reset bởi LegacyState::reset() trong lifecycle
+        // (spec 10 §10.7.2). Loader giữ lại vì chúng idempotent và tham chiếu
+        // PluginManager — xoá sẽ phá lazy-load trên worker sau request đầu tiên.
+        $this->compiledMap = null;
     }
 
     private function ensureLazyLoaded(string $hook): void
@@ -170,23 +120,4 @@ class HookDispatcher implements HookInterface, ResettableInterface
 
         unset($this->lazyLoaders[$hook]);
     }
-
-    private function removeFromPriority(array &$hooks, string $hook, callable $callback, int $priority): void
-    {
-        if (!isset($hooks[$hook][$priority])) {
-            return;
-        }
-
-        $hooks[$hook][$priority] = array_values(
-            array_filter($hooks[$hook][$priority], fn($c) => $c !== $callback),
-        );
-
-        if ($hooks[$hook][$priority] === []) {
-            unset($hooks[$hook][$priority]);
-        }
-
-        if ($hooks[$hook] === []) {
-            unset($hooks[$hook]);
-        }
-}
 }

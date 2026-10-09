@@ -47,6 +47,8 @@ class PluginManager implements ResettableInterface
     ) {
         $this->pluginPaths = [
             $app->basePath('plugins'),
+            $app->basePath('content/plugins'),
+            $app->basePath('storage/wp-content/plugins'),
         ];
     }
 

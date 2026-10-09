@@ -173,14 +173,14 @@ if (!function_exists('did_filter')) {
 if (!function_exists('wp_reset_postdata')) {
     function wp_reset_postdata(): void
     {
-        \PrestoWorld\Core\Legacy\LegacyState::reset();
+        \PrestoWorld\Core\Legacy\LegacyState::resetQuery();
     }
 }
 
 if (!function_exists('wp_reset_query')) {
     function wp_reset_query(): void
     {
-        \PrestoWorld\Core\Legacy\LegacyState::reset();
+        \PrestoWorld\Core\Legacy\LegacyState::resetQuery();
     }
 }
 

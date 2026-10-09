@@ -13,6 +13,8 @@ class SchemaVerifier
 
     private const REQUIRED_PREFIXED_TABLES = [
         'posts',
+        'users',
+        'options',
         'terms',
         'term_relationships',
         'icl_translations',

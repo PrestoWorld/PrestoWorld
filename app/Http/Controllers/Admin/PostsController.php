@@ -58,7 +58,7 @@ class PostsController
             return Response::json(['error' => 'Post not found'], 404);
         }
 
-        $rawMeta = $row['compact_meta'] ?? null;
+        $rawMeta = $row['meta'] ?? null;
         $meta = is_string($rawMeta) ? json_decode($rawMeta, true) : ($rawMeta ?? []);
         if (!is_array($meta)) $meta = [];
 
@@ -125,7 +125,7 @@ class PostsController
             'status' => $status,
             'author_id' => (int) ($body['author_id'] ?? 1),
             'created_at' => $body['created_at'] ?? date('Y-m-d H:i:s'),
-            'compact_meta' => json_encode($meta),
+            'meta' => json_encode($meta),
         ];
 
         $this->db->insert($this->prefix . 'posts')->values($data)->run();
@@ -153,7 +153,7 @@ class PostsController
             'slug' => $body['slug'] ?? '',
             'status' => $body['status'] ?? 'draft',
             'updated_at' => date('Y-m-d H:i:s'),
-            'compact_meta' => json_encode($meta),
+            'meta' => json_encode($meta),
         ];
 
         $this->db->update($this->prefix . 'posts', $data, ['id' => $id])->run();
@@ -252,7 +252,7 @@ class PostsController
             'status' => $status,
             'author_id' => $this->postInt($request, 'author_id', 1),
             'created_at' => $publishDate ?? date('Y-m-d H:i:s'),
-            'compact_meta' => json_encode($meta),
+            'meta' => json_encode($meta),
         ];
 
         $this->db->insert($this->prefix . 'posts')->values($data)->run();
@@ -297,7 +297,7 @@ class PostsController
             'slug' => $slug,
             'status' => $status,
             'updated_at' => date('Y-m-d H:i:s'),
-            'compact_meta' => json_encode($meta),
+            'meta' => json_encode($meta),
         ];
 
         $publishDate = $this->resolvePublishDate($request);
@@ -348,13 +348,13 @@ class PostsController
     {
         try {
             /** @var array<string, mixed>|false $row */
-            $row = $this->db->select('compact_meta')
+            $row = $this->db->select('meta')
                 ->from($this->prefix . 'posts')
                 ->where('id', $postId)
                 ->run()
                 ->fetch();
-            if (is_array($row) && isset($row['compact_meta']) && is_string($row['compact_meta'])) {
-                $decoded = json_decode($row['compact_meta'], true);
+            if (is_array($row) && isset($row['meta']) && is_string($row['meta'])) {
+                $decoded = json_decode($row['meta'], true);
                 return is_array($decoded) ? $decoded : [];
             }
         } catch (\Throwable) {}
@@ -479,12 +479,12 @@ class PostsController
 
     protected function extractMeta(array $row, string $key, mixed $default = null): mixed
     {
-        if (!isset($row['compact_meta'])) {
+        if (!isset($row['meta'])) {
             return $default;
         }
-        $meta = is_string($row['compact_meta'])
-            ? json_decode($row['compact_meta'], true)
-            : $row['compact_meta'];
+        $meta = is_string($row['meta'])
+            ? json_decode($row['meta'], true)
+            : $row['meta'];
         return $meta[$key] ?? $default;
     }
 }
