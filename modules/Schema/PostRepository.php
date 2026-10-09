@@ -39,15 +39,48 @@ class PostRepository
      */
     public function find(array $criteria = []): array
     {
-        $query = $this->db->select('*')->from($this->tablePrefix . 'posts');
+        $query = $this->db->select('p.*')->from($this->tablePrefix . 'posts as p');
 
         if (isset($criteria['post_type'])) {
             $types = (array) $criteria['post_type'];
-            $query->where('post_type', 'IN', $types);
+            $query->where('p.post_type', 'IN', $types);
         }
 
         if (isset($criteria['status'])) {
-            $query->where('status', $criteria['status']);
+            $query->where('p.status', $criteria['status']);
+        }
+
+        // Category slug filter (WordPress-style 'category' criteria)
+        if (isset($criteria['category']) && $criteria['category'] !== '') {
+            $categorySlug = $criteria['category'];
+            $query->innerJoin($this->tablePrefix . 'term_relationships', 'tr')->on('tr.object_id', 'p.id');
+            $query->innerJoin($this->tablePrefix . 'terms', 't')->on('t.id', 'tr.term_id');
+            $query->where('t.slug', $categorySlug);
+            $query->where('t.taxonomy', 'category');
+        }
+
+        // Taxonomy query filter (array of tax_query conditions)
+        if (isset($criteria['tax_query']) && is_array($criteria['tax_query'])) {
+            $aliasIndex = 0;
+            foreach ($criteria['tax_query'] as $taxCondition) {
+                $taxonomy = $taxCondition['taxonomy'] ?? 'category';
+                $terms = (array) ($taxCondition['terms'] ?? []);
+                if (empty($terms)) {
+                    continue;
+                }
+                $field = $taxCondition['field'] ?? 'slug';
+                $aliasIndex++;
+                $trAlias = "tr{$aliasIndex}";
+                $tAlias = "t{$aliasIndex}";
+                $query->innerJoin($this->tablePrefix . 'term_relationships', $trAlias)->on($trAlias . '.object_id', 'p.id');
+                $query->innerJoin($this->tablePrefix . 'terms', $tAlias)->on($tAlias . '.id', $trAlias . '.term_id');
+                $query->where($tAlias . '.taxonomy', $taxonomy);
+                if ($field === 'term_id' || $field === 'id') {
+                    $query->where($tAlias . '.id', 'IN', $terms);
+                } else {
+                    $query->where($tAlias . '.slug', 'IN', $terms);
+                }
+            }
         }
 
         $posts = $query->fetchAll();
@@ -127,6 +160,14 @@ class PostRepository
         foreach ($termData as $row) {
             $postId = $row['object_id'];
             unset($row['object_id']);
+            // Generate term link: /{taxonomy}/{slug}
+            $taxonomy = $row['taxonomy'] ?? 'category';
+            $slug = $row['slug'] ?? '';
+            if ($taxonomy === 'category' || $taxonomy === 'post_tag') {
+                $row['url'] = '/' . $taxonomy . '/' . $slug;
+            } else {
+                $row['url'] = '/' . $taxonomy . '/' . $slug;
+            }
             $indexedPosts[$postId]['terms'][] = $row;
         }
     }
