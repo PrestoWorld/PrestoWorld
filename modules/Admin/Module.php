@@ -7,6 +7,7 @@ namespace PrestoWorld\Modules\Admin;
 use Witals\Framework\Module\Module as WitalsModule;
 use Witals\Framework\Contracts\View\Factory as ViewFactory;
 use PrestoWorld\Contracts\Admin\Menu\MenuContextRepository as MenuContract;
+use PrestoWorld\Contracts\Admin\AdminBar\AdminBarContext as AdminBarContextContract;
 use PrestoWorld\Modules\Admin\Dashboard\DashboardWidget;
 
 class Module extends WitalsModule
@@ -22,6 +23,7 @@ class Module extends WitalsModule
     {
         $this->registerSkinManager();
         $this->registerMenuRepository();
+        $this->registerAdminBar();
         $this->registerDashboard();
     }
 
@@ -55,6 +57,11 @@ class Module extends WitalsModule
     {
         $view = $this->app->make(ViewFactory::class);
         $skin = new \PrestoWorld\Modules\Admin\Skins\PrestoModern\PrestoModernSkin($view);
+
+        // Inject admin bar context
+        $adminBar = $this->app->make(AdminBarContextContract::class);
+        $skin->setAdminBar($adminBar);
+
         $manager->registerSkin($skin, $skin::getManifest());
     }
 
@@ -159,6 +166,51 @@ class Module extends WitalsModule
         $menu->registerItem('settings-group', 'Media', '#/options-media', icon: 'Image', priority: 50, id: 'options-media', screenId: 'options-media');
         $menu->registerItem('settings-group', 'Permalinks', '#/options-permalink', icon: 'Link', priority: 60, id: 'options-permalink', screenId: 'options-permalink');
         $menu->registerItem('settings-group', 'Privacy', '#/options-privacy', icon: 'Shield', priority: 70, id: 'options-privacy', screenId: 'options-privacy');
+    }
+
+    // ── Admin Bar ──────────────────────────────────────────
+
+    protected function registerAdminBar(): void
+    {
+        $this->app->singleton(AdminBarContextContract::class, function () {
+            $bar = new \PrestoWorld\Modules\Admin\AdminBar\AdminBarContext();
+
+            $this->registerDefaultAdminBarItems($bar);
+
+            return $bar;
+        });
+        $this->app->alias(AdminBarContextContract::class, 'admin.bar');
+    }
+
+    protected function registerDefaultAdminBarItems(AdminBarContextContract $bar): void
+    {
+        // Visit Site
+        $bar->addItem(new \PrestoWorld\Modules\Admin\AdminBar\AdminBarItem(
+            id: 'visit-site',
+            label: 'Visit Site',
+            icon: 'Globe',
+            href: '/',
+            type: 'link',
+        ));
+
+        // New Post
+        $bar->addItem(new \PrestoWorld\Modules\Admin\AdminBar\AdminBarItem(
+            id: 'new-post',
+            label: 'New Post',
+            icon: 'Plus',
+            href: '/post-new',
+            type: 'link',
+        ));
+
+        // Comments
+        $bar->addItem(new \PrestoWorld\Modules\Admin\AdminBar\AdminBarItem(
+            id: 'comments',
+            label: 'Comments',
+            icon: 'MessageSquare',
+            href: '/edit-comments',
+            type: 'link',
+            badge: 0,
+        ));
     }
 
     // ── Dashboard & Widgets ──────────────────────────────────────

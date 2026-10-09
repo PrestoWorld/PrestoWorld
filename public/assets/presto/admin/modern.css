@@ -1,0 +1,230 @@
+/* PrestoWorld Admin Bar — PrestoModern Skin */
+
+.presto-admin-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 32px;
+    background: #1d2327;
+    color: #c3c4c7;
+    z-index: 99999;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+    font-size: 13px;
+    line-height: 1;
+}
+
+.presto-admin-bar--dark {
+    background: #1d2327;
+    color: #c3c4c7;
+}
+
+.presto-admin-bar-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 32px;
+    padding: 0 8px;
+    max-width: 100%;
+}
+
+.presto-admin-bar-left,
+.presto-admin-bar-right {
+    display: flex;
+    align-items: center;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    height: 32px;
+}
+
+.presto-admin-bar-left {
+    gap: 0;
+}
+
+.presto-admin-bar-right {
+    gap: 0;
+}
+
+.presto-admin-bar-item {
+    position: relative;
+    height: 32px;
+    display: flex;
+    align-items: center;
+}
+
+.presto-admin-bar-item a.presto-admin-bar-link,
+.presto-admin-bar-item button.presto-admin-bar-link {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 32px;
+    padding: 0 10px;
+    color: #c3c4c7;
+    text-decoration: none;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 13px;
+    line-height: 1;
+    font-family: inherit;
+    transition: background-color 0.1s ease-in-out, color 0.1s ease-in-out;
+}
+
+.presto-admin-bar-item a.presto-admin-bar-link:hover,
+.presto-admin-bar-item a.presto-admin-bar-link:focus,
+.presto-admin-bar-item button.presto-admin-bar-link:hover,
+.presto-admin-bar-item button.presto-admin-bar-link:focus {
+    background: #2c3338;
+    color: #72aee6;
+    outline: none;
+}
+
+.presto-admin-bar-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+.presto-admin-bar-icon svg {
+    width: 20px;
+    height: 20px;
+}
+
+.presto-admin-bar-logo a.presto-admin-bar-link {
+    padding: 0 8px;
+}
+
+.presto-admin-bar-site-name a.presto-admin-bar-link {
+    font-weight: 600;
+    color: #fff;
+}
+
+.presto-admin-bar-site-name a.presto-admin-bar-link:hover,
+.presto-admin-bar-site-name a.presto-admin-bar-link:focus {
+    color: #72aee6;
+}
+
+.presto-admin-bar-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    background: #d63638;
+    color: #fff;
+    border-radius: 9px;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1;
+}
+
+.presto-admin-bar-avatar {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.presto-admin-bar-username {
+    color: #c3c4c7;
+}
+
+.presto-admin-bar-user a.presto-admin-bar-link:hover .presto-admin-bar-username,
+.presto-admin-bar-user a.presto-admin-bar-link:focus .presto-admin-bar-username {
+    color: #72aee6;
+}
+
+/* Dropdown children */
+.presto-admin-bar-children {
+    position: absolute;
+    top: 32px;
+    left: 0;
+    min-width: 180px;
+    background: #1d2327;
+    border: 1px solid #2c3338;
+    border-radius: 0 0 4px 4px;
+    list-style: none;
+    margin: 0;
+    padding: 4px 0;
+    display: none;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.presto-admin-bar-has-children:hover > .presto-admin-bar-children,
+.presto-admin-bar-has-children:focus-within > .presto-admin-bar-children {
+    display: block;
+}
+
+.presto-admin-bar-children .presto-admin-bar-item {
+    height: auto;
+}
+
+.presto-admin-bar-children .presto-admin-bar-item a.presto-admin-bar-link,
+.presto-admin-bar-children .presto-admin-bar-item button.presto-admin-bar-link {
+    width: 100%;
+    padding: 8px 12px;
+    height: auto;
+    line-height: 1.4;
+}
+
+/* Body offset */
+.presto-admin-layout {
+    padding-top: 32px;
+}
+
+.presto-admin-body {
+    display: flex;
+    min-height: calc(100vh - 32px);
+}
+
+/* Screen reader text */
+.screen-reader-text {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Responsive */
+@media (max-width: 782px) {
+    .presto-admin-bar {
+        height: 46px;
+    }
+
+    .presto-admin-bar-inner {
+        height: 46px;
+    }
+
+    .presto-admin-bar-left,
+    .presto-admin-bar-right {
+        height: 46px;
+    }
+
+    .presto-admin-bar-item a.presto-admin-bar-link,
+    .presto-admin-bar-item button.presto-admin-bar-link {
+        height: 46px;
+        padding: 0 12px;
+    }
+
+    .presto-admin-bar-children {
+        top: 46px;
+    }
+
+    .presto-admin-layout {
+        padding-top: 46px;
+    }
+
+    .presto-admin-body {
+        min-height: calc(100vh - 46px);
+    }
+}
