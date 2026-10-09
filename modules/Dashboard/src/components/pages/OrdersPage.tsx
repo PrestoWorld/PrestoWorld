@@ -53,7 +53,7 @@ export const OrdersPage: React.FC<OrdersPageProps> = ({ widgets }) => {
 
   const orders = widgets
     .filter((w) => w.component === 'OrdersWidget' || w.component === '')
-    .map(() => INITAIAL_ORDERS);
+    .map(() => INITIAL_ORDERS);
 
   return (
     <div className="space-y-4 animate-in fade-in duration-200 max-w-7xl mx-auto">
@@ -86,7 +86,7 @@ export const OrdersPage: React.FC<OrdersPageProps> = ({ widgets }) => {
             </tr>
           </thead>
           <tbody>
-            {INITAIAL_ORDERS.map((order) => (
+            {INITIAL_ORDERS.map((order) => (
               <tr key={order.id} className="border-b border-slate-200 hover:bg-slate-50">
                 <td className="p-3 font-medium">{order.id}</td>
                 <td className="p-3">

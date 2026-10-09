@@ -1,5 +1,5 @@
 import React from 'react';
-import { Clock, User, MessageSquare, CheckCircle2 } from 'lucide-react';
+import { Clock, MessageSquare, CheckCircle2, Edit, FileText } from 'lucide-react';
 
 interface ActivityLogProps {
   content: string;

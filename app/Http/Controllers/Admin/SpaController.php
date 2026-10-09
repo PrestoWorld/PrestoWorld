@@ -315,6 +315,11 @@ class SpaController
         ]);
     }
 
+    public function initialState(Request $request): Response
+    {
+        return Response::json($this->getNewDashboardInitialState());
+    }
+
     public function menu(Request $request): Response
     {
         return Response::json([

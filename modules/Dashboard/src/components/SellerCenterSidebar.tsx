@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, BarChart2, Layers, X } from 'lucide-react';
+import { ArrowLeft, BarChart2, Layers, Sparkles, X } from 'lucide-react';
 import type { MenuSection } from '../types';
 
 interface NavItem {

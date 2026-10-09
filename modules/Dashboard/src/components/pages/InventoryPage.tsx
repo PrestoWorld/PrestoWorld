@@ -1,5 +1,5 @@
-import React from 'react';
-import { Boxes, Truck, Package, Search, RefreshCw, Filter, CircleInfo, CheckCircle2, XCircle, Mail, Check2 } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { Boxes, Book, DollarSign } from 'lucide-react';
 import type { DashboardWidget } from '../../types';
 
 interface InventoryPageProps {

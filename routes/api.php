@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\MediaController;
 
 /** @var RouterInterface $router */
 
+$router->get('/api/admin/initial-state', [\App\Http\Controllers\Admin\SpaController::class, 'initialState']);
 $router->get('/api/admin/menu', [\App\Http\Controllers\Admin\SpaController::class, 'menu']);
 $router->get('/api/admin/dashboard/widgets', [\App\Http\Controllers\Admin\SpaController::class, 'dashboardWidgets']);
 
