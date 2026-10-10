@@ -341,13 +341,27 @@ class SetupController
         $usersTable = $tablePrefix . 'users';
         if ($db->hasTable($usersTable)) {
             // Check if admin user already exists (by email or username)
-            $stmt = $db->prepare("SELECT id FROM {$usersTable} WHERE email = ? OR username = ?");
-            $stmt->execute([$input['admin_email'], $input['admin_username']]);
-            if (!$stmt->fetch()) {
+            $existingUser = $db->select('id')
+                ->from($usersTable)
+                ->where('email', $input['admin_email'])
+                ->orWhere('username', $input['admin_username'])
+                ->run()
+                ->fetch();
+
+            if (!$existingUser) {
                 // Insert admin user
                 $hashedPassword = password_hash($input['admin_password'], PASSWORD_DEFAULT);
-                $stmt = $db->prepare("INSERT INTO {$usersTable} (email, username, password_hash, display_name, role, created_at, updated_at) VALUES (?, ?, ?, ?, ?, NOW(), NOW())");
-                $stmt->execute([$input['admin_email'], $input['admin_username'], $hashedPassword, $input['admin_username'] ?? 'Administrator', 'administrator']);
+                
+                $db->insert($usersTable)->values([
+                    'email' => $input['admin_email'],
+                    'username' => $input['admin_username'],
+                    'password_hash' => $hashedPassword,
+                    'display_name' => $input['admin_username'] ?? 'Administrator',
+                    'role' => 'administrator',
+                    'created_at' => new \DateTimeImmutable(),
+                    'updated_at' => new \DateTimeImmutable(),
+                ])->run();
+                
                 $this->logger->info('Admin user created', ['email' => $input['admin_email']]);
             }
         }
@@ -419,9 +433,11 @@ class SetupController
                 return false;
             }
 
-            $stmt = $db->prepare("SELECT option_value FROM {$optionsTable} WHERE option_name = ?");
-            $stmt->execute(['presto_installed']);
-            $row = $stmt->fetch();
+            $row = $db->select('option_value')
+                ->from($optionsTable)
+                ->where('option_name', 'presto_installed')
+                ->run()
+                ->fetch();
 
             return $row && $row['option_value'] === '1';
         } catch (\Throwable $e) {
