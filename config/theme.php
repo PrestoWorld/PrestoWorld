@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 return [
-    'active' => getenv('PW_ACTIVE_THEME') ?: 'jankx',
+    'active' => getenv('PW_ACTIVE_THEME') ?: 'timeless',
     'path' => getenv('PW_THEME_DIR') ?: null,
     'default_title' => 'PrestoWorld',
     'charset' => 'UTF-8',

@@ -82,9 +82,26 @@ final class ThemeBooter
 
         require_once $themePath . '/functions.php';
 
-        if (function_exists('do_action')) {
-            do_action('after_setup_theme');
+        self::dispatchSetupHooks();
+    }
+
+    /**
+     * Fire the WordPress `after_setup_theme` action now that functions.php has
+     * run. Best-effort: in bare/CLI contexts the container (and therefore the
+     * hook service backing the WordPress shim) may not be wired yet, so skip
+     * instead of fataling — the theme registrations above are already applied.
+     */
+    private static function dispatchSetupHooks(): void
+    {
+        if (!function_exists('do_action')) {
+            return;
         }
+
+        if (function_exists('app') && app() === null) {
+            return;
+        }
+
+        do_action('after_setup_theme');
     }
 
     /**
