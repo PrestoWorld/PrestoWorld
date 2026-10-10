@@ -1,0 +1,25 @@
+{
+    "name": "schema-org",
+    "version": "1.0.0",
+    "description": "Schema.org structured data for SEO and Core Web Vitals integration",
+    "type": "frontend",
+    "priority": 30,
+    "enabled": true,
+    "namespace": "PrestoWorld\\Modules\\SchemaOrg",
+    "entry": "Module.php",
+    "requires": {
+        "php": "^8.1"
+    },
+    "dependencies": [],
+    "provides": [
+        "schema-org.types",
+        "schema-org.registry",
+        "schema-org.factory"
+    ],
+    "providers": [],
+    "autoload": {
+        "psr-4": {
+            "PrestoWorld\\Modules\\SchemaOrg\\": "src/"
+        }
+    }
+}
