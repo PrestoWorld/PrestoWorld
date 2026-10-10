@@ -48,13 +48,45 @@ class BlockFactory
         'core/social-links'             => SocialLinksBlock::class,
         'core/social-link'              => SocialLinkBlock::class,
         'core/widget-area'              => WidgetAreaBlock::class,
-
-        // Jankx custom blocks
-        'jankx/human-readable-post-date' => HumanReadablePostDateBlock::class,
-        'jankx/dynamic-data-layout'      => DynamicDataLayoutBlock::class,
-        'jankx/dynamic-data-template'    => DynamicDataTemplateBlock::class,
-
     ];
+
+    /**
+     * Runtime extensions registered by the active theme (and child themes).
+     *
+     * The framework core only ships `core/*` renderers. Theme blocks
+     * (`jankx/*`, `jankx-travel/*`, ...) are declared and handled by the theme
+     * itself through {@see registerBlock()} — the framework never hardcodes a
+     * theme's block names.
+     *
+     * @var array<string, class-string<AbstractBlock>>
+     */
+    protected static array $extensions = [];
+
+    /**
+     * Register a theme/plugin block renderer at runtime.
+     *
+     * @param class-string<AbstractBlock> $class
+     */
+    public static function registerBlock(string $name, string $class): void
+    {
+        if (!class_exists($class) || !is_subclass_of($class, AbstractBlock::class)) {
+            throw new \InvalidArgumentException(
+                sprintf('Block renderer "%s" must extend %s.', $class, AbstractBlock::class)
+            );
+        }
+
+        self::$extensions[$name] = $class;
+    }
+
+    /**
+     * Resolve the renderer class for a block name (core map first, then theme).
+     *
+     * @return class-string<AbstractBlock>|null
+     */
+    public static function blockClass(string $name): ?string
+    {
+        return self::$map[$name] ?? self::$extensions[$name] ?? null;
+    }
 
     public static function create(array $data): AbstractBlock
     {
@@ -64,7 +96,7 @@ class BlockFactory
             return new TextBlock($data);
         }
 
-        $class = self::$map[$name] ?? GenericBlock::class;
+        $class = self::$map[$name] ?? self::$extensions[$name] ?? GenericBlock::class;
         $instance = new $class($data);
 
         // Convert children recursively

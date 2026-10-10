@@ -69,9 +69,10 @@ HTML;
         $blockRegistry->register(new Block\HeadingBlock());
         $blockRegistry->register(new Block\ParagraphBlock());
         $blockRegistry->register(new Block\ImageBlock());
-        $blockRegistry->register(new Block\DynamicDataLayoutBlock());
-        $blockRegistry->register(new Block\DynamicDataTemplateBlock());
-        $blockRegistry->register(new Block\HumanReadablePostDateBlock());
+        // Theme blocks are declared & handled by the theme itself.
+        $blockRegistry->register(new \PrestoWorld\Theme\Jankx\ContextBlocks\DynamicDataLayoutBlock());
+        $blockRegistry->register(new \PrestoWorld\Theme\Jankx\ContextBlocks\DynamicDataTemplateBlock());
+        $blockRegistry->register(new \PrestoWorld\Theme\Jankx\ContextBlocks\HumanReadablePostDateBlock());
 
         $contextLoader = new ContextLoader(
             $blockRegistry,
@@ -113,9 +114,9 @@ if (php_sapi_name() === 'cli' && basename(__FILE__) === basename($_SERVER['PHP_S
     require_once __DIR__ . '/../Block/ParagraphBlock.php';
     require_once __DIR__ . '/../Block/ImageBlock.php';
     require_once __DIR__ . '/../Block/QueryLoopBlock.php';
-    require_once __DIR__ . '/../Block/DynamicDataLayoutBlock.php';
-    require_once __DIR__ . '/../Block/DynamicDataTemplateBlock.php';
-    require_once __DIR__ . '/../Block/HumanReadablePostDateBlock.php';
+    require_once __DIR__ . '/../../../content/themes/jankx/presto/context-blocks/DynamicDataLayoutBlock.php';
+    require_once __DIR__ . '/../../../content/themes/jankx/presto/context-blocks/DynamicDataTemplateBlock.php';
+    require_once __DIR__ . '/../../../content/themes/jankx/presto/context-blocks/HumanReadablePostDateBlock.php';
     require_once __DIR__ . '/../../Gutenberg/Renderer/BlockRenderer.php';
     require_once __DIR__ . '/../../Gutenberg/Renderer/Blocks/BlockFactory.php';
     require_once __DIR__ . '/../../Gutenberg/Renderer/Blocks/AbstractBlock.php';

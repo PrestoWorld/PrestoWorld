@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PrestoWorld\Modules\ContextBuilder;
 
 use Witals\Framework\Module\Module as WitalsModule;
+use PrestoWorld\Modules\Gutenberg\Theme\ThemeBooter;
 
 class Module extends WitalsModule
 {
@@ -73,6 +74,13 @@ class Module extends WitalsModule
 
     public function boot(): void
     {
+        // Theme setup (WP lifecycle): boot the active theme's functions.php.
+        // The theme decides how to load per runtime (WordPress vs PrestoWorld)
+        // and handles its own context blocks on the legacy registry; the
+        // framework never hardcodes a theme's block names.
+        ThemeBooter::provideBlockRegistry($this->app->make(BlockRegistry::class));
+        ThemeBooter::boot($this->resolveThemePath());
+
         $this->registerCoreBlocks();
         $this->registerRestRoutes();
     }
@@ -100,9 +108,6 @@ class Module extends WitalsModule
         $registry->register(new Block\ParagraphBlock());
         $registry->register(new Block\ImageBlock());
         $registry->register(new Block\QueryLoopBlock());
-        $registry->register(new Block\DynamicDataLayoutBlock());
-        $registry->register(new Block\DynamicDataTemplateBlock());
-        $registry->register(new Block\HumanReadablePostDateBlock());
 
         // Register default context types
         $contextRegistry = $this->app->make(ContextRegistry::class);
@@ -118,5 +123,18 @@ class Module extends WitalsModule
             'render_mode' => 'ssr',
             'regions' => ['header', 'content', 'sidebar', 'footer'],
         ]));
+    }
+
+    /**
+     * Resolve the active theme's path.
+     */
+    protected function resolveThemePath(): string
+    {
+        $themePath = getenv('PW_THEME_DIR');
+        if (!is_string($themePath) || $themePath === '') {
+            $themePath = $this->app->basePath('content/themes/' . $this->app->config('theme.active', 'jankx'));
+        }
+
+        return $themePath;
     }
 }

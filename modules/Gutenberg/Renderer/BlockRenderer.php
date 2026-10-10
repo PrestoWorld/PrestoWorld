@@ -50,6 +50,16 @@ class BlockRenderer
         $this->registry[$name] = $callback;
     }
 
+    /**
+     * Register a theme/plugin block renderer at runtime.
+     *
+     * @param class-string<\PrestoWorld\Modules\Gutenberg\Renderer\Blocks\AbstractBlock> $class
+     */
+    public function registerBlock(string $name, string $class): void
+    {
+        BlockFactory::registerBlock($name, $class);
+    }
+
     public function render(array $blocks): string
     {
         $output = '';

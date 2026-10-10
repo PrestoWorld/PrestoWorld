@@ -4,6 +4,7 @@ import {
   BarChart2,
   Layers,
   Sparkles,
+  ChevronRight,
   X,
   Circle,
   FileText,
@@ -101,6 +102,33 @@ export const SellerCenterSidebar: React.FC<SellerCenterSidebarProps> = ({
   onBackToMain,
   mobileMoreClick,
 }) => {
+  const [flyout, setFlyout] = React.useState<{ id: string; top: number; left: number } | null>(null);
+  const closeTimer = React.useRef<number | null>(null);
+
+  const openFlyout = (section: MenuSection, e: React.MouseEvent) => {
+    if (closeTimer.current) {
+      window.clearTimeout(closeTimer.current);
+      closeTimer.current = null;
+    }
+    const rect = e.currentTarget.getBoundingClientRect();
+    setFlyout({ id: section.id, top: rect.top, left: rect.right });
+  };
+
+  const keepFlyoutOpen = () => {
+    if (closeTimer.current) {
+      window.clearTimeout(closeTimer.current);
+      closeTimer.current = null;
+    }
+  };
+
+  const scheduleCloseFlyout = () => {
+    if (closeTimer.current) window.clearTimeout(closeTimer.current);
+    closeTimer.current = window.setTimeout(() => {
+      setFlyout(null);
+      closeTimer.current = null;
+    }, 140);
+  };
+
   return (
     <>
       <div className="md:hidden bg-white border-b border-slate-200 px-2 py-1.5 shadow-2xs flex-shrink-0 z-20">
@@ -251,40 +279,79 @@ export const SellerCenterSidebar: React.FC<SellerCenterSidebarProps> = ({
 
               {coreSections.map((section) => {
                 const Icon = resolveIcon(section.icon);
+                const hasActive = (section.items ?? []).some((item: CoreItem) => {
+                  const itemId = item.screenId ?? item.id;
+                  return itemId !== '' && isTabActive(itemId);
+                });
+                const isOpen = flyout?.id === section.id;
                 return (
-                  <div key={section.id} className="mb-1.5">
-                    <div className="flex items-center gap-2 px-3 py-1.5 text-[10.5px] font-extrabold text-slate-500">
-                      <Icon className="w-3.5 h-3.5 text-slate-400" />
-                      <span className="truncate">{section.title}</span>
-                    </div>
-
-                    <div className="space-y-0.5">
-                      {(section.items ?? []).map((item: CoreItem) => {
-                        const ItemIcon = resolveIcon(item.icon ?? section.icon);
-                        const itemId = item.screenId ?? item.id;
-                        const isActive = itemId !== '' && isTabActive(itemId);
-                        return (
-                          <button
-                            key={item.id}
-                            onClick={() => onSelectScreen(itemId)}
-                            className={`w-full flex items-center space-x-2.5 px-3 py-1.5 rounded-lg text-left transition-all cursor-pointer ${
-                              isActive
-                                ? 'bg-blue-50 text-blue-700 ring-1 ring-blue-200/70'
-                                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/90'
-                            }`}
-                          >
-                            <ItemIcon className={`w-3.5 h-3.5 flex-shrink-0 ${isActive ? 'text-blue-600' : 'text-slate-400'}`} />
-                            <span className="text-xs font-medium truncate">{item.label}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
+                  <button
+                    key={section.id}
+                    type="button"
+                    onMouseEnter={(e) => openFlyout(section, e)}
+                    onMouseLeave={scheduleCloseFlyout}
+                    onClick={(e) => openFlyout(section, e)}
+                    className={`w-full flex items-center space-x-2.5 px-3 py-1.5 rounded-lg text-left transition-all cursor-pointer ${
+                      isOpen || hasActive
+                        ? 'bg-blue-50 text-blue-700 ring-1 ring-blue-200/70'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/90'
+                    }`}
+                  >
+                    <Icon className={`w-3.5 h-3.5 flex-shrink-0 ${isOpen || hasActive ? 'text-blue-600' : 'text-slate-400'}`} />
+                    <span className="text-xs font-medium truncate flex-1">{section.title}</span>
+                    <ChevronRight className="w-3.5 h-3.5 flex-shrink-0 text-slate-300" />
+                  </button>
                 );
               })}
             </div>
           )}
         </nav>
+
+        {flyout && (() => {
+          const section = coreSections.find((s) => s.id === flyout.id);
+          if (!section) return null;
+          const Icon = resolveIcon(section.icon);
+          return (
+            <div
+              style={{ top: flyout.top, left: flyout.left }}
+              onMouseEnter={keepFlyoutOpen}
+              onMouseLeave={scheduleCloseFlyout}
+              className="fixed z-50 ml-1 w-56 max-h-[70vh] overflow-y-auto rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl no-scrollbar"
+            >
+              <div className="flex items-center gap-2 px-2 py-1.5 mb-1 border-b border-slate-100">
+                <Icon className="w-3.5 h-3.5 text-slate-400" />
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 truncate">
+                  {section.title}
+                </span>
+              </div>
+
+              <div className="space-y-0.5">
+                {(section.items ?? []).map((item: CoreItem) => {
+                  const ItemIcon = resolveIcon(item.icon ?? section.icon);
+                  const itemId = item.screenId ?? item.id;
+                  const isActive = itemId !== '' && isTabActive(itemId);
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => {
+                        setFlyout(null);
+                        onSelectScreen(itemId);
+                      }}
+                      className={`w-full flex items-center space-x-2.5 px-3 py-1.5 rounded-lg text-left transition-all cursor-pointer ${
+                        isActive
+                          ? 'bg-blue-50 text-blue-700 ring-1 ring-blue-200/70'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/90'
+                      }`}
+                    >
+                      <ItemIcon className={`w-3.5 h-3.5 flex-shrink-0 ${isActive ? 'text-blue-600' : 'text-slate-400'}`} />
+                      <span className="text-xs font-medium truncate">{item.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })()}
 
         <div className="p-2.5 border-t border-slate-100 space-y-1.5 bg-slate-50/50 flex-shrink-0">
           <div className="p-2 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100/80 flex items-center justify-between shadow-2xs">

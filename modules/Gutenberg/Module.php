@@ -14,6 +14,7 @@ use PrestoWorld\Modules\Gutenberg\Pattern\MemoryStorage;
 use PrestoWorld\Modules\Gutenberg\Pattern\FileCacheStorage;
 use PrestoWorld\Modules\Gutenberg\Renderer\Decorators\LayoutDecorator;
 use PrestoWorld\Modules\Gutenberg\Renderer\Decorators\StyleDecorator;
+use PrestoWorld\Modules\Gutenberg\Theme\ThemeBooter;
 use PrestoWorld\Modules\Schema\PostRepository;
 
 class Module extends WitalsModule
@@ -101,6 +102,13 @@ class Module extends WitalsModule
             $blocks = $parser->parse($html);
             return $renderer->render($blocks);
         });
+
+        // Theme setup: boot the active theme's functions.php (WP lifecycle).
+        // runs at module boot so every context — including "home" — is covered.
+        // The theme decides how to load per runtime (WordPress vs PrestoWorld)
+        // and handles its own blocks; the framework never hardcodes a theme's
+        // block names.
+        ThemeBooter::boot($this->getThemePath($this->app));
 
         // Pre-warm patterns in persistent environments (RoadRunner)
         if (isset($_SERVER['RR_MODE']) || isset($_SERVER['FRANKENPHP_WORKER'])) {
