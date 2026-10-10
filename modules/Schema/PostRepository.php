@@ -50,6 +50,17 @@ class PostRepository
             $query->where('p.status', $criteria['status']);
         }
 
+        // Author filter
+        if (isset($criteria['author_id']) && $criteria['author_id']) {
+            $query->where('p.author_id', (int) $criteria['author_id']);
+        }
+
+        // Search filter (WordPress-style 's'/'search')
+        $search = $criteria['search'] ?? $criteria['s'] ?? null;
+        if (is_string($search) && $search !== '') {
+            $query->where('p.title', 'LIKE', '%' . $search . '%');
+        }
+
         // Category slug filter (WordPress-style 'category' criteria)
         if (isset($criteria['category']) && $criteria['category'] !== '') {
             $categorySlug = $criteria['category'];
@@ -83,6 +94,26 @@ class PostRepository
             }
         }
 
+        // Ordering (WP `order`/`orderby`).
+        $order = strtoupper((string) ($criteria['order'] ?? 'DESC'));
+        $order = in_array($order, ['ASC', 'DESC'], true) ? $order : 'DESC';
+        $orderBy = $criteria['orderBy'] ?? $criteria['orderby'] ?? null;
+        if ($orderBy === 'date' || $orderBy === null) {
+            $query->orderBy('p.created_at', $order);
+        } elseif ($orderBy === 'title') {
+            $query->orderBy('p.title', $order);
+        } elseif ($orderBy === 'id') {
+            $query->orderBy('p.id', $order);
+        }
+
+        // Pagination (limit/offset).
+        if (isset($criteria['per_page']) && (int) $criteria['per_page'] > 0) {
+            $query->limit((int) $criteria['per_page']);
+            if (isset($criteria['offset'])) {
+                $query->offset(max(0, (int) $criteria['offset']));
+            }
+        }
+
         $posts = $query->fetchAll();
 
         if (empty($posts)) {
@@ -90,6 +121,63 @@ class PostRepository
         }
 
         return $this->hydrateCustomData($posts);
+    }
+
+    /**
+     * Count posts matching the given criteria (found posts, used for pagination).
+     */
+    public function count(array $criteria = []): int
+    {
+        $query = $this->db->select('p.id')->from($this->tablePrefix . 'posts as p');
+
+        if (isset($criteria['post_type'])) {
+            $types = (array) $criteria['post_type'];
+            $query->where('p.post_type', 'IN', $types);
+        }
+
+        if (isset($criteria['status'])) {
+            $query->where('p.status', $criteria['status']);
+        }
+
+        if (isset($criteria['author_id']) && $criteria['author_id']) {
+            $query->where('p.author_id', (int) $criteria['author_id']);
+        }
+
+        $search = $criteria['search'] ?? $criteria['s'] ?? null;
+        if (is_string($search) && $search !== '') {
+            $query->where('p.title', 'LIKE', '%' . $search . '%');
+        }
+
+        if (isset($criteria['category']) && $criteria['category'] !== '') {
+            $categorySlug = $criteria['category'];
+            $query->innerJoin($this->tablePrefix . 'term_relationships', 'tr')->on('tr.object_id', 'p.id');
+            $query->innerJoin($this->tablePrefix . 'terms', 't')->on('t.id', 'tr.term_id');
+            $query->where('t.slug', $categorySlug);
+            $query->where('t.taxonomy', 'category');
+        }
+
+        if (isset($criteria['tax_query']) && is_array($criteria['tax_query'])) {
+            foreach ($criteria['tax_query'] as $index => $taxCondition) {
+                $taxonomy = $taxCondition['taxonomy'] ?? 'category';
+                $terms = (array) ($taxCondition['terms'] ?? []);
+                if (empty($terms)) {
+                    continue;
+                }
+                $field = $taxCondition['field'] ?? 'slug';
+                $trAlias = "trc{$index}";
+                $tAlias = "tc{$index}";
+                $query->innerJoin($this->tablePrefix . 'term_relationships', $trAlias)->on($trAlias . '.object_id', 'p.id');
+                $query->innerJoin($this->tablePrefix . 'terms', $tAlias)->on($tAlias . '.id', $trAlias . '.term_id');
+                $query->where($tAlias . '.taxonomy', $taxonomy);
+                if ($field === 'term_id' || $field === 'id') {
+                    $query->where($tAlias . '.id', 'IN', $terms);
+                } else {
+                    $query->where($tAlias . '.slug', 'IN', $terms);
+                }
+            }
+        }
+
+        return (int) count($query->fetchAll());
     }
 
     protected function hydrateCustomData(array $posts): array

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PrestoWorld\Modules\ContextBuilder;
 
 use PrestoWorld\Modules\ContextBuilder\Parser\BlockParser;
+use PrestoWorld\Modules\Gutenberg\Parser\BlockParser as GutenbergBlockParser;
 use PrestoWorld\Modules\Gutenberg\Renderer\BlockRenderer;
 
 /**
@@ -38,6 +39,8 @@ class ContextLoader
 
     protected ?BlockRenderer $blockRenderer = null;
 
+    protected ?GutenbergBlockParser $blockParser = null;
+
     /** @var array<string, bool> */
     protected array $unsupportedBlocks = [];
 
@@ -54,6 +57,18 @@ class ContextLoader
     public function setBlockRenderer(BlockRenderer $blockRenderer): void
     {
         $this->blockRenderer = $blockRenderer;
+    }
+
+    /**
+     * Set the Gutenberg block parser used when rendering through BlockRenderer.
+     *
+     * The Gutenberg parser normalizes core block names (e.g. `group` →
+     * `core/group`), which is required so BlockFactory can resolve the
+     * correct block renderer (template-part, query, ...).
+     */
+    public function setBlockParser(GutenbergBlockParser $blockParser): void
+    {
+        $this->blockParser = $blockParser;
     }
 
     /**
@@ -89,9 +104,10 @@ class ContextLoader
             throw new \RuntimeException("Template not found: $templatePath");
         }
 
-        $blocks = BlockParser::parseFile($resolvedPath);
-
         if ($this->blockRenderer !== null) {
+            $parser = $this->blockParser ?? new GutenbergBlockParser();
+            $blocks = $parser->parse((string) file_get_contents($resolvedPath));
+
             if ($data !== []) {
                 $this->blockRenderer->mergeContext($data);
             }
@@ -100,6 +116,8 @@ class ContextLoader
         }
 
         // Fallback: render blocks manually
+        $blocks = BlockParser::parseFile($resolvedPath);
+
         return $this->renderParsedBlocks($blocks, $data);
     }
 

@@ -4,49 +4,54 @@ declare(strict_types=1);
 
 namespace PrestoWorld\Modules\Gutenberg\Renderer\Blocks;
 
+use PrestoWorld\Modules\Gutenberg\Renderer\Support\PostData;
+
 /**
- * Post Title Block rendering core/post-title
+ * core/post-title — PHP port of the fork render callback
+ * (packages/block-library/src/post-title/index.php).
  */
 class PostTitleBlock extends AbstractBlock
 {
     public function render(array $context): string
     {
-        $post = $context['post'] ?? [];
-        $title = $post['post_title'] ?? $post['title'] ?? 'Sample Post Title';
-        
-        if (empty($title)) {
+        $post = PostData::fromContext($context);
+        if ($post === null) {
             return '';
         }
-        
-        $level = $this->attrs['level'] ?? 2;
-        $isLink = $this->attrs['isLink'] ?? true;
-        
-        // WordPress standard: always include wp-block-post-title
-        $classes = array_merge(['wp-block-post-title'], $this->classes);
-        
-        // Add textAlign class if present
+
+        $title = PostData::title($post);
+        if ($title === '') {
+            return '';
+        }
+
+        $tagName = 'h2';
+        if (isset($this->attrs['level'])) {
+            $tagName = 0 === (int) $this->attrs['level'] ? 'p' : 'h' . (int) $this->attrs['level'];
+        }
+
+        if (!empty($this->attrs['isLink'])) {
+            $rel   = !empty($this->attrs['rel']) ? 'rel="' . htmlspecialchars((string) $this->attrs['rel'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '"' : '';
+            $title = sprintf(
+                '<a href="%1$s" target="%2$s" %3$s>%4$s</a>',
+                htmlspecialchars(PostData::permalink($post), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
+                htmlspecialchars((string) ($this->attrs['linkTarget'] ?? '_self'), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
+                $rel,
+                htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
+            );
+        } else {
+            $title = htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        }
+
+        $classes = [];
         if (isset($this->attrs['textAlign'])) {
             $classes[] = 'has-text-align-' . $this->attrs['textAlign'];
         }
-        
-        // Add link color class if present
         if (isset($this->attrs['style']['elements']['link']['color']['text'])) {
             $classes[] = 'has-link-color';
         }
-        
-        $classAttr = ' class="' . implode(' ', array_unique($classes)) . '"';
-        
-        $url = $post['url'] ?? $post['link'] ?? '#';
-        
-        if ($isLink) {
-            $linkTarget = $this->attrs['linkTarget'] ?? '_self';
-            $rel = !empty($this->attrs['rel']) ? 'rel="' . htmlspecialchars($this->attrs['rel'], ENT_QUOTES|ENT_SUBSTITUTE, 'UTF-8') . '"' : '';
-            $content = "<a href=\"" . htmlspecialchars($url, ENT_QUOTES|ENT_SUBSTITUTE, 'UTF-8') . "\" target=\"" . htmlspecialchars($linkTarget, ENT_QUOTES|ENT_SUBSTITUTE, 'UTF-8') . "\" {$rel}>" . htmlspecialchars($title, ENT_QUOTES|ENT_SUBSTITUTE, 'UTF-8') . "</a>";
-        } else {
-            $content = htmlspecialchars($title, ENT_QUOTES|ENT_SUBSTITUTE, 'UTF-8');
-        }
-        
-        $tag = 0 === $level ? 'p' : 'h' . (int)$level;
-        return "<{$tag}{$classAttr}>{$content}</{$tag}>";
+
+        $wrapperAttributes = $this->wrapperAttributes(['class' => implode(' ', $classes)]);
+
+        return sprintf('<%1$s%2$s>%3$s</%1$s>', $tagName, $wrapperAttributes, $title);
     }
 }

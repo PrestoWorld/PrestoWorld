@@ -86,6 +86,7 @@ class BlockRenderer
             // Build context — avoid per-block array_merge
             $context = [
                 'pattern_registry' => $this->patternRegistry,
+                'block_renderer' => $this,
                 'renderer_callback' => function(string $html) {
                     if (!isset($this->registry['__rerender'])) return $html;
                     return ($this->registry['__rerender'])($html);

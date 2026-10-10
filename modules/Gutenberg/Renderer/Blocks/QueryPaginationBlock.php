@@ -4,19 +4,38 @@ declare(strict_types=1);
 
 namespace PrestoWorld\Modules\Gutenberg\Renderer\Blocks;
 
+/**
+ * core/query-pagination — PHP port of the fork render callback
+ * (packages/block-library/src/query-pagination/index.php).
+ */
 class QueryPaginationBlock extends AbstractBlock
 {
     public function render(array $context): string
     {
-        $classes = array_merge(['wp-block-query-pagination'], $this->classes);
-        $classAttr = ' class="' . implode(' ', array_unique($classes)) . '"';
-        $styleAttr = !empty($this->styles) ? ' style="' . implode(';', $this->styles) . '"' : '';
-        $inner = $this->renderInner($context);
-        return "<nav{$classAttr}{$styleAttr}{$this->ariaLabel()}>{$inner}</nav>";
-    }
+        // The fork propagates `showLabel`/`paginationArrow`/`query`/`queryId`
+        // to the numeric/previous/next child blocks through block context.
+        $childContext = $context;
+        $childContext['showLabel']       = $this->attrs['showLabel'] ?? $context['showLabel'] ?? true;
+        $childContext['paginationArrow'] = $this->attrs['paginationArrow'] ?? $context['paginationArrow'] ?? 'none';
+        $childContext['query']           = $this->attrs['query'] ?? $context['query'] ?? [];
+        $childContext['queryId']         = $this->attrs['queryId'] ?? $context['queryId'] ?? null;
 
-    private function ariaLabel(): string
-    {
-        return ' aria-label="Pagination"';
+        $inner = '';
+        foreach ($this->innerBlocks as $block) {
+            $inner .= $block->render($childContext);
+        }
+
+        if (trim($inner) === '') {
+            return '';
+        }
+
+        $classes = isset($this->attrs['style']['elements']['link']['color']['text']) ? 'has-link-color' : '';
+
+        $wrapperAttributes = $this->wrapperAttributes([
+            'aria-label' => 'Pagination',
+            'class'      => $classes,
+        ]);
+
+        return sprintf('<nav%1$s>%2$s</nav>', $wrapperAttributes, $inner);
     }
 }

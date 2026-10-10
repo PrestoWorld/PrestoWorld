@@ -54,6 +54,9 @@ class Module extends WitalsModule
                 $loader->setBlockRenderer(
                     $app->make(\PrestoWorld\Modules\Gutenberg\Renderer\BlockRenderer::class)
                 );
+                $loader->setBlockParser(
+                    $app->make(\PrestoWorld\Modules\Gutenberg\Parser\BlockParser::class)
+                );
             }
 
             return $loader;

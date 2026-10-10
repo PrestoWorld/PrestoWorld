@@ -4,13 +4,33 @@ declare(strict_types=1);
 
 namespace PrestoWorld\Modules\Gutenberg\Renderer\Blocks;
 
+use PrestoWorld\Modules\Gutenberg\Renderer\Support\QuerySupport;
+
+/**
+ * core/query-pagination-numbers — PHP port of the fork render callback
+ * (packages/block-library/src/query-pagination-numbers/index.php).
+ */
 class QueryPaginationNumbersBlock extends AbstractBlock
 {
     public function render(array $context): string
     {
-        $classes = array_merge(['wp-block-query-pagination-numbers'], $this->classes);
-        $classAttr = ' class="' . implode(' ', array_unique($classes)) . '"';
-        $styleAttr = !empty($this->styles) ? ' style="' . implode(';', $this->styles) . '"' : '';
-        return "<span{$classAttr}{$styleAttr}>1</span>";
+        [$page, $pageKey, $maxPage] = QuerySupport::pageInfo($context);
+
+        $content = QuerySupport::paginateLinks([
+            'format'    => '?' . $pageKey . '=%#%',
+            'current'   => $page,
+            'total'     => $maxPage,
+            'mid_size'  => $this->attrs['midSize'] ?? 1,
+            'end_size'  => 1,
+            'prev_next' => false,
+        ]);
+
+        if ($content === '') {
+            return '';
+        }
+
+        $wrapperAttributes = $this->wrapperAttributes();
+
+        return sprintf('<div%1$s>%2$s</div>', $wrapperAttributes, $content);
     }
 }

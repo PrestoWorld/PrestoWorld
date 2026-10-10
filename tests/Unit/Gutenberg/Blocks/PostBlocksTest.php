@@ -16,7 +16,7 @@ class PostBlocksTest extends TestCase
     {
         $block = new PostTitleBlock([
             'attrs' => ['level' => 3, 'isLink' => true],
-            'classes' => ['custom-title']
+            'classes' => ['wp-block-post-title', 'custom-title']
         ]);
         
         $context = [
@@ -59,20 +59,25 @@ class PostBlocksTest extends TestCase
 
     public function test_post_template_block_loops_correctly(): void
     {
-        $template = new PostTemplateBlock(['classes' => ['my-template']]);
-        
+        $repo = $this->createMock(\PrestoWorld\Modules\Schema\PostRepository::class);
+        $repo->method('find')
+             ->willReturn([
+                 ['id' => 10, 'post_title' => 'Post 1'],
+                 ['id' => 11, 'post_title' => 'Post 2'],
+             ]);
+
+        $template = new PostTemplateBlock(['classes' => ['wp-block-post-template', 'my-template']]);
+
         $titleBlock = new PostTitleBlock(['attrs' => ['isLink' => false]]);
         $template->setInnerBlocks([$titleBlock]);
-        
+
         $context = [
-            'posts' => [
-                ['id' => 10, 'post_title' => 'Post 1'],
-                ['id' => 11, 'post_title' => 'Post 2'],
-            ]
+            'post_repository' => $repo,
+            'query' => ['postType' => 'post', 'perPage' => 9, 'inherit' => true],
         ];
-        
+
         $html = $template->render($context);
-        
+
         // wp-block-post-template is always first in the class list
         $this->assertStringContainsString('class="wp-block-post-template', $html);
         $this->assertStringContainsString('my-template', $html);
