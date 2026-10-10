@@ -88,9 +88,14 @@ class Kernel implements KernelContract
 
     /**
      * Dispatch via ContextLoader if a context matches the request.
+     * Skipped entirely in custom frontend mode (project SSR renderer).
      */
     private function dispatchContext(Request $request): ?Response
     {
+        if (\App\Services\Frontend\FrontendMode::isCustom()) {
+            return null;
+        }
+
         try {
             $context = $this->contextManager->resolveContext($request);
             if ($context === null) {
