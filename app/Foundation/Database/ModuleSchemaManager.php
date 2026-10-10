@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Foundation\Database;
 
+use Cycle\Database\DatabaseInterface;
 use Cycle\Database\DatabaseProviderInterface;
 use Cycle\Database\Schema\AbstractTable;
 use Cycle\Database\Schema\AbstractColumn;
@@ -92,8 +93,17 @@ class ModuleSchemaManager
     public function __construct(
         private readonly DatabaseProviderInterface $dbal,
         private readonly LoggerInterface $logger,
+        private ?DatabaseInterface $overrideDb = null,
     ) {
         $this->forceSync = $this->shouldForceSync();
+    }
+
+    /**
+     * Return the database instance to use: override if set, otherwise from DBAL.
+     */
+    private function getDb(): DatabaseInterface
+    {
+        return $this->overrideDb ?? $this->dbal->database();
     }
 
     // =========================================================================
@@ -179,7 +189,7 @@ class ModuleSchemaManager
             throw new \InvalidArgumentException('Table definition must have a "name" field.');
         }
 
-        $db    = $this->dbal->database();
+        $db    = $this->getDb();
         $table = $db->table($tableName)->getSchema();
 
         $this->applyColumns($table, $tableDef['columns'] ?? []);
@@ -200,7 +210,7 @@ class ModuleSchemaManager
     private function ensureRegistry(): void
     {
         try {
-            $db    = $this->dbal->database();
+            $db    = $this->getDb();
             $table = $db->table(self::REGISTRY_TABLE)->getSchema();
 
             if ($table->exists()) {
@@ -246,7 +256,7 @@ class ModuleSchemaManager
         $this->registryCache = [];
 
         try {
-            $rows = $this->dbal->database()
+            $rows = $this->getDb()
                 ->select('module', 'schema_version', 'schema_hash')
                 ->from(self::REGISTRY_TABLE)
                 ->fetchAll();
@@ -265,7 +275,7 @@ class ModuleSchemaManager
     private function updateRegistry(string $moduleName, string $version, string $hash): void
     {
         try {
-            $db  = $this->dbal->database();
+            $db  = $this->getDb();
             $now = (new \DateTimeImmutable())->format('Y-m-d H:i:s');
 
             $exists = $db->select('id')
@@ -563,7 +573,7 @@ class ModuleSchemaManager
     public function invalidate(string $moduleName): void
     {
         try {
-            $this->dbal->database()
+            $this->getDb()
                 ->delete(self::REGISTRY_TABLE)
                 ->where('module', $moduleName)
                 ->run();

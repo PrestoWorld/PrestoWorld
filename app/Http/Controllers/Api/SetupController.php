@@ -295,15 +295,14 @@ class SetupController
         // Update .env file with database connection
         $this->updateEnvFile($input);
 
-        // Initialize application to get services
-        $this->app->boot();
-
-        /** @var DatabaseInterface $db */
-        $db = $this->app->make(DatabaseInterface::class);
+        // Build a new database connection using the updated .env values
+        // This avoids using the existing database provider which may have old config.
+        $databaseConfig = $this->buildDatabaseConfig($input);
+        $manager = new \Cycle\Database\DatabaseManager($databaseConfig);
+        $db = $manager->database();
 
         // Test database connection
         try {
-            // Ensure we can connect
             $db->getSchemaManager()->listTables();
         } catch (\Throwable $e) {
             $this->logger->error('Database connection test failed', ['error' => $e->getMessage()]);
@@ -311,14 +310,22 @@ class SetupController
         }
 
         // Run migrations (core, modules, framework)
-        $manager = new SchemaMigrationManager($db, $this->app->basePath());
-        $migrationResult = $manager->runMigrations(false);
+        $migrationManager = new SchemaMigrationManager($db, $this->app->basePath());
+        $migrationResult = $migrationManager->runMigrations(false);
         $this->logger->info('Migrations run', $migrationResult);
 
+        // Determine table prefix (prefer input, fall back to env)
+        $tablePrefix = !empty($input['db_prefix']) ? $input['db_prefix'] : (getenv('PW_TABLE_PREFIX') ?: 'pw_');
+
         // Sync module schemas (create tables from module definitions)
+        // Use the fresh DB connection, not the stale container DBAL
         if ($this->app->has(\App\Foundation\Module\ModuleManager::class)) {
             $moduleManager = $this->app->make(\App\Foundation\Module\ModuleManager::class);
-            $schemaManager = $this->app->make(\App\Foundation\Database\ModuleSchemaManager::class);
+            $schemaManager = new \App\Foundation\Database\ModuleSchemaManager(
+                $this->app->make(\Cycle\Database\DatabaseProviderInterface::class),
+                $this->logger,
+                $db, // Pass fresh DB to avoid stale pre-boot config
+            );
 
             foreach ($moduleManager->allSorted() as $module) {
                 if ($module->isEnabled()) {
@@ -331,7 +338,6 @@ class SetupController
         }
 
         // Create admin user if not exists
-        $tablePrefix = getenv('PW_TABLE_PREFIX') ?: 'pw_';
         $usersTable = $tablePrefix . 'users';
         if ($db->hasTable($usersTable)) {
             // Check if admin user already exists (by email or username)
@@ -346,19 +352,56 @@ class SetupController
             }
         }
 
-        // Set installed flag
+        // Create options table if it doesn't exist (required for presto_installed flag)
         $optionsTable = $tablePrefix . 'options';
-        if ($db->hasTable($optionsTable)) {
-            $db->insert($optionsTable)->values([
-                'option_name' => 'presto_installed',
-                'option_value' => '1',
-                'autoload' => 'yes',
-            ])->onDuplicateKeyUpdate([
-                'option_value' => '1',
-            ])->run();
+        if (!$db->hasTable($optionsTable)) {
+            $schema = $db->table($optionsTable)->getSchema();
+            $schema->column('id')->primary();
+            $schema->column('option_name')->string(255)->notNull();
+            $schema->column('option_value')->text()->nullable();
+            $schema->column('autoload')->string(20)->notNull()->defaultValue('yes');
+            $schema->index(['option_name'])->unique();
+            $schema->save();
+            $this->logger->info('Created options table.', ['table' => $optionsTable]);
         }
 
+        // Set installed flag
+        $this->setOption($db, $optionsTable, 'presto_installed', '1');
+
+        // Also store site title and admin info as options
+        $this->setOption($db, $optionsTable, 'site_title', $input['site_title']);
+        $this->setOption($db, $optionsTable, 'admin_email', $input['admin_email']);
+
         return Response::json(['success' => true, 'message' => 'Installation completed']);
+    }
+
+    /**
+     * Set an option value (insert or update) in the options table.
+     */
+    private function setOption(DatabaseInterface $db, string $table, string $name, string $value): void
+    {
+        try {
+            $existing = $db->select('id')
+                ->from($table)
+                ->where('option_name', $name)
+                ->run()
+                ->fetch();
+
+            if (is_array($existing) && $existing !== []) {
+                $db->update($table, ['option_value' => $value], ['id' => $existing['id']])->run();
+            } else {
+                $db->insert($table)->values([
+                    'option_name' => $name,
+                    'option_value' => $value,
+                    'autoload' => 'yes',
+                ])->run();
+            }
+        } catch (\Throwable $e) {
+            $this->logger->warning('Failed to set option {name}: {message}', [
+                'name' => $name,
+                'message' => $e->getMessage(),
+            ]);
+        }
     }
 
     /**
@@ -499,6 +542,64 @@ class SetupController
         }
 
         file_put_contents($envPath, implode("\n", $updated) . "\n");
+    }
+
+    /**
+     * Build a fresh DatabaseConfig from user-provided input.
+     * This ensures the connection uses the latest credentials, not the pre-boot .env values.
+     */
+    protected function buildDatabaseConfig(array $input): \Cycle\Database\Config\DatabaseConfig
+    {
+        switch ($input['db_connection']) {
+            case 'pgsql':
+                $connection = new \Cycle\Database\Config\Postgres\TcpConnectionConfig(
+                    database: $input['db_name'],
+                    host: $input['db_host'],
+                    port: (int) $input['db_port'],
+                    user: $input['db_username'],
+                    password: $input['db_password'],
+                );
+                $driverConfig = new \Cycle\Database\Config\PostgresDriverConfig(
+                    connection: $connection,
+                );
+                break;
+
+            case 'mysql':
+                $connection = new \Cycle\Database\Config\MySQL\TcpConnectionConfig(
+                    database: $input['db_name'],
+                    host: $input['db_host'],
+                    port: (int) $input['db_port'],
+                    charset: 'utf8mb4',
+                    user: $input['db_username'],
+                    password: $input['db_password'],
+                );
+                $driverConfig = new \Cycle\Database\Config\MySQLDriverConfig(
+                    connection: $connection,
+                );
+                break;
+
+            case 'sqlite':
+                $connection = new \Cycle\Database\Config\SQLite\FileConnectionConfig(
+                    database: $input['db_name'],
+                );
+                $driverConfig = new \Cycle\Database\Config\SQLiteDriverConfig(
+                    connection: $connection,
+                );
+                break;
+
+            default:
+                throw new \RuntimeException("Unsupported database connection type: {$input['db_connection']}");
+        }
+
+        return new \Cycle\Database\Config\DatabaseConfig([
+            'default' => 'default',
+            'databases' => [
+                'default' => ['connection' => $input['db_connection']],
+            ],
+            'connections' => [
+                $input['db_connection'] => $driverConfig,
+            ],
+        ]);
     }
 
     /**
