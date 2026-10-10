@@ -51,6 +51,11 @@ final class ThemeBooter
      */
     public static function boot(string $themePath): void
     {
+        // Custom frontend mode: never load the theme engine.
+        if (\App\Services\Frontend\FrontendMode::isCustom()) {
+            return;
+        }
+
         $themePath = rtrim($themePath, '/');
 
         if (self::$booted) {
