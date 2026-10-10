@@ -24,6 +24,9 @@ class DatabaseServiceProvider extends ServiceProvider
             $drivers = [];
             $databases = [];
 
+            // Explicit connection requested via DB_CONNECTION (sqlite/pgsql/mysql).
+            $connection = strtolower(trim((string) (getenv('DB_CONNECTION') ?: '')));
+
             // ── Native PrestoWorld: PostgreSQL (production) ──
             $pgDb = getenv('DB_PGSQL_DATABASE');
             if ($pgDb) {
@@ -42,8 +45,8 @@ class DatabaseServiceProvider extends ServiceProvider
             // ── Legacy WordPress: MySQL ──
             $wordPressDetected = $this->configureWordPressConnection($app, $drivers, $databases);
 
-            // ── SQLite fallback (development, only when WordPress is NOT detected) ──
-            if (!$wordPressDetected) {
+            // ── SQLite (development, or whenever explicitly requested) ──
+            if ($connection === 'sqlite' || !$wordPressDetected) {
                 $sqlitePath = $app->basePath('storage/database.sqlite');
                 if (file_exists($sqlitePath)) {
                     $drivers['presto_sqlite'] = new Config\SQLiteDriverConfig(
@@ -55,14 +58,24 @@ class DatabaseServiceProvider extends ServiceProvider
                 }
             }
 
-            // ── Default 'presto' alias: PostgreSQL > WordPress > SQLite ──
-            if (isset($databases['presto_pgsql'])) {
-                $databases['presto'] = $databases['presto_pgsql'];
-            } elseif (isset($databases['wordpress'])) {
-                $databases['presto'] = $databases['wordpress'];
-            } elseif (isset($databases['presto_sqlite'])) {
-                $databases['presto'] = $databases['presto_sqlite'];
-            } else {
+            // ── Default 'presto' alias ──
+            // An explicit DB_CONNECTION wins so a configured SQLite/MySQL setup
+            // isn't silently hijacked by leftover PostgreSQL credentials.
+            // Otherwise fall back to PostgreSQL > WordPress > SQLite.
+            $default = match ($connection) {
+                'sqlite' => $databases['presto_sqlite'] ?? null,
+                'mysql', 'mariadb' => $databases['wordpress'] ?? null,
+                'pgsql', 'postgres', 'postgresql' => $databases['presto_pgsql'] ?? null,
+                default => null,
+            };
+
+            $databases['presto'] = $default
+                ?? $databases['presto_pgsql']
+                ?? $databases['wordpress']
+                ?? $databases['presto_sqlite']
+                ?? null;
+
+            if ($databases['presto'] === null) {
                 $drivers['presto_sqlite_mem'] = new Config\SQLiteDriverConfig(
                     connection: new Config\SQLite\MemoryConnectionConfig(),
                 );

@@ -303,7 +303,7 @@ class SetupController
 
         // Test database connection
         try {
-            $db->getSchemaManager()->listTables();
+            $db->getTables();
         } catch (\Throwable $e) {
             $this->logger->error('Database connection test failed', ['error' => $e->getMessage()]);
             return Response::json(['error' => 'Database connection failed: ' . $e->getMessage()], 500);

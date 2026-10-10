@@ -28,6 +28,7 @@ return new class implements MigrationInterface {
             $schema = $table->getSchema();
             $schema->primary('id');
             $schema->column('email')->string(255)->nullable(false);
+            $schema->column('username')->string(100)->nullable();
             $schema->column('password_hash')->string(255)->nullable(false);
             $schema->column('display_name')->string(100)->nullable();
             $schema->column('role')->string(50)->nullable(false)->defaultValue('subscriber');
