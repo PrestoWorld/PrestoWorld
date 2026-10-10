@@ -2,7 +2,7 @@
 
 ## Hoàn thành
 
-### 1. ContextLoader (render theme jankx hoàn chỉnh)
+### 1. ContextLoader (render theme timeless hoàn chỉnh)
 
 **File:** `modules/ContextBuilder/ContextLoader.php`
 
@@ -15,7 +15,7 @@
 **BlockParser:** `modules/ContextBuilder/Parser/BlockParser.php`
 - Parse HTML templates với Gutenberg block comments
 - Hỗ trợ nested blocks (recursive parsing)
-- Tương thích với format của jankx theme
+- Tương thích với format của timeless theme
 
 ### 2. Template Engine
 
@@ -64,9 +64,9 @@ Core blocks:
 - `QueryLoopBlock` (core/query-loop)
 
 Jankx custom blocks:
-- `DynamicDataLayoutBlock` (jankx/dynamic-data-layout)
-- `DynamicDataTemplateBlock` (jankx/dynamic-data-template)
-- `HumanReadablePostDateBlock` (jankx/human-readable-post-date)
+- `DynamicDataLayoutBlock` (timeless/dynamic-data-layout)
+- `DynamicDataTemplateBlock` (timeless/dynamic-data-template)
+- `HumanReadablePostDateBlock` (timeless/human-readable-post-date)
 
 ## Kiến trúc
 

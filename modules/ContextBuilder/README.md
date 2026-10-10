@@ -124,9 +124,9 @@ modules/ContextBuilder/
 │   ├── ParagraphBlock.php        # core/paragraph
 │   ├── ImageBlock.php            # core/image
 │   ├── QueryLoopBlock.php        # core/query-loop
-│   ├── DynamicDataLayoutBlock.php    # jankx/dynamic-data-layout
-│   ├── DynamicDataTemplateBlock.php  # jankx/dynamic-data-template
-│   └── HumanReadablePostDateBlock.php # jankx/human-readable-post-date
+│   ├── DynamicDataLayoutBlock.php    # timeless/dynamic-data-layout
+│   ├── DynamicDataTemplateBlock.php  # timeless/dynamic-data-template
+│   └── HumanReadablePostDateBlock.php # timeless/human-readable-post-date
 ├── Gutenberg/
 │   └── GutenbergIntegration.php  # Integrate Gutenberg vào PrestoWorld
 ├── Rest/

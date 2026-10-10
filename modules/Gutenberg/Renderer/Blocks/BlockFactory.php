@@ -54,7 +54,7 @@ class BlockFactory
      * Runtime extensions registered by the active theme (and child themes).
      *
      * The framework core only ships `core/*` renderers. Theme blocks
-     * (`jankx/*`, `jankx-travel/*`, ...) are declared and handled by the theme
+     * (`timeless/*`, `timeless-travel/*`, ...) are declared and handled by the theme
      * itself through {@see registerBlock()} — the framework never hardcodes a
      * theme's block names.
      *

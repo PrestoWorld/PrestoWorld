@@ -179,8 +179,8 @@ class ConfigManager
      */
     public function getThemeConfig(): array
     {
-        $activeDefault = $this->get('PW_THEME_ACTIVE', 'jankx');
-        $activeDefault = is_string($activeDefault) ? $activeDefault : 'jankx';
+        $activeDefault = $this->get('PW_THEME_ACTIVE', 'timeless');
+        $activeDefault = is_string($activeDefault) ? $activeDefault : 'timeless';
         $active = $this->get('PW_ACTIVE_THEME', $activeDefault);
         $active = is_string($active) ? $active : $activeDefault;
 

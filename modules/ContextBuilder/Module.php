@@ -41,7 +41,7 @@ class Module extends WitalsModule
         $this->app->singleton(ContextLoader::class, function ($app) {
             $themePath = getenv('PW_THEME_DIR');
             if (!is_string($themePath) || $themePath === '') {
-                $themePath = $app->basePath('content/themes/' . $app->config('theme.active', 'jankx'));
+                $themePath = $app->basePath('content/themes/' . $app->config('theme.active', 'timeless'));
             }
 
             $loader = new ContextLoader(
@@ -132,7 +132,7 @@ class Module extends WitalsModule
     {
         $themePath = getenv('PW_THEME_DIR');
         if (!is_string($themePath) || $themePath === '') {
-            $themePath = $this->app->basePath('content/themes/' . $this->app->config('theme.active', 'jankx'));
+            $themePath = $this->app->basePath('content/themes/' . $this->app->config('theme.active', 'timeless'));
         }
 
         return $themePath;

@@ -58,7 +58,7 @@ class AuthController
             $dbal = $this->app->make(\Cycle\Database\DatabaseProviderInterface::class);
             $db = $dbal->database();
             $prefix = env('WP_TABLE_PREFIX', 'wp_');
-            $theme = 'jankx'; // Default theme
+            $theme = 'timeless'; // Default theme
             
             // Get theme mods
             $themeMods = $db->table("{$prefix}options")

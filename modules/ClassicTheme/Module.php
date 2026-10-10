@@ -71,7 +71,7 @@ class Module extends WitalsModule
             return $envPath;
         }
 
-        $active = $this->app->config('theme.active', 'jankx');
+        $active = $this->app->config('theme.active', 'timeless');
         return $this->app->basePath() . '/public/wp-content/themes/' . $active;
     }
 }

@@ -16,7 +16,7 @@ class GetTemplateDirectoryUriTransformer extends FunctionTransformer
     public function handle(mixed ...$args): mixed
     {
         $themeUrl = getenv('PW_THEME_URL')
-            ?: '/wp-content/themes/' . basename(getenv('PW_THEME_DIR') ?: 'jankx');
+            ?: '/wp-content/themes/' . basename(getenv('PW_THEME_DIR') ?: 'timeless');
         return rtrim($themeUrl, '/');
     }
 }

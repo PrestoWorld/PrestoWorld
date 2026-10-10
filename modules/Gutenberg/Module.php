@@ -171,7 +171,7 @@ class Module extends WitalsModule
             return $pathFromConfig;
         }
 
-        $active = $app->config('theme.active', 'jankx');
+        $active = $app->config('theme.active', 'timeless');
         return $app->basePath() . '/content/themes/' . $active;
     }
 }

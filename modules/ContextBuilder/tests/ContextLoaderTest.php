@@ -7,7 +7,7 @@ namespace PrestoWorld\Modules\ContextBuilder;
 use PrestoWorld\Modules\ContextBuilder\Parser\BlockParser;
 
 /**
- * ContextLoaderTest — test ContextLoader with jankx theme.
+ * ContextLoaderTest — test ContextLoader with timeless theme.
  *
  * Run: php modules/ContextBuilder/tests/ContextLoaderTest.php
  */
@@ -77,7 +77,7 @@ HTML;
         $contextLoader = new ContextLoader(
             $blockRegistry,
             '/tmp/prestoworld-test/storage/contexts',
-            '/tmp/prestoworld-test/themes/jankx',
+            '/tmp/prestoworld-test/themes/timeless',
         );
 
         // Test context type
