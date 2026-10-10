@@ -39,3 +39,13 @@ $router->get('/api/admin/users', [UsersController::class, 'users']);
 $router->get('/api/admin/media', [MediaController::class, 'media']);
 $router->post('/api/admin/media/upload', [MediaController::class, 'uploadMedia']);
 $router->post('/api/admin/media/{id}/offload', [MediaController::class, 'offloadMedia']);
+
+// Setup routes (accessible before installation)
+$router->post('/api/setup/install', [\App\Http\Controllers\Api\SetupController::class, 'install']);
+
+// Setup routes (accessible before installation)
+$router->get('/api/setup/check-installed', [\App\Http\Controllers\Api\SetupController::class, 'checkInstalled']);
+$router->get('/api/setup/env', [\App\Http\Controllers\Api\SetupController::class, 'env']);
+$router->post('/api/setup/test-db', [\App\Http\Controllers\Api\SetupController::class, 'testDb']);
+$router->get('/api/setup/themes', [\App\Http\Controllers\Api\SetupController::class, 'themes']);
+$router->get('/api/setup/modules', [\App\Http\Controllers\Api\SetupController::class, 'modules']);

@@ -40,8 +40,8 @@ class RouteServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        error_log("RouteServiceProvider::boot() called");
         $router = $this->app->make(RouterInterface::class);
-
         $this->loadRoutes($router);
     }
 
