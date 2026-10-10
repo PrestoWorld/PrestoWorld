@@ -15,11 +15,24 @@ class ApplicationTest extends TestCase
     {
         $app = new Application(dirname(__DIR__, 2));
 
-        $request = new Request('GET', '/');
+        $request = new Request('GET', '/install');
 
         $response = $app->handle($request);
 
         $this->assertInstanceOf(Response::class, $response);
         $this->assertEquals(200, $response->getStatusCode());
+    }
+
+    public function test_uninstalled_application_redirects_to_installer()
+    {
+        $app = new Application(dirname(__DIR__, 2));
+
+        $request = new Request('GET', '/');
+
+        $response = $app->handle($request);
+
+        $this->assertInstanceOf(Response::class, $response);
+        $this->assertEquals(302, $response->getStatusCode());
+        $this->assertEquals('/install', $response->getHeader('Location'));
     }
 }

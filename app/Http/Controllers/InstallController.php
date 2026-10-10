@@ -40,8 +40,7 @@ class InstallController
         $path = $this->app->basePath('public/installer/install.html');
         if (file_exists($path)) {
             $content = file_get_contents($path);
-            $mime = mime_content_type($path);
-            return new Response($content, 200, ['Content-Type' => $mime]);
+            return new Response($content, 200, ['Content-Type' => 'text/html; charset=utf-8']);
         }
 
         return Response::html('Installer not found.', 404);
@@ -58,14 +57,38 @@ class InstallController
             return Response::redirect('/login');
         }
 
-        $path = $this->app->basePath("public/installer/{$any}");
-        if (file_exists($path)) {
+        $safePath = str_replace(['..', "\0"], '', $any);
+        $path = $this->app->basePath("public/installer/{$safePath}");
+        if (file_exists($path) && is_file($path)) {
             $content = file_get_contents($path);
-            $mime = mime_content_type($path);
+            $mime = $this->getMimeType($path);
             return new Response($content, 200, ['Content-Type' => $mime]);
         }
 
         return Response::html('File not found.', 404);
+    }
+
+    /**
+     * Get accurate MIME type for installer assets.
+     */
+    protected function getMimeType(string $path): string
+    {
+        $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+        return match ($ext) {
+            'js' => 'application/javascript; charset=utf-8',
+            'css' => 'text/css; charset=utf-8',
+            'html', 'htm' => 'text/html; charset=utf-8',
+            'json' => 'application/json',
+            'png' => 'image/png',
+            'jpg', 'jpeg' => 'image/jpeg',
+            'gif' => 'image/gif',
+            'svg' => 'image/svg+xml',
+            'ico' => 'image/x-icon',
+            'woff' => 'font/woff',
+            'woff2' => 'font/woff2',
+            'ttf' => 'font/ttf',
+            default => mime_content_type($path) ?: 'application/octet-stream',
+        };
     }
 
     /**
@@ -84,9 +107,7 @@ class InstallController
                 return false;
             }
 
-            $stmt = $db->prepare("SELECT option_value FROM {$optionsTable} WHERE option_name = ?");
-            $stmt->execute(['presto_installed']);
-            $row = $stmt->fetch();
+            $row = $db->query("SELECT option_value FROM {$optionsTable} WHERE option_name = ?", ['presto_installed'])->fetch();
 
             return $row && $row['option_value'] === '1';
         } catch (\Throwable $e) {

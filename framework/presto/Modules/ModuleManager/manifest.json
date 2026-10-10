@@ -1,0 +1,54 @@
+{
+    "name": "module-manager",
+    "version": "1.0.0",
+    "description": "Provides functionality to manage PrestoWorld modules including discovery, loading, and API management",
+    "type": "support",
+    "priority": 40,
+    "enabled": true,
+    "namespace": "PrestoWorld\\Modules\\ModuleManager",
+    "entry": "Module.php",
+    "dependencies": {
+        "admin": "1.0.0"
+    },
+    "provides": [
+        "module.manager"
+    ],
+    "route_prefix": "",
+    "routes": [
+        {
+            "method": "GET",
+            "path": "/api/v1/modules",
+            "handler": ["PrestoWorld\\Modules\\ModuleManager\\Controller\\ModuleController", "index"]
+        },
+        {
+            "method": "GET",
+            "path": "/api/v1/modules/{name}",
+            "handler": ["PrestoWorld\\Modules\\ModuleManager\\Controller\\ModuleController", "show"]
+        },
+        {
+            "method": "POST",
+            "path": "/api/v1/modules/{name}/load",
+            "handler": ["PrestoWorld\\Modules\\ModuleManager\\Controller\\ModuleController", "load"]
+        },
+        {
+            "method": "POST",
+            "path": "/api/v1/modules/{name}/unload",
+            "handler": ["PrestoWorld\\Modules\\ModuleManager\\Controller\\ModuleController", "unload"]
+        },
+        {
+            "method": "POST",
+            "path": "/api/v1/modules/reset",
+            "handler": ["PrestoWorld\\Modules\\ModuleManager\\Controller\\ModuleController", "reset"]
+        },
+        {
+            "method": "GET",
+            "path": "/api/v1/modules/{name}/routes",
+            "handler": ["PrestoWorld\\Modules\\ModuleManager\\Controller\\ModuleController", "routes"]
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "PrestoWorld\\Modules\\ModuleManager\\": "."
+        }
+    }
+}

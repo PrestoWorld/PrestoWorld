@@ -12,6 +12,7 @@ use Cycle\Database\DatabaseInterface;
 use Cycle\Database\Exception\Exception as DatabaseException;
 use PrestoWorld\Database\SchemaMigrationManager;
 use App\Foundation\Database\ModuleSchemaManager;
+use PDO;
 
 /**
  * Handle installation steps before authentication.
@@ -82,74 +83,80 @@ class SetupController
      */
     public function testDb(Request $request): Response
     {
-        $input = $request->getJson();
+        $input = $this->extractInput($request);
 
         if (!$input) {
             return Response::json(['error' => 'Invalid JSON payload'], 400);
         }
 
-        // Validate required fields
-        $required = ['connection', 'host', 'port', 'name', 'username', 'password'];
+        // Validate required fields (password may be empty string for local environments)
+        $required = ['connection', 'host', 'port', 'name', 'username'];
         foreach ($required as $field) {
             if (!isset($input[$field]) || $input[$field] === '') {
                 return Response::json(['error' => "Missing required field: $field"], 400);
             }
         }
+        $input['password'] = (string) ($input['password'] ?? '');
 
         try {
-            // Build DSN based on connection type
+            // Build Cycle ORM v2 typed driver config objects
             switch ($input['connection']) {
                 case 'pgsql':
-                    $dsn = "pgsql:host={$input['host']};port={$input['port']};dbname={$input['name']}";
+                    $connection = new \Cycle\Database\Config\Postgres\TcpConnectionConfig(
+                        database: $input['name'],
+                        host: $input['host'],
+                        port: (int) $input['port'],
+                        user: $input['username'],
+                        password: $input['password'],
+                    );
+                    $driverConfig = new \Cycle\Database\Config\PostgresDriverConfig(
+                        connection: $connection,
+                    );
                     break;
+
                 case 'mysql':
-                    $dsn = "mysql:host={$input['host']};port={$input['port']};dbname={$input['name']};charset=utf8mb4";
+                    $connection = new \Cycle\Database\Config\MySQL\TcpConnectionConfig(
+                        database: $input['name'],
+                        host: $input['host'],
+                        port: (int) $input['port'],
+                        charset: 'utf8mb4',
+                        user: $input['username'],
+                        password: $input['password'],
+                    );
+                    $driverConfig = new \Cycle\Database\Config\MySQLDriverConfig(
+                        connection: $connection,
+                    );
                     break;
+
                 case 'sqlite':
-                    $dsn = "sqlite:{$input['name']}";
+                    $connection = new \Cycle\Database\Config\SQLite\FileConnectionConfig(
+                        database: $input['name'],
+                    );
+                    $driverConfig = new \Cycle\Database\Config\SQLiteDriverConfig(
+                        connection: $connection,
+                    );
                     break;
+
                 default:
                     return Response::json(['error' => 'Unsupported database connection type'], 400);
             }
 
-            // Create database manager with single connection
-            $config = [
-                'default' => $input['connection'],
+            // Build DatabaseConfig with typed driver config objects (Cycle ORM v2 API)
+            $databaseConfig = new \Cycle\Database\Config\DatabaseConfig([
+                'default' => 'default',
                 'databases' => [
                     'default' => ['connection' => $input['connection']],
                 ],
                 'connections' => [
-                    'pgsql' => [
-                        'driver'  => 'pgsql',
-                        'host'    => $input['host'],
-                        'port'    => (int)$input['port'],
-                        'dbname'  => $input['name'],
-                        'user'    => $input['username'],
-                        'password' => $input['password'],
-                    ],
-                    'mysql' => [
-                        'driver'  => 'mysql',
-                        'host'    => $input['host'],
-                        'port'    => (int)$input['port'],
-                        'dbname'  => $input['name'],
-                        'user'    => $input['username'],
-                        'password' => $input['password'],
-                        'charset' => 'utf8mb4',
-                    ],
-                    'sqlite' => [
-                        'driver'  => 'sqlite',
-                        'database' => $input['name'],
-                    ],
+                    $input['connection'] => $driverConfig,
                 ],
-            ];
+            ]);
 
-            $databaseConfig = new \Cycle\Database\Config\DatabaseConfig($config);
             $manager = new \Cycle\Database\DatabaseManager($databaseConfig);
             $db = $manager->database();
 
-            // Try to connect and get schema manager
-            $schema = $db->getSchemaManager();
-            $tables = $schema->listTables();
+            // Try to connect and list tables to verify the connection works
+            $tables = $db->getTables();
 
             return Response::json(['success' => true, 'message' => 'Connection successful', 'tables_count' => count($tables)]);
         } catch (\Throwable $e) {
@@ -270,19 +277,20 @@ class SetupController
             return Response::json(['error' => 'Application is already installed.'], 409);
         }
 
-        $input = $request->getJson();
+        $input = $this->extractInput($request);
 
         if (!$input) {
             return Response::json(['error' => 'Invalid JSON payload'], 400);
         }
 
-        // Validate required fields
-        $required = ['db_connection', 'db_host', 'db_port', 'db_name', 'db_username', 'db_password', 'site_title', 'admin_email', 'admin_username', 'admin_password'];
+        // Validate required fields (db_password may be empty string for local environments)
+        $required = ['db_connection', 'db_host', 'db_port', 'db_name', 'db_username', 'site_title', 'admin_email', 'admin_username', 'admin_password'];
         foreach ($required as $field) {
             if (!isset($input[$field]) || $input[$field] === '') {
                 return Response::json(['error' => "Missing required field: $field"], 400);
             }
         }
+        $input['db_password'] = (string) ($input['db_password'] ?? '');
 
         // Update .env file with database connection
         $this->updateEnvFile($input);
@@ -491,5 +499,33 @@ class SetupController
         }
 
         file_put_contents($envPath, implode("\n", $updated) . "\n");
+    }
+
+    /**
+     * Safely extract input data as array from Request.
+     */
+    protected function extractInput(Request $request): ?array
+    {
+        if (method_exists($request, 'getJson')) {
+            $json = $request->getJson();
+            if ($json !== null) {
+                return $json;
+            }
+        }
+
+        $body = $request->body();
+        if ($body !== null && $body !== '') {
+            $decoded = json_decode($body, true);
+            if (is_array($decoded)) {
+                return $decoded;
+            }
+        }
+
+        $post = $request->post();
+        if (!empty($post) && is_array($post)) {
+            return $post;
+        }
+
+        return null;
     }
 }

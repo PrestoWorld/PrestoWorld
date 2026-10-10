@@ -32,10 +32,16 @@ class Kernel implements KernelContract
         private LoggerInterface $logger,
         private ContextManagerInterface $contextManager,
         private ContextLoaderInterface $contextLoader,
+        private ?\Witals\Framework\Application $app = null,
     ) {}
 
     public function handle(Request $request): Response
     {
+        // 0. Ensure application is installed (redirect to /install/ if uninstalled)
+        if ($this->shouldRedirectToInstaller($request)) {
+            return Response::redirect('/install/');
+        }
+
         // 1. Try router first (registered routes in routes/web.php)
         $routerResponse = $this->dispatchRouter($request);
         if ($routerResponse !== null) {
@@ -50,6 +56,55 @@ class Kernel implements KernelContract
 
         // 3. Fallback: theme rendering via PageService
         return $this->dispatchPageService($request);
+    }
+
+    /**
+     * Check if request should be redirected to installer when not installed.
+     */
+    private function shouldRedirectToInstaller(Request $request): bool
+    {
+        $path = '/' . ltrim($request->path(), '/');
+
+        // Allow access to installer pages, setup APIs, and static assets
+        if (
+            str_starts_with($path, '/install') ||
+            str_starts_with($path, '/api/setup') ||
+            str_starts_with($path, '/assets') ||
+            str_starts_with($path, '/content') ||
+            $path === '/favicon.ico'
+        ) {
+            return false;
+        }
+
+        return !$this->isInstalled();
+    }
+
+    /**
+     * Check if PrestoWorld is installed.
+     */
+    private function isInstalled(): bool
+    {
+        if ($this->app === null) {
+            return true;
+        }
+
+        try {
+            /** @var \Cycle\Database\DatabaseProviderInterface $dbal */
+            $dbal = $this->app->make(\Cycle\Database\DatabaseProviderInterface::class);
+            $db = $dbal->database();
+            $tablePrefix = getenv('PW_TABLE_PREFIX') ?: 'pw_';
+            $optionsTable = $tablePrefix . 'options';
+
+            if (!$db->hasTable($optionsTable)) {
+                return false;
+            }
+
+            $row = $db->query("SELECT option_value FROM {$optionsTable} WHERE option_name = ?", ['presto_installed'])->fetch();
+
+            return $row && $row['option_value'] === '1';
+        } catch (\Throwable) {
+            return false;
+        }
     }
 
     /**

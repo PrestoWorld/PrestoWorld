@@ -23,7 +23,8 @@
             "App\\": "app/",
             "PrestoWorld\\": "framework/presto/",
             "PrestoWorld\\Core\\": "app/src/Core/",
-            "PrestoWorld\\Modules\\": "modules/"
+            "PrestoWorld\\Modules\\": "modules/",
+            "PrestoWorld\\Modules\\ModuleManager\\": "framework/presto/Modules/ModuleManager/"
         }
     },
     "repositories": [
