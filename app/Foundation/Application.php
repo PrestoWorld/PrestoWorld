@@ -6,6 +6,8 @@ namespace App\Foundation;
 
 use Witals\Framework\Application as BaseApplication;
 use PrestoWorld\Foundation\Config\ConfigRepository;
+use \Psr\Log\LoggerInterface;
+use Witals\Framework\Log\Drivers\StandardLogger;
 
 class Application extends BaseApplication
 {
@@ -319,5 +321,32 @@ class Application extends BaseApplication
             $this->instance(\Witals\Framework\Contracts\I18n\TranslatorFactory::class, $this->translator);
             $this->instance('translator', $this->translator);
         }
+    }
+
+    /**
+     * Initialize logger manager
+     */
+    protected function initializeLogger(): void
+    {
+        $this->singleton(LoggerInterface::class, function ($app) {
+            // Default to standard buffered logger
+            return new StandardLogger(
+                path: $app->basePath('storage/logs/presto.log'),
+                buffered: true,
+                minLevel: getenv('APP_DEBUG') ? 'debug' : 'info'
+            );
+        });
+
+        $this->alias(LoggerInterface::class, 'log');
+    $this->alias(LoggerInterface::class, StandardLogger::class);
+    }
+
+    /**
+     * Get the destination for PHP error logging.
+     * Framework uses this early in the bootstrap process.
+     */
+    public function getErrorLogPath(): string
+    {
+        return $this->storagePath('logs/presto.log');
     }
 }
