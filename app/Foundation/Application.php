@@ -136,8 +136,12 @@ class Application extends BaseApplication
 
             // Try to load from cache first
             if (!$registry->loadFromCache()) {
-                $registry->loadFromDatabase();
-                $registry->saveToCache();
+                try {
+                    $registry->loadFromDatabase();
+                    $registry->saveToCache();
+                } catch (\Throwable) {
+                    // Ignore DB errors if not installed yet
+                }
             }
 
             return $registry;
@@ -219,6 +223,7 @@ class Application extends BaseApplication
                 only: ['/dashboard', '/api/admin'],
             );
             // Global middleware runs on all matched routes
+            $registry->addMiddleware(\App\Http\Middleware\EnsureInstalledMiddleware::class);
             $registry->addMiddleware(\App\Http\Middleware\CorsMiddleware::class);
             $registry->addMiddleware(\App\Http\Middleware\LocaleMiddleware::class);
         }

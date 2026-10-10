@@ -200,9 +200,19 @@ final class ClassPass extends NodeVisitorAbstract implements CompilablePass
             return $this->rewriteName($type) ?? $type;
         }
 
+        if ($type instanceof Node\NullableType) {
+            if ($type->type instanceof Name) {
+                $name = $this->rewriteName($type->type);
+                if ($name !== null) {
+                    $type->type = $name;
+                }
+            }
+
+            return $type;
+        }
+
         if (
-            $type instanceof Node\NullableType
-            || $type instanceof Node\UnionType
+            $type instanceof Node\UnionType
             || $type instanceof Node\IntersectionType
         ) {
             foreach ($type->types as $index => $inner) {

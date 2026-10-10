@@ -18,7 +18,8 @@ $router->get('/logout', [App\Http\Controllers\AuthController::class, 'handleLogo
 $router->get('/dashboard', \App\Http\Controllers\Admin\SpaController::class);
 
 // Installation routes (check if installed before serving)
-$router->get('/install[/]', [App\Http\Controllers\InstallController::class, 'show']);
+$router->get('/install', [App\Http\Controllers\InstallController::class, 'show']);
+$router->get('/install/', [App\Http\Controllers\InstallController::class, 'show']);
 $router->get('/install/{any}', [App\Http\Controllers\InstallController::class, 'asset']);
 
 // Routes are dynamically injected by modules and service providers.

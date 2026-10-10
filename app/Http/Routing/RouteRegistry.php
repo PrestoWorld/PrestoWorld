@@ -123,13 +123,15 @@ class RouteRegistry implements RouteRegistryInterface, ResettableInterface
     {
         $method = strtoupper($request->method());
         $path = $path ?? '/' . ltrim($request->path(), '/');
+        $altPath = rtrim($path, '/') ?: '/';
         $maxP = $maxPriority ?? self::PRIORITY_FALLBACK;
 
         $this->ensureIndexed();
 
         for ($p = 0; $p <= $maxP; $p++) {
-            if (isset($this->staticIndex[$p][$method][$path])) {
-                return $this->buildMatch($this->staticIndex[$p][$method][$path], []);
+            $staticMatch = $this->staticIndex[$p][$method][$path] ?? $this->staticIndex[$p][$method][$altPath] ?? null;
+            if ($staticMatch !== null) {
+                return $this->buildMatch($staticMatch, []);
             }
 
             if (!isset($this->dynamicIndex[$p][$method])) {
