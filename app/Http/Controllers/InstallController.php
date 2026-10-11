@@ -165,6 +165,12 @@ class InstallController
         .text-center { text-align: center; }
         .spinner { border: 3px solid #f3f3f3; border-top: 3px solid #0073aa; border-radius: 50%; width: 32px; height: 32px; animation: spin 1s linear infinite; margin: 20px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .success-check { display: flex; justify-content: center; }
+        .success-check-circle { stroke: #46b450; stroke-width: 2; stroke-dasharray: 166; stroke-dashoffset: 166; animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards; }
+        .success-check-mark { stroke: #46b450; stroke-width: 4; stroke-linecap: round; stroke-dasharray: 48; stroke-dashoffset: 48; animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.6s forwards; }
+        @keyframes stroke { 100% { stroke-dashoffset: 0; } }
+        .success-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+        .success-footnote { color: #999; font-size: 12px; margin-top: 24px; }
     </style>
 </head>
 <body>
@@ -243,7 +249,7 @@ class InstallController
                     </div>
                 </div>
                 <div class="nav-buttons">
-                    <button class="button button-secondary" onclick="goToStep(\'welcome\')">Back</button>
+                    <button class="button button-secondary" onclick="goToStep('welcome')">Back</button>
                     <button class="button" onclick="testAndProceed()">Submit</button>
                 </div>
             </div>
@@ -272,7 +278,7 @@ class InstallController
                     <input type="email" id="admin_email" placeholder="admin@example.com">
                 </div>
                 <div class="nav-buttons">
-                    <button class="button button-secondary" onclick="goToStep(\'database\')">Back</button>
+                    <button class="button button-secondary" onclick="goToStep('database')">Back</button>
                     <button class="button" onclick="startInstall()">Install PrestoWorld</button>
                 </div>
             </div>
@@ -289,12 +295,25 @@ class InstallController
                     <div id="install-spinner" class="spinner"></div>
                     <div id="install-status" style="color: #666; font-size: 13px; margin-top: 16px;"></div>
                     <div id="install-error" class="error hidden" style="text-align: left; margin-top: 20px;"></div>
-                    <div id="install-success" class="success hidden" style="text-align: left; margin-top: 20px;">
-                        <p><strong>Success!</strong> PrestoWorld has been installed successfully.</p>
-                        <div style="margin-top: 16px;">
-                            <a href="/login" class="button">Log In</a>
-                        </div>
+                </div>
+            </div>
+
+            <div id="step-done" class="hidden">
+                <div class="text-center">
+                    <div class="success-check" aria-hidden="true">
+                        <svg viewBox="0 0 52 52" width="72" height="72">
+                            <circle class="success-check-circle" cx="26" cy="26" r="25" fill="none"/>
+                            <path class="success-check-mark" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+                        </svg>
                     </div>
+                    <h2 style="font-size: 22px; font-weight: 400; color: #23282d; margin: 18px 0 10px;">Success!</h2>
+                    <p style="color: #444; font-size: 14px; margin-bottom: 6px;">PrestoWorld has been installed. <strong>Thank you for choosing PrestoWorld!</strong></p>
+                    <p style="color: #666; font-size: 13px; margin-bottom: 24px;">We truly appreciate you being part of our community. Your site is ready &mdash; we hope you love building with it.</p>
+                    <div class="success-actions">
+                        <a href="/login" class="button">Log In</a>
+                        <a href="/" class="button button-secondary">Visit Site</a>
+                    </div>
+                    <p class="success-footnote">Need help getting started? Check out the documentation anytime.</p>
                 </div>
             </div>
         </div>
@@ -307,6 +326,7 @@ class InstallController
             document.getElementById('step-database').classList.toggle('hidden', step !== 'database');
             document.getElementById('step-site').classList.toggle('hidden', step !== 'site');
             document.getElementById('step-install').classList.toggle('hidden', step !== 'install');
+            document.getElementById('step-done').classList.toggle('hidden', step !== 'done');
         }
         function updateDbFields() {
             const conn = document.getElementById('db_connection').value;
@@ -361,11 +381,9 @@ class InstallController
         }
         async function startInstall() {
             const errorDiv = document.getElementById('install-error');
-            const successDiv = document.getElementById('install-success');
             const spinner = document.getElementById('install-spinner');
             const status = document.getElementById('install-status');
             errorDiv.classList.add('hidden');
-            successDiv.classList.add('hidden');
             spinner.classList.remove('hidden');
             status.textContent = 'Running installation...';
             installData.site_title = document.getElementById('site_title').value;
@@ -389,9 +407,7 @@ class InstallController
                 const res = await fetch('/api/setup/install', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                 const data = await res.json();
                 if (res.ok && data.success) {
-                    spinner.classList.add('hidden');
-                    status.classList.add('hidden');
-                    successDiv.classList.remove('hidden');
+                    goToStep('done');
                 } else {
                     spinner.classList.add('hidden');
                     errorDiv.textContent = 'Installation failed: ' + (data.error || 'Unknown error');
