@@ -57,9 +57,11 @@ class EnsureInstalledMiddleware
                 return false;
             }
 
-            $stmt = $db->prepare("SELECT option_value FROM {$optionsTable} WHERE option_name = ?");
-            $stmt->execute(['presto_installed']);
-            $row = $stmt->fetch();
+            $row = $db->select('option_value')
+                ->from($optionsTable)
+                ->where('option_name', 'presto_installed')
+                ->run()
+                ->fetch();
 
             return $row && $row['option_value'] === '1';
         } catch (\Throwable) {

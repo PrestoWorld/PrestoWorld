@@ -99,7 +99,11 @@ class Kernel implements KernelContract
                 return false;
             }
 
-            $row = $db->query("SELECT option_value FROM {$optionsTable} WHERE option_name = ?", ['presto_installed'])->fetch();
+            $row = $db->select('option_value')
+                ->from($optionsTable)
+                ->where('option_name', 'presto_installed')
+                ->run()
+                ->fetch();
 
             return $row && $row['option_value'] === '1';
         } catch (\Throwable) {

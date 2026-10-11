@@ -459,6 +459,31 @@ class SetupController
             $lines = file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
         }
 
+        // Canonical value for every database key. The PostgreSQL and MySQL
+        // aliases always share the same value, so they are emitted together.
+        $dbValues = [
+            'DB_CONNECTION' => $input['db_connection'],
+            'DB_PGSQL_HOST' => $input['db_host'],
+            'DB_MYSQL_HOST' => $input['db_host'],
+            'DB_PGSQL_PORT' => $input['db_port'],
+            'DB_MYSQL_PORT' => $input['db_port'],
+            'DB_PGSQL_DATABASE' => $input['db_name'],
+            'DB_MYSQL_DATABASE' => $input['db_name'],
+            'DB_PGSQL_USERNAME' => $input['db_username'],
+            'DB_MYSQL_USERNAME' => $input['db_username'],
+            'DB_PGSQL_PASSWORD' => $input['db_password'],
+            'DB_MYSQL_PASSWORD' => $input['db_password'],
+        ];
+
+        // Aliases share a single source line so the file never grows on re-runs.
+        $dbAliasGroups = [
+            'DB_PGSQL_HOST' => ['DB_PGSQL_HOST', 'DB_MYSQL_HOST'],
+            'DB_PGSQL_PORT' => ['DB_PGSQL_PORT', 'DB_MYSQL_PORT'],
+            'DB_PGSQL_DATABASE' => ['DB_PGSQL_DATABASE', 'DB_MYSQL_DATABASE'],
+            'DB_PGSQL_USERNAME' => ['DB_PGSQL_USERNAME', 'DB_MYSQL_USERNAME'],
+            'DB_PGSQL_PASSWORD' => ['DB_PGSQL_PASSWORD', 'DB_MYSQL_PASSWORD'],
+        ];
+
         $updated = [];
         $found = [];
 
@@ -470,51 +495,35 @@ class SetupController
 
             if (preg_match('/^([^=]+)=(.*)$/', $line, $matches)) {
                 $key = trim($matches[1]);
-                $value = trim($matches[2]);
 
-                switch ($key) {
-                    case 'DB_CONNECTION':
-                        $updated[] = 'DB_CONNECTION=' . $input['db_connection'];
-                        $found[] = $key;
-                        break;
-                    case 'DB_PGSQL_HOST':
-                    case 'DB_MYSQL_HOST':
-                        $updated[] = 'DB_PGSQL_HOST=' . $input['db_host'];
-                        $updated[] = 'DB_MYSQL_HOST=' . $input['db_host'];
-                        $found[] = 'DB_PGSQL_HOST';
-                        $found[] = 'DB_MYSQL_HOST';
-                        break;
-                    case 'DB_PGSQL_PORT':
-                    case 'DB_MYSQL_PORT':
-                        $updated[] = 'DB_PGSQL_PORT=' . $input['db_port'];
-                        $updated[] = 'DB_MYSQL_PORT=' . $input['db_port'];
-                        $found[] = 'DB_PGSQL_PORT';
-                        $found[] = 'DB_MYSQL_PORT';
-                        break;
-                    case 'DB_PGSQL_DATABASE':
-                    case 'DB_MYSQL_DATABASE':
-                        $updated[] = 'DB_PGSQL_DATABASE=' . $input['db_name'];
-                        $updated[] = 'DB_MYSQL_DATABASE=' . $input['db_name'];
-                        $found[] = 'DB_PGSQL_DATABASE';
-                        $found[] = 'DB_MYSQL_DATABASE';
-                        break;
-                    case 'DB_PGSQL_USERNAME':
-                    case 'DB_MYSQL_USERNAME':
-                        $updated[] = 'DB_PGSQL_USERNAME=' . $input['db_username'];
-                        $updated[] = 'DB_MYSQL_USERNAME=' . $input['db_username'];
-                        $found[] = 'DB_PGSQL_USERNAME';
-                        $found[] = 'DB_MYSQL_USERNAME';
-                        break;
-                    case 'DB_PGSQL_PASSWORD':
-                    case 'DB_MYSQL_PASSWORD':
-                        $updated[] = 'DB_PGSQL_PASSWORD=' . $input['db_password'];
-                        $updated[] = 'DB_MYSQL_PASSWORD=' . $input['db_password'];
-                        $found[] = 'DB_PGSQL_PASSWORD';
-                        $found[] = 'DB_MYSQL_PASSWORD';
-                        break;
-                    default:
-                        $updated[] = $line;
+                if ($key === 'DB_CONNECTION') {
+                    $updated[] = 'DB_CONNECTION=' . $input['db_connection'];
+                    $found[] = $key;
+                    continue;
                 }
+
+                // Collapse each alias group into a single pair of lines.
+                $group = null;
+                foreach ($dbAliasGroups as $canonical => $aliases) {
+                    if (in_array($key, $aliases, true)) {
+                        $group = $canonical;
+                        break;
+                    }
+                }
+
+                if ($group !== null) {
+                    // Skip if this alias group was already written (dedupe).
+                    if (in_array($group, $found, true)) {
+                        continue;
+                    }
+                    foreach ($dbAliasGroups[$group] as $alias) {
+                        $updated[] = $alias . '=' . $dbValues[$alias];
+                        $found[] = $alias;
+                    }
+                    continue;
+                }
+
+                $updated[] = $line;
             } else {
                 $updated[] = $line;
             }
@@ -538,6 +547,7 @@ class SetupController
         foreach ($defaults as $key => $value) {
             if (!in_array($key, $found, true)) {
                 $updated[] = $key . '=' . $value;
+                $found[] = $key;
             }
         }
 

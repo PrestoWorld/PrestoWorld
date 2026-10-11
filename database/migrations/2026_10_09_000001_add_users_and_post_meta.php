@@ -11,7 +11,7 @@ use PrestoWorld\Database\MigrationInterface;
  *
  * Đồng bộ schema với spec 05 §5.2.1:
  * - Thêm bảng pw_users (email unique, password_hash, display_name, role...).
- * - pw_posts: compact_meta (json) → meta (jsonb) + thêm content, published_at,
+ * - pw_posts: compact_meta (json) + thêm content, published_at,
  *   unique slug, GIN index trên meta.
  */
 return new class implements MigrationInterface {
@@ -47,7 +47,7 @@ return new class implements MigrationInterface {
             $schema = $table->getSchema();
 
             if (!$schema->hasColumn('meta')) {
-                $schema->column('meta')->type('jsonb')->nullable()->defaultValue('{}');
+                $schema->column('meta')->type('json')->nullable()->default(null);
             }
 
             if (!$schema->hasColumn('content')) {

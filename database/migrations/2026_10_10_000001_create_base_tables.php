@@ -36,9 +36,9 @@ return new class implements MigrationInterface {
                 $schema->column('author_id')->integer()->nullable();
                 $schema->column('parent_id')->integer()->nullable();
                 $schema->column('menu_order')->integer()->nullable(false)->defaultValue(0);
-                $schema->column('meta')->type('jsonb')->nullable()->defaultValue('{}');
-                $schema->column('created_at')->datetime()->nullable(false)->defaultValue('CURRENT_TIMESTAMP');
-                $schema->column('updated_at')->datetime()->nullable(false)->defaultValue('CURRENT_TIMESTAMP');
+                $schema->column('meta')->type('json')->nullable()->default(null);
+                $schema->column('created_at')->datetime()->nullable(false)->defaultValue(new \DateTimeImmutable('now'));
+                $schema->column('updated_at')->datetime()->nullable(false)->defaultValue(new \DateTimeImmutable('now'));
                 $schema->column('published_at')->datetime()->nullable();
                 $schema->index(['slug'])->unique();
                 $schema->index(['status']);
