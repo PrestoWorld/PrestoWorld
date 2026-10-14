@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PrestoWorld\Modules\ContextBuilder;
+namespace Presto\Context;
 
 use PrestoWorld\Modules\ContextBuilder\Parser\BlockParser;
 use PrestoWorld\Modules\Gutenberg\Parser\BlockParser as GutenbergBlockParser;
@@ -29,9 +29,9 @@ use PrestoWorld\Modules\Gutenberg\Renderer\BlockRenderer;
  *
  * THROW EXCEPTION nếu có thành phần chưa hỗ trợ compile.
  */
-class ContextLoader
+class Loader
 {
-    protected BlockRegistry $blocks;
+    protected \PrestoWorld\Modules\ContextBuilder\BlockRegistry $blocks;
 
     protected string $storageDir;
 
@@ -44,7 +44,7 @@ class ContextLoader
     /** @var array<string, bool> */
     protected array $unsupportedBlocks = [];
 
-    public function __construct(BlockRegistry $blocks, string $storageDir, string $themeDir = '')
+    public function __construct(\PrestoWorld\Modules\ContextBuilder\BlockRegistry $blocks, string $storageDir, string $themeDir = '')
     {
         $this->blocks = $blocks;
         $this->storageDir = $storageDir;
@@ -167,7 +167,7 @@ class ContextLoader
             // Throw exception for unsupported blocks
             throw new UnsupportedBlockException(
                 "Block '$blockName' is not supported for compilation. " .
-                "Register it in BlockRegistry or add to supported blocks list."
+                "Register it in \PrestoWorld\Modules\ContextBuilder\BlockRegistry or add to supported blocks list."
             );
         }
 

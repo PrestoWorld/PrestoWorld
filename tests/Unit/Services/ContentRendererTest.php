@@ -9,7 +9,7 @@ use App\Services\ContentRenderer;
 use App\Services\NullContentRenderer;
 use App\Contracts\Services\RenderedContent;
 use PrestoWorld\Modules\ClassicTheme\ClassicThemeEngine;
-use PrestoWorld\Modules\ContextBuilder\ContextLoader;
+use Presto\Context\Loader as ContextLoader;
 use Witals\Framework\Contracts\Container;
 
 class ContentRendererTest extends TestCase

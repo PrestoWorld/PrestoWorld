@@ -6,7 +6,7 @@ namespace App\Services;
 
 use PrestoWorld\Modules\ClassicTheme\ClassicThemeEngine;
 use PrestoWorld\Modules\ClassicTheme\ThemeDetector;
-use PrestoWorld\Modules\ContextBuilder\ContextLoader;
+use Presto\Context\Loader as ContextLoader;
 use App\Contracts\Services\ContentRenderer as ContentRendererContract;
 use App\Contracts\Services\RenderedContent;
 use Witals\Framework\Contracts\Container;

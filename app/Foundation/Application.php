@@ -57,9 +57,9 @@ class Application extends BaseApplication
         $this->singleton(
             \App\Contracts\Services\ContentRenderer::class,
             function ($app) {
-                if ($app->has(\PrestoWorld\Modules\ContextBuilder\ContextLoader::class)) {
+                if ($app->has(\Presto\Context\Loader::class)) {
                     return new \App\Services\ContentRenderer(
-                        $app->make(\PrestoWorld\Modules\ContextBuilder\ContextLoader::class),
+                        $app->make(\Presto\Context\Loader::class),
                         $app,
                         self::resolveThemePath($app),
                     );

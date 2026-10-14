@@ -30,22 +30,22 @@ class Module extends WitalsModule
 
     public function register(): void
     {
-        $this->app->singleton(BlockRegistry::class, function ($app) {
-            return new BlockRegistry();
+        $this->app->singleton(PrestoWorld\Modules\ContextBuilder\BlockRegistry::class, function ($app) {
+            return new \PrestoWorld\Modules\ContextBuilder\BlockRegistry();
         });
 
-        $this->app->singleton(ContextRegistry::class, function ($app) {
-            return new ContextRegistry();
+        $this->app->singleton(PrestoWorld\Modules\ContextBuilder\ContextRegistry::class, function ($app) {
+            return new \PrestoWorld\Modules\ContextBuilder\ContextRegistry();
         });
 
-        $this->app->singleton(ContextLoader::class, function ($app) {
+        $this->app->singleton('Presto\\Context\\Loader', function ($app) {
             $themePath = getenv('PW_THEME_DIR');
             if (!is_string($themePath) || $themePath === '') {
                 $themePath = $app->basePath('content/themes/' . $app->config('theme.active', 'timeless'));
             }
 
-            $loader = new ContextLoader(
-                $app->make(BlockRegistry::class),
+            $loader = new \Presto\Context\Loader(
+                $app->make(PrestoWorld\Modules\ContextBuilder\BlockRegistry::class),
                 $app->basePath('storage/contexts'),
                 $themePath
             );
@@ -63,11 +63,11 @@ class Module extends WitalsModule
             return $loader;
         });
 
-        $this->app->singleton(ContextBuilder::class, function ($app) {
-            return new ContextBuilder(
-                $app->make(ContextRegistry::class),
-                $app->make(ContextLoader::class),
-                $app->make(BlockRegistry::class),
+        $this->app->singleton(PrestoWorld\Modules\ContextBuilder\ContextBuilder::class, function ($app) {
+            return new \PrestoWorld\Modules\ContextBuilder\ContextBuilder(
+                $app->make(PrestoWorld\Modules\ContextBuilder\ContextRegistry::class),
+                $app->make('Presto\\Context\\Loader'),
+                $app->make(PrestoWorld\Modules\ContextBuilder\BlockRegistry::class),
             );
         });
     }
@@ -78,7 +78,7 @@ class Module extends WitalsModule
         // The theme decides how to load per runtime (WordPress vs PrestoWorld)
         // and handles its own context blocks on the legacy registry; the
         // framework never hardcodes a theme's block names.
-        ThemeBooter::provideBlockRegistry($this->app->make(BlockRegistry::class));
+        ThemeBooter::provideBlockRegistry($this->app->make(PrestoWorld\Modules\ContextBuilder\BlockRegistry::class));
         ThemeBooter::boot($this->resolveThemePath());
 
         $this->registerCoreBlocks();
@@ -92,7 +92,7 @@ class Module extends WitalsModule
         }
 
         $controller = new Rest\ContextBuilderController(
-            $this->app->make(ContextBuilder::class),
+            $this->app->make(PrestoWorld\Modules\ContextBuilder\ContextBuilder::class),
         );
         $controller->register_routes();
 
@@ -102,7 +102,7 @@ class Module extends WitalsModule
 
     protected function registerCoreBlocks(): void
     {
-        $registry = $this->app->make(BlockRegistry::class);
+        $registry = $this->app->make(PrestoWorld\Modules\ContextBuilder\BlockRegistry::class);
 
         $registry->register(new Block\HeadingBlock());
         $registry->register(new Block\ParagraphBlock());
@@ -110,7 +110,7 @@ class Module extends WitalsModule
         $registry->register(new Block\QueryLoopBlock());
 
         // Register default context types
-        $contextRegistry = $this->app->make(ContextRegistry::class);
+        $contextRegistry = $this->app->make(PrestoWorld\Modules\ContextBuilder\ContextRegistry::class);
         $contextRegistry->register(new ContextType('post', 'Posts', [
             'render_mode' => 'ssr',
             'regions' => ['header', 'content', 'sidebar', 'footer'],
