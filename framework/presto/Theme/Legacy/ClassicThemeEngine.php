@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PrestoWorld\Modules\ClassicTheme;
+namespace Presto\Theme\Legacy;
 
 use App\Contracts\Services\RenderedContent;
 use Witals\Framework\Contracts\Container;

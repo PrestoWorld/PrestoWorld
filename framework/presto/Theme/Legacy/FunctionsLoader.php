@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace PrestoWorld\Modules\ClassicTheme;
+namespace Presto\Theme\Legacy;
 
-use PrestoWorld\Modules\ClassicTheme\TransformerRegistry;
+use Presto\Theme\Legacy\TransformerRegistry;
 
 class FunctionsLoader
 {

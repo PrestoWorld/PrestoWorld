@@ -5,7 +5,7 @@
     "type": "support",
     "priority": 40,
     "enabled": true,
-    "namespace": "PrestoWorld\\Modules\\ClassicTheme",
+    "namespace": "Presto\\Theme\\Legacy",
     "entry": "Module.php",
     "requires": {
         "php": "^8.1"

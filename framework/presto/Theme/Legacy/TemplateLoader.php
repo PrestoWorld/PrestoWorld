@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PrestoWorld\Modules\ClassicTheme;
+namespace Presto\Theme\Legacy;
 
 class TemplateLoader
 {

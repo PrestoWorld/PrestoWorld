@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace PrestoWorld\Modules\ClassicTheme;
+namespace Presto\Theme\Legacy;
 
-use PrestoWorld\Modules\ClassicTheme\Transformers\TransformerInterface;
-use PrestoWorld\Modules\ClassicTheme\Transformers\FunctionTransformer;
-use PrestoWorld\Modules\ClassicTheme\Transformers\ClassTransformer;
+use Presto\Theme\Legacy\Transformers\TransformerInterface;
+use Presto\Theme\Legacy\Transformers\FunctionTransformer;
+use Presto\Theme\Legacy\Transformers\ClassTransformer;
 
 class TransformerRegistry
 {

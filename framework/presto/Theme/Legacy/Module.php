@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PrestoWorld\Modules\ClassicTheme;
+namespace Presto\Theme\Legacy;
 
 use Witals\Framework\Module\Module as WitalsModule;
 
@@ -61,7 +61,7 @@ class Module extends WitalsModule
         }
 
         $this->app->make(\Witals\Framework\Console\Kernel::class)
-            ->register(\PrestoWorld\Modules\ClassicTheme\Console\GenerateStubsCommand::class);
+            ->register(\Presto\Theme\Legacy\Console\GenerateStubsCommand::class);
     }
 
     private function resolveThemePath(): string
