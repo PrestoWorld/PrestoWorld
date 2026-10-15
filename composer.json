@@ -35,6 +35,13 @@
             "options": {
                 "symlink": true
             }
+        },
+        {
+            "type": "path",
+            "url": "vendor/prestoworld/gutenberg-core",
+            "options": {
+                "symlink": true
+            }
         }
     ],
     "config": {
