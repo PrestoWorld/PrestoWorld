@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Admin;
 
 use Witals\Framework\Http\Request;
 use Witals\Framework\Http\Response;
+use PrestoWorld\Foundation\Admin\DashboardSubsystem;
 use PrestoWorld\Modules\Admin\SkinManager;
 use PrestoWorld\Contracts\Admin\Menu\MenuContextRepository;
 use PrestoWorld\Contracts\Admin\Dashboard\DashboardScreenRegistryInterface;
@@ -119,6 +120,7 @@ class SpaController
             'user' => $this->getUserState(),
             'screens' => $screens,
             'menuSections' => $menuSections,
+            'subsystems' => $this->buildSubsystemNav(),
             'widgets' => $this->buildWidgets(),
             'screenOptions' => $this->buildScreenOptions(),
             'adminBar' => $this->buildAdminBar()->toArray(),
@@ -254,6 +256,7 @@ class SpaController
             ],
             'screens' => $screens,
             'menuSections' => $menuSections,
+            'subsystems' => $this->buildSubsystemNav(),
             'widgets' => $widgets,
             'page' => [
                 'path' => '/dashboard',
@@ -329,6 +332,7 @@ class SpaController
     {
         return Response::json([
             'menuSections' => $this->buildMenuSections(),
+            'subsystems' => $this->buildSubsystemNav(),
         ]);
     }
 
@@ -414,6 +418,11 @@ class SpaController
         $sections = [];
 
         foreach ($menuTree as $i => $group) {
+            // Subsystem catalog is serialized separately via buildSubsystemNav()
+            if (($group['id'] ?? '') === DashboardSubsystem::GROUP_ID) {
+                continue;
+            }
+
             $children = $group['children'] ?? [];
 
             // Use the first child as the primary screenId/icon for the group
@@ -439,6 +448,41 @@ class SpaController
         }
 
         return $sections;
+    }
+
+    /**
+     * Serialize the Seller Center subsystem catalog ("Danh Mục Phân Hệ")
+     * registered by modules through the dashboard menu context.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    protected function buildSubsystemNav(): array
+    {
+        $this->dispatchAdminHooks();
+
+        foreach ($this->menu->getTreeAsArray() as $group) {
+            if (($group['id'] ?? '') !== DashboardSubsystem::GROUP_ID) {
+                continue;
+            }
+
+            $subsystems = [];
+            foreach ($group['children'] ?? [] as $child) {
+                $attributes = $child['attributes'] ?? [];
+                $screenId = $child['screenId'] ?? $child['id'] ?? '';
+                $subsystems[] = [
+                    'id' => $screenId,
+                    'label' => $child['label'] ?? '',
+                    'subLabel' => $attributes['subLabel'] ?? '',
+                    'icon' => $child['icon'] ?? 'Circle',
+                    'screenId' => $screenId,
+                    'priority' => $child['priority'] ?? 10,
+                ];
+            }
+
+            return $subsystems;
+        }
+
+        return [];
     }
 
     /** Build widget definitions with SPA component mapping */

@@ -30,6 +30,12 @@ class MenuContextRepository implements MenuContextRepositoryContract
 
     public function registerGroup(string $id, string $label, ?string $icon = null, ?string $image = null, array $attributes = [], int $priority = 10): void
     {
+        // Idempotent: multiple modules may register the same group. Keep the
+        // existing node so items registered by earlier callers are not lost.
+        if (isset($this->items[$id])) {
+            return;
+        }
+
         $item = new MenuItem(
             label: $label,
             url: $attributes['url'] ?? '',

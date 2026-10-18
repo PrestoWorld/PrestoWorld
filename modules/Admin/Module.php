@@ -8,6 +8,7 @@ use Witals\Framework\Module\Module as WitalsModule;
 use Witals\Framework\Contracts\View\Factory as ViewFactory;
 use PrestoWorld\Contracts\Admin\Menu\MenuContextRepository as MenuContract;
 use PrestoWorld\Contracts\Admin\AdminBar\AdminBarContext as AdminBarContextContract;
+use PrestoWorld\Foundation\Admin\DashboardSubsystem;
 use PrestoWorld\Modules\Admin\Dashboard\DashboardWidget;
 
 class Module extends WitalsModule
@@ -31,6 +32,7 @@ class Module extends WitalsModule
     {
         $this->registerSkins();
         $this->setActiveSkinFromConfig();
+        $this->registerCoreSubsystems();
     }
 
     // ── Skin ─────────────────────────────────────────────────────
@@ -265,6 +267,41 @@ class Module extends WitalsModule
                 $position += 10;
             }
         }
+    }
+
+    /**
+     * Platform-level Seller Center subsystems owned by the Admin engine.
+     * Feature modules register their own subsystems on top of these.
+     */
+    protected function registerCoreSubsystems(): void
+    {
+        DashboardSubsystem::register(
+            $this->app,
+            'overview',
+            'Tổng Quan',
+            'Bảng điều khiển kinh doanh',
+            'LayoutDashboard',
+            10,
+            'core',
+        );
+        DashboardSubsystem::register(
+            $this->app,
+            'messages',
+            'Tin Nhắn & CSKH',
+            'Hộp thư đa kênh SNS',
+            'MessageSquare',
+            40,
+            'core',
+        );
+        DashboardSubsystem::register(
+            $this->app,
+            'analytics',
+            'Phân Tích & Tối Ưu',
+            'Hiệu suất, Phễu CVR, Tốc độ web',
+            'BarChart2',
+            50,
+            'core',
+        );
     }
 
     protected function registerDashboardWidgets(): void
