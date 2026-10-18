@@ -25,6 +25,15 @@ export interface MenuSection {
   items: MenuItem[];
 }
 
+export interface SubsystemNavItem {
+  id: string;
+  label: string;
+  subLabel?: string;
+  icon?: string;
+  screenId?: string;
+  priority?: number;
+}
+
 export interface DashboardWidget {
   id: string;
   title: string;
@@ -79,6 +88,7 @@ export interface InitialState {
   user: User;
   screens: Screen[];
   menuSections: MenuSection[];
+  subsystems?: SubsystemNavItem[];
   widgets: DashboardWidget[];
   screenOptions: ScreenOptionsContext[];
   adminBar: AdminBarContext;

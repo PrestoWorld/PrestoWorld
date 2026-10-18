@@ -1,13 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import {
-  LayoutDashboard,
-  ShoppingBag,
-  Boxes,
-  MessageSquare,
-  BarChart2,
-  Globe,
-} from 'lucide-react';
-import type { InitialState } from '../types';
+import type { InitialState, SubsystemNavItem } from '../types';
+import { resolveSubsystemIcon } from '../nav/subsystemIcons';
 import { SellerCenterHeader } from './SellerCenterHeader';
 import { SellerCenterSidebar } from './SellerCenterSidebar';
 import { MarketingPage } from './pages/MarketingPage';
@@ -27,45 +20,14 @@ export const SellerCenterPage: React.FC<SellerCenterPageProps> = ({
   const [showMobileMoreMenu, setShowMobileMoreMenu] = useState(false);
 
   const merchantNav = useMemo(
-    () => [
-      {
-        id: 'overview',
-        label: 'Tổng Quan',
-        subLabel: 'Bảng điều khiển kinh doanh',
-        icon: LayoutDashboard,
-      },
-      {
-        id: 'orders',
-        label: 'Quản Lý Đơn Hàng',
-        subLabel: 'Chốt đơn & vận chuyển',
-        icon: ShoppingBag,
-      },
-      {
-        id: 'inventory',
-        label: 'Kho Hàng & Sách',
-        subLabel: 'Bán lẻ, Nhập tấn, PNK, API',
-        icon: Boxes,
-      },
-      {
-        id: 'messages',
-        label: 'Tin Nhắn & CSKH',
-        subLabel: 'Hộp thư đa kênh SNS',
-        icon: MessageSquare,
-      },
-      {
-        id: 'analytics',
-        label: 'Phân Tích & Tối Ưu',
-        subLabel: 'Hiệu suất, Phễu CVR, Tốc độ web',
-        icon: BarChart2,
-      },
-      {
-        id: 'marketing',
-        label: 'Kênh Bán & Marketing',
-        subLabel: 'BookPress Sub-site, Voucher, Hội sách',
-        icon: Globe,
-      },
-    ],
-    [],
+    () =>
+      (initialState.subsystems ?? []).map((sub: SubsystemNavItem) => ({
+        id: sub.screenId ?? sub.id,
+        label: sub.label,
+        subLabel: sub.subLabel ?? '',
+        icon: resolveSubsystemIcon(sub.icon),
+      })),
+    [initialState.subsystems],
   );
 
   const isTabActive = (tabId: string) => {

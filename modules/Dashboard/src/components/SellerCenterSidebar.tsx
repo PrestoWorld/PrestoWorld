@@ -1,7 +1,6 @@
 import React from 'react';
 import {
   ArrowLeft,
-  BarChart2,
   Layers,
   Sparkles,
   ChevronRight,
@@ -104,6 +103,7 @@ export const SellerCenterSidebar: React.FC<SellerCenterSidebarProps> = ({
 }) => {
   const [flyout, setFlyout] = React.useState<{ id: string; top: number; left: number } | null>(null);
   const closeTimer = React.useRef<number | null>(null);
+  const overflowActive = navItems.slice(4).some((item) => isTabActive(item.id));
 
   const openFlyout = (section: MenuSection, e: React.MouseEvent) => {
     if (closeTimer.current) {
@@ -133,7 +133,7 @@ export const SellerCenterSidebar: React.FC<SellerCenterSidebarProps> = ({
     <>
       <div className="md:hidden bg-white border-b border-slate-200 px-2 py-1.5 shadow-2xs flex-shrink-0 z-20">
         <div className="grid grid-cols-5 gap-1">
-          {navItems.slice(0, 5).map((item) => (
+          {navItems.slice(0, 4).map((item) => (
             <button
               key={item.id}
               onClick={() => onTabChange(item.id)}
@@ -148,23 +148,15 @@ export const SellerCenterSidebar: React.FC<SellerCenterSidebarProps> = ({
             </button>
           ))}
           <button
-            onClick={() => {
-              if (isTabActive('analytics')) {
-                setShowMobileMoreMenu(true);
-              } else {
-                onTabChange('analytics');
-              }
-            }}
+            onClick={() => setShowMobileMoreMenu(true)}
             className={`flex flex-col items-center justify-center py-1.5 px-1 rounded-xl text-[10.5px] font-bold transition-all cursor-pointer ${
-              isTabActive('analytics') || isTabActive('marketing')
+              overflowActive || showMobileMoreMenu
                 ? 'bg-blue-600 text-white shadow-xs'
                 : 'text-slate-600 hover:bg-slate-100'
             }`}
           >
-            <BarChart2 className="w-4 h-4 mb-0.5" />
-            <span className="truncate max-w-full flex items-center gap-0.5">
-              {isTabActive('marketing') ? 'Kênh Bán' : 'Phân Tích'}
-            </span>
+            <Menu className="w-4 h-4 mb-0.5" />
+            <span className="truncate max-w-full">Khác</span>
           </button>
         </div>
       </div>
