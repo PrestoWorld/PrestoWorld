@@ -10,7 +10,7 @@ use PrestoWorld\Core\Legacy\LegacyHook;
 use PrestoWorld\Core\Legacy\LegacyRegistry;
 use PrestoWorld\Core\Legacy\LegacyState;
 use PrestoWorld\Core\Legacy\LegacyStateResetter;
-use PrestoWorld\Core\Legacy\ShimLoader;
+use Prestoworld\WordpressShim\ShimLoader;
 use PrestoWorld\Core\OptionRepository;
 use Witals\Framework\Module\Contracts\HookInterface;
 
