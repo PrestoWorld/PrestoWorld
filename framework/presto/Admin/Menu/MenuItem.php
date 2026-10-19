@@ -213,10 +213,13 @@ class MenuItem implements MenuItemContract
         }
 
         if ($this->children !== []) {
-            $data['children'] = array_map(
+            $childrenData = array_map(
                 fn(MenuItemContract $child) => $child->toArray(),
                 $this->sortChildren($this->children),
             );
+            $data['children'] = $childrenData;
+            // Also include as 'items' for frontend compatibility
+            $data['items'] = $childrenData;
         }
 
         return $data;
