@@ -169,4 +169,29 @@ final class AssetManager
         self::$inlineStyles = [];
         self::$modules = [];
     }
+
+    /**
+     * Enqueued styles in queue order (handle => registered config).
+     *
+     * @return array<string, array{src: string, deps: array<int, string>, ver: string|bool|null, media: string}>
+     */
+    public static function queuedStyles(): array
+    {
+        $out = [];
+
+        foreach (self::$queueStyles as $handle) {
+            $out[$handle] = self::$styles[$handle] ?? [
+                'src' => '',
+                'deps' => [],
+                'ver' => null,
+                'media' => 'all',
+            ];
+
+            if (isset(self::$inlineStyles[$handle])) {
+                $out[$handle]['inline'] = self::$inlineStyles[$handle];
+            }
+        }
+
+        return $out;
+    }
 }

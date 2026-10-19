@@ -61,6 +61,8 @@ class PrestoWorldServiceProvider extends ServiceProvider
             $shims->registerAutoload();
         }
 
+        $this->bootContextBuilder();
+
         LegacyState::initGlobals();
         LegacyState::registry();
 
@@ -76,6 +78,36 @@ class PrestoWorldServiceProvider extends ServiceProvider
 
         if ($db !== null) {
             OptionRepository::setDatabase($db);
+        }
+    }
+
+    /**
+     * Bootstrap the Context Builder (framework/presto/Context/Builder):
+     * binds Presto\Context\Loader (backed by the gutenberg-core kernel),
+     * boots the active theme's functions.php and registers REST routes.
+     *
+     * The Builder lives outside modules/ so it is not part of module
+     * discovery — it is wired explicitly here.
+     */
+    private function bootContextBuilder(): void
+    {
+        try {
+            if (!class_exists(\PrestoWorld\Modules\ContextBuilder\Module::class)) {
+                return;
+            }
+
+            $path = $this->app->basePath('framework/presto/Context/Builder');
+
+            $module = new \PrestoWorld\Modules\ContextBuilder\Module(
+                $this->app,
+                $path,
+                ['name' => 'context-builder'],
+            );
+
+            $module->register();
+            $module->boot();
+        } catch (\Throwable $e) {
+            error_log('[PrestoWorld] Context Builder boot failed: ' . $e->getMessage());
         }
     }
 }

@@ -25,8 +25,13 @@
             "PrestoWorld\\": "framework/presto/",
             "PrestoWorld\\Core\\": "app/src/Core/",
             "PrestoWorld\\Modules\\": "modules/",
-            "PrestoWorld\\Modules\\ModuleManager\\": "framework/presto/Modules/ModuleManager/"
-        }
+            "PrestoWorld\\Modules\\ModuleManager\\": "framework/presto/Modules/ModuleManager/",
+            "Presto\\": "framework/presto/",
+            "PrestoWorld\\Modules\\Schema\\": "framework/presto/Modules/Schema/"
+        },
+        "classmap": [
+            "framework/presto/Context/Builder/"
+        ]
     },
     "config": {
         "allow-plugins": {

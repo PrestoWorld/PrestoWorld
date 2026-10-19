@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace Presto\Context;
 
-use PrestoWorld\Modules\ContextBuilder\Parser\BlockParser;
-use PrestoWorld\Modules\Gutenberg\Parser\BlockParser as GutenbergBlockParser;
-use PrestoWorld\Modules\Gutenberg\Renderer\BlockRenderer;
+use PrestoWorld\Gutenberg\Contracts\BlockRendererInterface;
+use PrestoWorld\Gutenberg\Contracts\ParserInterface;
+use PrestoWorld\Gutenberg\Parser\BlockSerializer;
+use PrestoWorld\Gutenberg\Rendering\BlockRenderer;
 
 /**
  * ContextLoader — render layout cho context type ra frontend.
@@ -39,7 +40,7 @@ class Loader
 
     protected ?BlockRenderer $blockRenderer = null;
 
-    protected ?GutenbergBlockParser $blockParser = null;
+    protected ?ParserInterface $blockParser = null;
 
     /** @var array<string, bool> */
     protected array $unsupportedBlocks = [];
@@ -52,7 +53,7 @@ class Loader
     }
 
     /**
-     * Set the BlockRenderer for rendering parsed blocks.
+     * Set the BlockRenderer (gutenberg-core engine) for rendering parsed blocks.
      */
     public function setBlockRenderer(BlockRenderer $blockRenderer): void
     {
@@ -60,13 +61,13 @@ class Loader
     }
 
     /**
-     * Set the Gutenberg block parser used when rendering through BlockRenderer.
+     * Set the block parser used when rendering through BlockRenderer.
      *
      * The Gutenberg parser normalizes core block names (e.g. `group` →
-     * `core/group`), which is required so BlockFactory can resolve the
-     * correct block renderer (template-part, query, ...).
+     * `core/group`), which is required so the block registry can resolve
+     * the correct block type (template-part, query, ...).
      */
-    public function setBlockParser(GutenbergBlockParser $blockParser): void
+    public function setBlockParser(ParserInterface $blockParser): void
     {
         $this->blockParser = $blockParser;
     }
@@ -105,20 +106,33 @@ class Loader
         }
 
         if ($this->blockRenderer !== null) {
-            $parser = $this->blockParser ?? new GutenbergBlockParser();
+            $parser = $this->blockParser ?? new BlockSerializer();
             $blocks = $parser->parse((string) file_get_contents($resolvedPath));
 
-            if ($data !== []) {
-                $this->blockRenderer->mergeContext($data);
-            }
-
-            return $this->blockRenderer->render($blocks);
+            return $this->blockRenderer->render($blocks, $data);
         }
 
-        // Fallback: render blocks manually
-        $blocks = BlockParser::parseFile($resolvedPath);
+        // Fallback: render blocks manually through the Builder block registry.
+        $blocks = $this->parseLegacy($resolvedPath);
 
         return $this->renderParsedBlocks($blocks, $data);
+    }
+
+    /**
+     * Legacy block-comment parser (fallback when no gutenberg-core renderer
+     * has been injected). Keeps the Builder's flat-array contract.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    protected function parseLegacy(string $resolvedPath): array
+    {
+        if (class_exists(\PrestoWorld\Modules\ContextBuilder\Parser\BlockParser::class)) {
+            return \PrestoWorld\Modules\ContextBuilder\Parser\BlockParser::parseFile($resolvedPath);
+        }
+
+        throw new \RuntimeException(
+            'No block renderer injected and legacy ContextBuilder BlockParser is unavailable.'
+        );
     }
 
     /**

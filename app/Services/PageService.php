@@ -141,7 +141,7 @@ class PageService
 
             $row = $query
                 ->where('p.slug', $slug)
-                ->where('p.post_type', 'IN', ['page', 'post'])
+                ->where('p.type', 'IN', ['page', 'post'])
                 ->where('p.status', 'publish')
                 ->run()
                 ->fetch();
