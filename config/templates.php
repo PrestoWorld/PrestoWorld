@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 return [
     'mapping' => [
-        '/' => 'index',
+        '/' => 'home',
         '/home' => 'page',
         '/about' => 'page-no-title',
         '/search' => 'search',

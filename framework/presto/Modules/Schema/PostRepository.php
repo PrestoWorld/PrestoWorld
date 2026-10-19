@@ -191,6 +191,8 @@ class PostRepository
         $indexedPosts = [];
 
         foreach ($posts as $post) {
+            // DB column is `type`; expose the WP-style `post_type` alias.
+            $post['post_type'] = $post['post_type'] ?? $post['type'] ?? 'post';
             $byType[$post['post_type']][] = $post['id'];
             $indexedPosts[$post['id']] = $post;
             $indexedPosts[$post['id']]['terms'] = [];

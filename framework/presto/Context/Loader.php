@@ -109,7 +109,7 @@ class Loader
             $parser = $this->blockParser ?? new BlockSerializer();
             $blocks = $parser->parse((string) file_get_contents($resolvedPath));
 
-            return $this->blockRenderer->render($blocks, $data);
+            return $this->blockRenderer->render($blocks, $this->singularContext($data));
         }
 
         // Fallback: render blocks manually through the Builder block registry.
@@ -141,6 +141,30 @@ class Loader
     public function supports(string $template): bool
     {
         return $this->resolveTemplatePath($template) !== null;
+    }
+
+    /**
+     * Expose a singular post row to post-* block handlers.
+     *
+     * For singular templates (single/page) the app passes the resolved post
+     * row as the render data. Post-title/post-content/... read it from block
+     * context, so wrap the row under `post` (+ derived postId/postType) here
+     * rather than mutating shared render state.
+     *
+     * @param array<string, mixed> $data
+     * @return array<string, mixed>
+     */
+    protected function singularContext(array $data): array
+    {
+        if (!isset($data['id']) && !isset($data['title']) && !isset($data['post_title'])) {
+            return $data;
+        }
+
+        $data['post'] = $data;
+        $data['postId'] = (int) ($data['id'] ?? 0);
+        $data['postType'] = $data['type'] ?? $data['post_type'] ?? $data['postType'] ?? 'post';
+
+        return $data;
     }
 
     /**
