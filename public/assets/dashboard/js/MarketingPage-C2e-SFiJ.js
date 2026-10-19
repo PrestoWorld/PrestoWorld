@@ -1,0 +1,1 @@
+import{j as r}from"./vendor-react-ioS9alIq.js";import"./vendor-Bb8JjhAW.js";const s=({subTab:e})=>e==="bookpress"?r.jsx("div",{children:r.jsx("h1",{children:"BookPress Sub-site"})}):e==="promotions"?r.jsx("div",{children:r.jsx("h1",{children:"Voucher"})}):e==="events"?r.jsx("div",{children:r.jsx("h1",{children:"Hội sách"})}):null;export{s as MarketingPage};

@@ -1,15 +1,26 @@
+import { lazy } from 'react';
 import { registerScreen } from './registry';
-import { OverviewPage } from '../components/pages/OverviewPage';
-import { OrdersPage } from '../components/pages/OrdersPage';
-import { InventoryPage } from '../components/pages/InventoryPage';
-import { MessagesPage } from '../components/pages/MessagesPage';
-import { AnalyticsPage } from '../components/pages/AnalyticsPage';
 
-registerScreen('overview', (props) => <OverviewPage widgets={props.widgets} />);
-registerScreen('orders', () => <OrdersPage />);
-registerScreen('inventory', () => <InventoryPage />);
-registerScreen('messages', () => <MessagesPage />);
-registerScreen('analytics', () => <AnalyticsPage />);
+registerScreen(
+  'overview',
+  lazy(() => import('../components/pages/OverviewPage').then((m) => ({ default: m.OverviewPage }))),
+);
+registerScreen(
+  'orders',
+  lazy(() => import('../components/pages/OrdersPage').then((m) => ({ default: m.OrdersPage }))),
+);
+registerScreen(
+  'inventory',
+  lazy(() => import('../components/pages/InventoryPage').then((m) => ({ default: m.InventoryPage }))),
+);
+registerScreen(
+  'messages',
+  lazy(() => import('../components/pages/MessagesPage').then((m) => ({ default: m.MessagesPage }))),
+);
+registerScreen(
+  'analytics',
+  lazy(() => import('../components/pages/AnalyticsPage').then((m) => ({ default: m.AnalyticsPage }))),
+);
 
 export { registerScreen, getScreenComponent, hasScreen } from './registry';
 export { GenericScreen } from './GenericScreen';

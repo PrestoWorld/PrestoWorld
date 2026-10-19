@@ -22,7 +22,7 @@ class RouteRegistry implements RouteRegistryInterface, ResettableInterface
 
     protected array $middleware = [];
 
-    protected const PARAM_REGEX = '/\{(\w+)(\??)(?::((?:[^{}]|\{[^{}]*\})+))?\}/';
+    protected const PARAM_REGEX = '/\{(\w+)(\??)(?:::((?:[^{}]|\{[^{}]*\})+))?\}/';
 
     protected string $cachePath = '';
     protected bool $cacheEnabled = false;
@@ -457,7 +457,16 @@ class RouteRegistry implements RouteRegistryInterface, ResettableInterface
         if ($lastSlash === false) {
             return '';
         }
-        return substr($path, 0, $lastSlash + 1);
+        $prefix = substr($path, 0, $lastSlash + 1);
+
+        // Optional first param ('/dashboard/{screen?}') must also match the
+        // bare parent path — drop the trailing slash from the prefix filter.
+        $rest = substr($path, $lastSlash + 1);
+        if (preg_match('/^\{\w+\?/', $rest) === 1) {
+            $prefix = rtrim($prefix, '/');
+        }
+
+        return $prefix;
     }
 
     protected function extractParams(array $paramNames, array $matches): array
@@ -473,7 +482,7 @@ class RouteRegistry implements RouteRegistryInterface, ResettableInterface
 
     protected function extractConstraint(string $path, string $name): string
     {
-        preg_match('/\{' . $name . '\??(?::((?:[^{}]|\{[^{}]*\})+))?\}/', $path, $m);
+        preg_match('/\{' . $name . '\??(?:::((?:[^{}]|\{[^{}]*\})+))?\}/', $path, $m);
         return $m[1] ?? '';
     }
 
@@ -483,13 +492,13 @@ class RouteRegistry implements RouteRegistryInterface, ResettableInterface
             return $this->compiled[$path];
         }
 
-        $pattern = preg_replace_callback('/\/\{(\w+)\?(?::((?:[^{}]|\{[^{}]*\})+))?\}/', function ($m) {
+        $pattern = preg_replace_callback('/\/\{(\w+)\?(?:::((?:[^{}]|\{[^{}]*\})+))?\}/', function ($m) {
             $name = $m[1];
             $regex = !empty($m[2]) ? $m[2] : '[^/]+';
             return '(/(?P<' . $name . '>' . $regex . '))?';
         }, $path);
 
-        $pattern = preg_replace_callback('/\{(\w+)(?::((?:[^{}]|\{[^{}]*\})+))?\}/', function ($m) {
+        $pattern = preg_replace_callback('/\{(\w+)(?:::((?:[^{}]|\{[^{}]*\})+))?\}/', function ($m) {
             $name = $m[1];
             $regex = !empty($m[2]) ? $m[2] : '[^/]+';
             return '(?P<' . $name . '>' . $regex . ')';

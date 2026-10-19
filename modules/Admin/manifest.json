@@ -20,11 +20,6 @@
     "routes": [
         {
             "method": "GET",
-            "path": "/dashboard",
-            "handler": ["App\\Http\\Controllers\\Admin\\SpaController", "__invoke"]
-        },
-        {
-            "method": "GET",
             "path": "/api/admin/menu",
             "handler": ["App\\Http\\Controllers\\Admin\\SpaController", "menu"]
         },

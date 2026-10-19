@@ -14,8 +14,8 @@ $router->get('/login', [App\Http\Controllers\AuthController::class, 'showLogin']
 $router->post('/login', [App\Http\Controllers\AuthController::class, 'handleLogin']);
 $router->get('/logout', [App\Http\Controllers\AuthController::class, 'handleLogout']);
 
-// Admin SPA entry
-$router->get('/dashboard', \App\Http\Controllers\Admin\SpaController::class);
+// Admin SPA entry — dynamic routes: /dashboard, /dashboard/{screen}
+$router->get('/dashboard/{screen?::[a-z0-9\-]+}', [\App\Http\Controllers\Admin\SpaController::class, 'dashboard']);
 
 // Installation routes (check if installed before serving)
 $router->get('/install', [App\Http\Controllers\InstallController::class, 'show']);

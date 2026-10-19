@@ -1,21 +1,31 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, lazy, Suspense } from 'react';
 import type { InitialState, SubsystemNavItem } from '../types';
 import { resolveSubsystemIcon } from '../nav/subsystemIcons';
+import { screenFromPath, pushScreen, replaceScreen, isKnownScreen } from '../router';
 import { SellerCenterHeader } from './SellerCenterHeader';
 import { SellerCenterSidebar } from './SellerCenterSidebar';
-import { MarketingPage } from './pages/MarketingPage';
 import { getScreenComponent, GenericScreen } from '../screens';
+
+const MarketingPage = lazy(() =>
+  import('./pages/MarketingPage').then((m) => ({ default: m.MarketingPage })),
+);
 
 interface SellerCenterPageProps {
   initialState: InitialState;
   onBackToMain: () => void;
 }
 
+const ScreenLoader = () => (
+  <div className="flex items-center justify-center h-64 text-slate-400 text-xs font-bold animate-pulse">
+    Đang tải phân hệ…
+  </div>
+);
+
 export const SellerCenterPage: React.FC<SellerCenterPageProps> = ({
   initialState,
   onBackToMain,
 }) => {
-  const [activeTab, setActiveTab] = useState<string>('overview');
+  const [activeTab, setActiveTab] = useState<string>(initialState.page.screenId || 'overview');
   const [marketingSubTab, setMarketingSubTab] = useState<'bookpress' | 'promotions' | 'events'>('bookpress');
   const [showMobileMoreMenu, setShowMobileMoreMenu] = useState(false);
 
@@ -30,6 +40,61 @@ export const SellerCenterPage: React.FC<SellerCenterPageProps> = ({
     [initialState.subsystems],
   );
 
+  // Route table built from backend state: subsystems + registered screens + menu items
+  const knownScreens = useMemo(() => {
+    const ids = new Set<string>();
+    ids.add('overview');
+    for (const sub of initialState.subsystems ?? []) {
+      const id = sub.screenId ?? sub.id;
+      if (id) ids.add(id);
+    }
+    for (const screen of initialState.screens) {
+      if (screen.id) ids.add(screen.id);
+    }
+    for (const section of initialState.menuSections) {
+      for (const item of section.items ?? []) {
+        const id = item.screenId ?? item.id;
+        if (id) ids.add(id);
+      }
+    }
+    return ids;
+  }, [initialState]);
+
+  const navigateTo = (tabId: string) => {
+    if (!isKnownScreen(tabId, knownScreens)) {
+      setActiveTab('overview');
+      replaceScreen('overview');
+      return;
+    }
+    setActiveTab(tabId);
+    pushScreen(tabId);
+  };
+
+  // Browser back/forward navigation
+  useEffect(() => {
+    const onPopState = () => {
+      const screenId = screenFromPath(window.location.pathname);
+      if (screenId !== null && !isKnownScreen(screenId, knownScreens)) {
+        setActiveTab('overview');
+        replaceScreen('overview');
+        return;
+      }
+      setActiveTab(screenId ?? 'overview');
+    };
+
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, [knownScreens]);
+
+  // Redirect direct loads of unknown screens back to the overview
+  useEffect(() => {
+    const screenId = screenFromPath(window.location.pathname);
+    if (screenId !== null && !isKnownScreen(screenId, knownScreens)) {
+      setActiveTab('overview');
+      replaceScreen('overview');
+    }
+  }, [knownScreens]);
+
   const isTabActive = (tabId: string) => {
     if (tabId === 'marketing') {
       return activeTab === 'marketing' || activeTab === 'bookpress' || activeTab === 'promotions' || activeTab === 'events';
@@ -39,17 +104,17 @@ export const SellerCenterPage: React.FC<SellerCenterPageProps> = ({
 
   const handleSelectNavTab = (tabId: string) => {
     if (tabId === 'marketing') {
-      setActiveTab('marketing');
+      navigateTo('marketing');
       if (activeTab !== 'bookpress' && activeTab !== 'promotions' && activeTab !== 'events') {
         setMarketingSubTab('bookpress');
       }
       return;
     }
-    setActiveTab(tabId);
+    navigateTo(tabId);
   };
 
   const handleSelectScreen = (screenId: string) => {
-    setActiveTab(screenId);
+    navigateTo(screenId);
   };
 
   const handleMobileMoreClick = (tabId: string) => {
@@ -113,7 +178,7 @@ export const SellerCenterPage: React.FC<SellerCenterPageProps> = ({
         />
 
         <main className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 pb-24 md:pb-6 bg-slate-50/50">
-          {renderPageContent()}
+          <Suspense fallback={<ScreenLoader />}>{renderPageContent()}</Suspense>
         </main>
       </div>
     </div>

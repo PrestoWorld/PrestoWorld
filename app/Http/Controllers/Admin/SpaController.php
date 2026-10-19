@@ -139,39 +139,21 @@ class SpaController
         return Response::html($html);
     }
 
-    protected function serveNewDashboard(Request $request): Response
+    /**
+     * Serve the Seller Center SPA for /dashboard and its dynamic screen
+     * routes (/dashboard/{screen}), e.g. /dashboard/orders.
+     */
+    public function dashboard(Request $request, ?string $screen = null): Response
+    {
+        return $this->serveNewDashboard($request, $screen);
+    }
+
+    protected function serveNewDashboard(Request $request, ?string $screen = null): Response
     {
         $dashboardDir = __DIR__ . '/../../../../public/assets/dashboard';
 
         if (is_dir($dashboardDir)) {
-            // Find all CSS and JS files
-            $cssFiles = [];
-            $jsFiles = [];
-
-            // Gather CSS files
-            $cssDir = $dashboardDir . '/css';
-            if (is_dir($cssDir)) {
-                foreach (glob($cssDir . '/*.css') as $cssFile) {
-                    $cssFiles[$cssFile] = '/assets/dashboard/css/' . basename($cssFile) . '?v=' . filemtime($cssFile);
-                }
-            }
-
-            // Gather JS files (ordered: vendor-react, vendor-lucide, vendor, dashboard.js)
-            $jsDir = $dashboardDir . '/js';
-            if (is_dir($jsDir)) {
-                $files = glob($jsDir . '/*.js');
-                // Sort to ensure vendor files come before main bundle
-                usort($files, function ($a, $b) {
-                    $aMain = strpos(basename($a), 'dashboard.js') !== false;
-                    $bMain = strpos(basename($b), 'dashboard.js') !== false;
-                    if ($aMain && !$bMain) return 1;
-                    if (!$aMain && $bMain) return -1;
-                    return strcmp($a, $b);
-                });
-                foreach ($files as $jsFile) {
-                    $jsFiles[] = '/assets/dashboard/js/' . basename($jsFile) . '?v=' . filemtime($jsFile);
-                }
-            }
+            [$cssFiles, $jsFiles] = $this->collectDashboardAssets($dashboardDir);
 
             // Build HTML with proper asset tags
             $html = '<!DOCTYPE html>' . "\n";
@@ -190,11 +172,11 @@ class SpaController
             $html .= '<body>' . "\n";
             $html .= '  <div id="root"></div>' . "\n";
 
-            // Inject initial state
-            $initialState = $this->getNewDashboardInitialState();
+            // Inject initial state (screen resolved from the route)
+            $initialState = $this->getNewDashboardInitialState($screen, $request->path());
             $html .= '  <script>window.__INITIAL_DASHBOARD_STATE__ = ' . json_encode($initialState, JSON_UNESCAPED_UNICODE) . ';</script>' . "\n";
 
-            // Inject JS files (cache-busted via filemtime)
+            // Inject JS files (entry only — lazy chunks load on demand)
             foreach ($jsFiles as $jsFile) {
                 $html .= '  <script src="' . $jsFile . '" type="module" defer></script>' . "\n";
             }
@@ -210,7 +192,76 @@ class SpaController
         return $this->__invoke($request);
     }
 
-    protected function getNewDashboardInitialState(): array
+    /**
+     * Resolve dashboard assets from the Vite manifest (entry + its CSS only)
+     * so per-route lazy chunks are fetched on demand. Falls back to globbing
+     * when the manifest is absent.
+     *
+     * @return array{0: list<string>, 1: list<string>}
+     */
+    protected function collectDashboardAssets(string $dashboardDir): array
+    {
+        $manifestPath = $dashboardDir . '/.vite/manifest.json';
+        if (is_file($manifestPath)) {
+            $manifest = json_decode((string) file_get_contents($manifestPath), true);
+
+            if (is_array($manifest)) {
+                foreach ($manifest as $node) {
+                    if (is_array($node) && ($node['isEntry'] ?? false) === true) {
+                        $cssFiles = [];
+                        $jsFiles = [];
+
+                        foreach ((array) ($node['css'] ?? []) as $css) {
+                            $absolute = $dashboardDir . '/' . ltrim((string) $css, '/');
+                            if (is_file($absolute)) {
+                                $cssFiles[] = '/assets/dashboard/' . ltrim((string) $css, '/') . '?v=' . filemtime($absolute);
+                            }
+                        }
+
+                        $entryAbsolute = $dashboardDir . '/' . ltrim((string) ($node['file'] ?? ''), '/');
+                        if (($node['file'] ?? '') !== '' && is_file($entryAbsolute)) {
+                            $jsFiles[] = '/assets/dashboard/' . ltrim((string) $node['file'], '/') . '?v=' . filemtime($entryAbsolute);
+                        }
+
+                        if ($jsFiles !== []) {
+                            return [$cssFiles, $jsFiles];
+                        }
+                    }
+                }
+            }
+        }
+
+        // Legacy fallback: inject every asset under the output directory
+        $cssFiles = [];
+        $jsFiles = [];
+
+        $cssDir = $dashboardDir . '/css';
+        if (is_dir($cssDir)) {
+            foreach (glob($cssDir . '/*.css') ?: [] as $cssFile) {
+                $cssFiles[] = '/assets/dashboard/css/' . basename($cssFile) . '?v=' . filemtime($cssFile);
+            }
+        }
+
+        $jsDir = $dashboardDir . '/js';
+        if (is_dir($jsDir)) {
+            $files = glob($jsDir . '/*.js') ?: [];
+            // Sort to ensure vendor files come before main bundle
+            usort($files, function ($a, $b) {
+                $aMain = strpos(basename($a), 'dashboard.js') !== false;
+                $bMain = strpos(basename($b), 'dashboard.js') !== false;
+                if ($aMain && !$bMain) return 1;
+                if (!$aMain && $bMain) return -1;
+                return strcmp($a, $b);
+            });
+            foreach ($files as $jsFile) {
+                $jsFiles[] = '/assets/dashboard/js/' . basename($jsFile) . '?v=' . filemtime($jsFile);
+            }
+        }
+
+        return [$cssFiles, $jsFiles];
+    }
+
+    protected function getNewDashboardInitialState(?string $screenId = null, ?string $path = null): array
     {
         $menuSections = $this->buildMenuSections();
         $screens = $this->buildScreens($menuSections);
@@ -248,6 +299,25 @@ class SpaController
             ];
         }
 
+        $subsystems = $this->buildSubsystemNav();
+
+        $resolvedScreenId = ($screenId !== null && $screenId !== '') ? $screenId : 'overview';
+        $title = 'Dashboard';
+        foreach ($screens as $s) {
+            if (($s['id'] ?? '') === $resolvedScreenId) {
+                $title = $s['title'] ?? 'Dashboard';
+                break;
+            }
+        }
+        if ($title === 'Dashboard') {
+            foreach ($subsystems as $sub) {
+                if (($sub['screenId'] ?? $sub['id'] ?? '') === $resolvedScreenId) {
+                    $title = $sub['label'] ?? 'Dashboard';
+                    break;
+                }
+            }
+        }
+
         return [
             'user' => [
                 'name' => 'Administrator',
@@ -256,12 +326,12 @@ class SpaController
             ],
             'screens' => $screens,
             'menuSections' => $menuSections,
-            'subsystems' => $this->buildSubsystemNav(),
+            'subsystems' => $subsystems,
             'widgets' => $widgets,
             'page' => [
-                'path' => '/dashboard',
-                'title' => 'Dashboard',
-                'screenId' => 'overview',
+                'path' => $path ?? '/dashboard',
+                'title' => $title,
+                'screenId' => $resolvedScreenId,
             ],
         ];
     }

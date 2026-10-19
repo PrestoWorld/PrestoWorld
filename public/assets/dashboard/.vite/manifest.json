@@ -1,0 +1,104 @@
+{
+  "_vendor-Bb8JjhAW.js": {
+    "file": "js/vendor-Bb8JjhAW.js",
+    "name": "vendor"
+  },
+  "_vendor-lucide-Dx8KE0fs.js": {
+    "file": "js/vendor-lucide-Dx8KE0fs.js",
+    "name": "vendor-lucide",
+    "imports": [
+      "_vendor-react-ioS9alIq.js"
+    ]
+  },
+  "_vendor-react-ioS9alIq.js": {
+    "file": "js/vendor-react-ioS9alIq.js",
+    "name": "vendor-react",
+    "imports": [
+      "_vendor-Bb8JjhAW.js"
+    ]
+  },
+  "src/components/pages/AnalyticsPage.tsx": {
+    "file": "js/AnalyticsPage-8EbzBqwF.js",
+    "name": "AnalyticsPage",
+    "src": "src/components/pages/AnalyticsPage.tsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "_vendor-react-ioS9alIq.js",
+      "_vendor-Bb8JjhAW.js"
+    ]
+  },
+  "src/components/pages/InventoryPage.tsx": {
+    "file": "js/InventoryPage-CGlb3dGl.js",
+    "name": "InventoryPage",
+    "src": "src/components/pages/InventoryPage.tsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "_vendor-react-ioS9alIq.js",
+      "_vendor-lucide-Dx8KE0fs.js",
+      "_vendor-Bb8JjhAW.js"
+    ]
+  },
+  "src/components/pages/MarketingPage.tsx": {
+    "file": "js/MarketingPage-C2e-SFiJ.js",
+    "name": "MarketingPage",
+    "src": "src/components/pages/MarketingPage.tsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "_vendor-react-ioS9alIq.js",
+      "_vendor-Bb8JjhAW.js"
+    ]
+  },
+  "src/components/pages/MessagesPage.tsx": {
+    "file": "js/MessagesPage-Hb4hsRzl.js",
+    "name": "MessagesPage",
+    "src": "src/components/pages/MessagesPage.tsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "_vendor-react-ioS9alIq.js",
+      "_vendor-Bb8JjhAW.js"
+    ]
+  },
+  "src/components/pages/OrdersPage.tsx": {
+    "file": "js/OrdersPage-DspFX2Cc.js",
+    "name": "OrdersPage",
+    "src": "src/components/pages/OrdersPage.tsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "_vendor-react-ioS9alIq.js",
+      "_vendor-Bb8JjhAW.js"
+    ]
+  },
+  "src/components/pages/OverviewPage.tsx": {
+    "file": "js/OverviewPage-V3srFpJ4.js",
+    "name": "OverviewPage",
+    "src": "src/components/pages/OverviewPage.tsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "_vendor-react-ioS9alIq.js",
+      "_vendor-lucide-Dx8KE0fs.js",
+      "_vendor-Bb8JjhAW.js"
+    ]
+  },
+  "src/main.tsx": {
+    "file": "js/dashboard.js",
+    "name": "main",
+    "src": "src/main.tsx",
+    "isEntry": true,
+    "imports": [
+      "_vendor-react-ioS9alIq.js",
+      "_vendor-lucide-Dx8KE0fs.js",
+      "_vendor-Bb8JjhAW.js"
+    ],
+    "dynamicImports": [
+      "src/components/pages/OverviewPage.tsx",
+      "src/components/pages/OrdersPage.tsx",
+      "src/components/pages/InventoryPage.tsx",
+      "src/components/pages/MessagesPage.tsx",
+      "src/components/pages/AnalyticsPage.tsx",
+      "src/components/pages/MarketingPage.tsx"
+    ],
+    "css": [
+      "css/dashboard.css"
+    ]
+  }
+}
