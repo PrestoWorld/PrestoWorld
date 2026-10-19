@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PrestoWorld\Modules\Admin\Skins\PrestoModern;
+namespace PrestoWorld\Admin\Skins\PrestoModern;
 
 use PrestoWorld\Contracts\Admin\SkinInterface;
 use PrestoWorld\Contracts\Admin\AdminBar\AdminBarContext as AdminBarContextContract;
@@ -57,7 +57,7 @@ class PrestoModernSkin implements SkinInterface
     {
         $adminBarHtml = '';
         if ($this->adminBar !== null) {
-            $renderer = new \PrestoWorld\Modules\Admin\AdminBar\AdminBarRenderer($this->adminBar);
+            $renderer = new \PrestoWorld\Admin\AdminBar\AdminBarRenderer($this->adminBar);
             $renderer->setTheme('dark');
 
             $user = $args['user'] ?? [];

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PrestoWorld\Modules\Admin\Menu;
+namespace PrestoWorld\Admin\Menu;
 
 use PrestoWorld\Contracts\Admin\Menu\MenuItem as MenuItemContract;
 

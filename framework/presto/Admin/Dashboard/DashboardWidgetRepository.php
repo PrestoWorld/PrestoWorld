@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PrestoWorld\Modules\Admin\Dashboard;
+namespace PrestoWorld\Admin\Dashboard;
 
 use PrestoWorld\Contracts\Admin\Dashboard\DashboardWidgetRepository as DashboardWidgetRepositoryContract;
 use PrestoWorld\Contracts\Admin\Dashboard\DashboardWidget as DashboardWidgetContract;

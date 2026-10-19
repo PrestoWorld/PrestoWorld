@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PrestoWorld\Modules\Admin\ScreenOptions;
+namespace PrestoWorld\Admin\ScreenOptions;
 
 use PrestoWorld\Contracts\Admin\ScreenOptions\ScreenOption as ScreenOptionContract;
 

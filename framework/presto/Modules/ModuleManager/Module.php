@@ -7,7 +7,7 @@ namespace PrestoWorld\Modules\ModuleManager;
 use Witals\Framework\Module\Module as WitalsModule;
 use Witals\Framework\Module\ModuleManager as WitalsModuleManager;
 use PrestoWorld\Contracts\Admin\Menu\MenuContextRepository as MenuContract;
-use PrestoWorld\Modules\Admin\Screen\Screen;
+use PrestoWorld\Admin\Screen\Screen;
 
 class Module extends WitalsModule
 {

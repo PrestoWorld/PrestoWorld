@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PrestoWorld\Modules\Admin\AdminBar;
+namespace PrestoWorld\Admin\AdminBar;
 
 use PrestoWorld\Contracts\Admin\AdminBar\AdminBarContext as AdminBarContextContract;
 use PrestoWorld\Contracts\Admin\AdminBar\AdminBarItem as AdminBarItemContract;

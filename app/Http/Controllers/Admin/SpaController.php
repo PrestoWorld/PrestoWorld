@@ -7,14 +7,14 @@ namespace App\Http\Controllers\Admin;
 use Witals\Framework\Http\Request;
 use Witals\Framework\Http\Response;
 use PrestoWorld\Foundation\Admin\DashboardSubsystem;
-use PrestoWorld\Modules\Admin\SkinManager;
+use PrestoWorld\Admin\SkinManager;
 use PrestoWorld\Contracts\Admin\Menu\MenuContextRepository;
 use PrestoWorld\Contracts\Admin\Dashboard\DashboardScreenRegistryInterface;
 use PrestoWorld\Contracts\Admin\Dashboard\DashboardWidgetRepository;
-use PrestoWorld\Modules\Admin\ScreenOptions\ScreenOption;
-use PrestoWorld\Modules\Admin\ScreenOptions\ScreenOptionsContext;
-use PrestoWorld\Modules\Admin\AdminBar\AdminBarItem;
-use PrestoWorld\Modules\Admin\AdminBar\AdminBarContext;
+use PrestoWorld\Admin\ScreenOptions\ScreenOption;
+use PrestoWorld\Admin\ScreenOptions\ScreenOptionsContext;
+use PrestoWorld\Admin\AdminBar\AdminBarItem;
+use PrestoWorld\Admin\AdminBar\AdminBarContext;
 
 class SpaController
 {

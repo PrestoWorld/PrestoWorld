@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PrestoWorld\Modules\Admin;
+namespace PrestoWorld\Admin;
 
 use PrestoWorld\Contracts\Admin\SkinInterface;
 use InvalidArgumentException;

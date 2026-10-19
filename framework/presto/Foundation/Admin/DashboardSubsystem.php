@@ -69,7 +69,7 @@ final class DashboardSubsystem
     ): void {
         if (
             !$app->has(DashboardScreenRegistryInterface::class)
-            || !class_exists(\PrestoWorld\Modules\Admin\Screen\Screen::class)
+            || !class_exists(\PrestoWorld\Admin\Screen\Screen::class)
         ) {
             return;
         }
@@ -83,7 +83,7 @@ final class DashboardSubsystem
             return;
         }
 
-        $registry->registerScreen(new \PrestoWorld\Modules\Admin\Screen\Screen(
+        $registry->registerScreen(new \PrestoWorld\Admin\Screen\Screen(
             id: $id,
             title: $label,
             icon: $icon,

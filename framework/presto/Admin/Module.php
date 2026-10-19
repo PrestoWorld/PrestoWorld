@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace PrestoWorld\Modules\Admin;
+namespace PrestoWorld\Admin;
 
 use Witals\Framework\Module\Module as WitalsModule;
 use Witals\Framework\Contracts\View\Factory as ViewFactory;
 use PrestoWorld\Contracts\Admin\Menu\MenuContextRepository as MenuContract;
 use PrestoWorld\Contracts\Admin\AdminBar\AdminBarContext as AdminBarContextContract;
 use PrestoWorld\Foundation\Admin\DashboardSubsystem;
-use PrestoWorld\Modules\Admin\Dashboard\DashboardWidget;
+use PrestoWorld\Admin\Dashboard\DashboardWidget;
 
 class Module extends WitalsModule
 {
@@ -39,15 +39,15 @@ class Module extends WitalsModule
 
     protected function registerSkinManager(): void
     {
-        $this->app->singleton(\PrestoWorld\Modules\Admin\SkinManager::class, fn() => new \PrestoWorld\Modules\Admin\SkinManager());
-        $this->app->alias(\PrestoWorld\Modules\Admin\SkinManager::class, 'admin.skins');
+        $this->app->singleton(\PrestoWorld\Admin\SkinManager::class, fn() => new \PrestoWorld\Admin\SkinManager());
+        $this->app->alias(\PrestoWorld\Admin\SkinManager::class, 'admin.skins');
     }
 
     protected function registerSkins(): void
     {
         if ($this->skinsRegistered) return;
 
-        $sm = $this->app->make(\PrestoWorld\Modules\Admin\SkinManager::class);
+        $sm = $this->app->make(\PrestoWorld\Admin\SkinManager::class);
         $this->registerPrestoModernSkin($sm);
         $this->registerPrestoSpaSkin($sm);
         $this->registerWordPressSkin($sm);
@@ -55,10 +55,10 @@ class Module extends WitalsModule
         $this->skinsRegistered = true;
     }
 
-    protected function registerPrestoModernSkin(\PrestoWorld\Modules\Admin\SkinManager $manager): void
+    protected function registerPrestoModernSkin(\PrestoWorld\Admin\SkinManager $manager): void
     {
         $view = $this->app->make(ViewFactory::class);
-        $skin = new \PrestoWorld\Modules\Admin\Skins\PrestoModern\PrestoModernSkin($view);
+        $skin = new \PrestoWorld\Admin\Skins\PrestoModern\PrestoModernSkin($view);
 
         // Inject admin bar context
         $adminBar = $this->app->make(AdminBarContextContract::class);
@@ -67,14 +67,14 @@ class Module extends WitalsModule
         $manager->registerSkin($skin, $skin::getManifest());
     }
 
-    protected function registerPrestoSpaSkin(\PrestoWorld\Modules\Admin\SkinManager $manager): void
+    protected function registerPrestoSpaSkin(\PrestoWorld\Admin\SkinManager $manager): void
     {
         $assets = $this->app->make(\Witals\Framework\Support\Assets\Contracts\AssetRegistryInterface::class);
-        $skin = new \PrestoWorld\Modules\Admin\Skins\PrestoSpa\PrestoSpaSkin($assets);
+        $skin = new \PrestoWorld\Admin\Skins\PrestoSpa\PrestoSpaSkin($assets);
         $manager->registerSkin($skin, $skin::getManifest());
     }
 
-    protected function registerWordPressSkin(\PrestoWorld\Modules\Admin\SkinManager $manager): void
+    protected function registerWordPressSkin(\PrestoWorld\Admin\SkinManager $manager): void
     {
         $view = $this->app->make(ViewFactory::class);
         $skin = new \PrestoWorld\Bridge\WordPress\Admin\Skins\WordPressSkin($view);
@@ -84,7 +84,7 @@ class Module extends WitalsModule
     protected function setActiveSkinFromConfig(): void
     {
         $skinName = $this->app->config('admin.skin', 'presto-spa');
-        $skinManager = $this->app->make(\PrestoWorld\Modules\Admin\SkinManager::class);
+        $skinManager = $this->app->make(\PrestoWorld\Admin\SkinManager::class);
 
         if ($skinManager->hasSkin($skinName)) {
             $skinManager->setActiveSkin($skinName);
@@ -96,7 +96,7 @@ class Module extends WitalsModule
     protected function registerMenuRepository(): void
     {
         $this->app->singleton(MenuContract::class, function () {
-            $menu = new \PrestoWorld\Modules\Admin\Menu\MenuContextRepository();
+            $menu = new \PrestoWorld\Admin\Menu\MenuContextRepository();
 
             $this->registerDefaultMenuItems($menu);
 
@@ -175,7 +175,7 @@ class Module extends WitalsModule
     protected function registerAdminBar(): void
     {
         $this->app->singleton(AdminBarContextContract::class, function () {
-            $bar = new \PrestoWorld\Modules\Admin\AdminBar\AdminBarContext();
+            $bar = new \PrestoWorld\Admin\AdminBar\AdminBarContext();
 
             $this->registerDefaultAdminBarItems($bar);
 
@@ -187,7 +187,7 @@ class Module extends WitalsModule
     protected function registerDefaultAdminBarItems(AdminBarContextContract $bar): void
     {
         // Visit Site
-        $bar->addItem(new \PrestoWorld\Modules\Admin\AdminBar\AdminBarItem(
+        $bar->addItem(new \PrestoWorld\Admin\AdminBar\AdminBarItem(
             id: 'visit-site',
             label: 'Visit Site',
             icon: 'Globe',
@@ -196,7 +196,7 @@ class Module extends WitalsModule
         ));
 
         // New Post
-        $bar->addItem(new \PrestoWorld\Modules\Admin\AdminBar\AdminBarItem(
+        $bar->addItem(new \PrestoWorld\Admin\AdminBar\AdminBarItem(
             id: 'new-post',
             label: 'New Post',
             icon: 'Plus',
@@ -205,7 +205,7 @@ class Module extends WitalsModule
         ));
 
         // Comments
-        $bar->addItem(new \PrestoWorld\Modules\Admin\AdminBar\AdminBarItem(
+        $bar->addItem(new \PrestoWorld\Admin\AdminBar\AdminBarItem(
             id: 'comments',
             label: 'Comments',
             icon: 'MessageSquare',
@@ -221,13 +221,13 @@ class Module extends WitalsModule
     {
         $this->app->singleton(
             \PrestoWorld\Contracts\Admin\Dashboard\DashboardScreenRegistryInterface::class,
-            fn() => new \PrestoWorld\Modules\Admin\Dashboard\DashboardScreenRegistry(),
+            fn() => new \PrestoWorld\Admin\Dashboard\DashboardScreenRegistry(),
         );
         $this->app->alias(\PrestoWorld\Contracts\Admin\Dashboard\DashboardScreenRegistryInterface::class, 'admin.screens');
 
         $this->app->singleton(
             \PrestoWorld\Contracts\Admin\Dashboard\DashboardWidgetRepository::class,
-            fn() => new \PrestoWorld\Modules\Admin\Dashboard\DashboardWidgetRepository(),
+            fn() => new \PrestoWorld\Admin\Dashboard\DashboardWidgetRepository(),
         );
 
         $this->registerDefaultScreens();
@@ -255,7 +255,7 @@ class Module extends WitalsModule
                     continue;
                 }
 
-                $registry->registerScreen(new \PrestoWorld\Modules\Admin\Screen\Screen(
+                $registry->registerScreen(new \PrestoWorld\Admin\Screen\Screen(
                     id: $screenId,
                     title: $item->getLabel(),
                     icon: $item->getIcon() ?? 'Circle',

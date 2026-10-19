@@ -210,6 +210,8 @@ class Application extends BaseApplication
 
             if ($this->has(\Witals\Framework\Module\ModuleManager::class)) {
                 $witalsManager = $this->make(\Witals\Framework\Module\ModuleManager::class);
+                // Core modules (e.g. Admin) live directly under framework/presto/
+                $witalsManager->addModulePath($this->basePath('framework/presto'));
                 $witalsManager->registerModuleRoutes($registry);
             }
 

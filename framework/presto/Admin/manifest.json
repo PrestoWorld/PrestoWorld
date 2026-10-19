@@ -5,7 +5,7 @@
     "type": "support",
     "priority": 30,
     "enabled": true,
-    "namespace": "PrestoWorld\\Modules\\Admin",
+    "namespace": "PrestoWorld\\Admin",
     "entry": "Module.php",
     "requires": {
         "php": "^8.1"
@@ -21,17 +21,23 @@
         {
             "method": "GET",
             "path": "/api/admin/menu",
-            "handler": ["App\\Http\\Controllers\\Admin\\SpaController", "menu"]
+            "handler": [
+                "App\\Http\\Controllers\\Admin\\SpaController",
+                "menu"
+            ]
         },
         {
             "method": "GET",
             "path": "/api/admin/dashboard/widgets",
-            "handler": ["App\\Http\\Controllers\\Admin\\SpaController", "dashboardWidgets"]
+            "handler": [
+                "App\\Http\\Controllers\\Admin\\SpaController",
+                "dashboardWidgets"
+            ]
         }
     ],
     "autoload": {
         "psr-4": {
-            "PrestoWorld\\Modules\\Admin\\": "."
+            "PrestoWorld\\Admin\\": "."
         }
     }
 }

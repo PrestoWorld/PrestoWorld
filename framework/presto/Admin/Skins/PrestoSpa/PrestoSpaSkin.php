@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PrestoWorld\Modules\Admin\Skins\PrestoSpa;
+namespace PrestoWorld\Admin\Skins\PrestoSpa;
 
 use PrestoWorld\Contracts\Admin\SkinInterface;
 use Witals\Framework\Support\Assets\Contracts\AssetRegistryInterface;

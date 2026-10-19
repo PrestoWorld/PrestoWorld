@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PrestoWorld\Modules\Admin\Screen;
+namespace PrestoWorld\Admin\Screen;
 
 use PrestoWorld\Contracts\Admin\Screen\ScreenInterface;
 
