@@ -17,6 +17,17 @@ class HtmlComposer implements HtmlComposerContract
     {
         $title = $title ?? $this->theme->defaultTitle;
 
+        // Styles may arrive as raw CSS or as full <style>/<link> markup
+        // (e.g. Gutenberg theme CSS + enqueued stylesheets) — only wrap raw
+        // CSS into a <style> tag; keep complete tags as-is.
+        $hasStyleMarkup = str_contains($styles, '<style') || str_contains($styles, '<link');
+
+        if ($hasStyleMarkup) {
+            $headStyles = '<style>' . "\n" . $this->theme->cssReset . "\n</style>\n" . $styles;
+        } else {
+            $headStyles = '<style>' . "\n" . $this->theme->cssReset . "\n" . $styles . "\n</style>";
+        }
+
         return <<<HTML
         <!DOCTYPE html>
         <html lang="en">
@@ -24,10 +35,7 @@ class HtmlComposer implements HtmlComposerContract
             <meta charset="{$this->theme->charset}">
             <meta name="viewport" content="{$this->theme->viewport}">
             <title>{$title}</title>
-            <style>
-                {$this->theme->cssReset}
-                {$styles}
-            </style>
+            {$headStyles}
         </head>
         <body>
         {$body}

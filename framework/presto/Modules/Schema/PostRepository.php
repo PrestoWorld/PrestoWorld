@@ -43,7 +43,12 @@ class PostRepository
 
         if (isset($criteria['post_type'])) {
             $types = (array) $criteria['post_type'];
-            $query->where('p.post_type', 'IN', $types);
+            $query->where('p.type', 'IN', $types);
+        }
+
+        if (isset($criteria['id'])) {
+            $ids = array_map('intval', (array) $criteria['id']);
+            $query->where('p.id', 'IN', $ids);
         }
 
         if (isset($criteria['status'])) {
@@ -132,7 +137,7 @@ class PostRepository
 
         if (isset($criteria['post_type'])) {
             $types = (array) $criteria['post_type'];
-            $query->where('p.post_type', 'IN', $types);
+            $query->where('p.type', 'IN', $types);
         }
 
         if (isset($criteria['status'])) {
