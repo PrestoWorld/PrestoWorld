@@ -37,6 +37,10 @@ class Module extends WitalsModule
             );
         });
 
+        $this->app->singleton(PostRepository::class, function ($app) {
+            return new PostRepository($app->make(DatabaseInterface::class));
+        });
+
         // Load compatibility helpers
         require_once __DIR__ . '/helpers.php';
     }

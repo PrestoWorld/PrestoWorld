@@ -17,7 +17,8 @@
         "prestoworld/marketplace-sdk": "*",
         "prestoworld/wp-bridge": "*",
         "prestoworld/search-engine": "dev-master",
-        "prestoworld/gutenberg-core": "dev-master"
+        "prestoworld/gutenberg-core": "dev-master",
+        "prestoworld/wordpress-shim": "dev-master"
     },
     "autoload": {
         "psr-4": {
