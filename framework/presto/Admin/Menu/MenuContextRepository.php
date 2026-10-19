@@ -127,6 +127,24 @@ class MenuContextRepository implements MenuContextRepositoryContract
     public function remove(string $id): void
     {
         unset($this->items[$id]);
+        
+        // Also check sections and groups
+        foreach ($this->sections as $sectionId => $section) {
+            if (isset($section['groups'][$id])) {
+                unset($this->sections[$sectionId]['groups'][$id]);
+                return;
+            }
+        }
+    }
+
+    private function findSectionOrGroup(string $id): ?MenuItem
+    {
+        foreach ($this->sections as $section) {
+            if (isset($section['groups'][$id])) {
+                return $section['groups'][$id];
+            }
+        }
+        return null;
     }
 
     protected function loadProviders(): void
