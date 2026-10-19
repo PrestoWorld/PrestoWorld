@@ -428,6 +428,47 @@ class SpaController
     }
 
     /**
+     * Get all dashboard screens with component paths for dynamic loading.
+     * Includes screens from all registered providers (modules, plugins, themes).
+     */
+    public function dashboardScreens(Request $request): Response
+    {
+        $this->dispatchAdminHooks();
+
+        $screens = [];
+        foreach ($this->screens->getScreens() as $screen) {
+            $screens[] = $screen->toArray();
+        }
+
+        // Also include fallback screens from menu items
+        $menuSections = $this->buildMenuSections();
+        $seen = [];
+        foreach ($menuSections as $section) {
+            foreach ($section['items'] ?? [] as $item) {
+                $screenId = $item['screenId'] ?? null;
+                if ($screenId === null || $screenId === '' || isset($seen[$screenId])) {
+                    continue;
+                }
+                $seen[$screenId] = true;
+                $screens[] = [
+                    'id' => $screenId,
+                    'title' => $item['label'] ?? $screenId,
+                    'icon' => $item['icon'] ?? 'Circle',
+                    'position' => $item['priority'] ?? count($screens) * 10,
+                    'component' => null,
+                    'source' => 'core',
+                    'settings' => [],
+                ];
+            }
+        }
+
+        return Response::json([
+            'success' => true,
+            'data' => $screens,
+        ]);
+    }
+
+    /**
      * Fire WordPress-compatible admin registration actions so plugins, modules
      * and themes can add nav items, screens and dashboard widgets through
      * add_action() before the SPA state is serialized.
@@ -452,7 +493,12 @@ class SpaController
 
         $screens = [];
         foreach ($this->screens->getScreens() as $screen) {
-            $screens[$screen->getId()] = $screen->toArray();
+            $screenData = $screen->toArray();
+            
+            // Add module asset URL for module-owned screens
+            $screenData['componentUrl'] = $this->getModuleComponentUrl($screen->getId());
+            
+            $screens[$screen->getId()] = $screenData;
         }
 
         // Fall back to menu items for screens not present in the registry
@@ -470,6 +516,7 @@ class SpaController
                     'icon' => $item['icon'] ?? 'Circle',
                     'position' => $item['priority'] ?? count($screens) * 10,
                     'component' => null,
+                    'componentUrl' => null,
                     'source' => 'core',
                     'settings' => [],
                 ];
@@ -479,43 +526,155 @@ class SpaController
         return array_values($screens);
     }
 
+    /**
+     * Get the module asset URL for a screen component.
+     * Maps screen IDs to their module's asset base URL + entry file.
+     */
+    protected function getModuleComponentUrl(string $screenId): ?string
+    {
+        $moduleMap = [
+            // Suppliers module
+            'suppliers' => '/assets/modules/suppliers/suppliers-screens.',
+            'depots' => '/assets/modules/suppliers/suppliers-screens.',
+            'departments' => '/assets/modules/suppliers/suppliers-screens.',
+            'users' => '/assets/modules/suppliers/suppliers-screens.',
+            
+            // Ecommerce module
+            'products' => '/assets/modules/ecommerce/ecommerce-screens.',
+            'customers' => '/assets/modules/ecommerce/ecommerce-screens.',
+            'orders' => '/assets/modules/ecommerce/ecommerce-screens.',
+            'bills' => '/assets/modules/ecommerce/ecommerce-screens.',
+            'ecom' => '/assets/modules/ecommerce/ecommerce-screens.',
+            'invoices' => '/assets/modules/ecommerce/ecommerce-screens.',
+            
+            // Inventory module
+            'inventory' => '/assets/modules/inventory/inventory-screens.',
+            'inventory-movements' => '/assets/modules/inventory/inventory-screens.',
+            
+            // Accounting module
+            'accounting' => '/assets/modules/accounting/accounting-screens.',
+            
+            // MarketingCampaign module
+            'promotions' => '/assets/modules/marketingcampaign/marketingcampaign-screens.',
+            
+            // ZaloBusiness module
+            'zalo' => '/assets/modules/zalobusiness/zalobusiness-screens.',
+            
+            // BookCatalog module
+            'books' => '/assets/modules/bookcatalog/bookcatalog-screens.',
+        ];
+
+        $baseUrl = $moduleMap[$screenId] ?? null;
+        
+        if ($baseUrl === null) {
+            return null;
+        }
+
+        // Get the manifest to find the actual hashed filename
+        $manifestPath = $this->getManifestPathForScreen($screenId);
+        if ($manifestPath && is_file($manifestPath)) {
+            $manifest = json_decode(file_get_contents($manifestPath), true);
+            if (is_array($manifest)) {
+                foreach ($manifest as $node) {
+                    if (is_array($node) && ($node['isEntry'] ?? false) === true && ($node['file'] ?? '')) {
+                        return $baseUrl . $node['file'];
+                    }
+                }
+            }
+        }
+
+        return $baseUrl . 'index.js';
+    }
+
+    protected function getManifestPathForScreen(string $screenId): ?string
+    {
+        $moduleMap = [
+            'suppliers' => 'suppliers',
+            'depots' => 'suppliers',
+            'departments' => 'suppliers',
+            'users' => 'suppliers',
+            'products' => 'ecommerce',
+            'customers' => 'ecommerce',
+            'orders' => 'ecommerce',
+            'bills' => 'ecommerce',
+            'ecom' => 'ecommerce',
+            'invoices' => 'ecommerce',
+            'inventory' => 'inventory',
+            'inventory-movements' => 'inventory',
+            'accounting' => 'accounting',
+            'promotions' => 'marketingcampaign',
+            'zalo' => 'zalobusiness',
+            'books' => 'bookcatalog',
+        ];
+
+        $module = $moduleMap[$screenId] ?? null;
+        
+        if ($module === null) {
+            return null;
+        }
+
+        return base_path("public/assets/modules/{$module}/.vite/manifest.json");
+    }
+
     /** Build sidebar sections from the registered menu tree */
     protected function buildMenuSections(): array
     {
         $this->dispatchAdminHooks();
 
-        $menuTree = $this->menu->getTreeAsArray();
         $sections = [];
-
-        foreach ($menuTree as $i => $group) {
-            // Subsystem catalog is serialized separately via buildSubsystemNav()
-            if (($group['id'] ?? '') === DashboardSubsystem::GROUP_ID) {
+        
+        // Get sections from the new menu structure (sections with groups)
+        $menuSections = $this->menu->getSections();
+        
+        foreach ($menuSections as $section) {
+            // Skip the subsystem section - it's serialized separately via buildSubsystemNav()
+            if (($section['id'] ?? '') === 'modules') {
+                // Include modules section but filter out subsystem items
+                $filteredGroups = array_filter($section['groups'] ?? [], function($group) {
+                    return !isset($group['attributes']['subLabel']);
+                });
+                if (empty($filteredGroups)) {
+                    continue;
+                }
+                $section['groups'] = array_values($filteredGroups);
+            }
+            
+            if (empty($section['groups'] ?? [])) {
                 continue;
             }
-
-            $children = $group['children'] ?? [];
-
-            // Use the first child as the primary screenId/icon for the group
-            $firstChild = $children[0] ?? [];
-            $screenId = $firstChild['screenId'] ?? $firstChild['id'] ?? '';
-            $icon = $firstChild['icon'] ?? $group['icon'] ?? 'Circle';
-
+            
+            $groups = array_values($section['groups']);
+            
+            // Use the first group as the primary screenId/icon for the section
+            $firstGroup = $groups[0] ?? [];
+            $screenId = $firstGroup['screenId'] ?? $firstGroup['id'] ?? '';
+            $icon = $firstGroup['icon'] ?? $section['icon'] ?? 'Circle';
+            
+            // Build items from groups
+            $items = array_map(function(array $group) use ($icon) {
+                $groupScreenId = $group['screenId'] ?? $group['id'] ?? '';
+                return [
+                    'id' => $group['id'] ?? $group['screenId'] ?? '',
+                    'screenId' => $groupScreenId,
+                    'label' => $group['label'] ?? '',
+                    'icon' => $group['icon'] ?? $icon,
+                    'url' => $group['url'] ?? '',
+                    'priority' => $group['priority'] ?? 10,
+                ];
+            }, $groups);
+            
             $sections[] = [
-                'id' => $group['id'] ?? 'section-' . $i,
-                'title' => $group['label'] ?? '',
-                'priority' => $group['priority'] ?? 10,
-                'icon' => $icon,
+                'id' => $section['id'] ?? '',
+                'title' => $section['label'] ?? '',
+                'priority' => $section['priority'] ?? 10,
+                'icon' => $section['icon'] ?? 'Circle',
                 'screenId' => $screenId,
-                'items' => array_map(fn(array $child) => [
-                    'id' => $child['id'] ?? $child['screenId'] ?? '',
-                    'screenId' => $child['screenId'] ?? $child['id'] ?? '',
-                    'label' => $child['label'] ?? '',
-                    'icon' => $child['icon'] ?? $icon,
-                    'url' => $child['url'] ?? '',
-                    'priority' => $child['priority'] ?? 10,
-                ], $children),
+                'items' => $items,
             ];
         }
+
+        // Sort sections by priority
+        usort($sections, fn($a, $b) => ($a['priority'] ?? 10) <=> ($b['priority'] ?? 10));
 
         return $sections;
     }
@@ -523,6 +682,7 @@ class SpaController
     /**
      * Serialize the Seller Center subsystem catalog ("Danh Mục Phân Hệ")
      * registered by modules through the dashboard menu context.
+     * Subsystems are now distributed across sections, identified by having a 'subLabel' attribute.
      *
      * @return array<int, array<string, mixed>>
      */
@@ -530,29 +690,39 @@ class SpaController
     {
         $this->dispatchAdminHooks();
 
-        foreach ($this->menu->getTreeAsArray() as $group) {
-            if (($group['id'] ?? '') !== DashboardSubsystem::GROUP_ID) {
+        $subsystems = [];
+        
+        foreach ($this->menu->getSections() as $section) {
+            // Skip modules section - it's handled separately in sidebar
+            if (($section['id'] ?? '') === 'modules') {
                 continue;
             }
+            
+            foreach ($section['groups'] ?? [] as $group) {
+                $attributes = $group['attributes'] ?? [];
+                
+                // Only include groups that have a subLabel (marks them as subsystem items)
+                if (!isset($attributes['subLabel']) || $attributes['subLabel'] === '') {
+                    continue;
+                }
 
-            $subsystems = [];
-            foreach ($group['children'] ?? [] as $child) {
-                $attributes = $child['attributes'] ?? [];
-                $screenId = $child['screenId'] ?? $child['id'] ?? '';
+                $screenId = $group['screenId'] ?? $group['id'] ?? '';
                 $subsystems[] = [
                     'id' => $screenId,
-                    'label' => $child['label'] ?? '',
+                    'label' => $group['label'] ?? '',
                     'subLabel' => $attributes['subLabel'] ?? '',
-                    'icon' => $child['icon'] ?? 'Circle',
+                    'icon' => $group['icon'] ?? 'Circle',
                     'screenId' => $screenId,
-                    'priority' => $child['priority'] ?? 10,
+                    'priority' => $group['priority'] ?? 10,
+                    'section' => $section['id'] ?? '',
                 ];
             }
-
-            return $subsystems;
         }
 
-        return [];
+        // Sort by priority
+        usort($subsystems, fn($a, $b) => ($a['priority'] ?? 10) <=> ($b['priority'] ?? 10));
+
+        return $subsystems;
     }
 
     /** Build widget definitions with SPA component mapping */
