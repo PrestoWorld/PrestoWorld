@@ -650,10 +650,11 @@ class SpaController
             $screenId = $firstGroup['screenId'] ?? $firstGroup['id'] ?? '';
             $icon = $firstGroup['icon'] ?? $section['icon'] ?? 'Circle';
             
-            // Build items from groups
+            // Build items from groups — children of a group (registered via
+            // registerItem) are serialized as `items` for the nested flyout.
             $items = array_map(function(array $group) use ($icon) {
                 $groupScreenId = $group['screenId'] ?? $group['id'] ?? '';
-                return [
+                $item = [
                     'id' => $group['id'] ?? $group['screenId'] ?? '',
                     'screenId' => $groupScreenId,
                     'label' => $group['label'] ?? '',
@@ -661,6 +662,14 @@ class SpaController
                     'url' => $group['url'] ?? '',
                     'priority' => $group['priority'] ?? 10,
                 ];
+
+                $children = array_values($group['items'] ?? []);
+                if ($children !== []) {
+                    usort($children, fn(array $a, array $b) => ($a['priority'] ?? 10) <=> ($b['priority'] ?? 10));
+                    $item['items'] = $children;
+                }
+
+                return $item;
             }, $groups);
             
             $sections[] = [

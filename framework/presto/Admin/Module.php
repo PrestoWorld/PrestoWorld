@@ -108,32 +108,32 @@ class Module extends WitalsModule
     protected function registerDefaultMenuItems(MenuContract $menu): void
     {
         $m = 1; // Dashboard
-        $menu->registerGroup('dashboard-group', 'Dashboard', icon: 'LayoutDashboard', priority: $m++);
+        $menu->registerGroup('dashboard-group', 'Dashboard', icon: 'LayoutDashboard', priority: $m++, attributes: ['section' => 'overview']);
         $menu->registerItem('dashboard-group', 'Dashboard', '#/dashboard', icon: 'LayoutDashboard', priority: 10, id: 'dashboard', screenId: 'dashboard');
 
         $m++; // Posts
-        $menu->registerGroup('posts-group', 'Posts', icon: 'FileText', priority: $m++);
+        $menu->registerGroup('posts-group', 'Posts', icon: 'FileText', priority: $m++, attributes: ['section' => 'content']);
         $menu->registerItem('posts-group', 'All Posts', '#/posts', icon: 'FileText', priority: 10, id: 'posts', screenId: 'posts');
         $menu->registerItem('posts-group', 'Add New', '#/post-new', icon: 'Plus', priority: 20, id: 'post-new', screenId: 'post-new');
         $menu->registerItem('posts-group', 'Categories', '#/edit-tags?taxonomy=category', icon: 'BookOpen', priority: 30, id: 'post-categories', screenId: 'edit-tags');
         $menu->registerItem('posts-group', 'Tags', '#/edit-tags?taxonomy=post_tag', icon: 'Tags', priority: 40, id: 'post-tags', screenId: 'edit-tags');
 
         $m++; // Media
-        $menu->registerGroup('media-group', 'Media', icon: 'Image', priority: $m++);
+        $menu->registerGroup('media-group', 'Media', icon: 'Image', priority: $m++, attributes: ['section' => 'content']);
         $menu->registerItem('media-group', 'Library', '#/upload', icon: 'Image', priority: 10, id: 'media', screenId: 'upload');
         $menu->registerItem('media-group', 'Add New', '#/media-new', icon: 'Plus', priority: 20, id: 'media-new', screenId: 'media-new');
 
         $m++; // Pages
-        $menu->registerGroup('pages-group', 'Pages', icon: 'File', priority: $m++);
+        $menu->registerGroup('pages-group', 'Pages', icon: 'File', priority: $m++, attributes: ['section' => 'content']);
         $menu->registerItem('pages-group', 'All Pages', '#/edit-pages', icon: 'File', priority: 10, id: 'pages', screenId: 'edit-pages');
         $menu->registerItem('pages-group', 'Add New', '#/post-new?post_type=page', icon: 'Plus', priority: 20, id: 'page-new', screenId: 'page-new');
 
         $m++; // Comments
-        $menu->registerGroup('comments-group', 'Comments', icon: 'MessageSquare', priority: $m++);
+        $menu->registerGroup('comments-group', 'Comments', icon: 'MessageSquare', priority: $m++, attributes: ['section' => 'crm']);
         $menu->registerItem('comments-group', 'All Comments', '#/edit-comments', icon: 'MessageSquare', priority: 10, id: 'comments', screenId: 'edit-comments');
 
         $m++; // Appearance
-        $menu->registerGroup('appearance-group', 'Appearance', icon: 'Palette', priority: $m++);
+        $menu->registerGroup('appearance-group', 'Appearance', icon: 'Palette', priority: $m++, attributes: ['section' => 'appearance']);
         $menu->registerItem('appearance-group', 'Themes', '#/themes', icon: 'Palette', priority: 10, id: 'themes', screenId: 'themes');
         $menu->registerItem('appearance-group', 'Customize', '#/customize', icon: 'Wrench', priority: 20, id: 'customize', screenId: 'customize');
         $menu->registerItem('appearance-group', 'Widgets', '#/widgets', icon: 'Blocks', priority: 30, id: 'widgets', screenId: 'widgets');
@@ -141,26 +141,26 @@ class Module extends WitalsModule
         $menu->registerItem('appearance-group', 'Theme Editor', '#/theme-editor', icon: 'Code', priority: 50, id: 'theme-editor', screenId: 'theme-editor');
 
         $m++; // Plugins
-        $menu->registerGroup('plugins-group', 'Plugins', icon: 'Puzzle', priority: $m++);
+        $menu->registerGroup('plugins-group', 'Plugins', icon: 'Puzzle', priority: $m++, attributes: ['section' => 'modules']);
         $menu->registerItem('plugins-group', 'Installed Plugins', '#/plugins', icon: 'Puzzle', priority: 10, id: 'plugins', screenId: 'plugins');
         $menu->registerItem('plugins-group', 'Add New', '#/plugin-install', icon: 'Plus', priority: 20, id: 'plugin-install', screenId: 'plugin-install');
         $menu->registerItem('plugins-group', 'Plugin Editor', '#/plugin-editor', icon: 'Code', priority: 30, id: 'plugin-editor', screenId: 'plugin-editor');
 
         $m++; // Users
-        $menu->registerGroup('users-group', 'Users', icon: 'User', priority: $m++);
+        $menu->registerGroup('users-group', 'Users', icon: 'User', priority: $m++, attributes: ['section' => 'settings']);
         $menu->registerItem('users-group', 'All Users', '#/users', icon: 'User', priority: 10, id: 'users', screenId: 'users');
         $menu->registerItem('users-group', 'Add New', '#/user-new', icon: 'Plus', priority: 20, id: 'user-new', screenId: 'user-new');
         $menu->registerItem('users-group', 'Profile', '#/profile', icon: 'UserCheck', priority: 30, id: 'profile', screenId: 'profile');
 
         $m++; // Tools
-        $menu->registerGroup('tools-group', 'Tools', icon: 'Wrench', priority: $m++);
+        $menu->registerGroup('tools-group', 'Tools', icon: 'Wrench', priority: $m++, attributes: ['section' => 'tools']);
         $menu->registerItem('tools-group', 'Available Tools', '#/tools', icon: 'Wrench', priority: 10, id: 'tools', screenId: 'tools');
         $menu->registerItem('tools-group', 'Import', '#/import', icon: 'Download', priority: 20, id: 'import', screenId: 'import');
         $menu->registerItem('tools-group', 'Export', '#/export', icon: 'Upload', priority: 30, id: 'export', screenId: 'export');
         $menu->registerItem('tools-group', 'Site Health', '#/site-health', icon: 'Activity', priority: 40, id: 'site-health', screenId: 'site-health');
 
         $m++; // Settings
-        $menu->registerGroup('settings-group', 'Settings', icon: 'Settings', priority: $m++);
+        $menu->registerGroup('settings-group', 'Settings', icon: 'Settings', priority: $m++, attributes: ['section' => 'settings']);
         $menu->registerItem('settings-group', 'General', '#/settings', icon: 'Settings', priority: 10, id: 'settings', screenId: 'settings');
         $menu->registerItem('settings-group', 'Writing', '#/options-writing', icon: 'Edit', priority: 20, id: 'options-writing', screenId: 'options-writing');
         $menu->registerItem('settings-group', 'Reading', '#/options-reading', icon: 'BookOpen', priority: 30, id: 'options-reading', screenId: 'options-reading');
@@ -248,23 +248,25 @@ class Module extends WitalsModule
         $menu = $this->app->make(MenuContract::class);
 
         $position = 10;
-        foreach ($menu->getTree() as $group) {
-            foreach ($group->getChildren() as $item) {
-                $screenId = $item->getScreenId();
-                if ($screenId === null || $screenId === '') {
-                    continue;
+        foreach ($menu->getTree() as $section) {
+            foreach ($section['groups'] ?? [] as $group) {
+                foreach ($group['items'] ?? [] as $item) {
+                    $screenId = $item['screenId'] ?? '';
+                    if ($screenId === '' || $screenId === null) {
+                        continue;
+                    }
+
+                    $registry->registerScreen(new \PrestoWorld\Admin\Screen\Screen(
+                        id: $screenId,
+                        title: $item['label'] ?? '',
+                        icon: $item['icon'] ?? 'Circle',
+                        position: $position,
+                        component: null,
+                        source: 'core',
+                    ));
+
+                    $position += 10;
                 }
-
-                $registry->registerScreen(new \PrestoWorld\Admin\Screen\Screen(
-                    id: $screenId,
-                    title: $item->getLabel(),
-                    icon: $item->getIcon() ?? 'Circle',
-                    position: $position,
-                    component: null,
-                    source: 'core',
-                ));
-
-                $position += 10;
             }
         }
     }
@@ -283,6 +285,7 @@ class Module extends WitalsModule
             'LayoutDashboard',
             10,
             'core',
+            'overview',
         );
         DashboardSubsystem::register(
             $this->app,
@@ -292,6 +295,7 @@ class Module extends WitalsModule
             'MessageSquare',
             40,
             'core',
+            'crm',
         );
         DashboardSubsystem::register(
             $this->app,
@@ -301,6 +305,7 @@ class Module extends WitalsModule
             'BarChart2',
             50,
             'core',
+            'analytics',
         );
     }
 

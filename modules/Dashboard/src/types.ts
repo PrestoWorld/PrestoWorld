@@ -14,6 +14,8 @@ export interface MenuItem {
   priority: number;
   screenId?: string;
   children?: MenuItem[];
+  /** Serialized children (backend key for nested menu items). */
+  items?: MenuItem[];
 }
 
 export interface MenuSection {

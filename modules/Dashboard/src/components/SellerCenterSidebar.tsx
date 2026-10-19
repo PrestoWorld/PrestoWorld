@@ -45,6 +45,7 @@ interface CoreItem {
   icon?: string;
   screenId?: string;
   url?: string;
+  items?: CoreItem[];
 }
 
 interface SellerCenterSidebarProps {
@@ -272,8 +273,13 @@ export const SellerCenterSidebar: React.FC<SellerCenterSidebarProps> = ({
               {coreSections.map((section) => {
                 const Icon = resolveIcon(section.icon);
                 const hasActive = (section.items ?? []).some((item: CoreItem) => {
-                  const itemId = item.screenId ?? item.id;
-                  return itemId !== '' && isTabActive(itemId);
+                  if ((item.screenId ?? item.id) !== '' && isTabActive(item.screenId ?? item.id)) {
+                    return true;
+                  }
+                  return (item.items ?? []).some((sub) => {
+                    const subId = sub.screenId ?? sub.id;
+                    return subId !== '' && isTabActive(subId);
+                  });
                 });
                 const isOpen = flyout?.id === section.id;
                 return (
@@ -322,22 +328,53 @@ export const SellerCenterSidebar: React.FC<SellerCenterSidebarProps> = ({
                   const ItemIcon = resolveIcon(item.icon ?? section.icon);
                   const itemId = item.screenId ?? item.id;
                   const isActive = itemId !== '' && isTabActive(itemId);
+                  const subItems = item.items ?? [];
                   return (
-                    <button
-                      key={item.id}
-                      onClick={() => {
-                        setFlyout(null);
-                        onSelectScreen(itemId);
-                      }}
-                      className={`w-full flex items-center space-x-2.5 px-3 py-1.5 rounded-lg text-left transition-all cursor-pointer ${
-                        isActive
-                          ? 'bg-blue-50 text-blue-700 ring-1 ring-blue-200/70'
-                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/90'
-                      }`}
-                    >
-                      <ItemIcon className={`w-3.5 h-3.5 flex-shrink-0 ${isActive ? 'text-blue-600' : 'text-slate-400'}`} />
-                      <span className="text-xs font-medium truncate">{item.label}</span>
-                    </button>
+                    <div key={item.id}>
+                      <button
+                        onClick={() => {
+                          setFlyout(null);
+                          onSelectScreen(itemId);
+                        }}
+                        className={`w-full flex items-center space-x-2.5 px-3 py-1.5 rounded-lg text-left transition-all cursor-pointer ${
+                          isActive
+                            ? 'bg-blue-50 text-blue-700 ring-1 ring-blue-200/70'
+                            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/90'
+                        }`}
+                      >
+                        <ItemIcon className={`w-3.5 h-3.5 flex-shrink-0 ${isActive ? 'text-blue-600' : 'text-slate-400'}`} />
+                        <span className="text-xs font-medium truncate">{item.label}</span>
+                        {subItems.length > 0 && (
+                          <ChevronRight className="w-3 h-3 flex-shrink-0 text-slate-300 ml-auto" />
+                        )}
+                      </button>
+                      {subItems.length > 0 && (
+                        <div className="ml-3 mt-0.5 space-y-0.5 border-l border-slate-100 pl-1.5">
+                          {subItems.map((sub: CoreItem) => {
+                            const SubIcon = resolveIcon(sub.icon ?? item.icon ?? section.icon);
+                            const subId = sub.screenId ?? sub.id;
+                            const isSubActive = subId !== '' && isTabActive(subId);
+                            return (
+                              <button
+                                key={sub.id}
+                                onClick={() => {
+                                  setFlyout(null);
+                                  onSelectScreen(subId);
+                                }}
+                                className={`w-full flex items-center space-x-2 px-2 py-1 rounded-md text-left transition-all cursor-pointer ${
+                                  isSubActive
+                                    ? 'bg-blue-50 text-blue-700 ring-1 ring-blue-200/70'
+                                    : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100/90'
+                                }`}
+                              >
+                                <SubIcon className={`w-3 h-3 flex-shrink-0 ${isSubActive ? 'text-blue-600' : 'text-slate-400'}`} />
+                                <span className="text-[11px] font-medium truncate">{sub.label}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
                   );
                 })}
               </div>

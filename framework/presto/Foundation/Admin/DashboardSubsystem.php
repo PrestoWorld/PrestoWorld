@@ -10,12 +10,14 @@ use Witals\Framework\Application;
 
 /**
  * Registers a Seller Center subsystem ("phân hệ") into the dashboard menu
- * context. Modules call register() from their boot() phase; the Dashboard
- * SPA renders the catalog from the serialized `subsystems` state built by
- * SpaController from the `dashboard-subsystems` menu group.
+ * context. Modules call register() from their boot() phase; each subsystem
+ * becomes its own menu group (tagged with a `subLabel` attribute) inside the
+ * given section, and the Dashboard SPA renders the catalog from the
+ * serialized `subsystems` state built by SpaController.
  */
 final class DashboardSubsystem
 {
+    /** @deprecated Legacy container group; each subsystem is now its own group. */
     public const GROUP_ID = 'dashboard-subsystems';
     public const GROUP_LABEL = 'Danh Mục Phân Hệ';
     public const GROUP_PRIORITY = 0;
@@ -28,6 +30,7 @@ final class DashboardSubsystem
         string $icon,
         int $priority,
         string $source = 'module',
+        string $section = 'overview',
     ): void {
         if (!$app->has(MenuContextRepository::class)) {
             return;
@@ -38,22 +41,19 @@ final class DashboardSubsystem
             return;
         }
 
+        // Each subsystem is a standalone group inside its section. The
+        // `subLabel` attribute marks it for buildSubsystemNav(); `section`
+        // places it in the right sidebar category.
         $menu->registerGroup(
-            self::GROUP_ID,
-            self::GROUP_LABEL,
-            icon: 'Layers',
-            priority: self::GROUP_PRIORITY,
-        );
-
-        $menu->registerItem(
-            self::GROUP_ID,
+            $id,
             $label,
-            '#/' . $id,
             icon: $icon,
-            attributes: ['subLabel' => $subLabel],
             priority: $priority,
-            id: $id,
-            screenId: $id,
+            attributes: [
+                'subLabel' => $subLabel,
+                'section' => $section,
+                'source' => $source,
+            ],
         );
 
         self::registerScreen($app, $id, $label, $icon, $priority, $source);

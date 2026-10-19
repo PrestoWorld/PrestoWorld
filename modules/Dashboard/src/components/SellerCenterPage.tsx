@@ -51,11 +51,15 @@ export const SellerCenterPage: React.FC<SellerCenterPageProps> = ({
     for (const screen of initialState.screens) {
       if (screen.id) ids.add(screen.id);
     }
-    for (const section of initialState.menuSections) {
-      for (const item of section.items ?? []) {
+    const collect = (items?: { id?: string; screenId?: string; items?: unknown[] }[]) => {
+      for (const item of items ?? []) {
         const id = item.screenId ?? item.id;
         if (id) ids.add(id);
+        collect(item.items as { id?: string; screenId?: string; items?: unknown[] }[] | undefined);
       }
+    };
+    for (const section of initialState.menuSections) {
+      collect(section.items);
     }
     return ids;
   }, [initialState]);
