@@ -186,12 +186,12 @@ class Module extends WitalsModule
 
     protected function registerDefaultAdminBarItems(AdminBarContextContract $bar): void
     {
-        // Context Builder — open the current page/context in the builder UI.
+        // Context Builder — standalone Site Editor (không qua admin SPA).
         $bar->addItem(new \PrestoWorld\Admin\AdminBar\AdminBarItem(
             id: 'context-builder',
             label: 'Context Builder',
             icon: 'LayoutTemplate',
-            href: '/dashboard#/context-builder',
+            href: '/site-editor',
             type: 'link',
         ));
 

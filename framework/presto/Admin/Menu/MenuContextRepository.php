@@ -20,7 +20,6 @@ class MenuContextRepository implements MenuContextRepositoryContract
     private const CORE_SECTIONS = [
         'overview' => ['label' => 'Overview', 'icon' => 'LayoutDashboard', 'priority' => 0],
         'ecommerce' => ['label' => 'Ecommerce', 'icon' => 'ShoppingBag', 'priority' => 10],
-        'content' => ['label' => 'Quản Lý Nội Dung', 'icon' => 'FileText', 'priority' => 20],
         'analytics' => ['label' => 'Analytics', 'icon' => 'BarChart3', 'priority' => 30],
         'crm' => ['label' => 'CRM', 'icon' => 'MessageSquare', 'priority' => 40],
         'modules' => ['label' => 'Modules / Plugins', 'icon' => 'Puzzle', 'priority' => 50],
