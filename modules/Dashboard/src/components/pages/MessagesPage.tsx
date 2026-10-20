@@ -1,145 +1,86 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { Search, Send, User, Phone, MoreVertical, MessageSquare, Sparkles } from 'lucide-react';
+
+interface Msg { id: string; text: string; from: 'customer' | 'shop'; time: string; }
+interface Conv { id: string; name: string; avatar: string; last: string; time: string; unread: number; channel: string; messages: Msg[]; }
+
+const seed: Conv[] = [
+  { id: 'c1', name: 'Nguyễn Văn A', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100', last: 'Chào shop, đang muốn hỏi về cuốn Sach Ngu Ngau...', time: 'Vừa xong', unread: 3, channel: 'Website', messages: [{ id: 'm1', text: 'Chào shop, đang muốn hỏi về cuốn Sach Ngu Ngau...', from: 'customer', time: '10:00' }] },
+  { id: 'c2', name: 'Trần Thị B', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf08d00e2?auto=format&fit=crop&q=80&w=100', last: 'Đơn hàng của tôi vẫn chưa được giao', time: '2 tiếng trước', unread: 0, channel: 'Facebook', messages: [{ id: 'm2', text: 'Đơn hàng của tôi vẫn chưa được giao', from: 'customer', time: '08:30' }] },
+];
 
 export const MessagesPage: React.FC = () => {
-  const initialConversations = [
-    {
-      id: 'conv-1',
-      customerName: 'Nguyễn Văn A',
-      customerAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100',
-      lastMessage: 'Chào shop, đang muốn hỏi về cuốn Sach Ngu Ngau...',
-      time: 'Vừa xong',
-      unreadCount: 3,
-      source: 'Website',
-    },
-    {
-      id: 'conv-2',
-      customerName: 'Trần Thị B',
-      customerAvatar: 'https://images.unsplash.com/photo-1544005313-94ddf08d00e2?auto=format&fit=crop&q=80&w=100',
-      lastMessage: 'Đơn hàng của tôi vẫn chưa được giao, khi được giao?',
-      time: '2 tiếng trước',
-      unreadCount: 0,
-      source: 'Facebook',
-    },
-    {
-      id: 'conv-3',
-      customerName: 'Lê Văn C',
-      customerAvatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=100',
-      lastMessage: 'Mình muốn hủy đơn hàng ord-882910',
-      time: '5 tiếng trước',
-      unreadCount: 2,
-      source: 'Website',
-    },
-  ];
+  const [convs, setConvs] = useState<Conv[]>(seed);
+  const [activeId, setActiveId] = useState<string>(seed[0].id);
+  const [input, setInput] = useState('');
+  const active = convs.find((c) => c.id === activeId)!;
 
-  const unreadMessages = initialConversations.filter((c) => c.unreadCount > 0).reduce((acc, c) => acc + c.unreadCount, 0);
+  const send = () => {
+    if (!input.trim()) return;
+    setConvs((prev) => prev.map((c) => c.id === activeId ? { ...c, messages: [...c.messages, { id: `m${Date.now()}`, text: input, from: 'shop', time: 'now' }], last: input } : c));
+    setInput('');
+  };
 
   return (
-    <div className="space-y-4 animate-in fade-in duration-200 max-w-7xl mx-auto">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Tin Nhắn & Hỗ trợ</h1>
-          <p className="text-sm text-slate-500 mt-1">Hộp thư đa kênh SNS - Quản lý tin khách hàng</p>
+    <div className="flex h-[calc(100vh-120px)] bg-white rounded-xl border border-slate-200 overflow-hidden">
+      <div className="w-80 border-r border-slate-200 flex flex-col">
+        <div className="p-3 border-b border-slate-200 flex items-center gap-2">
+          <MessageSquare className="w-5 h-5 text-blue-600" />
+          <h2 className="font-bold text-slate-900">Tin Nhắn & CSKH</h2>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-medium text-slate-600 bg-blue-100 text-blue-800 px-2 py-0.5 rounded">
-            {unreadMessages} mới
-          </span>
+        <div className="p-3">
+          <div className="relative">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input className="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-lg text-sm" placeholder="Tìm kiếm..." />
+          </div>
         </div>
-      </div>
-
-      {/* Filters */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 mb-4">
-        <div>
-          <select
-            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30"
-          >
-            <option value="all">Tất cả kênh</option>
-            <option value="website">Website</option>
-            <option value="facebook">Facebook</option>
-            <option value="zalo">Zalo</option>
-            <option value="shopee">Shopee</option>
-          </select>
-        </div>
-
-        <div>
-          <select
-            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30"
-          >
-            <option value="all">Tất cả trạng thái</option>
-            <option value="unread">Chưa đọc</option>
-            <option value="read">Đã đọc</option>
-            <option value="urgent">Khẩn cấp</option>
-          </select>
-        </div>
-
-        <div className="sm:col-span-2">
-          <select
-            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30"
-          >
-            <option value="all">Tất cả chủ shop</option>
-          </select>
+        <div className="flex-1 overflow-y-auto">
+          {convs.map((c) => (
+            <button key={c.id} onClick={() => setActiveId(c.id)} className={`w-full flex items-center gap-3 p-3 text-left hover:bg-slate-50 ${activeId === c.id ? 'bg-blue-50' : ''}`}>
+              <img src={c.avatar} className="w-10 h-10 rounded-full object-cover" alt="" />
+              <div className="flex-1 min-w-0">
+                <div className="flex justify-between items-center">
+                  <span className="font-medium text-sm truncate">{c.name}</span>
+                  <span className="text-xs text-slate-400">{c.time}</span>
+                </div>
+                <p className="text-xs text-slate-500 truncate">{c.last}</p>
+                <span className="text-[10px] text-blue-600">{c.channel}</span>
+              </div>
+              {c.unread > 0 && <span className="bg-blue-600 text-white text-xs rounded-full px-2 py-0.5">{c.unread}</span>}
+            </button>
+          ))}
         </div>
       </div>
-
-      {/* Messages list */}
-      <div className="overflow-x-auto bg-white rounded-2xl border border-slate-200 shadow-sm">
-        <table className="min-w-full text-sm">
-          <thead>
-            <tr className="border-b border-slate-200 bg-slate-50">
-              <th className="p-3 text-left text-xs font-medium text-slate-600">Kênh</th>
-              <th className="p-3 text-left text-xs font-medium text-slate-600">Khách hàng</th>
-              <th className="p-3 text-left text-xs font-medium text-slate-600">Tin nhắn mới</th>
-              <th className="p-3 text-left text-xs font-medium text-slate-600">Thời gian</th>
-            </tr>
-          </thead>
-          <tbody>
-            {initialConversations.map((conv) => (
-              <tr key={conv.id} className="border-b border-slate-200 hover:bg-slate-50">
-                <td className="p-3">
-                  <span
-                    className={`px-2 py-0.5 rounded text-xs font-medium ${
-                      conv.source === 'Website' ? 'bg-blue-100 text-blue-800' :
-                      conv.source === 'Facebook' ? 'bg-amber-100 text-amber-800' :
-                      conv.source === 'Zalo' ? 'bg-emerald-100 text-emerald-800' :
-                      conv.source === 'Shopee' ? 'bg-purple-100 text-purple-800' :
-                      'bg-slate-100 text-slate-600'
-                    }`}
-                  >
-                    {conv.source}
-                  </span>
-                </td>
-                <td className="p-3 font-medium">
-                  <div>
-                    <img
-                      src={conv.customerAvatar}
-                      alt={conv.customerName}
-                      className="w-5 h-5 rounded-full object-cover mr-2"
-                    />
-                    {conv.customerName}
-                  </div>
-                </td>
-                <td className="p-3">
-                  <span
-                    className={`px-2 py-0.5 rounded text-xs font-medium ${
-                      conv.unreadCount > 0 ? 'bg-rose-100 text-rose-600' : 'bg-slate-100 text-slate-500'
-                    }`}
-                  >
-                    {conv.unreadCount}
-                  </span>
-                </td>
-                <td className="p-3 text-sm text-slate-500">{conv.time}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* No messages state */}
-      {!initialConversations.length && (
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 text-center">
-          <p className="text-slate-500 text-sm">Chưa có tin nhắn. Tất cả kênh đang yên tĩnh.</p>
+      <div className="flex-1 flex flex-col">
+        <div className="p-3 border-b border-slate-200 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <img src={active.avatar} className="w-9 h-9 rounded-full object-cover" alt="" />
+            <div>
+              <div className="font-medium text-sm">{active.name}</div>
+              <div className="text-xs text-slate-400">{active.channel}</div>
+            </div>
+          </div>
+          <MoreVertical className="w-5 h-5 text-slate-400" />
         </div>
-      )}
+        <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50">
+          {active.messages.map((m) => (
+            <div key={m.id} className={`flex ${m.from === 'shop' ? 'justify-end' : 'justify-start'}`}>
+              <div className={`max-w-xs px-3 py-2 rounded-lg text-sm ${m.from === 'shop' ? 'bg-blue-600 text-white' : 'bg-white border border-slate-200'}`}>{m.text}</div>
+            </div>
+          ))}
+        </div>
+        <div className="p-3 border-t border-slate-200 flex gap-2">
+          <input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && send()} className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm" placeholder="Nhập tin nhắn..." />
+          <button onClick={send} className="px-4 py-2 bg-blue-600 text-white rounded-lg"><Send className="w-4 h-4" /></button>
+          <button className="px-3 py-2 border border-slate-200 rounded-lg"><Sparkles className="w-4 h-4 text-purple-600" /></button>
+        </div>
+      </div>
+      <div className="w-72 border-l border-slate-200 p-4 hidden lg:block">
+        <div className="flex items-center gap-2 mb-3"><User className="w-4 h-4" /><span className="font-medium text-sm">Thông tin khách</span></div>
+        <div className="text-sm text-slate-600 space-y-2">
+          <div className="flex items-center gap-2"><Phone className="w-4 h-4" /> 0909 xxx xxx</div>
+        </div>
+      </div>
     </div>
   );
 };

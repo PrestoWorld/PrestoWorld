@@ -15,6 +15,21 @@ use Witals\Framework\Contracts\Container;
 
 class ContentRenderer implements ContentRendererContract
 {
+    /** Minimal styling so the frontend admin bar is visible as a fixed top bar. */
+    private const ADMIN_BAR_CSS = <<<'CSS'
+<style id="presto-admin-bar-css">
+#presto-adminbar{position:fixed;top:0;left:0;right:0;height:32px;z-index:99999;background:#1d2327;color:#f0f0f1;font:13px/32px -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+#presto-adminbar .presto-admin-bar-inner{display:flex;justify-content:space-between;align-items:center;height:32px;padding:0 12px}
+#presto-adminbar ul{display:flex;align-items:center;gap:2px;margin:0;padding:0;list-style:none}
+#presto-adminbar .presto-admin-bar-item{display:flex}
+#presto-adminbar .presto-admin-bar-link{display:flex;align-items:center;gap:6px;color:#f0f0f1;text-decoration:none;padding:0 10px;height:32px;border-radius:0;white-space:nowrap}
+#presto-adminbar .presto-admin-bar-link:hover{background:#2c3338;color:#72aee6}
+#presto-adminbar .presto-admin-bar-username{opacity:.9}
+#presto-adminbar .presto-admin-bar-avatar{width:20px;height:20px;border-radius:50%}
+#presto-adminbar .presto-admin-bar-icon{display:inline-flex;width:16px;height:16px;opacity:.85}
+</style>
+CSS;
+
     private ?ClassicThemeEngine $classicEngine = null;
 
     private bool $resolved = false;
@@ -39,6 +54,9 @@ class ContentRenderer implements ContentRendererContract
 
         $body = $this->contextLoader->renderTemplate($template, $post);
         $styles = $this->collectStyles();
+
+        // Frontend admin bar (logged-in users) — prepend to the body.
+        $body = $this->injectAdminBar($body, $post);
 
         // Partial body + styles — HtmlComposer wraps the full document.
         return new RenderedContent($body, $styles, complete: false);
@@ -135,6 +153,72 @@ class ContentRenderer implements ContentRendererContract
         }
 
         return null;
+    }
+
+    /**
+     * Prepend the frontend admin bar (PrestoWorld\Admin\AdminBar) to the body
+     * for logged-in users. Uses the Witals AuthContext (real session token set
+     * on login), not the legacy pw_remember/UserRepository path. Renders nothing
+     * when the admin module is absent or the visitor is a guest.
+     */
+    private function injectAdminBar(string $body, array $post = []): string
+    {
+        if (!class_exists(\PrestoWorld\Admin\AdminBar\AdminBarRenderer::class)) {
+            return $body;
+        }
+
+        $user = $this->currentAdminBarUser();
+        if ($user === null) {
+            return $body;
+        }
+
+        $contextClass = \PrestoWorld\Contracts\Admin\AdminBar\AdminBarContext::class;
+        if (!$this->container->has($contextClass)) {
+            return $body;
+        }
+
+        $renderer = new \PrestoWorld\Admin\AdminBar\AdminBarRenderer(
+            $this->container->make($contextClass),
+        );
+
+        $html = self::ADMIN_BAR_CSS . $renderer->render($user);
+
+        // Push the page content below the fixed bar.
+        return '<style>body{padding-top:32px}</style>' . $html . $body;
+    }
+
+    /**
+     * Current admin-bar user from the auth token cookie ('token') + TokenStorage.
+     *
+     * Reads the token cookie directly and loads it from storage (global
+     * singleton) rather than relying on the request-scoped AuthContext — the
+     * ContentRenderer is a long-lived singleton that may resolve outside the
+     * AuthMiddleware runScope.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function currentAdminBarUser(): ?array
+    {
+        $tokenId = $_COOKIE['token'] ?? null;
+        if (!is_string($tokenId) || $tokenId === '') {
+            return null;
+        }
+
+        $storageClass = \Witals\Framework\Contracts\Auth\TokenStorageInterface::class;
+        if (!$this->container->has($storageClass)) {
+            return null;
+        }
+
+        $token = $this->container->make($storageClass)->load($tokenId);
+        if ($token === null) {
+            return null;
+        }
+
+        $payload = $token->getPayload();
+
+        return [
+            'name' => $payload['name'] ?? ($payload['email'] ?? 'Admin'),
+        ];
     }
 
     /**

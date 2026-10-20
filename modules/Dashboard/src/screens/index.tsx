@@ -14,10 +14,6 @@ registerScreen(
   lazy(() => import('../components/pages/InventoryPage').then((m) => ({ default: m.InventoryPage }))),
 );
 registerScreen(
-  'messages',
-  lazy(() => import('../components/pages/MessagesPage').then((m) => ({ default: m.MessagesPage }))),
-);
-registerScreen(
   'analytics',
   lazy(() => import('../components/pages/AnalyticsPage').then((m) => ({ default: m.AnalyticsPage }))),
 );
