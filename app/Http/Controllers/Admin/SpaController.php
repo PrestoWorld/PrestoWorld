@@ -644,6 +644,13 @@ class SpaController
             }
             
             $groups = array_values($section['groups']);
+            // Ensure overview section only contains dashboard group
+            if ((($section['id'] ?? '') === 'overview')) {
+                $groups = array_filter($groups, function($group) {
+                    return ((($group['id'] ?? '') === 'dashboard-group')) || ((($group['screenId'] ?? '') === 'dashboard'));
+                });
+                $groups = array_values($groups);
+            }
             
             // Use the first group as the primary screenId/icon for the section
             $firstGroup = $groups[0] ?? [];
