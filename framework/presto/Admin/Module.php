@@ -112,19 +112,19 @@ class Module extends WitalsModule
         $menu->registerItem('dashboard-group', 'Dashboard', '#/dashboard', icon: 'LayoutDashboard', priority: 10, id: 'dashboard', screenId: 'dashboard');
 
         $m++; // Posts
-        $menu->registerGroup('posts-group', 'Posts', icon: 'FileText', priority: $m++, attributes: ['section' => 'content']);
+        $menu->registerGroup('posts-group', 'Posts', icon: 'FileText', priority: $m++, attributes: ['section' => 'posts']);
         $menu->registerItem('posts-group', 'All Posts', '#/posts', icon: 'FileText', priority: 10, id: 'posts', screenId: 'posts');
         $menu->registerItem('posts-group', 'Add New', '#/post-new', icon: 'Plus', priority: 20, id: 'post-new', screenId: 'post-new');
         $menu->registerItem('posts-group', 'Categories', '#/edit-tags?taxonomy=category', icon: 'BookOpen', priority: 30, id: 'post-categories', screenId: 'edit-tags');
         $menu->registerItem('posts-group', 'Tags', '#/edit-tags?taxonomy=post_tag', icon: 'Tags', priority: 40, id: 'post-tags', screenId: 'edit-tags');
 
         $m++; // Media
-        $menu->registerGroup('media-group', 'Media', icon: 'Image', priority: $m++, attributes: ['section' => 'content']);
+        $menu->registerGroup('media-group', 'Media', icon: 'Image', priority: $m++, attributes: ['section' => 'media']);
         $menu->registerItem('media-group', 'Library', '#/upload', icon: 'Image', priority: 10, id: 'media', screenId: 'upload');
         $menu->registerItem('media-group', 'Add New', '#/media-new', icon: 'Plus', priority: 20, id: 'media-new', screenId: 'media-new');
 
         $m++; // Pages
-        $menu->registerGroup('pages-group', 'Pages', icon: 'File', priority: $m++, attributes: ['section' => 'content']);
+        $menu->registerGroup('pages-group', 'Pages', icon: 'File', priority: $m++, attributes: ['section' => 'pages']);
         $menu->registerItem('pages-group', 'All Pages', '#/edit-pages', icon: 'File', priority: 10, id: 'pages', screenId: 'edit-pages');
         $menu->registerItem('pages-group', 'Add New', '#/post-new?post_type=page', icon: 'Plus', priority: 20, id: 'page-new', screenId: 'page-new');
 
