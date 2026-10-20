@@ -23,6 +23,7 @@ $router->get('/site-editor/{contextType::[a-z0-9\-]+}', [\App\Http\Controllers\S
 $router->get('/site-editor/assets/{path::.*}', [\App\Http\Controllers\SiteEditorController::class, 'asset']);
 
 // Static content files (theme/plugin assets) — extension whitelist only,
+// Static content files (theme/plugin assets) - extension whitelist only,
 // PHP sources are never exposed or executed (see ContentFileController).
 $router->get('/content/{path::.+}', [\App\Http\Controllers\ContentFileController::class, 'serve']);
 

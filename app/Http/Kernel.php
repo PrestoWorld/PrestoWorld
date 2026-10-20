@@ -26,6 +26,17 @@ class Kernel implements KernelContract
         'Content-Security-Policy' => "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'",
     ];
 
+    /**
+     * Theme/context HTML varies by auth (admin bar is injected only when a valid
+     * token cookie is present) so it must never be cached without the cookie
+     * variant — otherwise a cached guest page is served to a logged-in user and
+     * the admin bar "disappears". Mirrors WordPress (`Vary: Cookie` + no-cache).
+     */
+    private const NO_CACHE_HEADERS = [
+        'Cache-Control' => 'no-cache, no-store, must-revalidate, private',
+        'Vary' => 'Cookie',
+    ];
+
     public function __construct(
         private RouterInterface $router,
         private PageService $pageService,
@@ -162,7 +173,7 @@ class Kernel implements KernelContract
             }
 
             $response = $this->contextLoader->load($context);
-            return $this->withSecurityHeaders($response);
+            return $this->withPageHeaders($response);
         } catch (\Throwable $e) {
             $this->logger->error('Kernel: Context dispatch error: {message}', [
                 'message' => $e->getMessage(),
@@ -183,6 +194,7 @@ class Kernel implements KernelContract
             return new Response($html, 200, [
                 'Content-Type' => 'text/html; charset=utf-8',
                 ...self::SECURITY_HEADERS,
+                ...self::NO_CACHE_HEADERS,
             ]);
         } catch (TemplateNotFoundException | NotFoundException $e) {
             $this->logger->warning('Kernel: Page not found: {path} ({reason})', [
@@ -192,6 +204,7 @@ class Kernel implements KernelContract
             return new Response($this->pageService->renderNotFound($request), 404, [
                 'Content-Type' => 'text/html; charset=utf-8',
                 ...self::SECURITY_HEADERS,
+                ...self::NO_CACHE_HEADERS,
             ]);
         } catch (RenderException $e) {
             $this->logger->error('Kernel: Render error: {message}', [
@@ -205,6 +218,20 @@ class Kernel implements KernelContract
     private function withSecurityHeaders(Response $response): Response
     {
         foreach (self::SECURITY_HEADERS as $name => $value) {
+            $response = $response->withHeader($name, $value);
+        }
+        return $response;
+    }
+
+    /**
+     * Security headers + no-cache for auth-varying theme HTML (context + page
+     * service responses). Deliberately NOT applied to router responses, which
+     * may serve cacheable assets.
+     */
+    private function withPageHeaders(Response $response): Response
+    {
+        $response = $this->withSecurityHeaders($response);
+        foreach (self::NO_CACHE_HEADERS as $name => $value) {
             $response = $response->withHeader($name, $value);
         }
         return $response;

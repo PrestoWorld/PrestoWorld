@@ -8,6 +8,7 @@ use PrestoWorld\Gutenberg\Contracts\BlockRendererInterface;
 use PrestoWorld\Gutenberg\Contracts\ParserInterface;
 use PrestoWorld\Gutenberg\Parser\BlockSerializer;
 use PrestoWorld\Gutenberg\Rendering\BlockRenderer;
+use PrestoWorld\Modules\ContextBuilder\ContextType;
 
 /**
  * ContextLoader — render layout cho context type ra frontend.
@@ -378,7 +379,12 @@ class Loader
         $regions = [];
         $parentMode = $contextType->getRenderMode();
 
-        foreach ($contextType->getRegions() as $regionName => $regionConfig) {
+        foreach ($contextType->getRegions() as $key => $value) {
+            // getRegions() có thể trả list tên region ['header',...] hoặc map [name => config].
+            $regionName = is_string($key) ? $key : (string) $value;
+            if ($regionName === '') {
+                continue;
+            }
             $regionBlocks = $layout[$regionName] ?? [];
             $regions[$regionName] = $this->renderRegion(
                 $regionName,

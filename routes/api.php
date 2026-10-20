@@ -65,3 +65,10 @@ $router->get('/api/setup/env', [\App\Http\Controllers\Api\SetupController::class
 $router->post('/api/setup/test-db', [\App\Http\Controllers\Api\SetupController::class, 'testDb']);
 $router->get('/api/setup/themes', [\App\Http\Controllers\Api\SetupController::class, 'themes']);
 $router->get('/api/setup/modules', [\App\Http\Controllers\Api\SetupController::class, 'modules']);
+
+// Context Editor data API — /api/admin/context/* (Site Editor standalone page)
+$router->get('/api/admin/context/types', [\App\Http\Controllers\ContextApiController::class, 'types']);
+$router->get('/api/admin/context/blocks', [\App\Http\Controllers\ContextApiController::class, 'blocks']);
+$router->get('/api/admin/context/layout/{contextType::[a-z0-9\-]+}', [\App\Http\Controllers\ContextApiController::class, 'getLayout']);
+$router->post('/api/admin/context/layout/{contextType::[a-z0-9\-]+}', [\App\Http\Controllers\ContextApiController::class, 'saveLayout']);
+$router->post('/api/admin/context/render/{contextType::[a-z0-9\-]+}', [\App\Http\Controllers\ContextApiController::class, 'render']);

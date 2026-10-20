@@ -8,10 +8,63 @@ use Witals\Framework\Application as BaseApplication;
 use PrestoWorld\Foundation\Config\ConfigRepository;
 use \Psr\Log\LoggerInterface;
 use Witals\Framework\Log\Drivers\StandardLogger;
+use Witals\Framework\Http\Request;
+use Witals\Framework\Http\Response;
 
 class Application extends BaseApplication
 {
     protected ?ConfigRepository $configRepository = null;
+
+    /**
+     * Force canonical HTTPS for EVERY request (routed AND frontend fallback).
+     *
+     * The auth cookie is Secure-flagged, so browsers only send it over https.
+     * A http:// visit would silently drop it → user looks logged-out → no admin
+     * bar. This must run here (not only as a RouteRegistry middleware) because
+     * frontend URLs with no explicit route (/, /hello-world, …) fall through to
+     * the HTTP Kernel and BYPASS the middleware pipeline entirely.
+     *
+     * Disable with env PW_FORCE_HTTPS=false (pure-http dev/CI).
+     */
+    public function handle(Request $request): Response
+    {
+        $redirect = $this->httpsRedirectResponse($request);
+        if ($redirect !== null) {
+            return $redirect;
+        }
+
+        return parent::handle($request);
+    }
+
+    protected function httpsRedirectResponse(Request $request): ?Response
+    {
+        $enabled = getenv('PW_FORCE_HTTPS');
+        if ($enabled !== false && strtolower((string) $enabled) === 'false') {
+            return null;
+        }
+
+        // Behind a TLS-terminating proxy that already marks the request https.
+        $forwarded = strtolower((string) ($request->header('X-Forwarded-Proto') ?? ''));
+        if ($forwarded === 'https') {
+            return null;
+        }
+
+        // Direct https connection (PHP sets HTTPS=on on port 443).
+        $https = $_SERVER['HTTPS'] ?? '';
+        if (is_string($https) && $https !== '' && strtolower($https) !== 'off') {
+            return null;
+        }
+
+        $host = (string) ($request->header('Host') ?? ($_SERVER['HTTP_HOST'] ?? ''));
+        if ($host === '') {
+            return null;
+        }
+
+        return Response::html('', 302, [
+            'Location' => 'https://' . $host . $request->uri(),
+            'Cache-Control' => 'no-store',
+        ]);
+    }
 
     public function registerCoreContainerAliases(): void
     {
@@ -222,7 +275,7 @@ class Application extends BaseApplication
             // Admin auth only applies to admin routes — lazy-load
             $registry->addMiddlewareFor(
                 \App\Http\Middleware\AdminAuthMiddleware::class,
-                only: ['/dashboard', '/api/admin'],
+                only: ['/dashboard', '/api/admin', '/site-editor'],
             );
             // Global middleware runs on all matched routes
             $registry->addMiddleware(\App\Http\Middleware\EnsureInstalledMiddleware::class);

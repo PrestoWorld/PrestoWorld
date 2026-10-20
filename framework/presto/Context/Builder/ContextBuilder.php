@@ -18,13 +18,13 @@ class ContextBuilder
 {
     protected ContextRegistry $contexts;
 
-    protected ContextLoader $loader;
+    protected \Presto\Context\Loader $loader;
 
     protected BlockRegistry $blocks;
 
     public function __construct(
         ContextRegistry $contexts,
-        ContextLoader $loader,
+        \Presto\Context\Loader $loader,
         BlockRegistry $blocks,
     ) {
         $this->contexts = $contexts;

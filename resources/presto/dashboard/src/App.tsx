@@ -214,7 +214,13 @@ export default function App() {
 
   const [siteTitle, setSiteTitle] = createSignal('PrestoWorld');
   const [siteTagline, setSiteTagline] = createSignal('Digital marketplace platform');
-  const [siteUrl, setSiteUrl] = createSignal('https://prestoworld.org');
+  // Default to the origin the dashboard is served from so "Visit Site" opens
+  // the SAME host the auth cookie was set on — a hardcoded cross-domain URL
+  // (e.g. https://prestoworld.org) would drop the Secure token cookie and the
+  // frontend would render without the admin bar. Overridable in Settings.
+  const [siteUrl, setSiteUrl] = createSignal<string>(
+    typeof window !== 'undefined' ? window.location.origin : '/'
+  );
   const [adminEmail, setAdminEmail] = createSignal('admin@prestoworld.org');
   const [membershipOpen, setMembershipOpen] = createSignal(true);
   const [defaultRole, setDefaultRole] = createSignal('Subscriber');

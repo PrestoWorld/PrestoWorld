@@ -37,8 +37,18 @@ class AdminAuthMiddleware
     {
         $path = $request->path();
 
-        // Only apply to /dashboard routes
-        if (!str_starts_with($path, '/dashboard')) {
+        // Only apply to admin surfaces: dashboard SPA, admin API and the
+        // standalone Site Editor (Context Editor) page.
+        $protectedPrefixes = ['/dashboard', '/api/admin', '/site-editor'];
+        $isProtected = false;
+        foreach ($protectedPrefixes as $prefix) {
+            if (str_starts_with($path, $prefix)) {
+                $isProtected = true;
+                break;
+            }
+        }
+
+        if (!$isProtected) {
             return $next($request);
         }
 
