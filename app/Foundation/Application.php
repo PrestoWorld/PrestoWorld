@@ -14,6 +14,7 @@ use Witals\Framework\Http\Response;
 class Application extends BaseApplication
 {
     protected ?ConfigRepository $configRepository = null;
+    protected bool $sessionGlobalsBridgeRegistered = false;
 
     /**
      * Force canonical HTTPS for EVERY request (routed AND frontend fallback).
@@ -71,6 +72,90 @@ class Application extends BaseApplication
         parent::registerCoreContainerAliases();
 
         $this->instance(self::class, $this);
+    }
+
+    public function handle(Request $request): Response
+    {
+        if ($this->isLongRunning() && !$this->sessionGlobalsBridgeRegistered) {
+            $this->sessionGlobalsBridgeRegistered = true;
+            $this->beforeRequest(function (Request $r): void {
+                $this->syncSessionGlobals($r);
+            });
+        }
+
+        $response = parent::handle($request);
+
+        if ($this->isLongRunning()) {
+            $response = $this->attachSessionCookie($response);
+        }
+
+        return $response;
+    }
+
+    private function syncSessionGlobals(Request $request): void
+    {
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+        }
+
+        $cookies = [];
+
+        $raw = $request->header('Cookie') ?? $request->header('cookie') ?? $request->header('COOKIE');
+        if (is_string($raw) && $raw !== '') {
+            foreach (explode(';', $raw) as $pair) {
+                $pair = trim($pair);
+                if ($pair === '' || !str_contains($pair, '=')) {
+                    continue;
+                }
+                [$name, $value] = explode('=', $pair, 2);
+                $cookies[trim($name)] = urldecode(trim($value));
+            }
+        }
+
+        $sessionCookie = $request->cookie(session_name());
+        if (is_string($sessionCookie) && $sessionCookie !== '') {
+            $cookies[session_name()] = $sessionCookie;
+        }
+
+        $_COOKIE = $cookies;
+    }
+
+    private function attachSessionCookie(Response $response): Response
+    {
+        if (session_status() !== PHP_SESSION_ACTIVE || !ini_get('session.use_cookies')) {
+            return $response;
+        }
+
+        $params = session_get_cookie_params();
+        $cookie = session_name() . '=' . session_id()
+            . '; path=' . ($params['path'] !== '' ? $params['path'] : '/');
+
+        if (!empty($params['domain'])) {
+            $cookie .= '; domain=' . $params['domain'];
+        }
+        if (!empty($params['secure'])) {
+            $cookie .= '; secure';
+        }
+        if (!empty($params['httponly'])) {
+            $cookie .= '; HttpOnly';
+        }
+        if (!empty($params['samesite'])) {
+            $cookie .= '; SameSite=' . $params['samesite'];
+        }
+
+        $existing = $response->getHeader('Set-Cookie');
+        if ($existing === null) {
+            $merged = [$cookie];
+        } elseif (is_array($existing)) {
+            $merged = array_merge($existing, [$cookie]);
+        } else {
+            $merged = [$existing, $cookie];
+        }
+
+        $headers = $response->getHeaders();
+        $headers['Set-Cookie'] = $merged;
+
+        return new Response($response->getContent(), $response->getStatusCode(), $headers);
     }
 
     public function registerConfiguredProviders(): void
