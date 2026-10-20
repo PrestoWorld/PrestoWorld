@@ -501,22 +501,37 @@ HTML;
             $dbal = $this->app->make(\Cycle\Database\DatabaseProviderInterface::class);
             $db = $dbal->database();
             
-            // 1. Try native users table
-            $user = $db->table('users')
-                ->where('email', $email)
-                ->run()
-                ->fetch();
+            // 1. Try native users table (honour PW_TABLE_PREFIX, e.g. pw_users)
+            $prefix = getenv('PW_TABLE_PREFIX') ?: 'pw_';
+            $usersTable = $prefix . 'users';
 
-            if ($user && password_verify($password, $user['password'])) {
-                return $user;
+            if ($db->hasTable($usersTable)) {
+                $user = $db->table($usersTable)
+                    ->where('email', $email)
+                    ->run()
+                    ->fetch();
+
+                // Column may be password_hash (schema) or password (legacy).
+                $hash = is_array($user) ? ($user['password_hash'] ?? $user['password'] ?? null) : null;
+
+                if ($user && is_string($hash) && $hash !== '' && password_verify($password, $hash)) {
+                    return $user;
+                }
             }
 
             // 2. Try WordPress users table (Bridge)
-            $wpUser = $db->table('wp_users')
-                ->where('user_email', $email)
-                ->orWhere('user_login', $email)
-                ->run()
-                ->fetch();
+            $wpPrefix = env('WP_TABLE_PREFIX', 'wp_');
+            $wpUsersTable = $db->hasTable('wp_users') ? 'wp_users' : ($db->hasTable($wpPrefix . 'users') ? $wpPrefix . 'users' : null);
+
+            if ($wpUsersTable !== null) {
+                $wpUser = $db->table($wpUsersTable)
+                    ->where('user_email', $email)
+                    ->orWhere('user_login', $email)
+                    ->run()
+                    ->fetch();
+            } else {
+                $wpUser = null;
+            }
 
             if ($wpUser) {
                 $hash = $wpUser['user_pass'];

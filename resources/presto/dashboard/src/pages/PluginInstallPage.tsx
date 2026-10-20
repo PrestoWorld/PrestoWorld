@@ -1,0 +1,47 @@
+import { createSignal } from 'solid-js';
+
+export default function PluginInstallPage() {
+  const [searchTerm, setSearchTerm] = createSignal('');
+  const [plugins, setPlugins] = createSignal([]);
+
+  return (
+    <div class="space-y-6">
+      <div>
+        <h2 class="text-base font-extrabold text-slate-900 tracking-tight">Add Plugins</h2>
+        <p class="text-xs text-slate-500 font-semibold mt-1">
+          Search and install plugins from the PrestoWorld plugin repository
+        </p>
+      </div>
+      <div class="bg-white rounded-xl border border-slate-200 p-6">
+        <div class="space-y-4">
+          <input
+            type="text"
+            placeholder="Search plugins..."
+            value={searchTerm()}
+            onInput={(e) => setSearchTerm(e.currentTarget.value)}
+            class="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
+          <button class="mt-2 px-3 py-2 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-700 transition-colors">
+            Search Plugins
+          </button>
+        </div>
+        <div class="space-y-4">
+          <button class="w-full px-3 py-2 bg-white text-indigo-600 font-semibold border border-indigo-300 rounded-md hover:bg-indigo-50 transition-colors">
+            Upload Plugin
+          </button>
+          <p class="mt-2 text-xs text-slate-500">
+            Upload a plugin in .zip format
+          </p>
+        </div>
+        <div class="space-y-4">
+          <h3 class="text-sm font-bold text-slate-900 mb-2">Popular Plugins</h3>
+          <div class="space-y-2">
+            <p class="text-xs text-slate-500">
+              No plugins found. Try searching for a plugin above.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

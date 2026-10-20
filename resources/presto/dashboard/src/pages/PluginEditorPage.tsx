@@ -1,0 +1,49 @@
+import { createSignal } from 'solid-js';
+
+export default function PluginEditorPage() {
+  return (
+    <div class="space-y-6">
+      <div>
+        <h2 class="text-base font-extrabold text-slate-900 tracking-tight">Plugin Editor</h2>
+        <p class="text-xs text-slate-500 font-semibold mt-1">
+          Edit plugin files directly
+        </p>
+        <p class="text-xs text-slate-500 mt-2">
+          <strong>Warning:</strong> Editing plugins directly can break your site if done incorrectly.
+        </p>
+      </div>
+      <div class="bg-white rounded-xl border border-slate-200 p-6">
+        <div class="space-y-4">
+          <label class="block text-xs font-bold text-slate-700 mb-1">Select a plugin to edit</label>
+          <select class="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="">Select a plugin</option>
+            <option value="akismet">Akismet Anti-Spam</option>
+            <option value="hello-dolly">Hello Dolly</option>
+          </select>
+        </div>
+        <div class="space-y-4">
+          <label class="block text-xs font-bold text-slate-700 mb-1">Select a file to edit</label>
+          <select class="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="">Select a file</option>
+            <option value="akismet/akismet.php">akismet/akismet.php</option>
+            <option value="hello-dolly/hello.php">hello-dolly/hello.php</option>
+          </select>
+        </div>
+        <div class="space-y-4">
+          <div class="border border-slate-200 rounded-md p-4">
+            <textarea
+              rows="20"
+              class="w-full px-3 py-2 font-mono text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              placeholder="File contents will appear here..."
+            />
+          </div>
+        </div>
+        <div class="flex justify-end pt-4">
+          <button class="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-700 transition-colors">
+            Update File
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

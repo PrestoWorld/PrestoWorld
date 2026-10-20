@@ -1,0 +1,46 @@
+import { createSignal } from 'solid-js';
+
+export default function WritingSettingsPage() {
+  return (
+    <div class="space-y-6">
+      <div>
+        <h2 class="text-base font-extrabold text-slate-900 tracking-tight">Writing Settings</h2>
+        <p class="text-xs text-slate-500 font-semibold mt-1">
+          Settings for writing posts and pages
+        </p>
+      </div>
+      <div class="bg-white rounded-xl border border-slate-200 p-6">
+        <form class="space-y-4">
+          <div class="space-y-2">
+            <label class="block text-xs font-bold text-slate-700 mb-1">Default Post Category</label>
+            <select class="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              <option value="1">Uncategorized</option>
+              <option value="2">Development</option>
+              <option value="3">Performance</option>
+            </select>
+          </div>
+          <div class="space-y-2">
+            <label class="block text-xs font-bold text-slate-700 mb-1">Default Post Format</label>
+            <select class="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              <option value="0">Standard</option>
+              <option value="1">Aside</option>
+              <option value="2">Gallery</option>
+              <option value="3">Link</option>
+              <option value="4">Image</option>
+              <option value="5">Quote</option>
+              <option value="6">Status</option>
+              <option value="7">Video</option>
+              <option value="8">Audio</option>
+              <option value="9">Chat</option>
+            </select>
+          </div>
+        </form>
+        <div class="flex justify-end pt-4">
+          <button class="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-700 transition-colors">
+            Save Changes
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

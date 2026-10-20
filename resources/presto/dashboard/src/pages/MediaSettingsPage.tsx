@@ -1,0 +1,73 @@
+import { createSignal } from 'solid-js';
+
+export default function MediaSettingsPage() {
+  return (
+    <div class="space-y-6">
+      <div>
+        <h2 class="text-base font-extrabold text-slate-900 tracking-tight">Media Settings</h2>
+        <p class="text-xs text-slate-500 font-semibold mt-1">
+          Settings for media uploads
+        </p>
+      </div>
+      <div class="bg-white rounded-xl border border-slate-200 p-6">
+        <form class="space-y-4">
+          <div class="space-y-2">
+            <label class="block text-xs font-bold text-slate-700 mb-1">Thumbnail size</label>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Width</label>
+                <input type="number" min="0" class="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Height</label>
+                <input type="number" min="0" class="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+              </div>
+            </div>
+          </div>
+          <div class="space-y-2">
+            <label class="block text-xs font-bold text-slate-700 mb-1">Medium size</label>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Width</label>
+                <input type="number" min="0" class="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Height</label>
+                <input type="number" min="0" class="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+              </div>
+            </div>
+          </div>
+          <div class="space-y-2">
+            <label class="block text-xs font-bold text-slate-700 mb-1">Large size</label>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Width</label>
+                <input type="number" min="0" class="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Height</label>
+                <input type="number" min="0" class="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+              </div>
+            </div>
+          </div>
+          <div class="space-y-2">
+            <label class="block text-xs font-bold text-slate-700 mb-1">Uploading files</label>
+            <div class="flex items-start space-x-3">
+              <input type="checkbox" id="uploads_use_yearmonth_folders" class="mt-1" checked />
+              <div class="space-y-0.5">
+                <label class="text-xs font-bold text-slate-700" for="uploads_use_yearmonth_folders">
+                  Organize my uploads into month- and year-based folders
+                </label>
+              </div>
+            </div>
+          </div>
+        </form>
+        <div class="flex justify-end pt-4">
+          <button class="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-700 transition-colors">
+            Save Changes
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

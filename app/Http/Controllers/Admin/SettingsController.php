@@ -110,6 +110,96 @@ class SettingsController
         $this->redirectWithNotice('/wp-admin/options-privacy.php', 'Settings saved.');
     }
 
+    public function getGeneral(Request )
+    {
+        return [
+            "blogname" => ->options->get("blogname"),
+            "blogdescription" => ->options->get("blogdescription"),
+            "admin_email" => ->options->get("admin_email"),
+            "default_role" => ->options->get("default_role"),
+            "timezone_string" => ->options->get("timezone_string"),
+            "date_format" => ->options->get("date_format"),
+            "time_format" => ->options->get("time_format"),
+            "start_of_week" => ->options->get("start_of_week"),
+            "WPLANG" => ->options->get("WPLANG"),
+        ];
+    }
+
+    public function getGeneral(Request )
+    {
+        return [
+            "blogname" => ->options->get("blogname"),
+            "blogdescription" => ->options->get("blogdescription"),
+            "admin_email" => ->options->get("admin_email"),
+            "default_role" => ->options->get("default_role"),
+            "timezone_string" => ->options->get("timezone_string"),
+            "date_format" => ->options->get("date_format"),
+            "time_format" => ->options->get("time_format"),
+            "start_of_week" => ->options->get("start_of_week"),
+            "WPLANG" => ->options->get("WPLANG"),
+        ];
+    }
+
+    public function getWriting(Request )
+    {
+        return [
+            "default_category" => ->options->get("default_category"),
+            "default_post_format" => ->options->get("default_post_format"),
+        ];
+    }
+
+    public function getReading(Request )
+    {
+        return [
+            "show_on_front" => ->options->get("show_on_front"),
+            "page_on_front" => ->options->get("page_on_front"),
+            "page_for_posts" => ->options->get("page_for_posts"),
+            "posts_per_page" => ->options->get("posts_per_page"),
+            "rss_use_excerpt" => ->options->get("rss_use_excerpt"),
+            "blog_public" => ->options->get("blog_public"),
+        ];
+    }
+
+    public function getDiscussion(Request )
+    {
+        return [
+            "default_comment_status" => ->options->get("default_comment_status"),
+            "default_ping_status" => ->options->get("default_ping_status"),
+            "comment_registration" => ->options->get("comment_registration"),
+            "comment_moderation" => ->options->get("comment_moderation"),
+            "comment_whitelist" => ->options->get("comment_whitelist"),
+        ];
+    }
+
+    public function getMedia(Request )
+    {
+        return [
+            "thumbnail_size_w" => ->options->get("thumbnail_size_w"),
+            "thumbnail_size_h" => ->options->get("thumbnail_size_h"),
+            "medium_size_w" => ->options->get("medium_size_w"),
+            "medium_size_h" => ->options->get("medium_size_h"),
+            "large_size_w" => ->options->get("large_size_w"),
+            "large_size_h" => ->options->get("large_size_h"),
+            "upload_size_limit" => ->options->get("upload_size_limit"),
+        ];
+    }
+
+    public function getPermalink(Request )
+    {
+        return [
+            "permalink_structure" => ->options->get("permalink_structure"),
+            "category_base" => ->options->get("category_base"),
+            "tag_base" => ->options->get("tag_base"),
+        ];
+    }
+
+    public function getPrivacy(Request )
+    {
+        return [
+            "wp_page_for_privacy_policy" => ->options->get("wp_page_for_privacy_policy"),
+        ];
+    }
+
     private function redirectWithNotice(string $url, string $message): never
     {
         $separator = str_contains($url, '?') ? '&' : '?';

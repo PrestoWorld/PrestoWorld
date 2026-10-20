@@ -40,6 +40,22 @@ $router->get('/api/admin/media', [MediaController::class, 'media']);
 $router->post('/api/admin/media/upload', [MediaController::class, 'uploadMedia']);
 $router->post('/api/admin/media/{id}/offload', [MediaController::class, 'offloadMedia']);
 
+// Settings routes
+->get("/api/admin/settings/general", [\App\Http\Controllers\Admin\SettingsController::class, "getGeneral"]);
+->get("/api/admin/settings/writing", [\App\Http\Controllers\Admin\SettingsController::class, "getWriting"]);
+->get("/api/admin/settings/reading", [\App\Http\Controllers\Admin\SettingsController::class, "getReading"]);
+->get("/api/admin/settings/discussion", [\App\Http\Controllers\Admin\SettingsController::class, "getDiscussion"]);
+->get("/api/admin/settings/media", [\App\Http\Controllers\Admin\SettingsController::class, "getMedia"]);
+->get("/api/admin/settings/permalink", [\App\Http\Controllers\Admin\SettingsController::class, "getPermalink"]);
+->get("/api/admin/settings/privacy", [\App\Http\Controllers\Admin\SettingsController::class, "getPrivacy"]);
+->post("/api/admin/settings/general", [\App\Http\Controllers\Admin\SettingsController::class, "saveGeneral"]);
+->post("/api/admin/settings/writing", [\App\Http\Controllers\Admin\SettingsController::class, "saveWriting"]);
+->post("/api/admin/settings/reading", [\App\Http\Controllers\Admin\SettingsController::class, "saveReading"]);
+->post("/api/admin/settings/discussion", [\App\Http\Controllers\Admin\SettingsController::class, "saveDiscussion"]);
+->post("/api/admin/settings/media", [\App\Http\Controllers\Admin\SettingsController::class, "saveMedia"]);
+->post("/api/admin/settings/permalink", [\App\Http\Controllers\Admin\SettingsController::class, "savePermalink"]);
+->post("/api/admin/settings/privacy", [\App\Http\Controllers\Admin\SettingsController::class, "savePrivacy"]);
+
 // Setup routes (accessible before installation)
 $router->post('/api/setup/install', [\App\Http\Controllers\Api\SetupController::class, 'install']);
 

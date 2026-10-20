@@ -31,7 +31,23 @@ const ToolsPage = lazy(() => import('./pages/ToolsPage'));
 const SettingsPage = lazy(() => import('./pages/SettingsPage'));
 const GenericPage = lazy(() => import('./pages/GenericPage'));
 const MediaUploadModal = lazy(() => import('./components/MediaUploadModal'));
-
+const WritingSettingsPage = lazy(() => import('./pages/WritingSettingsPage'));
+const ReadingSettingsPage = lazy(() => import('./pages/ReadingSettingsPage'));
+const DiscussionSettingsPage = lazy(() => import('./pages/DiscussionSettingsPage'));
+const MediaSettingsPage = lazy(() => import('./pages/MediaSettingsPage'));
+const PermalinkSettingsPage = lazy(() => import('./pages/PermalinkSettingsPage'));
+const PrivacySettingsPage = lazy(() => import('./pages/PrivacySettingsPage'));
+const ImportPage = lazy(() => import('./pages/ImportPage'));
+const ExportPage = lazy(() => import('./pages/ExportPage'));
+const SiteHealthPage = lazy(() => import('./pages/SiteHealthPage'));
+const SiteHealthInfoPage = lazy(() => import('./pages/SiteHealthInfoPage'));
+const UserEditPage = lazy(() => import('./pages/UserEditPage'));
+const PluginInstallPage = lazy(() => import('./pages/PluginInstallPage'));
+const PluginEditorPage = lazy(() => import('./pages/PluginEditorPage'));
+const CustomizePage = lazy(() => import('./pages/CustomizePage'));
+const WidgetsPage = lazy(() => import('./pages/WidgetsPage'));
+const NavMenusPage = lazy(() => import('./pages/NavMenusPage'));
+const ThemeEditorPage = lazy(() => import('./pages/ThemeEditorPage'));
 declare global {
   interface Window {
     __INITIAL_STATE__?: AdminInitialState;
@@ -712,7 +728,7 @@ export default function App() {
                 />
               </Match>
 
-              <Match when={screenId() === 'settings' || screenId() === 'options-writing' || screenId() === 'options-reading' || screenId() === 'options-discussion' || screenId() === 'options-media' || screenId() === 'options-permalink' || screenId() === 'options-privacy'}>
+              <Match when={screenId() === 'settings'}>
                 <SettingsPage
                   siteTitle={siteTitle}
                   setSiteTitle={setSiteTitle}
@@ -731,6 +747,54 @@ export default function App() {
                   saveSettings={saveSettings}
                 />
               </Match>
+              <Match when={screenId() === 'options-writing'}>
+                <WritingSettingsPage
+                  siteTitle={siteTitle}
+                  setSiteTitle={setSiteTitle}
+                  siteTagline={siteTagline}
+                  setSiteTagline={setSiteTagline}
+                />
+              </Match>
+              <Match when={screenId() === 'options-reading'}>
+                <ReadingSettingsPage
+                  siteTitle={siteTitle}
+                  setSiteTitle={setSiteTitle}
+                  siteTagline={siteTagline}
+                  setSiteTagline={setSiteTagline}
+                />
+              </Match>
+              <Match when={screenId() === 'options-discussion'}>
+                <DiscussionSettingsPage
+                  siteTitle={siteTitle}
+                  setSiteTitle={setSiteTitle}
+                  siteTagline={siteTagline}
+                  setSiteTagline={setSiteTagline}
+                />
+              </Match>
+              <Match when={screenId() === 'options-media'}>
+                <MediaSettingsPage
+                  siteTitle={siteTitle}
+                  setSiteTitle={siteTitle}
+                  siteTagline={siteTagline}
+                  setSiteTagline={siteTagline}
+                />
+              </Match>
+              <Match when={screenId() === 'options-permalink'}>
+                <PermalinkSettingsPage
+                  siteTitle={siteTitle}
+                  setSiteTitle={setSiteTitle}
+                  siteTagline={siteTagline}
+                  setSiteTagline={setSiteTagline}
+                />
+              </Match>
+              <Match when={screenId() === 'options-privacy'}>
+                <PrivacySettingsPage
+                  siteTitle={siteTitle}
+                  setSiteTitle={setSiteTitle}
+                  siteTagline={siteTagline}
+                  setSiteTagline={setSiteTagline}
+                />
+              </Match>
 
               <Match when={screenId() === 'upload' || screenId() === 'media-new'}>
                 <MediaPage onOpenUploadModal={() => setIsMediaUploadOpen(true)} />
@@ -744,14 +808,47 @@ export default function App() {
                 <CommentsPage />
               </Match>
 
-              <Match when={screenId() === 'tools' || screenId() === 'import' || screenId() === 'export' || screenId() === 'site-health'}>
+              <Match when={screenId() === 'tools'}>
                 <ToolsPage />
+              </Match>
+              <Match when={screenId() === 'import'}>
+                <ImportPage />
+              </Match>
+              <Match when={screenId() === 'export'}>
+                <ExportPage />
+              </Match>
+              <Match when={screenId() === 'site-health'}>
+                <SiteHealthPage />
+              </Match>
+              <Match when={screenId() === 'site-health-info'}>
+                <SiteHealthInfoPage />
+              </Match>
+
+              <Match when={screenId() === 'customize'}>
+                <CustomizePage />
+              </Match>
+              <Match when={screenId() === 'widgets'}>
+                <WidgetsPage />
+              </Match>
+              <Match when={screenId() === 'nav-menus'}>
+                <NavMenusPage />
+              </Match>
+              <Match when={screenId() === 'theme-editor'}>
+                <ThemeEditorPage />
+              </Match>
+              <Match when={screenId() === 'user-edit'}>
+                <UserEditPage />
+              </Match>
+              <Match when={screenId() === 'plugin-install'}>
+                <PluginInstallPage />
+              </Match>
+              <Match when={screenId() === 'plugin-editor'}>
+                <PluginEditorPage />
               </Match>
 
               <Match when={true}>
                 <GenericPage screenId={screenId} />
-              </Match>
-            </Switch>
+              </Match>            </Switch>
             </Suspense>
           }>
             <div class="flex items-center justify-center min-h-[400px]">

@@ -1,0 +1,106 @@
+import { createSignal } from 'solid-js';
+
+export default function SiteHealthInfoPage() {
+  return (
+    <div class="space-y-6">
+      <div>
+        <h2 class="text-base font-extrabold text-slate-900 tracking-tight">Site Health Info</h2>
+        <p class="text-xs text-slate-500 font-semibold mt-1">
+          Debug information and server configuration
+        </p>
+      </div>
+      <div class="bg-white rounded-xl border border-slate-200 p-6">
+        <div class="space-y-4">
+          <h3 class="text-sm font-bold text-slate-900 mb-2">WordPress Constants</h3>
+          <div class="grid grid-cols-2 gap-4 text-xs">
+            <div>
+              <span class="font-medium">WP_DEBUG</span>
+              <span class="ml-2">false</span>
+            </div>
+            <div>
+              <span class="font-medium">WP_MEMORY_LIMIT</span>
+              <span class="ml-2">256M</span>
+            </div>
+            <div>
+              <span class="font-medium">WP_MAX_MEMORY_LIMIT</span>
+              <span class="ml-2">512M</span>
+            </div>
+            <div>
+              <span class="font-medium">WP_DEBUG_DISPLAY</span>
+              <span class="ml-2">false</span>
+            </div>
+            <div>
+              <span class="font-medium">WP_DEBUG_LOG</span>
+              <span class="ml-2">false</span>
+            </div>
+            <div>
+              <span class="font-medium">SCRIPT_DEBUG</span>
+              <span class="ml-2">false</span>
+            </div>
+            <div>
+              <span class="font-medium">WP_CACHE</span>
+              <span class="ml-2">false</span>
+            </div>
+            <div>
+              <span class="font-medium">CONCATENATE_SCRIPTS</span>
+              <span class="ml-2">true</span>
+            </div>
+            <div>
+              <span class="font-medium">COMPRESS_SCRIPTS</span>
+              <span class="ml-2">true</span>
+            </div>
+            <div>
+              <span class="font-medium">COMPRESS_CSS</span>
+              <span class="ml-2">true</span>
+            </div>
+            <div>
+              <span class="font-medium">ENFORCE_GZIP</span>
+              <span class="ml-2">false</span>
+            </div>
+          </div>
+        </div>
+        <div class="space-y-4">
+          <h3 class="text-sm font-bold text-slate-900 mb-2">Filesystem Permissions</h3>
+          <div class="grid grid-cols-2 gap-4 text-xs">
+            <div>
+              <span class="font-medium">The main WordPress directory</span>
+              <span class="ml-2">writable</span>
+            </div>
+            <div>
+              <span class="font-medium">The /tmp/ directory</span>
+              <span class="ml-2">writable</span>
+            </div>
+            <div>
+               <span class="font-medium">The /wp-content/ directory</span>
+              <span class="ml-2">writable</span>
+            </div>
+            <div>
+              <span class="font-medium">The /wp-content/uploads/ directory</span>
+              <span class="ml-2">writable</span>
+            </div>
+            <div>
+              <span class="font-medium">The /wp-content/plugins/ directory</span>
+              <span class="ml-2">writable</span>
+            </div>
+            <div>
+              <span class="font-medium">The /wp-content/themes/ directory</span>
+              <span class="ml-2">writable</span>
+            </div>
+          </div>
+        </div>
+        <div class="space-y-4">
+          <h3 class="text-sm font-bold text-slate-900 mb-2">Database Server Version</h3>
+          <p class="text-xs text-slate-500">10.5.15-MariaDB-0ubuntu0.21.10.1</p>
+        </div>
+        <div class="space-y-4">
+          <h3 class="text-sm font-bold text-slate-900 mb-2">PHP Version</h3>
+          <p class="text-xs text-slate-500">8.1.2-1ubuntu2.14</p>
+        </div>
+        <div class="space-y-4">
+          <h3 class="text-sm font-bold text-slate-900 mb-2">Web Server Information</h3>
+          <p class="text-xs text-slate-500">Apache/2.4.41 (Ubuntu)</p>
+        </div>
+      </div>
+    </div>
+  );
+}
