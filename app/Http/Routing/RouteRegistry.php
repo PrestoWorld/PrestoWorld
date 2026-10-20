@@ -5,12 +5,11 @@ declare(strict_types=1);
 namespace App\Http\Routing;
 
 use Witals\Framework\Application;
-use Witals\Framework\Contracts\ResettableInterface;
 use Witals\Framework\Http\Request;
 use Witals\Framework\Http\Response;
 use App\Http\Routing\Contracts\RouteRegistryInterface;
 
-class RouteRegistry implements RouteRegistryInterface, ResettableInterface
+class RouteRegistry implements RouteRegistryInterface
 {
     protected array $routes = [];
     protected array $compiled = [];
