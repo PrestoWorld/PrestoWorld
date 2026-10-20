@@ -34,7 +34,20 @@ class Application extends BaseApplication
             return $redirect;
         }
 
-        return parent::handle($request);
+        if ($this->isLongRunning() && !$this->sessionGlobalsBridgeRegistered) {
+            $this->sessionGlobalsBridgeRegistered = true;
+            $this->beforeRequest(function (Request $r): void {
+                $this->syncSessionGlobals($r);
+            });
+        }
+
+        $response = parent::handle($request);
+
+        if ($this->isLongRunning()) {
+            $response = $this->attachSessionCookie($response);
+        }
+
+        return $response;
     }
 
     protected function httpsRedirectResponse(Request $request): ?Response
@@ -72,24 +85,6 @@ class Application extends BaseApplication
         parent::registerCoreContainerAliases();
 
         $this->instance(self::class, $this);
-    }
-
-    public function handle(Request $request): Response
-    {
-        if ($this->isLongRunning() && !$this->sessionGlobalsBridgeRegistered) {
-            $this->sessionGlobalsBridgeRegistered = true;
-            $this->beforeRequest(function (Request $r): void {
-                $this->syncSessionGlobals($r);
-            });
-        }
-
-        $response = parent::handle($request);
-
-        if ($this->isLongRunning()) {
-            $response = $this->attachSessionCookie($response);
-        }
-
-        return $response;
     }
 
     private function syncSessionGlobals(Request $request): void
