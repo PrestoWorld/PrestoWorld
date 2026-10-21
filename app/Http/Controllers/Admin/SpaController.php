@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Admin;
 
 use Witals\Framework\Http\Request;
 use Witals\Framework\Http\Response;
+use Witals\Framework\Contracts\Auth\AuthContextInterface;
 use PrestoWorld\Foundation\Admin\DashboardSubsystem;
 use PrestoWorld\Admin\SkinManager;
 use PrestoWorld\Contracts\Admin\Menu\MenuContextRepository;
@@ -33,6 +34,7 @@ class SpaController
         protected MenuContextRepository $menu,
         protected DashboardWidgetRepository $widgets,
         protected DashboardScreenRegistryInterface $screens,
+        protected ?AuthContextInterface $auth = null,
     ) {}
 
     protected const WP_SCREEN_MAP = [
@@ -145,6 +147,17 @@ class SpaController
      */
     public function dashboard(Request $request, ?string $screen = null): Response
     {
+        // Gate the dashboard SPA shell behind a valid auth token.
+        //
+        // AdminAuthMiddleware now always enforces auth for /dashboard, but this
+        // controller-level check stays as a safety net (same pattern as
+        // SiteEditorController) so a valid token is still required to render
+        // the SPA shell — a missing/expired token can never look "logged in".
+        if ($this->auth?->getToken() === null) {
+            $redirect = urlencode($request->uri());
+            return Response::html('', 302, ['Location' => '/login?redirect=' . $redirect]);
+        }
+
         return $this->serveNewDashboard($request, $screen);
     }
 

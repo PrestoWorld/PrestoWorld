@@ -112,7 +112,6 @@ class EnvConfigReader implements ConfigReaderInterface
             'DB_MYSQL_PASSWORD',
             'CACHE_DRIVER',
             'QUEUE_CONNECTION',
-            'ADMIN_AUTH_ENABLED',
             'PW_DEBUG',
             'PW_ACTIVE_THEME',
             'PW_THEME_ACTIVE',

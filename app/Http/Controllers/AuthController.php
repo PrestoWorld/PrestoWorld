@@ -452,9 +452,11 @@ HTML;
         $httpTransport = $this->app->make(HttpTransportInterface::class);
         $authContext = $this->app->make(AuthContextInterface::class);
 
-        $expiresAt = $remember
-            ? Chronos::now()->addDays(30)
-            : Chronos::now()->addHours(8);
+        // Default token lifetime is 30 days so a session survives across
+        // days of normal use (previously 8h, which silently dropped the
+        // cookie and made the admin bar "disappear" while /dashboard stayed
+        // open). "Remember me" also yields 30 days.
+        $expiresAt = Chronos::now()->addDays(30);
 
         $token = $tokenStorage->create([
             'user_id' => $user['id'],

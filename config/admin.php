@@ -8,15 +8,6 @@ return [
     'skin' => env('ADMIN_SKIN', 'presto-spa'),
 
     /*
-    | Authentication
-    | Set enabled=false to bypass auth check during development.
-    | In production, wire a real AuthContext provider.
-    */
-    'auth' => [
-        'enabled' => env('ADMIN_AUTH_ENABLED', true),
-    ],
-
-    /*
     | Dashboard widget defaults
     */
     'dashboard' => [

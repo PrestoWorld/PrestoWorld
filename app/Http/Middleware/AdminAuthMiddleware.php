@@ -7,7 +7,6 @@ namespace App\Http\Middleware;
 use Witals\Framework\Contracts\Auth\AuthContextInterface;
 use Witals\Framework\Http\Request;
 use Witals\Framework\Http\Response;
-use App\Foundation\Application;
 
 /**
  * Admin Authentication Middleware
@@ -16,20 +15,18 @@ use App\Foundation\Application;
  * 1. User is authenticated (has valid token)
  * 2. User has admin role
  *
- * If not authenticated, redirects to login page.
+ * If not authenticated, redirects to login page (401 JSON for /api/*).
  * If authenticated but not admin, returns 403 Forbidden.
  *
- * Auth can be bypassed in development via config/admin.php auth.enabled=false.
+ * Auth is ALWAYS enforced for the protected prefixes — there is no
+ * development bypass anymore; use a real login to access admin surfaces.
  */
 class AdminAuthMiddleware
 {
     protected ?AuthContextInterface $auth;
 
-    protected Application $app;
-
-    public function __construct(Application $app, ?AuthContextInterface $auth = null)
+    public function __construct(?AuthContextInterface $auth = null)
     {
-        $this->app = $app;
         $this->auth = $auth;
     }
 
@@ -52,19 +49,14 @@ class AdminAuthMiddleware
             return $next($request);
         }
 
-        // Skip auth check when disabled in config (dev mode)
-        if (!$this->app->config('admin.auth.enabled', false)) {
-            return $next($request);
-        }
-
         if ($this->auth === null) {
-            return $this->redirectToLogin($request);
+            return $this->deny($request);
         }
 
         // Check if user is authenticated
         $token = $this->auth->getToken();
         if ($token === null) {
-            return $this->redirectToLogin($request);
+            return $this->deny($request);
         }
 
         // Check if user has admin role
@@ -76,6 +68,23 @@ class AdminAuthMiddleware
 
         // User is authenticated and is admin — proceed
         return $next($request);
+    }
+
+    /**
+     * Unauthenticated response: 401 JSON for /api/* (so fetch/XHR clients can
+     * react without parsing HTML), 302 to login for page requests.
+     */
+    protected function deny(Request $request): Response
+    {
+        if (str_starts_with($request->path(), '/api/')) {
+            return Response::html(
+                json_encode(['error' => 'unauthenticated', 'message' => 'Authentication required.']),
+                401,
+                ['Content-Type' => 'application/json; charset=utf-8']
+            );
+        }
+
+        return $this->redirectToLogin($request);
     }
 
     /**
