@@ -78,6 +78,28 @@ abstract class RestController
     }
 
     /**
+     * Read a query arg as a scalar string. Clients may send repeated args
+     * (`status[0]=publish&status[1]=draft`); casting that array to string
+     * throws "Array to string conversion" — take the first scalar instead.
+     */
+    protected function scalarQuery(Request $request, string $key, string $default = ''): string
+    {
+        $value = $request->query($key, $default);
+
+        if (is_array($value)) {
+            foreach ($value as $item) {
+                if (is_scalar($item)) {
+                    return (string) $item;
+                }
+            }
+
+            return $default;
+        }
+
+        return is_scalar($value) ? (string) $value : $default;
+    }
+
+    /**
      * Collection response with the pagination headers core-data reads.
      *
      * @param list<array<string, mixed>> $items
@@ -338,6 +360,16 @@ abstract class RestController
                 'collection' => [
                     [
                         'href' => $this->restUrl($isPart ? 'template-parts' : 'templates'),
+                    ],
+                ],
+                // Drives editor label logic (post-publish-button/label.js):
+                // without wp:action-publish the header shows "Submit for
+                // Review" instead of "Save". Writes are supported (PUT above).
+                'wp:action-publish' => [
+                    [
+                        'href' => $this->restUrl(
+                            ($isPart ? 'template-parts/' : 'templates/') . rawurlencode($stylesheet . '//' . $slug)
+                        ),
                     ],
                 ],
             ],

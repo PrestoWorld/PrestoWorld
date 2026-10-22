@@ -190,6 +190,10 @@ body{overflow:hidden;background:#f0f0f1;font-family:-apple-system,BlinkMacSystem
   content:"Đang tải Site Editor…";display:grid;place-items:center;height:100%;
   color:#757575;font-size:13px;
 }
+/* Standalone mount has no WP admin sidebar — neutralize base-styles'
+   editor-left() offset (left: 160px) or the layout shifts/overflows. */
+.interface-interface-skeleton,
+.editor-editor-interface{left:0!important;margin-left:0!important}
 </style>
 </head>
 <body class="block-editor-page">

@@ -26,7 +26,7 @@ class TemplatePartsController extends RestController
     /** GET /wp-json/wp/v2/template-parts/lookup?slug=header */
     public function lookup(Request $request): Response
     {
-        $slug = (string) $request->query('slug', '');
+        $slug = $this->scalarQuery($request, 'slug');
         if ($slug === '') {
             return $this->error('rest_missing_callback_param', 'Missing required parameter: slug.', 400);
         }

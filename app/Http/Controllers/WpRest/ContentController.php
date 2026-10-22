@@ -46,15 +46,15 @@ class ContentController extends RestController
             ->where('status', '!=', 'auto-draft')
             ->where('status', '!=', 'trash');
 
-        $search = trim((string) $request->query('search', ''));
+        $search = trim($this->scalarQuery($request, 'search'));
         if ($search !== '') {
             $like = '%' . str_replace(['%', '_'], ['\\%', '\\_'], $search) . '%';
             $query = $query->where('title', 'LIKE', $like);
         }
 
-        $status = (string) $request->query('status', '');
-        if ($status !== '' && $status !== 'any') {
-            $query = $query->where('status', $status);
+        $statuses = $this->statusList($request);
+        if ($statuses !== []) {
+            $query = $query->where('status', $statuses);
         }
 
         $query = $query->orderBy('created_at', 'DESC');
@@ -68,6 +68,36 @@ class ContentController extends RestController
         $items = array_map(fn (array $row): array => $this->record($row, $type), $query->fetchAll());
 
         return $this->collection($request, $items);
+    }
+
+    /**
+     * WP `status` query arg: scalar (`status=publish`) or repeated
+     * (`status[0]=publish&status[1]=draft`). `any` anywhere in the list
+     * means "no extra restriction". Cycle compiles `where(col, array)`
+     * as `col IN (...)`.
+     *
+     * @return list<string>
+     */
+    private function statusList(Request $request): array
+    {
+        $raw = $request->query('status', '');
+        $values = is_array($raw) ? array_values($raw) : [$raw];
+
+        $statuses = [];
+        foreach ($values as $value) {
+            if (!is_scalar($value)) {
+                continue;
+            }
+
+            $value = (string) $value;
+            if ($value === '' || $value === 'any') {
+                return [];
+            }
+
+            $statuses[] = $value;
+        }
+
+        return array_values(array_unique($statuses));
     }
 
     /** GET /wp-json/wp/v2/{restBase}/{id} */
@@ -105,7 +135,7 @@ class ContentController extends RestController
      * @param array<string, mixed> $row
      * @return array<string, mixed>
      */
-    private function record(array $row, string $type): array
+    public function record(array $row, string $type): array
     {
         $id = (int) ($row['id'] ?? 0);
         $title = (string) ($row['title'] ?? '');

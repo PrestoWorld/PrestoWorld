@@ -89,6 +89,7 @@ $router->get('/wp-json/wp/v2/block-patterns/categories', [PatternsController::cl
 $router->get('/wp-json/wp-block-editor/v1/settings', [BlockEditorController::class, 'settings']);
 $router->get('/wp-json/wp-block-editor/v1/assets', [BlockEditorController::class, 'assets']);
 $router->get('/wp-json/wp-block-editor/v1/export', [BlockEditorController::class, 'export']);
+$router->get('/wp-json/wp-block-editor/v1/navigation-fallback', [BlockEditorController::class, 'navigationFallback']);
 
 // --- content entities (posts, pages, blocks, navigation, media) -------
 // Registered after the static routes above: static paths win, and dynamic

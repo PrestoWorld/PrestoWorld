@@ -157,8 +157,8 @@ class RootController extends RestController
      */
     public function viewConfig(Request $request): Response
     {
-        $kind = (string) $request->query('kind', '');
-        $name = (string) $request->query('name', '');
+        $kind = $this->scalarQuery($request, 'kind');
+        $name = $this->scalarQuery($request, 'name');
 
         $config = (new ViewConfig())->for($kind, $name, [
             'allItemsLabel' => $this->allItemsLabel($kind, $name),

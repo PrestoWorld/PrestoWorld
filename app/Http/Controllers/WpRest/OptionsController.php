@@ -90,6 +90,7 @@ class OptionsController extends RestController
             'wp/v2/users/me' => ['GET', 'POST', 'PUT'],
             'wp-block-editor/v1/settings' => ['GET'],
             'wp-block-editor/v1/assets' => ['GET'],
+            'wp-block-editor/v1/navigation-fallback' => ['GET'],
             // Revisions probes (posts/pages/blocks/navigation/media/global-styles)
             'wp/v2/[^/]+/[^/]+/revisions' => ['GET'],
         ];

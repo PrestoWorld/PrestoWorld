@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\WpRest;
 
+use Cycle\Database\DatabaseInterface;
+use App\Foundation\Application;
+use Witals\Framework\Contracts\Auth\AuthContextInterface;
 use Witals\Framework\Http\Request;
 use Witals\Framework\Http\Response;
 
@@ -17,6 +20,14 @@ use Witals\Framework\Http\Response;
  */
 class BlockEditorController extends RestController
 {
+    public function __construct(
+        Application $app,
+        private DatabaseInterface $db,
+        protected ?AuthContextInterface $auth = null,
+    ) {
+        parent::__construct($app);
+    }
+
     /** GET /wp-json/wp-block-editor/v1/settings */
     public function settings(Request $request): Response
     {
@@ -66,6 +77,139 @@ class BlockEditorController extends RestController
     public function export(Request $request): Response
     {
         return $this->error('rest_cannot_export', 'Site export is not available on this installation.', 501);
+    }
+
+    /**
+     * GET /wp-json/wp-block-editor/v1/navigation-fallback?_embed=true
+     *
+     * Mirrors `WP_REST_Navigation_Fallback_Controller`: return the newest
+     * published `wp_navigation` post, creating the default fallback
+     * (`<!-- wp:page-list /-->`, title "Navigation") when none exists —
+     * WordPress creates it on this same GET. `core-data` resolves the path
+     * with no error handling, so an unanswered route (404) surfaces as an
+     * unhandled rejection in the console.
+     */
+    public function navigationFallback(Request $request): Response
+    {
+        $token = $this->auth?->getToken();
+        if ($token === null) {
+            return $this->unauthorized();
+        }
+
+        $row = $this->latestNavigation() ?? $this->createDefaultNavigation($token->getPayload());
+
+        if ($row === null) {
+            return $this->error('no_fallback_menu', 'No fallback menu found.', 404);
+        }
+
+        $id = (int) ($row['id'] ?? 0);
+        $body = [
+            'id' => $id,
+            '_links' => [
+                'self' => [
+                    [
+                        'href' => $this->restUrl('navigation/' . $id),
+                        'embeddable' => true,
+                    ],
+                ],
+            ],
+        ];
+
+        // `_embed=true` → `_embedded.self` holds the full record; the resolver
+        // receives it into the store and invalidates stale navigation queries.
+        if ($request->query('_embed', null) !== null) {
+            $record = $this->app->make(ContentController::class)->record($row, 'wp_navigation');
+            $body['_embedded'] = ['self' => [$record]];
+        }
+
+        return $this->respond($body);
+    }
+
+    private function latestNavigation(): ?array
+    {
+        $row = $this->db->select('*')
+            ->from($this->prefix() . 'posts')
+            ->where('type', 'wp_navigation')
+            ->where('status', 'publish')
+            ->orderBy('created_at', 'DESC')
+            ->limit(1)
+            ->run()
+            ->fetch();
+
+        return (is_array($row) && $row !== []) ? $row : null;
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     */
+    private function createDefaultNavigation(array $payload): ?array
+    {
+        // `slug` carries a global unique index in pw_posts — WordPress allows
+        // per-type slugs, so fall back to a variant when "navigation" is taken.
+        $slug = 'navigation';
+        for ($i = 1; $i <= 25 && $this->slugExists($slug); $i++) {
+            $slug = 'navigation-' . $i;
+        }
+
+        $now = date('Y-m-d H:i:s');
+        $author = (int) ($payload['sub'] ?? $payload['user_id'] ?? $payload['id'] ?? 0);
+
+        try {
+            $this->db->insert($this->prefix() . 'posts')->values([
+                'title' => 'Navigation',
+                'slug' => $slug,
+                'content' => '<!-- wp:page-list /-->',
+                'excerpt' => '',
+                'status' => 'publish',
+                'type' => 'wp_navigation',
+                'author_id' => $author > 0 ? $author : 1,
+                'menu_order' => 0,
+                'created_at' => $now,
+                'updated_at' => $now,
+                'published_at' => $now,
+            ])->run();
+
+            $insertId = $this->db->getDriver()->lastInsertID();
+            $id = is_scalar($insertId) ? (int) $insertId : 0;
+
+            if ($id <= 0) {
+                return null;
+            }
+
+            return $this->latestNavigationById($id);
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    private function latestNavigationById(int $id): ?array
+    {
+        $row = $this->db->select('*')
+            ->from($this->prefix() . 'posts')
+            ->where('id', $id)
+            ->where('type', 'wp_navigation')
+            ->limit(1)
+            ->run()
+            ->fetch();
+
+        return (is_array($row) && $row !== []) ? $row : null;
+    }
+
+    private function slugExists(string $slug): bool
+    {
+        $row = $this->db->select('id')
+            ->from($this->prefix() . 'posts')
+            ->where('slug', $slug)
+            ->limit(1)
+            ->run()
+            ->fetch();
+
+        return is_array($row) && $row !== [];
+    }
+
+    private function prefix(): string
+    {
+        return (string) (getenv('PW_TABLE_PREFIX') ?: 'pw_');
     }
 
     /**

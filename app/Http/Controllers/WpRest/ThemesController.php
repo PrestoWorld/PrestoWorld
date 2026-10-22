@@ -19,7 +19,7 @@ class ThemesController extends RestController
     /** GET /wp-json/wp/v2/themes */
     public function index(Request $request): Response
     {
-        $status = (string) $request->query('status', '');
+        $status = $this->scalarQuery($request, 'status');
         if ($status !== '' && $status !== 'active') {
             return $this->fullCollection([]);
         }

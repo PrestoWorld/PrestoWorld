@@ -40,13 +40,13 @@ class TemplatesController extends RestController
     /** GET /wp-json/wp/v2/templates/lookup?slug=front-page */
     public function lookup(Request $request): Response
     {
-        $slug = (string) $request->query('slug', '');
+        $slug = $this->scalarQuery($request, 'slug');
         if ($slug === '') {
             return $this->error('rest_missing_callback_param', 'Missing required parameter: slug.', 400);
         }
 
-        $isCustom = filter_var($request->query('is_custom', false), FILTER_VALIDATE_BOOLEAN);
-        $prefix = (string) $request->query('template_prefix', '');
+        $isCustom = filter_var($this->scalarQuery($request, 'is_custom', 'false'), FILTER_VALIDATE_BOOLEAN);
+        $prefix = $this->scalarQuery($request, 'template_prefix');
 
         // WP: get_template_fallback() walks get_template_hierarchy() until a
         // candidate has content — a missing front-page.html resolves to
