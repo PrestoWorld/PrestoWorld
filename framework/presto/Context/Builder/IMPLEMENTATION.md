@@ -34,14 +34,19 @@ Hai integration points:
 - **Full Site Edit** — edit toàn bộ layout.html
 - **Content Edit** — edit content bên trong layout
 
-### 4. Gutenberg Fork
+### 4. Gutenberg Source (vendored)
 
-**File:** `/Users/puleeno/Projects/gutenberg/`
+**File:** `vendor/prestoworld/gutenberg-core/gutenberg/`
 
-- `webpack.presto.js` — build config cho PrestoWorld
+Clone đầy đủ source của WordPress/gutenberg (commit `e59587e516c`,
+GPL-2.0-or-later — xem `VENDORED.md`) để build tự-contained, không phụ
+thuộc checkout ngoài:
+
+- `webpack.presto.js` — build config cho PrestoWorld (context/output trỏ về repo này)
 - `packages/api-fetch/src/presto-adapter.js` — API adapter (redirect `/wp/v2/` → `/pw-api/v1/`)
-- `packages/edit-post/src/presto-editor.js` — editor entry point
-- `package.json` — thêm scripts `build:presto`, `dev:presto`
+- `packages/edit-post/src/index` — `editor` entry; `packages/edit-site/src/presto-boot` — `presto` entry
+- `presto-styles.js` — style entry
+- `package.json` (gutenberg-core) — deps exact-pinned + scripts `build:gutenberg`, `dev:gutenberg`
 
 ### 5. REST API
 
@@ -99,13 +104,13 @@ Kết quả: ✓ All tests passed
 ## Gutenberg Build
 
 ```bash
-cd /Users/puleeno/Projects/gutenberg
-npm run build:presto        # Development build
-npm run dev:presto          # Watch mode
-npm run build:presto:prod   # Production build
+cd vendor/prestoworld/gutenberg-core
+npm install                 # lần đầu
+npm run build:gutenberg     # production build
+npm run dev:gutenberg       # watch mode
 ```
 
-Output: `/prestoworld.org/public/assets/gutenberg/`
+Output: `public/assets/gutenberg/` (script tự `cd gutenberg/` trước khi chạy webpack)
 
 ## Unsupported Blocks
 
@@ -150,8 +155,10 @@ try {
 - tests/ContextLoaderTest.php
 - README.md
 
-### Gutenberg Fork (/Users/puleeno/Projects/gutenberg/)
+### Gutenberg Source (vendor/prestoworld/gutenberg-core/gutenberg/)
+- VENDORED.md (nguồn, commit, cách build/customize)
 - webpack.presto.js
+- presto-styles.js
+- babel.config.js + tools/build-scripts/babel.config.cjs
 - packages/api-fetch/src/presto-adapter.js
-- packages/edit-post/src/presto-editor.js
-- package.json (modified)
+- packages/* (đầy đủ 127 packages)

@@ -187,20 +187,22 @@ php modules/ContextBuilder/tests/ContextLoaderTest.php
 
 ## Gutenberg Build
 
+Source: `vendor/prestoworld/gutenberg-core/gutenberg/` (vendored, xem `VENDORED.md`)
+
 ```bash
-cd /Users/puleeno/Projects/gutenberg
+cd vendor/prestoworld/gutenberg-core
 
-# Development build
-npm run build:presto
-
-# Watch mode
-npm run dev:presto
+# Lần đầu
+npm install
 
 # Production build
-npm run build:presto:prod
+npm run build:gutenberg
+
+# Watch mode
+npm run dev:gutenberg
 ```
 
-Output: `/prestoworld.org/public/assets/gutenberg/`
+Output: `public/assets/gutenberg/`
 
 ## Unsupported Blocks
 
