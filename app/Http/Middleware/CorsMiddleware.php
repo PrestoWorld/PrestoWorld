@@ -19,6 +19,8 @@ class CorsMiddleware
         'X-Requested-With',
         'Accept',
         'Origin',
+        'X-WP-Nonce',
+        'X-HTTP-Method-Override',
     ];
 
     protected int $maxAge = 86400;
@@ -41,7 +43,12 @@ class CorsMiddleware
     {
         $origin = $request->header('Origin', '');
 
-        if ($request->method() === 'OPTIONS') {
+        // Only a genuine cross-origin preflight short-circuits the router.
+        // `Access-Control-Request-Method` is the marker browsers set on
+        // preflights; a plain OPTIONS from a same-origin client (the REST API
+        // capability probes) must reach the route so it can answer with an
+        // `Allow` header.
+        if ($request->method() === 'OPTIONS' && $request->header('Access-Control-Request-Method', null) !== null) {
             return $this->createPreflightResponse($origin);
         }
 

@@ -36,8 +36,9 @@ class Application extends BaseApplication
 
         if ($this->isLongRunning() && !$this->sessionGlobalsBridgeRegistered) {
             $this->sessionGlobalsBridgeRegistered = true;
-            $this->beforeRequest(function (Request $r): void {
-                $this->syncSessionGlobals($r);
+            $this->beforeRequest(function (Request $request): void {
+                $this->syncSessionGlobals($request);
+                \PrestoWorld\Core\AuthService::reset();
             });
         }
 
@@ -74,8 +75,16 @@ class Application extends BaseApplication
             return null;
         }
 
+        $uri = $request->uri();
+        $path = parse_url($uri, PHP_URL_PATH) ?: '/';
+        $query = parse_url($uri, PHP_URL_QUERY);
+        $location = 'https://' . $host . $path;
+        if (is_string($query) && $query !== '') {
+            $location .= '?' . $query;
+        }
+
         return Response::html('', 302, [
-            'Location' => 'https://' . $host . $request->uri(),
+            'Location' => $location,
             'Cache-Control' => 'no-store',
         ]);
     }
@@ -113,6 +122,10 @@ class Application extends BaseApplication
         }
 
         $_COOKIE = $cookies;
+        $_SESSION = [];
+
+        $sid = (string) ($cookies[session_name()] ?? '');
+        session_id($sid !== '' && preg_match('/^[a-zA-Z0-9,-]+$/', $sid) ? $sid : bin2hex(random_bytes(16)));
     }
 
     private function attachSessionCookie(Response $response): Response
@@ -355,7 +368,7 @@ class Application extends BaseApplication
             // Admin auth only applies to admin routes — lazy-load
             $registry->addMiddlewareFor(
                 \App\Http\Middleware\AdminAuthMiddleware::class,
-                only: ['/dashboard', '/api/admin', '/site-editor'],
+                only: ['/dashboard', '/api/admin', '/site-editor', '/wp-json'],
             );
             // Global middleware runs on all matched routes
             $registry->addMiddleware(\App\Http\Middleware\EnsureInstalledMiddleware::class);

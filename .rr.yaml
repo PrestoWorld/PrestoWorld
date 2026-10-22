@@ -4,9 +4,10 @@ server:
   command: "php public/index.php"
   env:
     - RR_MODE: true
+    - PW_FORCE_HTTPS: "false"
 
 http:
-  address: 0.0.0.0:8080
+  address: ${RR_HTTP_ADDRESS:-0.0.0.0:8080}
   middleware: ["static", "gzip"]
   static:
     dir: "public"

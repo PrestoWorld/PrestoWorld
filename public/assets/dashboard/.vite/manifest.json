@@ -48,16 +48,6 @@
       "_vendor-Bb8JjhAW.js"
     ]
   },
-  "src/components/pages/MessagesPage.tsx": {
-    "file": "js/MessagesPage-Hb4hsRzl.js",
-    "name": "MessagesPage",
-    "src": "src/components/pages/MessagesPage.tsx",
-    "isDynamicEntry": true,
-    "imports": [
-      "_vendor-react-ioS9alIq.js",
-      "_vendor-Bb8JjhAW.js"
-    ]
-  },
   "src/components/pages/OrdersPage.tsx": {
     "file": "js/OrdersPage-DspFX2Cc.js",
     "name": "OrdersPage",
@@ -93,7 +83,6 @@
       "src/components/pages/OverviewPage.tsx",
       "src/components/pages/OrdersPage.tsx",
       "src/components/pages/InventoryPage.tsx",
-      "src/components/pages/MessagesPage.tsx",
       "src/components/pages/AnalyticsPage.tsx",
       "src/components/pages/MarketingPage.tsx"
     ],
