@@ -56,5 +56,10 @@ class RouteServiceProvider extends ServiceProvider
         if (file_exists($apiFile)) {
             require $apiFile;
         }
+
+        $restFile = $this->app->basePath('routes/rest.php');
+        if (file_exists($restFile)) {
+            require $restFile;
+        }
     }
 }

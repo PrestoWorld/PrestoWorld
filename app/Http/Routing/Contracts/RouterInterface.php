@@ -12,6 +12,7 @@ interface RouterInterface
     public function post(string $path, mixed $action): void;
     public function put(string $path, mixed $action): void;
     public function delete(string $path, mixed $action): void;
+    public function options(string $path, mixed $action): void;
     public function dispatch(Request $request): mixed;
     public function setWordPressFallback(callable $fallback): void;
     public function setHookFallback(callable $hook): void;

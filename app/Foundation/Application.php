@@ -355,7 +355,7 @@ class Application extends BaseApplication
             // Admin auth only applies to admin routes — lazy-load
             $registry->addMiddlewareFor(
                 \App\Http\Middleware\AdminAuthMiddleware::class,
-                only: ['/dashboard', '/api/admin', '/site-editor'],
+                only: ['/dashboard', '/api/admin', '/site-editor', '/wp-json'],
             );
             // Global middleware runs on all matched routes
             $registry->addMiddleware(\App\Http\Middleware\EnsureInstalledMiddleware::class);

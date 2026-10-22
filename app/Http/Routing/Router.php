@@ -45,6 +45,11 @@ class Router implements RouterInterface
         $this->addRoute('DELETE', $path, $action);
     }
 
+    public function options(string $path, $action): void
+    {
+        $this->addRoute('OPTIONS', $path, $action);
+    }
+
     public function group(array $attributes, \Closure $callback): void
     {
         $prefix = $attributes['prefix'] ?? '';

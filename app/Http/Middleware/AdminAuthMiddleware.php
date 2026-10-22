@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Http\Rest\RestHeaders;
+use App\Http\Rest\WpNonce;
 use Witals\Framework\Contracts\Auth\AuthContextInterface;
 use Witals\Framework\Http\Request;
 use Witals\Framework\Http\Response;
@@ -23,6 +25,8 @@ use Witals\Framework\Http\Response;
  */
 class AdminAuthMiddleware
 {
+    use RestHeaders;
+
     protected ?AuthContextInterface $auth;
 
     public function __construct(?AuthContextInterface $auth = null)
@@ -34,9 +38,10 @@ class AdminAuthMiddleware
     {
         $path = $request->path();
 
-        // Only apply to admin surfaces: dashboard SPA, admin API and the
-        // standalone Site Editor (Context Editor) page.
-        $protectedPrefixes = ['/dashboard', '/api/admin', '/site-editor'];
+        // Only apply to admin surfaces: dashboard SPA, admin API, the
+        // standalone Site Editor page and the WordPress-compatible REST
+        // namespace the Site Editor talks to.
+        $protectedPrefixes = ['/dashboard', '/api/admin', '/site-editor', '/wp-json'];
         $isProtected = false;
         foreach ($protectedPrefixes as $prefix) {
             if (str_starts_with($path, $prefix)) {
@@ -66,16 +71,41 @@ class AdminAuthMiddleware
             return $this->forbidden();
         }
 
+        // The REST namespace additionally requires the nonce the editor page
+        // injects (`X-WP-Nonce`) on write requests — a cross-site form cannot
+        // set that header, which is what makes cookie auth safe to accept.
+        if ($this->isRestPath($path) && $this->isWrite($request)) {
+            $nonce = $this->headerValue($request, WpNonce::HEADER);
+            if (!WpNonce::verify($nonce)) {
+                return $this->deny($request, 'rest_cookie_invalid_nonce', 'The nonce is invalid or has expired.');
+            }
+        }
+
         // User is authenticated and is admin — proceed
         return $next($request);
     }
 
     /**
-     * Unauthenticated response: 401 JSON for /api/* (so fetch/XHR clients can
-     * react without parsing HTML), 302 to login for page requests.
+     * Unauthenticated response: WP-shaped 401 JSON for the REST namespace,
+     * 401 JSON for /api/* (so fetch/XHR clients can react without parsing
+     * HTML), 302 to login for page requests.
      */
-    protected function deny(Request $request): Response
-    {
+    protected function deny(
+        Request $request,
+        string $code = 'rest_not_logged_in',
+        string $message = 'Cookie authentication is not available. Authentication must be passed explicitly.',
+    ): Response {
+        if ($this->isRestPath($request->path())) {
+            return Response::html(
+                json_encode(
+                    ['code' => $code, 'message' => $message, 'data' => ['status' => 401]],
+                    JSON_UNESCAPED_SLASHES,
+                ),
+                401,
+                ['Content-Type' => 'application/json; charset=utf-8'],
+            );
+        }
+
         if (str_starts_with($request->path(), '/api/')) {
             return Response::html(
                 json_encode(['error' => 'unauthenticated', 'message' => 'Authentication required.']),
@@ -85,6 +115,16 @@ class AdminAuthMiddleware
         }
 
         return $this->redirectToLogin($request);
+    }
+
+    protected function isRestPath(string $path): bool
+    {
+        return str_starts_with($path, '/wp-json');
+    }
+
+    protected function isWrite(Request $request): bool
+    {
+        return in_array(strtoupper($request->method()), ['POST', 'PUT', 'PATCH', 'DELETE'], true);
     }
 
     /**
