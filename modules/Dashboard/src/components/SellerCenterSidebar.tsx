@@ -106,6 +106,29 @@ export const SellerCenterSidebar: React.FC<SellerCenterSidebarProps> = ({
   const closeTimer = React.useRef<number | null>(null);
   const overflowActive = navItems.slice(4).some((item) => isTabActive(item.id));
 
+  const menuSections = React.useMemo(() => {
+    const sections: MenuSection[] = [];
+    for (const section of coreSections) {
+      if (section.id === 'overview') continue;
+      if (section.id === 'content') {
+        for (const item of section.items ?? []) {
+          const id = item.screenId ?? item.id;
+          sections.push({
+            id,
+            title: item.label,
+            priority: item.priority ?? section.priority,
+            icon: item.icon ?? section.icon,
+            screenId: item.screenId,
+            items: item.items?.length ? item.items : [item],
+          });
+        }
+        continue;
+      }
+      sections.push(section);
+    }
+    return sections;
+  }, [coreSections]);
+
   const openFlyout = (section: MenuSection, e: React.MouseEvent) => {
     if (closeTimer.current) {
       window.clearTimeout(closeTimer.current);
@@ -261,16 +284,16 @@ export const SellerCenterSidebar: React.FC<SellerCenterSidebarProps> = ({
             );
           })}
 
-          {coreSections.length > 0 && (
+          {menuSections.length > 0 && (
             <div className="pt-3 mt-2 border-t border-slate-200/80">
               <div className="px-1.5 pb-1.5 flex items-center justify-between text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
                 <span>Quản Lý Nội Dung</span>
                 <span className="text-[9px] bg-slate-100 text-slate-600 px-1.5 py-0.2 rounded-full font-extrabold border border-slate-200/60">
-                  {coreSections.length} Nhóm
+                  {menuSections.length} Nhóm
                 </span>
               </div>
 
-              {coreSections.map((section) => {
+              {menuSections.map((section) => {
                 const Icon = resolveIcon(section.icon);
                 const hasActive = (section.items ?? []).some((item: CoreItem) => {
                   if ((item.screenId ?? item.id) !== '' && isTabActive(item.screenId ?? item.id)) {
@@ -306,7 +329,7 @@ export const SellerCenterSidebar: React.FC<SellerCenterSidebarProps> = ({
         </nav>
 
         {flyout && (() => {
-          const section = coreSections.find((s) => s.id === flyout.id);
+          const section = menuSections.find((s) => s.id === flyout.id);
           if (!section) return null;
           const Icon = resolveIcon(section.icon);
           return (
