@@ -1391,7 +1391,7 @@ window.runInstallation = async () => {
     const data = await res.json().catch(() => ({}));
     if (res.ok && data.success) {
       setProgress(70, "Migrations ho\xE0n t\u1EA5t, \u0111ang kh\u1EDFi t\u1EA1o d\u1EEF li\u1EC7u...");
-      log("[MIGRATION] T\u1EA5t c\u1EA3 migrations \u0111\xE3 \u0111\u01B0\u1EE3c th\u1EF1c thi v\xE0 ghi l\u1ECBch s\u1EED v\xE0o pw_migrations", "success");
+      log("[MIGRATION] T\u1EA5t c\u1EA3 migrations \u0111\xE3 \u0111\u01B0\u1EE3c th\u1EF1c thi v\xE0 ghi l\u1ECBch s\u1EED v\xE0o "{$prefix} migrations"", "success");
       const result = data.migrations || {};
       if (result.created && result.created.length > 0) {
         result.created.forEach((m) => log("[MIGRATION] \u2713 " + m, "success"));
@@ -1403,7 +1403,7 @@ window.runInstallation = async () => {
       log("[AUTH] T\xE0i kho\u1EA3n qu\u1EA3n tr\u1ECB \u0111\xE3 \u0111\u01B0\u1EE3c t\u1EA1o", "success");
       setProgress(85, "\u0110ang ghi tr\u1EA1ng th\xE1i installed...");
       await new Promise((r) => setTimeout(r, 300));
-      log("[OPTIONS] presto_installed = 1 \u2192 pw_options", "success");
+      log("[OPTIONS] presto_installed = 1 \u2192 pw_ options", "success");
       setProgress(100, "C\xE0i \u0111\u1EB7t ho\xE0n t\u1EA5t!");
       await new Promise((r) => setTimeout(r, 300));
       log("[SUCCESS] PrestoWorld \u0111\xE3 \u0111\u01B0\u1EE3c c\xE0i \u0111\u1EB7t th\xE0nh c\xF4ng!", "success");

@@ -22,7 +22,16 @@ class MigrateCommand extends Command
         }
 
         $db = app(\Cycle\Database\DatabaseInterface::class);
-        $manager = new SchemaMigrationManager($db, $this->app->basePath());
+        if (!($this->app instanceof \App\Foundation\Application)) {
+            $this->error('The application does not support module migrations.');
+            return 1;
+        }
+
+        $manager = new SchemaMigrationManager(
+            $db,
+            $this->app->basePath(),
+            $this->app->moduleMigrationPaths(),
+        );
 
         $this->info('Running migrations...');
         $result = $manager->runMigrations($force);

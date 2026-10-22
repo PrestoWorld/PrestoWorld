@@ -15,13 +15,14 @@ use Cycle\Database\DatabaseInterface;
 class PostRepository
 {
     protected DatabaseInterface $db;
-    protected string $tablePrefix = 'pw_';
+    protected string $tablePrefix;
     protected string $defaultLocale = 'en';
     protected ?string $currentLocale = null;
 
     public function __construct(DatabaseInterface $db)
     {
         $this->db = $db;
+        $this->tablePrefix = getenv('PW_TABLE_PREFIX') ?: 'pw_';
     }
 
     public function setLocale(string $locale): void

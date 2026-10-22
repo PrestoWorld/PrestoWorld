@@ -433,6 +433,78 @@ class Application extends BaseApplication
         return $config;
     }
 
+    /**
+     * Migration directories owned by enabled modules. Modules own their
+     * migrations; database/migrations only holds app-level ones.
+     *
+     * Domain modules (modules/<Module>/Domain/<Slice>) are owned by their
+     * parent module and are included as well, otherwise their tables are
+     * never created.
+     *
+     * @return list<string>
+     */
+    public function moduleMigrationPaths(): array
+    {
+        if (!$this->has(\Witals\Framework\Module\ModuleManager::class)) {
+            return [];
+        }
+
+        $manager = $this->make(\Witals\Framework\Module\ModuleManager::class);
+        if (!$manager instanceof \Witals\Framework\Module\ModuleManager) {
+            return [];
+        }
+
+        $paths = [];
+        foreach ($manager->all() as $metadata) {
+            if (!is_array($metadata) || empty($metadata['enabled'])) {
+                continue;
+            }
+            $modulePath = $metadata['_path'] ?? null;
+            if (!is_string($modulePath)) {
+                continue;
+            }
+
+            $owned = [$modulePath];
+            $domainPath = $modulePath . '/Domain';
+            if (is_dir($domainPath)) {
+                foreach (scandir($domainPath) as $entry) {
+                    if ($entry === '.' || $entry === '..') {
+                        continue;
+                    }
+                    $slicePath = $domainPath . '/' . $entry;
+                    if (is_dir($slicePath)) {
+                        $owned[] = $slicePath;
+                    }
+                }
+            }
+
+            foreach ($owned as $ownerPath) {
+                $migrationPath = $this->resolveMigrationsPath($ownerPath);
+                if ($migrationPath !== null) {
+                    $paths[] = $migrationPath;
+                }
+            }
+        }
+
+        return array_values(array_unique($paths));
+    }
+
+    /**
+     * Migration directory of a module. Modules ship it either as migrations
+     * or Migrations, so the lookup has to be case insensitive - otherwise the
+     * migrations silently disappear on a case sensitive filesystem.
+     */
+    private function resolveMigrationsPath(string $modulePath): ?string
+    {
+        foreach (['migrations', 'Migrations'] as $candidate) {
+            $path = $modulePath . '/' . $candidate;
+            if (is_dir($path)) {
+                return $path;
+            }
+        }
+        return null;
+    }
+
     public function resolveConfigRepository(): ConfigRepository
     {
         if ($this->configRepository === null) {

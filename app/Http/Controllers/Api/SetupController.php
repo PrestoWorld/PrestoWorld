@@ -295,6 +295,17 @@ class SetupController
         // Update .env file with database connection
         $this->updateEnvFile($input);
 
+        // Resolve the effective table prefix BEFORE any migration runs.
+        // updateEnvFile() only rewrites the .env file on disk; the running
+        // process still holds the previous prefix in its environment, so
+        // getenv('PW_TABLE_PREFIX') would return the stale value and the
+        // migrations would create the tables under the old prefix.
+        $tablePrefix = !empty($input['db_prefix'])
+            ? (string) $input['db_prefix']
+            : (getenv('PW_TABLE_PREFIX') ?: 'pw_');
+
+        $this->publishTablePrefix($tablePrefix);
+
         // Build a new database connection using the updated .env values
         // This avoids using the existing database provider which may have old config.
         $databaseConfig = $this->buildDatabaseConfig($input);
@@ -310,12 +321,14 @@ class SetupController
         }
 
         // Run migrations (core, modules, framework)
-        $migrationManager = new SchemaMigrationManager($db, $this->app->basePath());
+        $migrationManager = new SchemaMigrationManager(
+            $db,
+            $this->app->basePath(),
+            $this->app->moduleMigrationPaths(),
+            $tablePrefix,
+        );
         $migrationResult = $migrationManager->runMigrations(false);
         $this->logger->info('Migrations run', $migrationResult);
-
-        // Determine table prefix (prefer input, fall back to env)
-        $tablePrefix = !empty($input['db_prefix']) ? $input['db_prefix'] : (getenv('PW_TABLE_PREFIX') ?: 'pw_');
 
         // Sync module schemas (create tables from module definitions)
         // Use the fresh DB connection, not the stale container DBAL
@@ -443,6 +456,58 @@ class SetupController
         } catch (\Throwable $e) {
             // If we cannot determine, assume not installed to allow installation attempt
             return false;
+        }
+    }
+
+    /**
+     * Publish the resolved table prefix to the running process.
+     *
+     * The .env file was rewritten by updateEnvFile(), but the process
+     * environment still carries the value it booted with. Config files and
+     * module repositories resolve their prefix through getenv()/env(), so the
+     * new prefix has to be pushed into the process environment and the config
+     * cache has to be dropped for them to pick it up.
+     */
+    private function publishTablePrefix(string $prefix): void
+    {
+        putenv('PW_TABLE_PREFIX=' . $prefix);
+        $_ENV['PW_TABLE_PREFIX'] = $prefix;
+        $_SERVER['PW_TABLE_PREFIX'] = $prefix;
+
+        $this->app->resolveConfigRepository()->clearCache();
+        $this->syncWpConfigTablePrefix($prefix);
+    }
+
+    /**
+     * Keep wp-config.php in sync with the installed prefix.
+     *
+     * The WordPress bridge reads $table_prefix from wp-config.php and exports
+     * it as PW_TABLE_PREFIX whenever the environment does not carry the
+     * variable, so a stale value there silently brings the old prefix back.
+     */
+    private function syncWpConfigTablePrefix(string $prefix): void
+    {
+        $path = $this->app->basePath('wp-config.php');
+        if (!is_file($path)) {
+            return;
+        }
+
+        $contents = file_get_contents($path);
+        if ($contents === false) {
+            return;
+        }
+
+        $updated = preg_replace(
+            '/(\$table_prefix\s*=\s*[\'"])[a-zA-Z0-9_]+([\'"]\s*;)/',
+            '$1' . $prefix . '$2',
+            $contents,
+            1,
+            $count,
+        );
+
+        if ($updated !== null && $count > 0 && $updated !== $contents) {
+            file_put_contents($path, $updated);
+            $this->logger->info('wp-config.php table prefix synced', ['prefix' => $prefix]);
         }
     }
 

@@ -55,7 +55,7 @@ class DbInitCommand extends Command
         // Global tables on the 'presto' connection
         $db = $dm->database('presto');
         if ($db instanceof Database) {
-            $result = $this->initGlobalTables($db, $force);
+            $result = $this->initGlobalTables($db, $force, $prefix);
             $created += $result['created'];
             $skipped += $result['skipped'];
         }
@@ -180,7 +180,7 @@ class DbInitCommand extends Command
     }
 
     /** @return array{created: int, skipped: int} */
-    private function initGlobalTables(Database $db, bool $force): array
+    private function initGlobalTables(Database $db, bool $force, string $prefix = 'pw_'): array
     {
         $tables = [
             [
@@ -195,7 +195,7 @@ class DbInitCommand extends Command
                 'uniques' => [['module']],
             ],
             [
-                'name' => 'pw_migrations',
+                'name' => "{$prefix}migrations",
                 'columns' => [
                     ['type' => 'primary', 'name' => 'id'],
                     ['type' => 'string(255)', 'name' => 'migration', 'nullable' => false],
@@ -228,7 +228,7 @@ class DbInitCommand extends Command
                 ],
             ],
             [
-                'name' => 'pw_options',
+                'name' => "{$prefix}options",
                 'columns' => [
                     ['type' => 'primary', 'name' => 'id'],
                     ['type' => 'string(191)', 'name' => 'option_name', 'nullable' => false],

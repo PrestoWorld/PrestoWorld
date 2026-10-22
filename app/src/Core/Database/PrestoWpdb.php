@@ -25,7 +25,7 @@ final class PrestoWpdb
 
     public static int $queryCount = 0;
 
-    public string $prefix = 'pw_';
+    public string $prefix;
     public int $insertId = 0;
     public int $numRows = 0;
     public bool $showErrors = false;
@@ -39,12 +39,12 @@ final class PrestoWpdb
     public function __construct(
         ?DatabaseInterface $db = null,
         ?QueryTransformer $transformer = null,
-        string $prefix = 'pw_',
+        ?string $prefix = null,
         ?DataMasker $masker = null,
     ) {
         $this->db = $db;
         $this->transformer = $transformer ?? new QueryTransformer(QueryRule::TARGET_POSTGRESQL);
-        $this->prefix = $prefix;
+        $this->prefix = $prefix ?? (getenv('PW_TABLE_PREFIX') ?: 'pw_');
         $this->masker = $masker ?? new DataMasker();
     }
 

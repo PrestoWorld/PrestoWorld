@@ -21,9 +21,44 @@ class SeedCommand extends Command
         $db = app(DatabaseInterface::class);
         $repo = new PostRepository($db);
 
-        if (!$db->hasTable('pw_posts')) {
-            $this->error('Database not initialized. Run migration first.');
+        $prefix = getenv('PW_TABLE_PREFIX') ?: 'pw_';
+        $postsTable = $prefix . 'posts';
+        $termsTable = $prefix . 'terms';
+        $relationsTable = $prefix . 'term_relationships';
+        $usersTable = $prefix . 'users';
+
+        if (!$db->hasTable($postsTable)) {
+            $this->error("Database not initialized. Table {$postsTable} is missing.");
             return 1;
+        }
+
+        $this->line('  Creating admin user...');
+        if (!$db->hasTable($usersTable)) {
+            $this->error("  {$usersTable} table missing. Run migration first.");
+        } else {
+            $adminEmail = getenv('ADMIN_EMAIL') ?: 'admin@example.com';
+            $existing = $db->select('id')
+                ->from($usersTable)
+                ->where('email', $adminEmail)
+                ->run()
+                ->fetch();
+
+            if ($existing) {
+                $this->line("  - {$adminEmail}: already exists, skipping.");
+            } else {
+                $now = new \DateTimeImmutable();
+                $db->insert($usersTable)->values([
+                    'email' => $adminEmail,
+                    'username' => getenv('ADMIN_USERNAME') ?: 'admin',
+                    'password_hash' => password_hash(getenv('ADMIN_PASSWORD') ?: 'admin123', PASSWORD_DEFAULT),
+                    'display_name' => 'Administrator',
+                    'role' => 'administrator',
+                    'status' => 'active',
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ])->run();
+                $this->line("  - {$adminEmail}: created.");
+            }
         }
 
         $this->line('  Creating pages...');
@@ -43,9 +78,9 @@ class SeedCommand extends Command
             $slug = $locales['en']['slug'];
 
             $existing = $db->select('id')
-                ->from('pw_posts')
+                ->from($postsTable)
                 ->where('slug', $slug)
-                ->where('post_type', 'page')
+                ->where('type', 'page')
                 ->run()
                 ->fetch();
 
@@ -54,16 +89,17 @@ class SeedCommand extends Command
                 continue;
             }
 
-            $db->insert('pw_posts')->values([
-                'post_type' => 'page',
+            $db->insert($postsTable)->values([
+                'type' => 'page',
                 'title' => $locales['en']['title'],
                 'slug' => $slug,
+                'content' => $locales['en']['content'],
                 'status' => 'publish',
                 'author_id' => 1,
             ])->run();
 
             $post = $db->select('id')
-                ->from('pw_posts')
+                ->from($postsTable)
                 ->where('slug', $slug)
                 ->run()
                 ->fetch();
@@ -112,7 +148,7 @@ class SeedCommand extends Command
 
         foreach ($categories as $cat) {
             $existing = $db->select('id')
-                ->from('pw_terms')
+                ->from($termsTable)
                 ->where('slug', $cat['slug'])
                 ->where('taxonomy', 'category')
                 ->run()
@@ -123,7 +159,7 @@ class SeedCommand extends Command
                 continue;
             }
 
-            $db->insert('pw_terms')->values([
+            $db->insert($termsTable)->values([
                 'name' => $cat['name'],
                 'slug' => $cat['slug'],
                 'taxonomy' => 'category',
@@ -157,9 +193,9 @@ class SeedCommand extends Command
 
         foreach ($posts as $postData) {
             $existing = $db->select('id')
-                ->from('pw_posts')
+                ->from($postsTable)
                 ->where('slug', $postData['slug'])
-                ->where('post_type', 'post')
+                ->where('type', 'post')
                 ->run()
                 ->fetch();
 
@@ -168,9 +204,8 @@ class SeedCommand extends Command
                 continue;
             }
 
-            $db->insert('pw_posts')->values([
-                'id' => $db->select('MAX(id)')->from('pw_posts')->run()->fetchColumn() + 1,
-                'post_type' => 'post',
+            $db->insert($postsTable)->values([
+                'type' => 'post',
                 'title' => $postData['title'],
                 'slug' => $postData['slug'],
                 'content' => $postData['content'],
@@ -179,7 +214,7 @@ class SeedCommand extends Command
             ])->run();
 
             $post = $db->select('id')
-                ->from('pw_posts')
+                ->from($postsTable)
                 ->where('slug', $postData['slug'])
                 ->run()
                 ->fetch();
@@ -188,14 +223,14 @@ class SeedCommand extends Command
 
             // Get category term id
             $term = $db->select('id')
-                ->from('pw_terms')
+                ->from($termsTable)
                 ->where('slug', $postData['category'])
                 ->where('taxonomy', 'category')
                 ->run()
                 ->fetch();
 
             if ($term) {
-                $db->insert('pw_term_relationships')->values([
+                $db->insert($relationsTable)->values([
                     'object_id' => $postId,
                     'term_id' => (int) $term['id'],
                 ])->run();

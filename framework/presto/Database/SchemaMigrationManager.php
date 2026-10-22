@@ -9,25 +9,114 @@ use Cycle\Database\DatabaseInterface;
 class SchemaMigrationManager
 {
     private DatabaseInterface $db;
+    private string $basePath;
     private string $migrationsPath;
+    /** @var list<string> */
+    private array $migrationPaths;
     private string $tablePrefix;
+    private string $migrationsTable;
 
-    private const MIGRATIONS_TABLE = 'pw_migrations';
-
-    public function __construct(DatabaseInterface $db, string $basePath)
-    {
+    /**
+     * @param list<string> $moduleMigrationPaths Directories owned by enabled
+     *        modules. Module migrations take precedence over published copies
+     *        in database/migrations.
+     * @param string|null $tablePrefix Explicit table prefix. Callers that
+     *        just wrote a new prefix (the installer) pass it here: getenv()
+     *        still returns the value the process booted with, so reading it
+     *        again would create the tables under the previous prefix.
+     */
+    public function __construct(
+        DatabaseInterface $db,
+        string $basePath,
+        array $moduleMigrationPaths = [],
+        ?string $tablePrefix = null,
+    ) {
         $this->db = $db;
-        $this->migrationsPath = $basePath . '/database/migrations';
-        $this->tablePrefix = getenv('PW_TABLE_PREFIX') ?: 'pw_';
+        $this->basePath = rtrim($basePath, '/');
+        $this->migrationsPath = $this->basePath . '/database/migrations';
+        $this->tablePrefix = $tablePrefix ?? (getenv('PW_TABLE_PREFIX') ?: 'pw_');
+        $this->migrationsTable = $this->tablePrefix . 'migrations';
+
+        $paths = array_merge([$this->migrationsPath], $moduleMigrationPaths);
+        $this->migrationPaths = array_values(array_unique(array_filter(
+            array_map(static fn (string $path): string => rtrim($path, '/'), $paths),
+            static fn (string $path): bool => $path !== '',
+        )));
+    }
+
+    /**
+     * All migration files keyed by migration name, sorted by name.
+     *
+     * A migration file published into database/migrations is a copy of a
+     * module owned file: when both exist the module wins. Two different
+     * modules shipping the same file name are both kept - their ledger keys
+     * are qualified with the owning module path so neither is shadowed.
+     *
+     * @return array<string, string>
+     */
+    public function migrationFiles(): array
+    {
+        $groups = [];
+
+        foreach ($this->migrationPaths as $path) {
+            foreach (glob($path . '/*.php') ?: [] as $file) {
+                $name = basename($file, '.php');
+                $groups[$name][] = ['path' => $path, 'file' => $file];
+            }
+        }
+
+        $files = [];
+
+        foreach ($groups as $name => $group) {
+            $moduleOwned = array_values(array_filter(
+                $group,
+                fn (array $entry): bool => $entry['path'] !== $this->migrationsPath,
+            ));
+
+            // The module owned file replaces the published copy.
+            if ($moduleOwned !== [] && count($group) > 1) {
+                $group = $moduleOwned;
+            }
+
+            if (count($group) === 1) {
+                $files[$name] = $group[0]['file'];
+
+                continue;
+            }
+
+            foreach ($group as $entry) {
+                $files[$this->qualifyMigrationName($entry['path'], $name)] = $entry['file'];
+            }
+        }
+
+        ksort($files);
+
+        return $files;
+    }
+
+    /**
+     * Ledger key for a migration name that two modules share. The owning
+     * module path keeps the key unique and stable across runs.
+     */
+    private function qualifyMigrationName(string $path, string $name): string
+    {
+        $relative = $path;
+        if (str_starts_with($path, $this->basePath . '/')) {
+            $relative = substr($path, strlen($this->basePath) + 1);
+        }
+
+        $relative = trim(str_replace(['/', '\\'], '_', $relative), '_');
+
+        return $relative === '' ? $name : $relative . '_' . $name;
     }
 
     public function ensureMigrationsTable(): void
     {
-        if ($this->db->hasTable(self::MIGRATIONS_TABLE)) {
+        if ($this->db->hasTable($this->migrationsTable)) {
             return;
         }
 
-        $schema = $this->db->table(self::MIGRATIONS_TABLE)->getSchema();
+        $schema = $this->db->table($this->migrationsTable)->getSchema();
         $schema->primary('id');
         $schema->column('migration')->string(255);
         $schema->column('batch')->integer();
@@ -41,7 +130,7 @@ class SchemaMigrationManager
         $this->ensureMigrationsTable();
 
         $rows = $this->db->select('migration')
-            ->from(self::MIGRATIONS_TABLE)
+            ->from($this->migrationsTable)
             ->orderBy('id', 'ASC')
             ->fetchAll();
 
@@ -50,7 +139,7 @@ class SchemaMigrationManager
 
     public function markExecuted(string $name, int $batch): void
     {
-        $this->db->insert(self::MIGRATIONS_TABLE)->values([
+        $this->db->insert($this->migrationsTable)->values([
             'migration' => $name,
             'batch' => $batch,
         ])->run();
@@ -58,7 +147,7 @@ class SchemaMigrationManager
 
     public function markRemoved(string $name): void
     {
-        $this->db->delete(self::MIGRATIONS_TABLE)
+        $this->db->delete($this->migrationsTable)
             ->where('migration', $name)
             ->run();
     }
@@ -70,19 +159,13 @@ class SchemaMigrationManager
 
         if (!is_dir($this->migrationsPath)) {
             mkdir($this->migrationsPath, 0755, true);
-            return ['created' => [], 'skipped' => []];
         }
-
-        $files = glob($this->migrationsPath . '/*.php');
-        sort($files);
 
         $batch = $this->getNextBatch();
         $created = [];
         $skipped = [];
 
-        foreach ($files as $file) {
-            $name = basename($file, '.php');
-
+        foreach ($this->migrationFiles() as $name => $file) {
             if (in_array($name, $executed, true)) {
                 $skipped[] = $name;
                 continue;
@@ -105,7 +188,7 @@ class SchemaMigrationManager
         $this->ensureMigrationsTable();
 
         $lastBatch = $this->db->select('batch')
-            ->from(self::MIGRATIONS_TABLE)
+            ->from($this->migrationsTable)
             ->orderBy('id', 'DESC')
             ->limit(1)
             ->run()->fetch();
@@ -118,16 +201,18 @@ class SchemaMigrationManager
 
         $rolledBack = [];
         $rows = $this->db->select('migration')
-            ->from(self::MIGRATIONS_TABLE)
+            ->from($this->migrationsTable)
             ->where('batch', $batch)
             ->orderBy('id', 'DESC')
             ->fetchAll();
 
         $names = array_map(fn(array $row) => $row['migration'], $rows);
 
+        $files = $this->migrationFiles();
+
         foreach ($names as $name) {
-            $file = $this->migrationsPath . '/' . $name . '.php';
-            if (file_exists($file)) {
+            $file = $files[$name] ?? null;
+            if ($file !== null && is_file($file)) {
                 $migration = require $file;
                 if ($migration instanceof MigrationInterface) {
                     $migration->down($this->db, $this->tablePrefix);
@@ -143,7 +228,7 @@ class SchemaMigrationManager
     private function getNextBatch(): int
     {
         $lastBatch = $this->db->select('batch')
-            ->from(self::MIGRATIONS_TABLE)
+            ->from($this->migrationsTable)
             ->orderBy('id', 'DESC')
             ->limit(1)
             ->run()->fetch();

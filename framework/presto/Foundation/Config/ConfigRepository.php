@@ -138,10 +138,30 @@ class ConfigRepository
         $this->loaded[$file] = $config;
     }
 
+    /**
+     * Drop the compiled config.
+     *
+     * The cache stores the resolved values, so a stale file keeps serving the
+     * values the config had when it was built - a changed table prefix for
+     * example. The cached copy has to go, not only the in-memory one.
+     */
     public function clearCache(): void
     {
         $this->loaded = [];
         $this->cache = null;
+
+        if ($this->cachePath === null) {
+            return;
+        }
+
+        if (file_exists($this->cachePath)) {
+            @unlink($this->cachePath);
+        }
+
+        $meta = $this->cachePath . '.meta';
+        if (file_exists($meta)) {
+            @unlink($meta);
+        }
     }
 
     private function loadFromCache(string $file): mixed

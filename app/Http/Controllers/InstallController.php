@@ -126,6 +126,7 @@ class InstallController
     protected function getInstallerHtml(): string
     {
         $lang = 'en';
+        $prefix = getenv('PW_TABLE_PREFIX') ?: 'pw_';
         return <<<HTML
 <!DOCTYPE html>
 <html lang="en">
@@ -245,7 +246,7 @@ class InstallController
                     </div>
                     <div class="form-group">
                         <label for="db_prefix">Table Prefix</label>
-                        <input type="text" id="db_prefix" value="pw_">
+                        <input type="text" id="db_prefix" value="{$prefix}">
                     </div>
                 </div>
                 <div class="nav-buttons">
