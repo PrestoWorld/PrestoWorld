@@ -58,6 +58,19 @@ class Application extends BaseApplication
             return null;
         }
 
+        $host = (string) ($request->header('Host') ?? ($_SERVER['HTTP_HOST'] ?? ''));
+        if ($host === '') {
+            return null;
+        }
+
+        // Do not force HTTPS for local development (localhost, 127.0.0.1) unless explicitly configured
+        if ($enabled === false || $enabled === null || $enabled === '') {
+            $hostname = explode(':', $host)[0];
+            if ($hostname === 'localhost' || $hostname === '127.0.0.1' || str_ends_with($hostname, '.localhost') || getenv('APP_ENV') === 'local') {
+                return null;
+            }
+        }
+
         // Behind a TLS-terminating proxy that already marks the request https.
         $forwarded = strtolower((string) ($request->header('X-Forwarded-Proto') ?? ''));
         if ($forwarded === 'https') {
@@ -67,11 +80,6 @@ class Application extends BaseApplication
         // Direct https connection (PHP sets HTTPS=on on port 443).
         $https = $_SERVER['HTTPS'] ?? '';
         if (is_string($https) && $https !== '' && strtolower($https) !== 'off') {
-            return null;
-        }
-
-        $host = (string) ($request->header('Host') ?? ($_SERVER['HTTP_HOST'] ?? ''));
-        if ($host === '') {
             return null;
         }
 
@@ -104,15 +112,23 @@ class Application extends BaseApplication
 
         $cookies = [];
 
-        $raw = $request->header('Cookie') ?? $request->header('cookie') ?? $request->header('COOKIE');
-        if (is_string($raw) && $raw !== '') {
-            foreach (explode(';', $raw) as $pair) {
-                $pair = trim($pair);
-                if ($pair === '' || !str_contains($pair, '=')) {
-                    continue;
+        // 1. Prefer parsed cookies from Request
+        if (method_exists($request, 'cookies')) {
+            $cookies = $request->cookies();
+        }
+
+        // 2. Fallback to raw Cookie header if request cookies are empty
+        if (empty($cookies)) {
+            $raw = $request->header('Cookie') ?? $request->header('cookie') ?? $request->header('COOKIE');
+            if (is_string($raw) && $raw !== '') {
+                foreach (explode(';', $raw) as $pair) {
+                    $pair = trim($pair);
+                    if ($pair === '' || !str_contains($pair, '=')) {
+                        continue;
+                    }
+                    [$name, $value] = explode('=', $pair, 2);
+                    $cookies[trim($name)] = urldecode(trim($value));
                 }
-                [$name, $value] = explode('=', $pair, 2);
-                $cookies[trim($name)] = urldecode(trim($value));
             }
         }
 

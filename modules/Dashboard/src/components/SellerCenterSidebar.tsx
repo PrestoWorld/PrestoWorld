@@ -2,7 +2,6 @@ import React from 'react';
 import {
   ArrowLeft,
   Layers,
-  Sparkles,
   ChevronRight,
   X,
   Circle,
@@ -405,22 +404,7 @@ export const SellerCenterSidebar: React.FC<SellerCenterSidebarProps> = ({
           );
         })()}
 
-        <div className="p-2.5 border-t border-slate-100 space-y-1.5 bg-slate-50/50 flex-shrink-0">
-          <div className="p-2 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100/80 flex items-center justify-between shadow-2xs">
-            <div className="flex items-center space-x-2">
-              <div className="w-6 h-6 rounded-lg bg-blue-600 text-white flex items-center justify-center shadow-xs">
-                <Sparkles className="w-3.5 h-3.5" />
-              </div>
-              <div>
-                <p className="text-[11px] font-extrabold text-slate-900 leading-tight">PrestoWorld Pro</p>
-                <p className="text-[9.5px] text-slate-500">Nâng cấp để mở khóa tính năng</p>
-              </div>
-            </div>
-            <button className="text-[10px] font-bold text-blue-700 hover:underline cursor-pointer">
-              Nâng Cấp →
-            </button>
-          </div>
-
+        <div className="p-2.5 border-t border-slate-100 bg-slate-50/50 flex-shrink-0">
           <button
             onClick={onBackToMain}
             className="w-full py-1.5 bg-white hover:bg-slate-100 text-slate-700 text-xs font-bold rounded-xl border border-slate-200 transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
