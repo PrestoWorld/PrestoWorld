@@ -316,6 +316,16 @@ class Module extends WitalsModule
             'core',
             'analytics',
         );
+        DashboardSubsystem::register(
+            $this->app,
+            'cache',
+            'Cache & Bộ Nhớ Đệm',
+            'Quản lý toàn bộ cache: xoá, bật/tắt, TTL, thống kê',
+            'Zap',
+            60,
+            'core',
+            'tools',
+        );
     }
 
     protected function registerDashboardWidgets(): void

@@ -86,6 +86,8 @@ class RootController extends RestController
             json_encode($stored, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR),
         );
 
+        \PrestoWorld\Core\Cache\CacheInvalidation::onContentChange('settings');
+
         return $this->respond($this->siteSettings());
     }
 

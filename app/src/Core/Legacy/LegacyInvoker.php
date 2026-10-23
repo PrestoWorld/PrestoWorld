@@ -31,12 +31,22 @@ class LegacyInvoker
     {
         $type = $hookType ?? $this->inferType($tag);
 
-        $this->stack[] = $tag;
         $this->didCount[$tag] = ($this->didCount[$tag] ?? 0) + 1;
         $isFilter = $type === LegacyRegistry::HOOK_FILTER;
 
         $hooks = $this->registry->hooksFor($tag, $type);
         $value = $hookArgs[0] ?? null;
+
+        if ($hooks === []) {
+            // Fast-path: không có callback nào — bỏ stack push/pop và mọi
+            // reflection (resolveArguments) cho tag chết. didCount vẫn tăng
+            // nên did_action() giữ đúng semantics.
+            \PrestoWorld\Core\Cache\StatsCollector::increment('hooks.empty_skip');
+
+            return $isFilter ? $value : null;
+        }
+
+        $this->stack[] = $tag;
 
         foreach ($hooks as $hook) {
             $callback = $hook['callback'];

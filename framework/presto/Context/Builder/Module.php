@@ -40,6 +40,16 @@ class Module extends WitalsModule
             return new ContextRegistry();
         });
 
+        // Cache bridge: host owns policy (salt/gen/TTL/stats) — gutenberg-core
+        // chỉ đi qua interface. Đăng ký trước khi kernel/parser chạy.
+        \PrestoWorld\Core\Cache\GutenbergBridge::register();
+        \PrestoWorld\Gutenberg\Core\Blocks\TemplatePartHandler::$cacheLookup = static function (string $slug, array $attributes): ?string {
+            return \PrestoWorld\Core\Cache\FragmentCache::lookup($slug, $attributes);
+        };
+        \PrestoWorld\Gutenberg\Core\Blocks\TemplatePartHandler::$cacheStore = static function (string $slug, array $attributes, string $html): void {
+            \PrestoWorld\Core\Cache\FragmentCache::store($slug, $attributes, $html);
+        };
+
         // Gutenberg engine kernel (vendor/prestoworld/gutenberg-core).
         $this->app->singleton(Kernel::class, function ($app) {
             return Gutenberg::boot($this->resolveThemePath(), $this->renderServices($app));

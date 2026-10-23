@@ -28,6 +28,19 @@ class LegacyRegistry
      */
     private array $entities = [];
 
+    /**
+     * Memo kết quả hooksFor() — tránh usort mỗi apply_filters (hot path).
+     *
+     * Key bao gồm salt 'hooks' (dashboard Clear → mọi worker rebuild ≤1s).
+     * Tự xoá khi registry đổi (recordHook/removeHook/removeAll) và khi salt
+     * đổi (key cũ không còn được reference).
+     *
+     * @var array<string, list<array{id: string, priority: int, callback: callable, accepted_args: int, type: string}>>
+     */
+    private array $hooksForCache = [];
+
+    private const HOOKS_FOR_CACHE_MAX = 512;
+
     private ?\PDO $ledger = null;
 
     public function __construct(?string $sqlitePath = null)
@@ -95,6 +108,8 @@ class LegacyRegistry
             'type' => $type,
         ];
 
+        $this->hooksForCache = [];
+
         $this->persistHook($tag, $type, $callback, $priority, $acceptedArgs);
 
         return $id;
@@ -129,6 +144,8 @@ class LegacyRegistry
                 unset($this->hooks[$type][$tag]);
             }
         }
+
+        $this->hooksForCache = [];
 
         return $removed;
     }
@@ -172,6 +189,8 @@ class LegacyRegistry
             }
         }
 
+        $this->hooksForCache = [];
+
         return $removed;
     }
 
@@ -197,10 +216,22 @@ class LegacyRegistry
     /**
      * Hook đã đăng ký của một tag, đã sort theo priority (dùng cho LegacyInvoker).
      *
+     * Memoised: usort chỉ chạy khi miss (tag mới / registry đổi / salt đổi).
+     *
      * @return list<array{id: string, priority: int, callback: callable, accepted_args: int, type: string}>
      */
     public function hooksFor(string $tag, ?string $hookType = null): array
     {
+        $memoEnabled = \PrestoWorld\Core\Cache\CacheSettings::enabled('hooks');
+        $salt = $memoEnabled ? \PrestoWorld\Core\Cache\CacheSalt::current('hooks') : '';
+        $key = $salt . "\0" . ($hookType ?? '*') . "\0" . $tag;
+
+        if ($memoEnabled && isset($this->hooksForCache[$key])) {
+            \PrestoWorld\Core\Cache\StatsCollector::increment('hooks.hit');
+
+            return $this->hooksForCache[$key];
+        }
+
         $result = [];
         foreach ($this->typesFor($hookType) as $type) {
             foreach ($this->hooks[$type][$tag] ?? [] as $hook) {
@@ -210,7 +241,31 @@ class LegacyRegistry
 
         usort($result, fn (array $a, array $b): int => $a['priority'] <=> $b['priority']);
 
+        if ($memoEnabled) {
+            if (count($this->hooksForCache) >= self::HOOKS_FOR_CACHE_MAX) {
+                $this->hooksForCache = [];
+            }
+            $this->hooksForCache[$key] = $result;
+            \PrestoWorld\Core\Cache\StatsCollector::increment('hooks.miss');
+        }
+
         return $result;
+    }
+
+    /**
+     * Số entry memo hooksFor trong worker hiện tại (dashboard stats).
+     *
+     * @return array{entries: int, cap: int}
+     */
+    public function hooksCacheStats(): array
+    {
+        return ['entries' => count($this->hooksForCache), 'cap' => self::HOOKS_FOR_CACHE_MAX];
+    }
+
+    /** Xoá cục bộ worker này (purge từ dashboard/API). */
+    public function flushHooksCache(): void
+    {
+        $this->hooksForCache = [];
     }
 
     /**
@@ -408,6 +463,7 @@ class LegacyRegistry
     public function reset(): void
     {
         $this->hooks = [];
+        $this->hooksForCache = [];
         // Entity registrations derived from source, không cần reset giữa request.
     }
 }

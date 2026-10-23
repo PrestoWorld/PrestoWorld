@@ -3,8 +3,8 @@
     "file": "js/vendor-Bb8JjhAW.js",
     "name": "vendor"
   },
-  "_vendor-lucide-Dx8KE0fs.js": {
-    "file": "js/vendor-lucide-Dx8KE0fs.js",
+  "_vendor-lucide-BlvTGd9P.js": {
+    "file": "js/vendor-lucide-BlvTGd9P.js",
     "name": "vendor-lucide",
     "imports": [
       "_vendor-react-ioS9alIq.js"
@@ -27,14 +27,25 @@
       "_vendor-Bb8JjhAW.js"
     ]
   },
+  "src/components/pages/CachePage.tsx": {
+    "file": "js/CachePage-jXJQ0kg5.js",
+    "name": "CachePage",
+    "src": "src/components/pages/CachePage.tsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "_vendor-react-ioS9alIq.js",
+      "_vendor-lucide-BlvTGd9P.js",
+      "_vendor-Bb8JjhAW.js"
+    ]
+  },
   "src/components/pages/InventoryPage.tsx": {
-    "file": "js/InventoryPage-CGlb3dGl.js",
+    "file": "js/InventoryPage-hbtndbuF.js",
     "name": "InventoryPage",
     "src": "src/components/pages/InventoryPage.tsx",
     "isDynamicEntry": true,
     "imports": [
       "_vendor-react-ioS9alIq.js",
-      "_vendor-lucide-Dx8KE0fs.js",
+      "_vendor-lucide-BlvTGd9P.js",
       "_vendor-Bb8JjhAW.js"
     ]
   },
@@ -59,13 +70,13 @@
     ]
   },
   "src/components/pages/OverviewPage.tsx": {
-    "file": "js/OverviewPage-V3srFpJ4.js",
+    "file": "js/OverviewPage-CFRO5OU2.js",
     "name": "OverviewPage",
     "src": "src/components/pages/OverviewPage.tsx",
     "isDynamicEntry": true,
     "imports": [
       "_vendor-react-ioS9alIq.js",
-      "_vendor-lucide-Dx8KE0fs.js",
+      "_vendor-lucide-BlvTGd9P.js",
       "_vendor-Bb8JjhAW.js"
     ]
   },
@@ -76,7 +87,7 @@
     "isEntry": true,
     "imports": [
       "_vendor-react-ioS9alIq.js",
-      "_vendor-lucide-Dx8KE0fs.js",
+      "_vendor-lucide-BlvTGd9P.js",
       "_vendor-Bb8JjhAW.js"
     ],
     "dynamicImports": [
@@ -84,6 +95,7 @@
       "src/components/pages/OrdersPage.tsx",
       "src/components/pages/InventoryPage.tsx",
       "src/components/pages/AnalyticsPage.tsx",
+      "src/components/pages/CachePage.tsx",
       "src/components/pages/MarketingPage.tsx"
     ],
     "css": [

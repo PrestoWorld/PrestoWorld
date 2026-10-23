@@ -41,6 +41,7 @@ class ThemesController
 
         putenv('PW_ACTIVE_THEME=' . $theme);
         $_ENV['PW_ACTIVE_THEME'] = $theme;
+        \PrestoWorld\Core\Cache\CacheInvalidation::onContentChange('theme-activate');
 
         $repo = new ThemeRepository($themesDir);
         $all = $repo->getAll();
@@ -74,6 +75,7 @@ class ThemesController
         if ($themesDir !== null && is_dir($themesDir . '/' . $theme)) {
             putenv('PW_ACTIVE_THEME=' . $theme);
             $_ENV['PW_ACTIVE_THEME'] = $theme;
+            \PrestoWorld\Core\Cache\CacheInvalidation::onContentChange('theme-activate');
         }
 
         return Response::redirect('/wp-admin/themes.php');

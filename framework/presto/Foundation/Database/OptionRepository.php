@@ -70,6 +70,8 @@ class OptionRepository
                 'option_value' => $encoded,
             ])->run();
         }
+
+        \PrestoWorld\Core\Cache\CacheInvalidation::onContentChange('option:' . $name);
     }
 
     public function delete(string $name): void
