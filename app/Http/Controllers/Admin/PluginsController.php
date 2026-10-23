@@ -125,6 +125,8 @@ class PluginsController
             $this->plugins->setEnabled($plugin, false);
         }
 
+        \PrestoWorld\Core\Cache\CacheInvalidation::onContentChange('plugin-toggle');
+
         return Response::json(['success' => true, 'plugin' => $plugin, 'active' => $active]);
     }
 

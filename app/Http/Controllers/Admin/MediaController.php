@@ -110,6 +110,8 @@ class MediaController
         $localUrl = '/storage/uploads/' . $relativePath;
         $url = $cloudUrl ?? $this->resolveMediaUrl($localUrl);
 
+        \PrestoWorld\Core\Cache\CacheInvalidation::onContentChange('media-upload');
+
         if ($this->isWordPress()) {
             try {
                 $postId = $this->createAttachmentPost($filename, $relativePath, $mime);

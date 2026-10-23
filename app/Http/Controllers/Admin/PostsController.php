@@ -132,6 +132,8 @@ class PostsController
         $insertId = $this->db->getDriver()->lastInsertID();
         $postId = is_scalar($insertId) ? (int) $insertId : 0;
 
+        \PrestoWorld\Core\Cache\CacheInvalidation::onContentChange('post-create');
+
         return Response::json(['id' => $postId]);
     }
 
@@ -157,6 +159,8 @@ class PostsController
         ];
 
         $this->db->update($this->prefix . 'posts', $data, ['id' => $id])->run();
+        \PrestoWorld\Core\Cache\CacheInvalidation::onContentChange('post-update');
+
         return Response::json(['id' => $id]);
     }
 

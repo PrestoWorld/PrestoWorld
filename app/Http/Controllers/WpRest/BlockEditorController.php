@@ -176,6 +176,8 @@ class BlockEditorController extends RestController
                 return null;
             }
 
+            \PrestoWorld\Core\Cache\CacheInvalidation::onContentChange('navigation-create');
+
             return $this->latestNavigationById($id);
         } catch (\Throwable) {
             return null;

@@ -102,15 +102,44 @@ class Loader
     public function renderTemplate(string $templatePath, array $data = []): string
     {
         $resolvedPath = $this->resolveTemplatePath($templatePath);
+
         if ($resolvedPath === null) {
             throw new \RuntimeException("Template not found: $templatePath");
         }
 
         if ($this->blockRenderer !== null) {
             $parser = $this->blockParser ?? new BlockSerializer();
-            $blocks = $parser->parse((string) file_get_contents($resolvedPath));
 
-            return $this->blockRenderer->render($blocks, $this->singularContext($data));
+            $t0 = hrtime(true);
+            $content = (string) file_get_contents($resolvedPath);
+            $t1 = hrtime(true);
+            $blocks = $parser->parse($content);
+            $t2 = hrtime(true);
+            $html = $this->blockRenderer->render($blocks, $this->singularContext($data));
+            $t3 = hrtime(true);
+
+            if (self::renderTimingEnabled()) {
+                $loadMs = ($t1 - $t0) / 1e6;
+                $parseMs = ($t2 - $t1) / 1e6;
+                $renderMs = ($t3 - $t2) / 1e6;
+
+                file_put_contents('/tmp/render-timing.log', sprintf(
+                    '[render-timing] %s load=%.3fms parse=%.3fms render=%.3fms',
+                    $templatePath,
+                    $loadMs,
+                    $parseMs,
+                    $renderMs,
+                ) . "\n", FILE_APPEND);
+            }
+
+            \PrestoWorld\Core\Cache\RenderTiming::record(
+                $templatePath,
+                ($t1 - $t0) / 1e6,
+                ($t2 - $t1) / 1e6,
+                ($t3 - $t2) / 1e6,
+            );
+
+            return $html;
         }
 
         // Fallback: render blocks manually through the Builder block registry.
@@ -119,6 +148,21 @@ class Loader
         return $this->renderParsedBlocks($blocks, $data);
     }
 
+    /**
+     * Chi tiết per-request ra /tmp/render-timing.log — chỉ khi env
+     * PW_RENDER_TIMING=1 (debug). Aggregate cho dashboard luôn được ghi
+     * qua RenderTiming (không phụ thuộc env này).
+     */
+    protected static function renderTimingEnabled(): bool
+    {
+        static $enabled = null;
+
+        if ($enabled === null) {
+            $enabled = getenv('PW_RENDER_TIMING') === '1';
+        }
+
+        return $enabled;
+    }
     /**
      * Legacy block-comment parser (fallback when no gutenberg-core renderer
      * has been injected). Keeps the Builder's flat-array contract.
@@ -270,7 +314,12 @@ class Loader
             JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR,
         );
 
-        return file_put_contents($path, $payload) !== false;
+        $written = file_put_contents($path, $payload) !== false;
+        if ($written) {
+            \PrestoWorld\Core\Cache\CacheInvalidation::onContentChange('layout');
+        }
+
+        return $written;
     }
 
     /**

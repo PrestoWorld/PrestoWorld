@@ -35,6 +35,11 @@ $router->get('/api/admin/stats', [DashboardController::class, 'stats']);
 $router->get('/api/admin/activities', [DashboardController::class, 'activities']);
 $router->get('/api/admin/database/health', [DatabaseHealthController::class, 'health']);
 $router->get('/api/admin/database/tables', [DatabaseHealthController::class, 'tables']);
+
+// Cache manager (dashboard screen "cache")
+$router->get('/api/admin/cache/stats', [\App\Http\Controllers\Admin\CacheAdminController::class, 'stats']);
+$router->post('/api/admin/cache/purge', [\App\Http\Controllers\Admin\CacheAdminController::class, 'purge']);
+$router->post('/api/admin/cache/settings', [\App\Http\Controllers\Admin\CacheAdminController::class, 'settings']);
 $router->get('/api/admin/users', [UsersController::class, 'users']);
 $router->get('/api/admin/media', [MediaController::class, 'media']);
 $router->post('/api/admin/media/upload', [MediaController::class, 'uploadMedia']);

@@ -42,7 +42,18 @@ class Application extends BaseApplication
             });
         }
 
+        // Full-page cache (minh bạch: replay y hệt status/headers/body).
+        // Gen đọc TRƯỚC render — nếu content đổi giữa chừng thì store() thấy
+        // gen khác và không lưu entry stale.
+        $pageGen = \PrestoWorld\Core\Cache\CacheGen::current(\PrestoWorld\Core\Cache\FileCacheStore::NS);
+        $cached = \PrestoWorld\Core\Cache\PageCache::serve($request, $pageGen);
+        if ($cached !== null) {
+            return $cached;
+        }
+
         $response = parent::handle($request);
+
+        \PrestoWorld\Core\Cache\PageCache::store($request, $response, $pageGen);
 
         if ($this->isLongRunning()) {
             $response = $this->attachSessionCookie($response);

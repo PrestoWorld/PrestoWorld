@@ -17,6 +17,10 @@ registerScreen(
   'analytics',
   lazy(() => import('../components/pages/AnalyticsPage').then((m) => ({ default: m.AnalyticsPage }))),
 );
+registerScreen(
+  'cache',
+  lazy(() => import('../components/pages/CachePage').then((m) => ({ default: m.CachePage }))),
+);
 
 export { registerScreen, getScreenComponent, hasScreen } from './registry';
 export { GenericScreen } from './GenericScreen';

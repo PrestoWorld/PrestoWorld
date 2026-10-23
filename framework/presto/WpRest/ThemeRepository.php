@@ -244,6 +244,7 @@ class ThemeRepository
         );
 
         $this->userPartMeta = null;
+        \PrestoWorld\Core\Cache\CacheInvalidation::onContentChange('part-meta');
     }
 
     /**
@@ -446,7 +447,12 @@ class ThemeRepository
             return false;
         }
 
-        return file_put_contents($dir . '/' . $slug . '.html', $content) !== false;
+        $written = file_put_contents($dir . '/' . $slug . '.html', $content) !== false;
+        if ($written) {
+            \PrestoWorld\Core\Cache\CacheInvalidation::onContentChange('template');
+        }
+
+        return $written;
     }
 
     /**
@@ -463,7 +469,12 @@ class ThemeRepository
             return false;
         }
 
-        return file_put_contents($dir . '/' . $slug . '.html', $content) !== false;
+        $written = file_put_contents($dir . '/' . $slug . '.html', $content) !== false;
+        if ($written) {
+            \PrestoWorld\Core\Cache\CacheInvalidation::onContentChange('part');
+        }
+
+        return $written;
     }
 
     public function deleteTemplate(string $slug): bool
@@ -473,8 +484,12 @@ class ThemeRepository
         }
 
         $path = $this->storageDir . '/' . $slug . '.html';
+        $gone = !is_file($path) || unlink($path);
+        if ($gone) {
+            \PrestoWorld\Core\Cache\CacheInvalidation::onContentChange('template-delete');
+        }
 
-        return !is_file($path) || unlink($path);
+        return $gone;
     }
 
     public function deletePart(string $slug): bool
@@ -484,8 +499,12 @@ class ThemeRepository
         }
 
         $path = $this->storageDir . '/parts/' . $slug . '.html';
+        $gone = !is_file($path) || unlink($path);
+        if ($gone) {
+            \PrestoWorld\Core\Cache\CacheInvalidation::onContentChange('part-delete');
+        }
 
-        return !is_file($path) || unlink($path);
+        return $gone;
     }
 
     /**
