@@ -24,6 +24,7 @@
         "psr-4": {
             "App\\": "app/",
             "PrestoWorld\\": "framework/presto/",
+            "PrestoWorld\\AccessControl\\": "framework/presto/AccessControl/",
             "PrestoWorld\\Core\\": "app/src/Core/",
             "PrestoWorld\\Modules\\": "modules/",
             "PrestoWorld\\Modules\\ModuleManager\\": "framework/presto/Modules/ModuleManager/",

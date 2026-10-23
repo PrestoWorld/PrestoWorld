@@ -1,0 +1,86 @@
+{
+    "module": "access-control",
+    "version": "1.0.0",
+    "description": "RBAC access control tables: permissions, roles, role_permissions, subject_roles",
+    "tables": [
+        {
+            "name": "pw_acl_permissions",
+            "columns": [
+                { "name": "slug", "type": "string", "size": 100, "nullable": false },
+                { "name": "name", "type": "string", "size": 100, "nullable": false },
+                { "name": "description", "type": "text", "nullable": true },
+                { "name": "resource", "type": "string", "size": 100, "nullable": false, "default": "*" },
+                { "name": "created_at", "type": "datetime", "nullable": false }
+            ],
+            "indexes": [
+                { "columns": ["slug"], "unique": true, "name": "uq_pw_acl_permissions_slug" },
+                { "columns": ["resource"], "name": "idx_pw_acl_permissions_resource" }
+            ]
+        },
+        {
+            "name": "pw_acl_roles",
+            "columns": [
+                { "name": "slug", "type": "string", "size": 100, "nullable": false },
+                { "name": "name", "type": "string", "size": 100, "nullable": false },
+                { "name": "description", "type": "text", "nullable": true },
+                { "name": "created_at", "type": "datetime", "nullable": false }
+            ],
+            "indexes": [
+                { "columns": ["slug"], "unique": true, "name": "uq_pw_acl_roles_slug" }
+            ]
+        },
+        {
+            "name": "pw_acl_role_permissions",
+            "columns": [
+                { "name": "id", "type": "primary" },
+                { "name": "role", "type": "string", "size": 100, "nullable": false },
+                { "name": "permission", "type": "string", "size": 100, "nullable": false },
+                { "name": "created_at", "type": "datetime", "nullable": false }
+            ],
+            "indexes": [
+                { "columns": ["role", "permission"], "unique": true, "name": "uq_pw_acl_role_permissions" },
+                { "columns": ["role"], "name": "idx_pw_acl_role_permissions_role" },
+                { "columns": ["permission"], "name": "idx_pw_acl_role_permissions_permission" }
+            ],
+            "foreign_keys": [
+                {
+                    "column": "role",
+                    "references": "pw_acl_roles",
+                    "on": "slug",
+                    "on_delete": "CASCADE",
+                    "on_update": "CASCADE"
+                },
+                {
+                    "column": "permission",
+                    "references": "pw_acl_permissions",
+                    "on": "slug",
+                    "on_delete": "CASCADE",
+                    "on_update": "CASCADE"
+                }
+            ]
+        },
+        {
+            "name": "pw_acl_subject_roles",
+            "columns": [
+                { "name": "id", "type": "primary" },
+                { "name": "subject", "type": "string", "size": 100, "nullable": false },
+                { "name": "role", "type": "string", "size": 100, "nullable": false },
+                { "name": "created_at", "type": "datetime", "nullable": false }
+            ],
+            "indexes": [
+                { "columns": ["subject", "role"], "unique": true, "name": "uq_pw_acl_subject_roles" },
+                { "columns": ["subject"], "name": "idx_pw_acl_subject_roles_subject" },
+                { "columns": ["role"], "name": "idx_pw_acl_subject_roles_role" }
+            ],
+            "foreign_keys": [
+                {
+                    "column": "role",
+                    "references": "pw_acl_roles",
+                    "on": "slug",
+                    "on_delete": "CASCADE",
+                    "on_update": "CASCADE"
+                }
+            ]
+        }
+    ]
+}

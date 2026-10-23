@@ -9,7 +9,7 @@ parameters:
         - framework/witals/src
         - modules
     excludePaths:
-        - modules/Gutenberg/Pattern/wp-stubs.php
+        - modules/Gutenberg/Pattern/wp-stubs.php (?)
     tmpDir: storage/framework/cache/phpstan
     reportUnmatchedIgnoredErrors: false
     treatPhpDocTypesAsCertain: false
