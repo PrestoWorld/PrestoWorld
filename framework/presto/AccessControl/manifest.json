@@ -1,0 +1,26 @@
+{
+    "name": "access-control",
+    "version": "1.0.0",
+    "description": "Hệ thống phân quyền dựa trên Role-Based Access Control (RBAC), có thể chuyển đổi sang ABAC/ACL/PBAC/DAC qua plugin/module.",
+    "type": "support",
+    "priority": 25,
+    "enabled": true,
+    "namespace": "PrestoWorld\\AccessControl",
+    "entry": "Module.php",
+    "requires": {
+        "php": "^8.1"
+    },
+    "dependencies": {
+        "admin": "1.0.0"
+    },
+    "provides": [
+        "access.control.manager",
+        "access.control.repository",
+        "access.control.rbac"
+    ],
+    "autoload": {
+        "psr-4": {
+            "PrestoWorld\\AccessControl\\": "."
+        }
+    }
+}
