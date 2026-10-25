@@ -145,14 +145,11 @@ class Module extends WitalsModule
         $menu->registerItem('plugins-group', 'Installed Plugins', '#/plugins', icon: 'Puzzle', priority: 10, id: 'plugins', screenId: 'plugins');
         $menu->registerItem('plugins-group', 'Add New', '#/plugin-install', icon: 'Plus', priority: 20, id: 'plugin-install', screenId: 'plugin-install');
         $menu->registerItem('plugins-group', 'Plugin Editor', '#/plugin-editor', icon: 'Code', priority: 30, id: 'plugin-editor', screenId: 'plugin-editor');
-    $menu->registerItem("plugins-group", "Plugin Author", "#/plugin-author", icon: "User", priority: 31, id: "plugin-author", screenId: "plugin-author");
-    $menu->registerItem("plugins-group", "Plugin Force Deactivate", "#/plugin-deactivate", icon: "Ban", priority: 32, id: "plugin-deactivate", screenId: "plugin-deactivate");
 
         $m++; // Users
         $menu->registerGroup('users-group', 'Users', icon: 'User', priority: $m++, attributes: ['section' => 'settings']);
         $menu->registerItem('users-group', 'All Users', '#/users', icon: 'User', priority: 10, id: 'users', screenId: 'users');
         $menu->registerItem('users-group', 'Add New', '#/user-new', icon: 'Plus', priority: 20, id: 'user-new', screenId: 'user-new');
-    $menu->registerItem("users-group", "Your Profile", "#/your-profile", icon: "User", priority: 31, id: "your-profile", screenId: "your-profile");
         $menu->registerItem('users-group', 'Profile', '#/profile', icon: 'UserCheck', priority: 30, id: 'profile', screenId: 'profile');
 
         $m++; // Tools

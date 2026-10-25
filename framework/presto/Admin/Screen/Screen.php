@@ -13,6 +13,7 @@ class Screen implements ScreenInterface
         protected string $title,
         protected ?string $parent = null,
         protected ?string $capability = null,
+        protected ?string $permission = null,
         protected ?string $icon = null,
         protected int $position = 10,
         protected ?string $component = null,
@@ -38,6 +39,17 @@ class Screen implements ScreenInterface
     public function getCapability(): ?string
     {
         return $this->capability;
+    }
+
+    public function getPermission(): ?string
+    {
+        return $this->permission;
+    }
+
+    public function setPermission(string $permission): self
+    {
+        $this->permission = $permission;
+        return $this;
     }
 
     public function getIcon(): ?string
@@ -72,6 +84,7 @@ class Screen implements ScreenInterface
             'title' => $this->title,
             'parent' => $this->parent,
             'capability' => $this->capability,
+            'permission' => $this->permission,
             'icon' => $this->icon,
             'position' => $this->position,
             'component' => $this->component,
