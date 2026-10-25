@@ -18,12 +18,12 @@ class Module extends WitalsModule
 
     public function getVersion(): string
     {
-        return '1.0.0';
+        return '1.1.0';
     }
 
     public function getDescription(): string
     {
-        return 'Hệ thống phân quyền dựa trên Role-Based Access Control (RBAC), có thể chuyển đổi sang ABAC/ACL/PBAC/DAC qua plugin/module.';
+        return 'Hệ thống phân quyền dựa trên Role-Based Access Control (RBAC), hỗ trợ phân quyền theo module, data resource, data feature và user group. Các module có thể đăng ký roles, permissions, groups của riêng mình.';
     }
 
     public function register(): void
@@ -41,6 +41,12 @@ class Module extends WitalsModule
             return new AccessControlManager($app);
         });
         $this->app->alias(AccessControlManager::class, 'access.control');
+
+        // ── ModulePermissionManager ──
+        $this->app->singleton(ModulePermissionManager::class, function ($app) {
+            return ModulePermissionManager::make($app);
+        });
+        $this->app->alias(ModulePermissionManager::class, 'access.control.module.permissions');
 
         // Đăng ký RBAC là mô hình mặc định
         /** @var AccessControlManager $manager */
@@ -65,6 +71,9 @@ class Module extends WitalsModule
 
         // Tạo các role mặc định nếu chưa có
         $this->seedDefaultRoles($manager);
+
+        // Đăng ký các module mặc định vào hệ thống phân quyền
+        $this->registerDefaultModules();
     }
 
     protected function seedDefaultRoles(AccessControlManager $manager): void
@@ -116,6 +125,38 @@ class Module extends WitalsModule
                     $data['permissions'],
                     $data['description']
                 );
+            }
+        }
+    }
+
+    /**
+     * Đăng ký các module hệ thống mặc định vào hệ thống phân quyền.
+     * Các module khác có thể gọi ModulePermissionManager::registerModule()
+     * từ boot() của chính mình.
+     */
+    protected function registerDefaultModules(): void
+    {
+        /** @var ModulePermissionManager $modulePerm */
+        $modulePerm = $this->app->make(ModulePermissionManager::class);
+
+        $modules = [
+            'dashboard' => 'Bảng Điều Khiển',
+            'orders' => 'Đơn Hàng',
+            'products' => 'Sản Phẩm',
+            'customers' => 'Khách Hàng',
+            'inventory' => 'Kho Hàng',
+            'posts' => 'Bài Viết',
+            'pages' => 'Trang',
+            'media' => 'Media',
+            'ecommerce' => 'TMĐT',
+            'accounting' => 'Kế Toán',
+        ];
+
+        foreach ($modules as $module => $label) {
+            if (!$modulePerm->isModuleRegistered($module)) {
+                $modulePerm->registerModule($module, $label, [
+                    'auto_roles' => true,
+                ]);
             }
         }
     }

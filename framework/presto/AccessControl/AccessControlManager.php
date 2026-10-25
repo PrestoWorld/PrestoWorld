@@ -8,6 +8,7 @@ use PrestoWorld\AccessControl\Contracts\AccessControlInterface;
 use PrestoWorld\AccessControl\Contracts\AccessControlRepositoryInterface;
 use PrestoWorld\AccessControl\Contracts\Strategy\AccessControlStrategyInterface;
 use PrestoWorld\AccessControl\Exception\InvalidModelException;
+use PrestoWorld\AccessControl\ModulePermissionManager;
 use PrestoWorld\AccessControl\Rbac\RbacStrategy;
 use PrestoWorld\AccessControl\Repository\DatabaseAccessControlRepository;
 use Witals\Framework\Application;
@@ -234,6 +235,185 @@ class AccessControlManager implements AccessControlInterface
     public function getAvailableModels(): array
     {
         return $this->availableModels;
+    }
+
+    // ── ModulePermissionManager delegation ──────────────────────────
+
+    /**
+     * Lấy ModulePermissionManager instance (đăng ký module, role, group, permission).
+     */
+    public function modulePermissions(): ModulePermissionManager
+    {
+        if ($this->app->has(ModulePermissionManager::class)) {
+            return $this->app->make(ModulePermissionManager::class);
+        }
+
+        return ModulePermissionManager::make($this->app);
+    }
+
+    /**
+     * Đăng ký một module vào hệ thống phân quyền.
+     *
+     * @param array<string, mixed> $options
+     */
+    public function registerModule(string $module, string $label, array $options = []): void
+    {
+        $this->modulePermissions()->registerModule($module, $label, $options);
+    }
+
+    /**
+     * Kiểm tra subject có quyền action (module:feature) trên module không.
+     */
+    public function canModule(string $subject, string $module, string $feature, mixed $resource = null, array $context = []): array
+    {
+        return $this->modulePermissions()->canModule($subject, $module, $feature, $resource, $context);
+    }
+
+    /**
+     * Tạo data resource.
+     *
+     * @param array<string, mixed> $resource
+     */
+    public function createDataResource(array $resource): void
+    {
+        $this->ensureCurrent()->createDataResource($resource);
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    public function listDataResources(string $module = ''): array
+    {
+        $strategy = $this->ensureCurrent();
+        $all = $strategy->listDataResources();
+        if ($module === '') {
+            return $all;
+        }
+
+        return array_values(array_filter($all, fn($r) => ($r['module'] ?? null) === $module));
+    }
+
+    /**
+     * Tạo data feature.
+     *
+     * @param array<string, mixed> $feature
+     */
+    public function createDataFeature(array $feature): void
+    {
+        $this->ensureCurrent()->createDataFeature($feature);
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    public function listDataFeatures(string $resourceSlug = ''): array
+    {
+        return $this->ensureCurrent()->listDataFeatures($resourceSlug);
+    }
+
+    /**
+     * Tạo module permission.
+     *
+     * @param array<string, mixed> $permission
+     */
+    public function createModulePermission(array $permission): void
+    {
+        $this->ensureCurrent()->createModulePermission($permission);
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    public function listModulePermissions(string $module = ''): array
+    {
+        return $this->ensureCurrent()->listModulePermissions($module);
+    }
+
+    /**
+     * Tạo user group.
+     *
+     * @param array<string, mixed> $group
+     */
+    public function createUserGroup(array $group): void
+    {
+        $this->ensureCurrent()->createUserGroup($group);
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function getUserGroup(string $slug): ?array
+    {
+        return $this->ensureCurrent()->getUserGroup($slug);
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    public function listUserGroups(string $module = ''): array
+    {
+        return $this->ensureCurrent()->listUserGroups($module);
+    }
+
+    /**
+     * Gán role cho group.
+     */
+    public function grantGroupRole(string $groupSlug, string $roleSlug): void
+    {
+        $this->ensureCurrent()->grantGroupRole($groupSlug, $roleSlug);
+    }
+
+    /**
+     * Gán subject vào group.
+     */
+    public function assignSubjectToGroup(string $subject, string $groupSlug): void
+    {
+        $this->ensureCurrent()->assignSubjectToGroup($subject, $groupSlug);
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public function getSubjectGroups(string $subject): array
+    {
+        return $this->ensureCurrent()->getSubjectGroups($subject);
+    }
+
+    public function hasSubjectInGroup(string $subject, string $groupSlug): bool
+    {
+        return $this->ensureCurrent()->hasSubjectInGroup($subject, $groupSlug);
+    }
+
+    /**
+     * Đăng ký role cho module.
+     */
+    public function registerModuleRole(string $module, string $roleSlug): void
+    {
+        $this->ensureCurrent()->registerModuleRole($module, $roleSlug);
+    }
+
+    /**
+     * Đăng ký feature cho module.
+     */
+    public function registerModuleFeature(string $module, string $featureSlug): void
+    {
+        $this->ensureCurrent()->registerModuleFeature($module, $featureSlug);
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public function getModuleRoles(string $module): array
+    {
+        return $this->ensureCurrent()->getModuleRoles($module);
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public function getModuleFeatures(string $module): array
+    {
+        return $this->ensureCurrent()->getModuleFeatures($module);
     }
 
     /**
