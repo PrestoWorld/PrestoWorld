@@ -545,88 +545,89 @@ class SpaController
      */
     protected function getModuleComponentUrl(string $screenId): ?string
     {
-        $moduleMap = [
-            // Suppliers module
-            'suppliers' => '/assets/modules/suppliers/suppliers-screens.',
-            'depots' => '/assets/modules/suppliers/suppliers-screens.',
-            'departments' => '/assets/modules/suppliers/suppliers-screens.',
-            'users' => '/assets/modules/suppliers/suppliers-screens.',
-            
-            // Ecommerce module
-            'products' => '/assets/modules/ecommerce/ecommerce-screens.',
-            'customers' => '/assets/modules/ecommerce/ecommerce-screens.',
-            'orders' => '/assets/modules/ecommerce/ecommerce-screens.',
-            'bills' => '/assets/modules/ecommerce/ecommerce-screens.',
-            'ecom' => '/assets/modules/ecommerce/ecommerce-screens.',
-            'invoices' => '/assets/modules/ecommerce/ecommerce-screens.',
-            
-            // Inventory module
-            'inventory' => '/assets/modules/inventory/inventory-screens.',
-            'inventory-movements' => '/assets/modules/inventory/inventory-screens.',
-            
-            // Accounting module
-            'accounting' => '/assets/modules/accounting/accounting-screens.',
-            
-            // MarketingCampaign module
-            'promotions' => '/assets/modules/marketingcampaign/marketingcampaign-screens.',
-            
-            // ZaloBusiness module
-            'zalo' => '/assets/modules/zalobusiness/zalobusiness-screens.',
-            
-            // BookCatalog module
-            'books' => '/assets/modules/bookcatalog/bookcatalog-screens.',
-        ];
+        foreach ($this->discoverModuleScreens() as $screen => $moduleInfo) {
+            if ($screen !== $screenId) {
+                continue;
+            }
 
-        $baseUrl = $moduleMap[$screenId] ?? null;
-        
-        if ($baseUrl === null) {
-            return null;
+            $baseDir = "/assets/modules/" . $moduleInfo['dir'] . "/";
+            $manifestPath = base_path("public" . $baseDir . ".vite/manifest.json");
+            if (is_file($manifestPath)) {
+                $manifest = json_decode(file_get_contents($manifestPath), true);
+                if (is_array($manifest)) {
+                    foreach ($manifest as $node) {
+                        if (is_array($node) && ($node['isEntry'] ?? false) === true && ($node['file'] ?? '')) {
+                            return $baseDir . $node['file'];
+                        }
+                    }
+                }
+            }
+
+            return $baseDir . ($moduleInfo['entry'] ?? 'index') . '.js';
         }
 
-        // Get the manifest to find the actual hashed filename
-        $manifestPath = $this->getManifestPathForScreen($screenId);
-        if ($manifestPath && is_file($manifestPath)) {
-            $manifest = json_decode(file_get_contents($manifestPath), true);
-            if (is_array($manifest)) {
-                foreach ($manifest as $node) {
-                    if (is_array($node) && ($node['isEntry'] ?? false) === true && ($node['file'] ?? '')) {
-                        return $baseUrl . $node['file'];
-                    }
+        return null;
+    }
+
+    protected function discoverModuleScreens(): array
+    {
+        $screens = [];
+        $roots = [
+            base_path('modules'),
+            base_path('framework/presto'),
+        ];
+
+        foreach ($roots as $root) {
+            if (!is_dir($root)) {
+                continue;
+            }
+
+            foreach (new \DirectoryIterator($root) as $entry) {
+                if (!$entry->isDir() || $entry->isDot()) {
+                    continue;
+                }
+
+                $moduleDir = $entry->getPathname();
+                $manifestFile = $moduleDir . '/manifest.json';
+                if (!is_file($manifestFile)) {
+                    continue;
+                }
+
+                $manifest = json_decode(file_get_contents($manifestFile), true);
+                if (!is_array($manifest)) {
+                    continue;
+                }
+
+                $name = $manifest['name'] ?? $entry->getBasename();
+                $dir = $entry->getBasename();
+                $declared = $manifest['screens'] ?? [];
+
+                if (empty($declared)) {
+                    // Fallback: map module name kebab-case to its own screen id
+                    $declared = [str_replace('_', '-', strtolower($name)) => $manifest['entry'] ?? 'Module'];
+                }
+
+                foreach ($declared as $screenId => $entryValue) {
+                    $screens[$screenId] = [
+                        'dir' => $dir,
+                        'entry' => is_string($entryValue) ? $entryValue : ($manifest['entry'] ?? 'Module'),
+                    ];
                 }
             }
         }
 
-        return $baseUrl . 'index.js';
+        return $screens;
     }
 
     protected function getManifestPathForScreen(string $screenId): ?string
     {
-        $moduleMap = [
-            'suppliers' => 'suppliers',
-            'depots' => 'suppliers',
-            'departments' => 'suppliers',
-            'users' => 'suppliers',
-            'products' => 'ecommerce',
-            'customers' => 'ecommerce',
-            'orders' => 'ecommerce',
-            'bills' => 'ecommerce',
-            'ecom' => 'ecommerce',
-            'invoices' => 'ecommerce',
-            'inventory' => 'inventory',
-            'inventory-movements' => 'inventory',
-            'accounting' => 'accounting',
-            'promotions' => 'marketingcampaign',
-            'zalo' => 'zalobusiness',
-            'books' => 'bookcatalog',
-        ];
-
-        $module = $moduleMap[$screenId] ?? null;
-        
-        if ($module === null) {
-            return null;
+        foreach ($this->discoverModuleScreens() as $screen => $moduleInfo) {
+            if ($screen === $screenId) {
+                return base_path("public/assets/modules/" . $moduleInfo['dir'] . "/.vite/manifest.json");
+            }
         }
 
-        return base_path("public/assets/modules/{$module}/.vite/manifest.json");
+        return null;
     }
 
     /** Build sidebar sections from the registered menu tree */

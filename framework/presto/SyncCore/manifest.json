@@ -1,0 +1,26 @@
+{
+    "$schema": "https://prestoworld.pages.dev/schemas/module-manifest/v1.json",
+    "name": "sync-core",
+    "version": "1.0.0",
+    "description": "Platform-agnostic synchronization core: jobs, records, ID mappings and connector contracts",
+    "type": "support",
+    "priority": 60,
+    "enabled": true,
+    "namespace": "PrestoWorld\\Core\\SyncCore",
+    "entry": "Module.php",
+    "requires": {
+        "php": "^8.1"
+    },
+    "providers": [],
+    "route_prefix": "",
+    "routes": [],
+    "provides": [
+        "sync-core.jobs",
+        "sync-core.mappings"
+    ],
+    "autoload": {
+        "psr-4": {
+            "PrestoWorld\\Core\\SyncCore\\": "."
+        }
+    }
+}
