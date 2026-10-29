@@ -638,9 +638,9 @@ HTML;
 
         return $token;
     }
-        if (!str_starts_with($hash, '$P$') && !str_starts_with($hash, '$H$')) {
-            return false;
-        }
+
+    private function verifyPhpassHash(string $password, string $hash): bool
+    {
 
         $itoa64 = './0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 
