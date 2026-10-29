@@ -4,79 +4,83 @@ declare(strict_types=1);
 
 namespace PrestoWorld\AccessControl;
 
+use Cycle\Database\DatabaseInterface;
 use PrestoWorld\AccessControl\Contracts\AccessControlRepositoryInterface;
 use PrestoWorld\AccessControl\Repository\DatabaseAccessControlRepository;
-use Witals\Framework\Module\Module as WitalsModule;
-use Cycle\Database\DatabaseInterface;
+use Witals\Framework\Support\ServiceProvider;
 
-class Module extends WitalsModule
+final class AccessControlServiceProvider extends ServiceProvider
 {
-    public function getName(): string
-    {
-        return 'PrestoWorld Access Control';
-    }
-
-    public function getVersion(): string
-    {
-        return '1.1.0';
-    }
-
-    public function getDescription(): string
-    {
-        return 'Hệ thống phân quyền dựa trên Role-Based Access Control (RBAC), hỗ trợ phân quyền theo module, data resource, data feature và user group. Các module có thể đăng ký roles, permissions, groups của riêng mình.';
-    }
+    private bool $initialized = false;
 
     public function register(): void
     {
-        // ── Repository ──
         $this->app->singleton(AccessControlRepositoryInterface::class, function ($app) {
-            return new DatabaseAccessControlRepository(
-                $app->make(DatabaseInterface::class)
-            );
+            return new DatabaseAccessControlRepository($app->make(DatabaseInterface::class));
         });
         $this->app->alias(AccessControlRepositoryInterface::class, 'access.control.repository');
 
-        // ── Manager (Context/Strategy) ──
         $this->app->singleton(AccessControlManager::class, function ($app) {
             return new AccessControlManager($app);
         });
         $this->app->alias(AccessControlManager::class, 'access.control');
 
-        // ── ModulePermissionManager ──
         $this->app->singleton(ModulePermissionManager::class, function ($app) {
             return ModulePermissionManager::make($app);
         });
         $this->app->alias(ModulePermissionManager::class, 'access.control.module.permissions');
 
-        // Đăng ký RBAC là mô hình mặc định
-        /** @var AccessControlManager $manager */
-        $manager = $this->app->make(AccessControlManager::class);
-        $manager->registerModel('rbac', \PrestoWorld\AccessControl\Rbac\RbacStrategy::class);
+        $this->app->booting(function (): void {
+            $this->initialize();
+        });
     }
 
     public function boot(): void
     {
-        /** @var AccessControlManager $manager */
-        $manager = $this->app->make(AccessControlManager::class);
-
-        // Đảm bảo RBAC (mô hình mặc định) được khởi tạo
-        $manager->getModel('rbac');
-
-        // Sync schema (schema.json) qua ModuleSchemaManager nếu có
-        if ($this->app->has(\App\Foundation\Database\ModuleSchemaManager::class)) {
-            /** @var \App\Foundation\Database\ModuleSchemaManager $schemaManager */
-            $schemaManager = $this->app->make(\App\Foundation\Database\ModuleSchemaManager::class);
-            $schemaManager->syncModule(__DIR__);
-        }
-
-        // Tạo các role mặc định nếu chưa có
-        $this->seedDefaultRoles($manager);
-
-        // Đăng ký các module mặc định vào hệ thống phân quyền
-        $this->registerDefaultModules();
+        $this->initialize();
     }
 
-    protected function seedDefaultRoles(AccessControlManager $manager): void
+    private function initialize(): void
+    {
+        if ($this->initialized) {
+            return;
+        }
+
+        $this->app->make(\App\Foundation\Database\ModuleSchemaManager::class)
+            ->syncModule($this->app->basePath('framework/presto/AccessControl'));
+
+        $schema = json_decode(
+            (string) file_get_contents(__DIR__ . '/schema.json'),
+            true,
+            512,
+            JSON_THROW_ON_ERROR,
+        );
+        $db = $this->app->make(DatabaseInterface::class);
+        $missingTables = [];
+        foreach ($schema['tables'] ?? [] as $table) {
+            $tableName = $table['name'] ?? null;
+            if (is_string($tableName) && !$db->hasTable($tableName)) {
+                $missingTables[] = $tableName;
+            }
+        }
+        if ($missingTables !== []) {
+            throw new \RuntimeException(
+                'Access Control schema is missing tables: ' . implode(', ', $missingTables),
+            );
+        }
+
+        /** @var AccessControlManager $manager */
+        $manager = $this->app->make(AccessControlManager::class);
+        $manager->getModel('rbac');
+
+        $this->seedDefaultRoles($manager);
+        $this->registerDefaultModules();
+
+        require_once __DIR__ . '/helpers.php';
+        $this->initialized = true;
+    }
+
+    private function seedDefaultRoles(AccessControlManager $manager): void
     {
         $defaultRoles = [
             'administrator' => [
@@ -104,9 +108,7 @@ class Module extends WitalsModule
             'subscriber' => [
                 'name' => 'Người đăng ký',
                 'description' => 'Chỉ đọc nội dung công khai',
-                'permissions' => [
-                    'posts.read:published',
-                ],
+                'permissions' => ['posts.read:published'],
             ],
             'customer' => [
                 'name' => 'Khách hàng',
@@ -119,25 +121,15 @@ class Module extends WitalsModule
 
         foreach ($defaultRoles as $slug => $data) {
             if ($manager->getRole($slug) === null) {
-                $manager->createRole(
-                    $slug,
-                    $data['name'],
-                    $data['permissions'],
-                    $data['description']
-                );
+                $manager->createRole($slug, $data['name'], $data['permissions'], $data['description']);
             }
         }
     }
 
-    /**
-     * Đăng ký các module hệ thống mặc định vào hệ thống phân quyền.
-     * Các module khác có thể gọi ModulePermissionManager::registerModule()
-     * từ boot() của chính mình.
-     */
-    protected function registerDefaultModules(): void
+    private function registerDefaultModules(): void
     {
-        /** @var ModulePermissionManager $modulePerm */
-        $modulePerm = $this->app->make(ModulePermissionManager::class);
+        /** @var ModulePermissionManager $modulePermissions */
+        $modulePermissions = $this->app->make(ModulePermissionManager::class);
 
         $modules = [
             'dashboard' => 'Bảng Điều Khiển',
@@ -153,10 +145,8 @@ class Module extends WitalsModule
         ];
 
         foreach ($modules as $module => $label) {
-            if (!$modulePerm->isModuleRegistered($module)) {
-                $modulePerm->registerModule($module, $label, [
-                    'auto_roles' => true,
-                ]);
+            if (!$modulePermissions->isModuleRegistered($module)) {
+                $modulePermissions->registerModule($module, $label, ['auto_roles' => true]);
             }
         }
     }

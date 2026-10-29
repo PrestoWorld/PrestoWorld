@@ -83,50 +83,60 @@ class ModulePermissionManager
         $resourceSlug = $module . '.data';
         $resourceName = $label . ' Dữ Liệu';
 
-        // 1. Đăng ký data resource
-        $this->rbac->createDataResource([
-            'slug' => $resourceSlug,
-            'name' => $resourceName,
-            'description' => 'Tài nguyên dữ liệu của module ' . $module,
-            'module' => $module,
-        ]);
+        if ($this->rbac->getDataResource($resourceSlug) === null) {
+            $this->rbac->createDataResource([
+                'slug' => $resourceSlug,
+                'name' => $resourceName,
+                'description' => 'Tài nguyên dữ liệu của module ' . $module,
+                'module' => $module,
+            ]);
+        }
 
         // 2. Đăng ký data features
         foreach ($features as $feature) {
             $featureSlug = $module . ':' . $feature;
-            $this->rbac->createDataFeature([
-                'slug' => $featureSlug,
-                'name' => ucfirst($feature) . ' ' . $label,
-                'description' => 'Tính năng ' . $feature . ' cho ' . $label,
-                'resource' => $resourceSlug,
-                'module' => $module,
-            ]);
-            $this->rbac->registerModuleFeature($module, $featureSlug);
+            if ($this->rbac->getDataFeature($featureSlug) === null) {
+                $this->rbac->createDataFeature([
+                    'slug' => $featureSlug,
+                    'name' => ucfirst($feature) . ' ' . $label,
+                    'description' => 'Tính năng ' . $feature . ' cho ' . $label,
+                    'resource' => $resourceSlug,
+                    'module' => $module,
+                ]);
+            }
+            if (!in_array($featureSlug, $this->rbac->getModuleFeatures($module), true)) {
+                $this->rbac->registerModuleFeature($module, $featureSlug);
+            }
         }
 
         // 3. Đăng ký module permissions (module:feature)
         foreach ($features as $feature) {
             $featureSlug = $module . ':' . $feature;
             $permSlug = $module . ':' . $feature;
-            $this->rbac->createModulePermission([
-                'slug' => $permSlug,
-                'name' => ucfirst($feature) . ' ' . $label,
-                'description' => 'Quyền ' . $feature . ' dữ liệu ' . $label,
-                'module' => $module,
-                'feature' => $featureSlug,
-                'resource' => $resourceSlug,
-            ]);
+            if ($this->rbac->getModulePermission($permSlug) === null) {
+                $this->rbac->createModulePermission([
+                    'slug' => $permSlug,
+                    'name' => ucfirst($feature) . ' ' . $label,
+                    'description' => 'Quyền ' . $feature . ' dữ liệu ' . $label,
+                    'module' => $module,
+                    'feature' => $featureSlug,
+                    'resource' => $resourceSlug,
+                ]);
+            }
         }
 
         // 4. Extra permissions từ options
         $extraPermissions = $options['permissions'] ?? [];
         foreach ($extraPermissions as $perm) {
-            $this->rbac->createPermission(
-                $perm['slug'] ?? $module . ':' . ($perm['name'] ?? ''),
-                $perm['name'] ?? '',
-                $perm['description'] ?? '',
-                $perm['resource'] ?? $resourceSlug
-            );
+            $slug = $perm['slug'] ?? $module . ':' . ($perm['name'] ?? '');
+            if ($this->access->getPermission($slug) === null) {
+                $this->rbac->createPermission(
+                    $slug,
+                    $perm['name'] ?? '',
+                    $perm['description'] ?? '',
+                    $perm['resource'] ?? $resourceSlug
+                );
+            }
         }
 
         // 5. Auto-create default roles
@@ -165,7 +175,9 @@ class ModulePermissionManager
                         $roleData['description']
                     );
                 }
-                $this->rbac->registerModuleRole($module, $roleSlug);
+                if (!in_array($roleSlug, $this->rbac->getModuleRoles($module), true)) {
+                    $this->rbac->registerModuleRole($module, $roleSlug);
+                }
             }
         }
 
@@ -181,7 +193,9 @@ class ModulePermissionManager
                     $role['description'] ?? ''
                 );
             }
-            $this->rbac->registerModuleRole($module, $roleSlug);
+            if (!in_array($roleSlug, $this->rbac->getModuleRoles($module), true)) {
+                $this->rbac->registerModuleRole($module, $roleSlug);
+            }
         }
 
         // 7. User groups từ options
@@ -201,7 +215,10 @@ class ModulePermissionManager
             // Gán roles cho group
             $groupRoles = $group['roles'] ?? [$module . '.viewer'];
             foreach ($groupRoles as $roleSlug) {
-                if ($this->access->getRole($roleSlug) !== null) {
+                if (
+                    $this->access->getRole($roleSlug) !== null
+                    && !in_array($roleSlug, $this->rbac->getGroupRoles($groupSlug), true)
+                ) {
                     $this->rbac->grantGroupRole($groupSlug, $roleSlug);
                 }
             }

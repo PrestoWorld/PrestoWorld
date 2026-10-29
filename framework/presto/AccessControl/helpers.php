@@ -13,16 +13,17 @@ if (!function_exists('access')) {
      */
     function access(?Application $app = null): AccessControlManager
     {
-        static $manager = null;
-
         if ($app !== null) {
-            $manager = new AccessControlManager($app);
+            return $app->make(AccessControlManager::class);
         }
 
-        if ($manager === null) {
-            throw new \RuntimeException('AccessControlManager chưa được khởi tạo. Hãy bật module access-control.');
+        if (function_exists('app')) {
+            $manager = \app(AccessControlManager::class);
+            if ($manager instanceof AccessControlManager) {
+                return $manager;
+            }
         }
 
-        return $manager;
+        throw new \RuntimeException('AccessControlManager chưa được đăng ký trong core container.');
     }
 }

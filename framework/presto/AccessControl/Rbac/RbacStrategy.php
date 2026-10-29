@@ -297,13 +297,15 @@ class RbacStrategy implements AccessControlStrategyInterface
             'is_system' => false,
         ];
 
-        foreach ($permissions as $perm) {
-            $this->grantPermission($slug, $perm);
-        }
-
         if ($this->repository !== null) {
             $this->repository->saveRole($this->roles[$slug]);
-            $this->repository->saveRolePermissions($slug, $permissions);
+        }
+
+        foreach ($permissions as $perm) {
+            if (!isset($this->permissions[$perm])) {
+                $this->createPermission($perm, $perm);
+            }
+            $this->grantPermission($slug, $perm);
         }
     }
 

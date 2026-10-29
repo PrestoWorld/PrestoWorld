@@ -7,9 +7,12 @@ namespace PrestoWorld\Foundation\Providers;
 use Witals\Framework\Support\ServiceProvider;
 use PrestoWorld\Bridge\WordPress\WordPressConfig;
 use PrestoWorld\Foundation\Database\OptionRepository;
+use App\Foundation\Database\ModuleSchemaManager;
 use Cycle\Database\Config;
 use Cycle\Database\DatabaseManager;
 use Cycle\Database\DatabaseInterface;
+use Cycle\Database\DatabaseProviderInterface;
+use Psr\Log\LoggerInterface;
 
 class DatabaseServiceProvider extends ServiceProvider
 {
@@ -97,6 +100,13 @@ class DatabaseServiceProvider extends ServiceProvider
 
         $this->app->singleton(DatabaseInterface::class, function ($app) {
             return $app->make(DatabaseManager::class)->database('presto');
+        });
+
+        $this->app->singleton(ModuleSchemaManager::class, function ($app) {
+            return new ModuleSchemaManager(
+                $app->make(DatabaseProviderInterface::class),
+                $app->make(LoggerInterface::class),
+            );
         });
 
         $this->app->singleton(OptionRepository::class, function ($app) {

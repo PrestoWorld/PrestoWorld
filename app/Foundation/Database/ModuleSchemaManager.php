@@ -26,6 +26,7 @@ use Psr\Log\LoggerInterface;
  * schema.json format:
  * {
  *   "version": "1.0.0",
+ *   "module": "module-name", // or "feature" for a core feature
  *   "tables": [
  *     {
  *       "name": "optilarity_customers",
@@ -141,7 +142,7 @@ class ModuleSchemaManager
             return [];
         }
 
-        $moduleName    = $schema['module']  ?? basename($modulePath);
+        $moduleName    = $schema['module'] ?? $schema['feature'] ?? basename($modulePath);
         $schemaVersion = $schema['version'] ?? '1.0.0';
         
         // Canonicalize the JSON to ensure the hash is consistent regardless of whitespace/formatting
@@ -150,18 +151,31 @@ class ModuleSchemaManager
         // Ensure the registry itself exists (cheap: only runs if table missing)
         $this->ensureRegistry();
 
-        // Skip if this exact hash was already synced (hot path — zero overhead)
+        // Skip only when the schema hash matches and every declared table still exists.
         if (!$this->forceSync && $this->isAlreadySynced($moduleName, $currentHash)) {
-            return [];
+            $allTablesExist = true;
+            foreach (($schema['tables'] ?? []) as $tableDef) {
+                $tableName = $tableDef['name'] ?? null;
+                if (is_string($tableName) && !$this->getDb()->hasTable($tableName)) {
+                    $allTablesExist = false;
+                    break;
+                }
+            }
+
+            if ($allTablesExist) {
+                return [];
+            }
         }
 
         // Perform the actual table sync
         $processed = [];
+        $syncFailed = false;
         foreach (($schema['tables'] ?? []) as $tableDef) {
             try {
                 $this->syncTable($tableDef);
                 $processed[] = $tableDef['name'];
             } catch (\Throwable $e) {
+                $syncFailed = true;
                 $this->logger->error(
                     "ModuleSchemaManager: Failed to sync table '{table}': {message}",
                     ['table' => $tableDef['name'], 'message' => $e->getMessage(), 'exception' => $e]
@@ -169,8 +183,10 @@ class ModuleSchemaManager
             }
         }
 
-        // Record the new hash so we skip on next request
-        $this->updateRegistry($moduleName, $schemaVersion, $currentHash);
+        // Don't cache a partially-applied schema; the next boot must retry it.
+        if (!$syncFailed) {
+            $this->updateRegistry($moduleName, $schemaVersion, $currentHash);
+        }
 
         return $processed;
     }

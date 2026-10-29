@@ -1,4 +1,4 @@
-# PrestoWorld Access Control Module
+# PrestoWorld Access Control Core Feature
 
 Hệ thống phân quyền dựa trên **Role-Based Access Control (RBAC)**, được thiết kế theo **pattern Strategy** để có thể chuyển đổi linh hoạt giữa các mô hình phân quyền khác nhau (ABAC, ACL, PBAC, DAC) thông qua plugin/module mà không cần sửa code core.
 
@@ -7,9 +7,8 @@ Hệ thống phân quyền dựa trên **Role-Based Access Control (RBAC)**, đ�
 ```
 framework/presto/AccessControl/
 ├── AccessControlManager.php          # Context/Strategy — quản lý mô hình phân quyền hiện hành
-├── Module.php                        # Witals Module (auto-discover qua manifest.json)
-├── manifest.json                     # Khai báo module, phụ thuộc admin
-├── schema.json                       # 4 bảng RBAC (declarative schema)
+├── AccessControlServiceProvider.php  # Bind service, tạo schema và khởi tạo RBAC
+├── schema.json                       # Khai báo các bảng Access Control
 ├── helpers.php                       # access() helper global
 ├── Middleware/AccessCanMiddleware.php # Middleware bảo vệ route/controller
 ├── Contracts/
@@ -57,9 +56,15 @@ User ──(assigned)──▶ Role ──(granted)──▶ Permission
 
 Kiểm tra: user có role nào, role đó có quyền `action` trên `resource` không.
 
-## Cài đặt
+## Khởi tạo
 
-Module được auto-discover từ `framework/presto/AccessControl/manifest.json`. Đảm bảo module `admin` đã bật (là dependency).
+Access Control là core feature và được đăng ký trực tiếp trong
+`App\Foundation\Application`. Khi application khởi động, service provider đồng bộ
+`schema.json`, tạo các role mặc định và đăng ký các module hệ thống. Không cần
+khai báo module hoặc chạy WP-CLI.
+
+Sau khi cập nhật từ phiên bản từng discover Access Control như module, chạy
+`php witals cache:clear --modules` một lần để xóa metadata discovery cũ.
 
 ## API chính
 
@@ -130,6 +135,6 @@ php vendor/bin/phpunit tests/Unit/AccessControl/RbacStrategyTest.php
 
 ## Lưu ý
 
-- `composer.json` đã được thêm PSR-4 mapping `PrestoWorld\AccessControl\` → `framework/presto/AccessControl/`.
+- `composer.json` ánh xạ namespace `PrestoWorld\AccessControl\` tới `framework/presto/AccessControl/`.
 - `phpstan.neon` đã được sửa `excludePaths` cho entry không tồn tại (thêm `?`).
 - Chưa commit: hãy review trước khi push.
