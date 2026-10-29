@@ -15,6 +15,8 @@ use Witals\Framework\Contracts\Auth\HttpTransportInterface;
 use Witals\Framework\Contracts\Auth\RateLimiterInterface;
 use Witals\Framework\Contracts\Session\SessionInterface;
 
+use Illuminate\Support\Str;
+
 class AuthController
 {
     protected Application $app;
@@ -125,9 +127,16 @@ HTML;
      */
     public function showLogin(Request $request): Response
     {
-        // If already authenticated and is admin, redirect to dashboard
+        $sso = $request->query('sso');
+        $returnTo = (string) $request->query('return_to', '');
+
+        // If already authenticated
         $auth = $this->app->make(AuthContextInterface::class);
         if ($auth->getToken() !== null) {
+            if ($sso === '1' && $returnTo !== '' && $this->isAllowedReturnTo($returnTo)) {
+                $loginUrl = '/sso/init?return_to=' . urlencode($returnTo);
+                return Response::html('', 302, ['Location' => $loginUrl]);
+            }
             $redirect = $this->safeRedirect($request->query('redirect', '/dashboard'));
             return Response::html('', 302, ['Location' => $redirect]);
         }
@@ -142,6 +151,8 @@ HTML;
         
         $errorHtml = $error ? '<div class="alert-error">' . htmlspecialchars($error, ENT_QUOTES) . '</div>' : '';
         $successHtml = $success ? '<div class="alert-success">' . htmlspecialchars($success, ENT_QUOTES) . '</div>' : '';
+
+        $ssoField = ($sso === '1' && $returnTo !== '') ? '<input type="hidden" name="sso" value="1"><input type="hidden" name="return_to" value="' . htmlspecialchars($returnTo, ENT_QUOTES) . '">' : '';
 
         $html = <<<HTML
         <!DOCTYPE html>
@@ -360,6 +371,7 @@ HTML;
                     <form method="POST" action="/login">
                         <input type="hidden" name="redirect" value="{$redirect}">
                         <input type="hidden" name="_token" value="{$this->csrfToken()}">
+                        {$ssoField}
 
                         <div class="form-group">
                             <label for="email">Email</label>
@@ -405,6 +417,8 @@ HTML;
         $password = $request->post('password', '');
         $redirect = $this->safeRedirect($request->post('redirect', '/dashboard'));
         $remember = (bool) $request->post('remember', false);
+        $sso = $request->post('sso');
+        $returnTo = (string) $request->post('return_to', '');
 
         $rateLimiter = $this->app->make(RateLimiterInterface::class);
         $rateLimitKey = 'login:' . strtolower($email);
@@ -468,6 +482,10 @@ HTML;
         $authContext->start($token);
 
         // Create redirect response and set cookie
+        if ($sso === '1' && $returnTo !== '' && $this->isAllowedReturnTo($returnTo)) {
+            $response = Response::html('', 302, ['Location' => '/sso/init?return_to=' . urlencode($returnTo)]);
+            return $httpTransport->commitToken($request, $response, $token, $expiresAt);
+        }
         $response = Response::html('', 302, ['Location' => $redirect]);
         return $httpTransport->commitToken($request, $response, $token, $expiresAt);
     }
@@ -608,8 +626,18 @@ HTML;
         return '/dashboard';
     }
 
-    private function verifyPhpassHash(string $password, string $hash): bool
+    private function csrfToken(): string
     {
+        $session = $this->app->make(SessionInterface::class);
+        $token = $session->get('_csrf_token', '');
+
+        if ($token === '') {
+            $token = bin2hex(random_bytes(32));
+            $session->set('_csrf_token', $token);
+        }
+
+        return $token;
+    }
         if (!str_starts_with($hash, '$P$') && !str_starts_with($hash, '$H$')) {
             return false;
         }
@@ -665,16 +693,222 @@ HTML;
         return $output;
     }
 
-    private function csrfToken(): string
+    private function ssoSecret(): string
     {
-        $session = $this->app->make(SessionInterface::class);
-        $token = $session->get('_csrf_token', '');
+        $key = env('APP_KEY') ?: env('SSO_SECRET') ?: 'bookowl-sso-secret-change-me';
+        return hash('sha256', $key);
+    }
 
-        if ($token === '') {
-            $token = bin2hex(random_bytes(32));
-            $session->set('_csrf_token', $token);
+    private function base64urlEncode(string $data): string
+    {
+        return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
+    }
+
+    private function base64urlDecode(string $data): string|false
+    {
+        $replaced = strtr($data, '-_', '+/');
+        $padding = strlen($replaced) % 4;
+        if ($padding > 0) {
+            $replaced .= str_repeat('=', 4 - $padding);
+        }
+        return base64_decode($replaced);
+    }
+
+    private function signSso(array $payload): string
+    {
+        $data = json_encode($payload);
+        if ($data === false) {
+            $data = '{}';
+        }
+        $sig = hash_hmac('sha256', $data, $this->ssoSecret());
+        return $this->base64urlEncode($data) . '.' . $sig;
+    }
+
+    private function verifySso(string $ticket): ?array
+    {
+        if (!str_contains($ticket, '.')) {
+            return null;
+        }
+        [$dataB64, $sig] = explode('.', $ticket, 2);
+        if ($dataB64 === '' || $sig === '') {
+            return null;
+        }
+        $data = $this->base64urlDecode($dataB64);
+        if ($data === false || $data === '') {
+            return null;
+        }
+        $calc = hash_hmac('sha256', $data, $this->ssoSecret());
+        if (!hash_equals($calc, $sig)) {
+            return null;
+        }
+        $payload = json_decode($data, true);
+        if (!is_array($payload)) {
+            return null;
+        }
+        if (($payload['exp'] ?? 0) < time()) {
+            return null;
+        }
+        if (($payload['nonce'] ?? '') === '') {
+            return null;
+        }
+        if (empty($payload['user_id'])) {
+            return null;
+        }
+        return $payload;
+    }
+
+    private function mainDomain(): string
+    {
+        $url = env('APP_URL') ?: env('BOOKOWL_MAIN_DOMAIN') ?: 'https://bookowl.org';
+        $host = parse_url($url, PHP_URL_HOST);
+        if (is_string($host) && $host !== '') {
+            return $host;
+        }
+        if (is_string($url) && $url !== '') {
+            $clean = preg_replace('#^https?://#i', '', $url);
+            if (is_string($clean) && str_contains($clean, ':')) {
+                $clean = explode(':', $clean)[0];
+            }
+            return $clean ?: 'bookowl.org';
+        }
+        return 'bookowl.org';
+    }
+
+    private function isAllowedReturnTo(string $returnTo): bool
+    {
+        if ($returnTo === '') {
+            return false;
+        }
+        $parts = parse_url($returnTo);
+        if (!is_array($parts)) {
+            return false;
+        }
+        $scheme = strtolower((string) ($parts['scheme'] ?? ''));
+        if ($scheme !== 'http' && $scheme !== 'https') {
+            return false;
+        }
+        $host = strtolower((string) ($parts['host'] ?? ''));
+        if ($host === '') {
+            return false;
+        }
+        $main = strtolower($this->mainDomain());
+        if ($host === $main) {
+            return false; // don't callback to main domain
+        }
+        // allow localhost for dev
+        if ($host === 'localhost') {
+            return true;
+        }
+        if (filter_var($host, FILTER_VALIDATE_IP)) {
+            return true;
+        }
+        // try to allow known bookpress custom domains if possible
+        try {
+            $dbal = $this->app->make(\Cycle\Database\DatabaseProviderInterface::class);
+            $db = $dbal->database();
+            $row = $db->table('bookpress_store_domains')
+                ->where('domain', $host)
+                ->where('status', 'active')
+                ->run()
+                ->fetch();
+            if ($row) {
+                return true;
+            }
+        } catch (\Throwable $e) {
+            // ignore
+        }
+        // also check subsite custom_domain
+        try {
+            $dbal = $this->app->make(\Cycle\Database\DatabaseProviderInterface::class);
+            $db = $dbal->database();
+            $row = $db->table('bookpress_subsites')
+                ->where('custom_domain', $host)
+                ->run()
+                ->fetch();
+            if ($row) {
+                return true;
+            }
+        } catch (\Throwable $e) {
+            // ignore
+        }
+        return false;
+    }
+
+    /**
+     * SSO init - redirect to login or create ticket
+     */
+    public function ssoInit(Request $request): Response
+    {
+        $returnTo = (string) $request->query('return_to', '');
+        if ($returnTo === '' || !$this->isAllowedReturnTo($returnTo)) {
+            return Response::html('', 400);
         }
 
-        return $token;
+        $auth = $this->app->make(AuthContextInterface::class);
+        $token = $auth->getToken();
+
+        if ($token === null) {
+            $loginUrl = '/login?sso=1&return_to=' . urlencode($returnTo);
+            return Response::html('', 302, ['Location' => $loginUrl]);
+        }
+
+        $payload = $token->getPayload();
+        if (!is_array($payload) || empty($payload['user_id'])) {
+            $loginUrl = '/login?sso=1&return_to=' . urlencode($returnTo);
+            return Response::html('', 302, ['Location' => $loginUrl]);
+        }
+
+        $ticketPayload = [
+            'user_id' => $payload['user_id'],
+            'email'   => $payload['email'] ?? null,
+            'role'    => $payload['role'] ?? 'user',
+            'name'    => $payload['name'] ?? ($payload['email'] ?? ''),
+            'nonce'   => bin2hex(random_bytes(16)),
+            'exp'     => time() + 60,
+            'iat'     => time(),
+        ];
+
+        $ticket = $this->signSso($ticketPayload);
+        $parts = parse_url($returnTo);
+        $sep = isset($parts['query']) ? '&' : '?';
+        $callbackUrl = $returnTo . $sep . 'sso_ticket=' . urlencode($ticket);
+        return Response::html('', 302, ['Location' => $callbackUrl]);
+    }
+
+    /**
+     * SSO callback - validate ticket and set cookie
+     */
+    public function ssoCallback(Request $request): Response
+    {
+        $ticket = (string) $request->query('sso_ticket', '');
+        $returnTo = (string) $request->query('return_to', '');
+        if ($returnTo === '' || !$this->isAllowedReturnTo($returnTo)) {
+            // try to get from referer? but just fail
+            return Response::html('', 400);
+        }
+        if ($ticket === '') {
+            return Response::html('', 400);
+        }
+
+        $payload = $this->verifySso($ticket);
+        if ($payload === null) {
+            return Response::html('', 400);
+        }
+
+        $tokenStorage = $this->app->make(TokenStorageInterface::class);
+        $httpTransport = $this->app->make(HttpTransportInterface::class);
+        $authContext = $this->app->make(AuthContextInterface::class);
+
+        $expiresAt = \Cake\Chronos\Chronos::now()->addDays(30);
+        $token = $tokenStorage->create([
+            'user_id' => $payload['user_id'],
+            'email'   => $payload['email'] ?? '',
+            'role'    => $payload['role'] ?? 'user',
+            'name'    => $payload['name'] ?? '',
+        ], $expiresAt);
+
+        $authContext->start($token);
+        $response = Response::html('', 302, ['Location' => $returnTo]);
+        return $httpTransport->commitToken($request, $response, $token, $expiresAt);
     }
 }

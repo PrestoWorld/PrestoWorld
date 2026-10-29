@@ -14,6 +14,10 @@ $router->get('/login', [App\Http\Controllers\AuthController::class, 'showLogin']
 $router->post('/login', [App\Http\Controllers\AuthController::class, 'handleLogin']);
 $router->get('/logout', [App\Http\Controllers\AuthController::class, 'handleLogout']);
 
+// SSO for cross-domain BookPress sites
+$router->get('/sso/init', [App\Http\Controllers\AuthController::class, 'ssoInit']);
+$router->get('/sso/callback', [App\Http\Controllers\AuthController::class, 'ssoCallback']);
+
 // Admin SPA entry — dynamic routes: /dashboard, /dashboard/{screen}
 $router->get('/dashboard/{screen?::[a-z0-9\-]+}', [\App\Http\Controllers\Admin\SpaController::class, 'dashboard']);
 
