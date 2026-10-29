@@ -36,6 +36,13 @@ class SeedCommand extends Command
         if (!$db->hasTable($usersTable)) {
             $this->error("  {$usersTable} table missing. Run migration first.");
         } else {
+            $firstUser = $db->select('id')
+                ->from($usersTable)
+                ->orderBy('id', 'asc')
+                ->limit(1)
+                ->run()
+                ->fetch();
+
             $adminEmail = getenv('ADMIN_EMAIL') ?: 'admin@example.com';
             $existing = $db->select('id')
                 ->from($usersTable)
@@ -58,6 +65,22 @@ class SeedCommand extends Command
                     'updated_at' => $now,
                 ])->run();
                 $this->line("  - {$adminEmail}: created.");
+            }
+
+            if (!$firstUser && !$existing) {
+                $firstUser = $db->select('id')
+                    ->from($usersTable)
+                    ->where('email', $adminEmail)
+                    ->run()
+                    ->fetch();
+            }
+            if (!$firstUser && $existing) {
+                $firstUser = $existing;
+            }
+            if (is_array($firstUser) && isset($firstUser['id'])) {
+                (new \PrestoWorld\AccessControl\FirstUserRootAssigner($db))
+                    ->assign((string) $firstUser['id']);
+                $this->line("  - Root role assigned to first user (ID {$firstUser['id']}).");
             }
         }
 

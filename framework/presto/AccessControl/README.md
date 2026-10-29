@@ -105,11 +105,20 @@ new AccessCanMiddleware($app, 'posts.edit', 'post:{id}');
 
 | Role | Mô tả | Quyền |
 |------|-------|-------|
+| `root` | Quản trị hệ thống và BookPress | `*` (toàn quyền) |
 | `administrator` | Quản trị viên | `*` (toàn quyền) |
 | `editor` | Biên tập viên | posts, pages, media |
 | `author` | Tác giả | bài viết của riêng mình |
 | `subscriber` | Người đăng ký | đọc công khai |
 | `customer` | Khách hàng | đơn hàng, hồ sơ của mình |
+
+User đầu tiên được tạo trong quá trình cài đặt hoặc bằng lệnh seed tự động
+được gán `root`. Có thể gán thủ công bằng
+`access()->assignRole($userId, 'root')`. BookPress kiểm tra role này theo
+`user_id` của token trong `acl_subject_roles`; không dùng `pw_users.role` để
+cấp quyền truy cập site.
+
+Mỗi permission mới tạo trong RBAC cũng tự động được cấp cho role `root`.
 
 ## Chuyển đổi mô hình phân quyền
 

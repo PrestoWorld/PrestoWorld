@@ -13,6 +13,7 @@ use Cycle\Database\DatabaseProviderInterface;
 use PHPUnit\Framework\TestCase;
 use PrestoWorld\AccessControl\AccessControlManager;
 use PrestoWorld\AccessControl\AccessControlServiceProvider;
+use PrestoWorld\AccessControl\FirstUserRootAssigner;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Witals\Framework\Application;
@@ -86,8 +87,32 @@ class AccessControlCoreFeatureTest extends TestCase
         }
 
         $roles = array_column($db->select('slug')->from('acl_roles')->fetchAll(), 'slug');
+        $this->assertContains('root', $roles);
         $this->assertContains('administrator', $roles);
         $this->assertContains('editor', $roles);
+
+        /** @var AccessControlManager $manager */
+        $manager = $app->make(AccessControlManager::class);
+        $manager->assignRole('user-123', 'root');
+        $this->assertTrue($manager->hasRole('user-123', 'root'));
+        $this->assertSame(
+            'root',
+            $db->select('role')->from('acl_subject_roles')->where('subject', 'user-123')->fetchAll()[0]['role'],
+        );
+        (new FirstUserRootAssigner($db))->assign('first-user');
+        $this->assertSame(
+            'root',
+            $db->select('role')->from('acl_subject_roles')->where('subject', 'first-user')->fetchAll()[0]['role'],
+        );
+        (new FirstUserRootAssigner($db))->assign('first-user');
+        $this->assertCount(
+            1,
+            $db->select('role')
+                ->from('acl_subject_roles')
+                ->where('subject', 'first-user')
+                ->where('role', 'root')
+                ->fetchAll(),
+        );
         $this->assertSame($app->make(AccessControlManager::class), \PrestoWorld\AccessControl\access($app));
 
         $rolesSchema = $db->table('acl_roles')->getSchema();

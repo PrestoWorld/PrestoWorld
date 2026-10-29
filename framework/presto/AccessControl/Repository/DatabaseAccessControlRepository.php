@@ -144,12 +144,14 @@ class DatabaseAccessControlRepository implements AccessControlRepositoryInterfac
             return;
         }
 
+        $createdAt = (new \DateTimeImmutable())->format('Y-m-d H:i:s');
         $this->db->delete($table, ['subject' => $subject])->run();
 
         foreach ($roles as $role) {
             $this->db->insert($table)->values([
                 'subject' => $subject,
                 'role' => $role,
+                'created_at' => $createdAt,
             ])->run();
         }
     }
@@ -164,12 +166,14 @@ class DatabaseAccessControlRepository implements AccessControlRepositoryInterfac
             return;
         }
 
+        $createdAt = (new \DateTimeImmutable())->format('Y-m-d H:i:s');
         $this->db->delete($table, ['role' => $roleSlug])->run();
 
         foreach ($permissions as $permission) {
             $this->db->insert($table)->values([
                 'role' => $roleSlug,
                 'permission' => $permission,
+                'created_at' => $createdAt,
             ])->run();
         }
     }

@@ -83,6 +83,11 @@ final class AccessControlServiceProvider extends ServiceProvider
     private function seedDefaultRoles(AccessControlManager $manager): void
     {
         $defaultRoles = [
+            'root' => [
+                'name' => 'Root',
+                'description' => 'Toàn quyền quản trị hệ thống và truy cập mọi BookPress site',
+                'permissions' => ['*'],
+            ],
             'administrator' => [
                 'name' => 'Quản trị viên',
                 'description' => 'Có toàn quyền truy cập hệ thống',

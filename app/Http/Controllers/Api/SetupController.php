@@ -11,6 +11,7 @@ use Psr\Log\LoggerInterface;
 use Cycle\Database\DatabaseInterface;
 use Cycle\Database\Exception\Exception as DatabaseException;
 use PrestoWorld\Database\SchemaMigrationManager;
+use PrestoWorld\AccessControl\FirstUserRootAssigner;
 use App\Foundation\Database\ModuleSchemaManager;
 use PDO;
 
@@ -330,15 +331,18 @@ class SetupController
         $migrationResult = $migrationManager->runMigrations(false);
         $this->logger->info('Migrations run', $migrationResult);
 
-        // Sync module schemas (create tables from module definitions)
-        // Use the fresh DB connection, not the stale container DBAL
+        // Sync core Access Control schema against the newly configured database.
+        // Use the fresh DB connection, not the stale container DBAL.
+        $schemaManager = new ModuleSchemaManager(
+            $this->app->make(\Cycle\Database\DatabaseProviderInterface::class),
+            $this->logger,
+            $db,
+        );
+        $schemaManager->syncModule($this->app->basePath('framework/presto/AccessControl'));
+
+        // Sync module schemas (create tables from module definitions).
         if ($this->app->has(\App\Foundation\Module\ModuleManager::class)) {
             $moduleManager = $this->app->make(\App\Foundation\Module\ModuleManager::class);
-            $schemaManager = new \App\Foundation\Database\ModuleSchemaManager(
-                $this->app->make(\Cycle\Database\DatabaseProviderInterface::class),
-                $this->logger,
-                $db, // Pass fresh DB to avoid stale pre-boot config
-            );
 
             foreach ($moduleManager->allSorted() as $module) {
                 if ($module->isEnabled()) {
@@ -353,6 +357,13 @@ class SetupController
         // Create admin user if not exists
         $usersTable = $tablePrefix . 'users';
         if ($db->hasTable($usersTable)) {
+            $firstUser = $db->select('id')
+                ->from($usersTable)
+                ->orderBy('id', 'asc')
+                ->limit(1)
+                ->run()
+                ->fetch();
+
             // Check if admin user already exists (by email or username)
             $existingUser = $db->select('id')
                 ->from($usersTable)
@@ -376,6 +387,19 @@ class SetupController
                 ])->run();
                 
                 $this->logger->info('Admin user created', ['email' => $input['admin_email']]);
+            }
+
+            if ($firstUser === null || $firstUser === false) {
+                $firstUser = $existingUser ?: $db->select('id')
+                    ->from($usersTable)
+                    ->where('email', $input['admin_email'])
+                    ->run()
+                    ->fetch();
+            }
+
+            if (is_array($firstUser) && isset($firstUser['id'])) {
+                (new FirstUserRootAssigner($db))->assign((string) $firstUser['id']);
+                $this->logger->info('Root role assigned to first user', ['user_id' => (string) $firstUser['id']]);
             }
         }
 

@@ -289,6 +289,10 @@ class RbacStrategy implements AccessControlStrategyInterface
             throw RoleNotFoundException::for($slug);
         }
 
+        if ($slug === 'root') {
+            $permissions = array_values(array_unique(array_merge(array_keys($this->permissions), $permissions)));
+        }
+
         $this->roles[$slug] = [
             'slug' => $slug,
             'name' => $name,
@@ -448,6 +452,10 @@ class RbacStrategy implements AccessControlStrategyInterface
 
         if ($this->repository !== null) {
             $this->repository->savePermission($this->permissions[$slug]);
+        }
+
+        if (isset($this->roles['root'])) {
+            $this->grantPermission('root', $slug);
         }
     }
 

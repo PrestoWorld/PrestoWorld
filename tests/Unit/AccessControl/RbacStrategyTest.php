@@ -166,6 +166,17 @@ class RbacStrategyTest extends TestCase
         $this->assertSame('posts.edit', $perms[0]['slug']);
     }
 
+    public function test_new_permissions_are_granted_to_root_role(): void
+    {
+        $this->rbac->createPermission('posts.read', 'Read posts');
+        $this->rbac->createRole('root', 'Root', ['*']);
+        $this->rbac->createPermission('posts.publish', 'Publish posts');
+        $this->rbac->assignRole('root-user', 'root');
+
+        $this->assertTrue($this->rbac->can('root-user', 'posts.read')['allowed']);
+        $this->assertTrue($this->rbac->can('root-user', 'posts.publish')['allowed']);
+    }
+
     public function test_delete_permission_removes_from_roles(): void
     {
         $this->rbac->createPermission('posts.edit', 'Sửa bài viết', '', 'posts');
