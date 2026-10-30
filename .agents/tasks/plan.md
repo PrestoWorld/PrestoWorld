@@ -235,3 +235,64 @@ rendering to nothing. Snippet deleted after running.
 - `vendor/prestoworld/gutenberg-core/src/Core/Blocks/TemplatePartHandler.php` — removed the `try/catch (TemplateNotFoundException)` so `$repository->part($slug)` propagates instead of falling back to empty inner content.
 - `vendor/prestoworld/gutenberg-core/src/Core/Blocks/PatternHandler.php` — `if ($pattern === null)` now throws `TemplateNotFoundException::named('pattern:'.$slug, ...)` instead of returning `''`.
 - `framework/presto/Context/Loader.php` — docblock-only: extended `renderTemplate()` `@throws` to document the propagated gutenberg exceptions.
+
+---
+
+## Phase 2 — Deeper root cause: re-key the kernel singleton per subsite
+
+The throw (Phase 1) converts the symptom from **blank page** → **clear error**
+(`TemplateNotFoundException` naming `part:header`). It does **not** fix the
+cause: the gutenberg `Kernel` is a singleton booted once
+(`framework/presto/Context/Builder/Module.php:54`, `Gutenberg::boot(...)`) with a
+fixed `themeDir`, so its `TemplateRepository` and `PatternRegistry` are keyed to
+that one dir. `BookPressContextLoader::renderSubsite()` called `setThemeDir()`
+only on the *loader* (which affects `home.html` file resolution), not on the
+kernel's repositories. When the resolved subsite theme dir lacks
+`parts/header.html`, `parts/footer.html` and the `patterns/` files, those resolve
+to nothing while `core/group` still renders its `<main>` wrapper.
+
+### Changes
+- `vendor/prestoworld/gutenberg-core/src/Kernel/Kernel.php` — add
+  `setThemeDir(string $themeDir): void`. Rebuilds `TemplateRepository` and
+  `PatternRegistry` from the new themeDir and re-points the shared
+  `RenderContext` references (`template_repository`, `pattern_registry`) so
+  template-part/pattern blocks resolve against the active theme. `themeDir`
+  changed from `readonly` to mutable. No-op when the dir is unchanged.
+- `modules/BookPress/ContextLoader/BookPressContextLoader.php` — accept an
+  optional `?Kernel $kernel` and call `$this->kernel->setThemeDir($themeDir)`
+  alongside the existing `$this->baseLoader->setThemeDir($themeDir)`.
+- `modules/BookPress/Module.php` — resolve `Kernel::class` from the container
+  (null-safe when context-builder is not loaded) and pass it into the
+  `BookPressContextLoader` constructor.
+
+### Verification
+- `php -l` on all three changed files — no syntax errors.
+- `./vendor/bin/phpunit tests/Unit/Services/ContentRendererTest.php` — 5 tests,
+  4 errors, 1 pass. The 4 errors are the known pre-existing
+  `PrestoWorld.Modules\ClassicTheme\*` autoloader mismatch; identical with the
+  change stashed. No new failures.
+- `./vendor/bin/phpunit --testsuite BookPress` — 58 tests, 213 assertions,
+  1 failure (`SiteCatalogControllerTest::test_unauthenticated_gets_401`
+  expects 401, gets 302). Proven pre-existing by stashing the change set and
+  re-running: identical failure. No new failures introduced.
+- **Runtime proof (self-contained snippet, `php`, cleaned up after):**
+  Boot the kernel on a dir containing only `templates/home.html` (no `parts/`,
+  no `patterns/`) — render **throws**
+  `TemplateNotFoundException :: Block theme template "part:header" not found in
+  "(theme has no matching parts/*.html)"` (Phase 1 behaviour). Then call
+  `$kernel->setThemeDir($subsiteDir)` where `$subsiteDir` has
+  `parts/header.html`, `parts/footer.html` and a `patterns/heading.php` —
+  render **succeeds** (length=148, HEADER=yes, `<main`=yes, FOOTER=yes).
+  Result: re-keying fixes the themeDir mismatch; the page renders instead of
+  blanking. Snippet deleted after running.
+
+### Files changed (Phase 2)
+- `vendor/prestoworld/gutenberg-core/src/Kernel/Kernel.php` — `setThemeDir()`.
+- `modules/BookPress/ContextLoader/BookPressContextLoader.php` — optional
+  `?Kernel` injection + re-key call.
+- `modules/BookPress/Module.php` — wire `Kernel::class` into the loader DI.
+
+> Note: `vendor/` is gitignored, so the `Kernel.php` change is **not** tracked.
+> If the vendor dir is ever reinstalled (composer install), the Phase 1 vendor
+> edits (BlockRenderer/TemplatePartHandler/PatternHandler) and this Phase 2
+> `Kernel::setThemeDir` must be re-applied — they are recorded here.
