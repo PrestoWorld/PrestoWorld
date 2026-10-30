@@ -296,3 +296,48 @@ to nothing while `core/group` still renders its `<main>` wrapper.
 > If the vendor dir is ever reinstalled (composer install), the Phase 1 vendor
 > edits (BlockRenderer/TemplatePartHandler/PatternHandler) and this Phase 2
 > `Kernel::setThemeDir` must be re-applied — they are recorded here.
+
+---
+
+## Phase 3 — Wrap template-file output in the template-canvas shell
+
+### Symptom
+After Phase 2 the page rendered (parts/patterns resolved), but the HTML was
+**not wrapped** in the WordPress-style document shell
+(`<!DOCTYPE html><html><head><body>`). Only the raw block markup came back.
+
+### Root cause
+`renderSubsite()` has three branches:
+1. Storage/theme layout → `$this->baseLoader->render(...)` which calls
+   `renderCanvas()` → includes `template-canvas.php` → **wrapped**.
+2. Template file → `$this->baseLoader->renderTemplate(...)` which returns the
+   raw block HTML from `BlockRenderer::render()` → **unwrapped**.
+3. Final fallback → `ob_start(); include $canvasPath;` → **wrapped**.
+
+Branch 2 was the odd one out: `renderTemplate()` deliberately returns only the
+inner markup (the canvas is the parent's job), but `renderSubsite()` consumed
+that raw string directly without wrapping it.
+
+### Change
+`modules/BookPress/ContextLoader/BookPressContextLoader.php` — add
+`wrapWithCanvas(string $html, string $subsiteId, array $data): string` which
+includes the sub-site's `template-canvas.php` (resolved by the existing
+`resolveSubsiteCanvas()`) with the rendered markup exposed as `$BP_CONTENT`,
+exactly as branch 3 does. Call it on branch-2 output before placeholder
+substitution.
+
+### Verification
+- `php -l` clean.
+- `./vendor/bin/phpunit --testsuite BookPress` — 58 tests, 213 assertions,
+  1 failure (`SiteCatalogControllerTest::test_unauthenticated_gets_401`,
+  302 vs 401). Proven pre-existing by stashing. No new failures.
+- **Runtime proof:** a self-contained theme dir with `home.html` +
+  `parts/header.html`, `parts/footer.html`, `patterns/heading.php`, rendered
+  through the real `BookPressContextLoader::renderSubsite()` (boot dir =
+  subsite dir, kernel re-keyed). Result: length=264, `<!DOCTYPE`=yes,
+  `<html`/`<head`/`<body`=yes, HEADER=`<main`=yes, FOOTER=yes. Snippet deleted
+  after running.
+
+### Files changed (Phase 3)
+- `modules/BookPress/ContextLoader/BookPressContextLoader.php` — `wrapWithCanvas()`
+  + branch-2 call.
