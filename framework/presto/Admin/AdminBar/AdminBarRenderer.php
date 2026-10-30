@@ -129,12 +129,13 @@ class AdminBarRenderer
         $rest = substr($requestPath, strlen($prefix));
         $segments = array_values(array_filter(explode('/', $rest), static fn (string $s) => $s !== ''));
 
-        if (count($segments) < 2) {
+        if (count($segments) < 1) {
             return $items;
         }
 
         $siteId = (string) $segments[0];
-        $pageType = (string) $segments[1];
+        // /bookpress/<siteId> (no page type in URL) is the home page.
+        $pageType = isset($segments[1]) ? (string) $segments[1] : 'home';
         $href = $prefix . $siteId . '/site-editor/' . $pageType;
 
         foreach ($items as $item) {
