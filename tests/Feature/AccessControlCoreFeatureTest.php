@@ -74,6 +74,10 @@ class AccessControlCoreFeatureTest extends TestCase
             'acl_roles',
             'acl_role_permissions',
             'acl_subject_roles',
+        ] as $table) {
+            $this->assertTrue($db->hasTable($table), "Expected core schema table {$table}.");
+        }
+        foreach ([
             'acl_data_resources',
             'acl_data_features',
             'acl_module_permissions',
@@ -83,7 +87,7 @@ class AccessControlCoreFeatureTest extends TestCase
             'acl_module_roles',
             'acl_module_features',
         ] as $table) {
-            $this->assertTrue($db->hasTable($table), "Expected core schema table {$table}.");
+            $this->assertFalse($db->hasTable($table), "Core RBAC should not create unused table {$table}.");
         }
 
         $roles = array_column($db->select('slug')->from('acl_roles')->fetchAll(), 'slug');

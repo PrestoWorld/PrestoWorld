@@ -74,7 +74,6 @@ final class AccessControlServiceProvider extends ServiceProvider
         $manager->getModel('rbac');
 
         $this->seedDefaultRoles($manager);
-        $this->registerDefaultModules();
 
         require_once __DIR__ . '/helpers.php';
         $this->initialized = true;
@@ -131,28 +130,4 @@ final class AccessControlServiceProvider extends ServiceProvider
         }
     }
 
-    private function registerDefaultModules(): void
-    {
-        /** @var ModulePermissionManager $modulePermissions */
-        $modulePermissions = $this->app->make(ModulePermissionManager::class);
-
-        $modules = [
-            'dashboard' => 'Bảng Điều Khiển',
-            'orders' => 'Đơn Hàng',
-            'products' => 'Sản Phẩm',
-            'customers' => 'Khách Hàng',
-            'inventory' => 'Kho Hàng',
-            'posts' => 'Bài Viết',
-            'pages' => 'Trang',
-            'media' => 'Media',
-            'ecommerce' => 'TMĐT',
-            'accounting' => 'Kế Toán',
-        ];
-
-        foreach ($modules as $module => $label) {
-            if (!$modulePermissions->isModuleRegistered($module)) {
-                $modulePermissions->registerModule($module, $label, ['auto_roles' => true]);
-            }
-        }
-    }
 }

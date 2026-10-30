@@ -60,8 +60,9 @@ Kiểm tra: user có role nào, role đó có quyền `action` trên `resource` 
 
 Access Control là core feature và được đăng ký trực tiếp trong
 `App\Foundation\Application`. Khi application khởi động, service provider đồng bộ
-`schema.json`, tạo các role mặc định và đăng ký các module hệ thống. Không cần
-khai báo module hoặc chạy WP-CLI.
+`schema.json` và tạo các role mặc định. Core RBAC chỉ tạo bốn bảng:
+`acl_permissions`, `acl_roles`, `acl_role_permissions` và `acl_subject_roles`.
+Không cần khai báo module hoặc chạy WP-CLI.
 
 Sau khi cập nhật từ phiên bản từng discover Access Control như module, chạy
 `php witals cache:clear --modules` một lần để xóa metadata discovery cũ.
@@ -119,6 +120,8 @@ User đầu tiên được tạo trong quá trình cài đặt hoặc bằng l�
 cấp quyền truy cập site.
 
 Mỗi permission mới tạo trong RBAC cũng tự động được cấp cho role `root`.
+Các bảng mở rộng dành cho module, feature và group không được tạo hoặc seed
+theo mặc định.
 
 ## Chuyển đổi mô hình phân quyền
 
