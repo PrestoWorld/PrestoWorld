@@ -341,3 +341,117 @@ substitution.
 ### Files changed (Phase 3)
 - `modules/BookPress/ContextLoader/BookPressContextLoader.php` — `wrapWithCanvas()`
   + branch-2 call.
+
+## Phase 4 — Emit theme CSS + admin bar in the BookPress template canvas
+
+### Symptom
+After Phase 3 the page rendered inside a proper `<!DOCTYPE html><head><body>`
+shell, but the shell was **empty** — no `<style>`, no admin bar. Logged-in
+users visiting `/bookpress/<site>` saw no admin bar even though
+`/bookpress/<site>/dashboard` worked.
+
+### Root cause
+The canvas `<head>` only fired `wp_head()`, which is a no-op outside WordPress.
+Two things that the normal `PageService` path injects were therefore missing on
+BookPress pages:
+
+1. **Theme CSS** — `ContentRenderer::collectStyles()` reads
+   `$kernel->themeCss()` (theme.json + base styles) and queued
+   `wp_enqueue_style` assets, but `ContentRenderer` is not on the BookPress
+   path (`SubsiteController` → `renderSubsite()` bypasses `PageService`).
+2. **Admin bar** — `ContentRenderer::injectAdminBar()` renders
+   `AdminBarRenderer` for logged-in users, but again that runs only on the
+   `PageService` path.
+
+### Changes
+- `modules/BookPress/Views/Routes/template-canvas.php` — read `$BP_HEAD_CSS`
+  (emitted in `<head>`) and `$BP_ADMIN_BAR` (emitted right after `<body>` open).
+- `modules/BookPress/ContextLoader/BookPressContextLoader.php`:
+  - `collectHeadCss()` — mirrors `ContentRenderer::collectStyles()`: kernel
+    `themeCss()` + `AssetManager::queuedStyles()` (inline or `<link>`).
+  - `renderAdminBar()` — mirrors `ContentRenderer::injectAdminBar()`: reads the
+    `token` cookie → `TokenStorageInterface` → `AdminBarRenderer::render()`
+    with the `AdminBarContext` from the container. Returns `''` when absent.
+  - Both exposed as `$BP_HEAD_CSS` / `$BP_ADMIN_BAR` in `wrapWithCanvas()`
+    (branch 2) and branch 3's canvas include, so all three branches share the
+    same shell.
+- `modules/BookPress/Module.php` — pass the Application (`Container`) into the
+  `BookPressContextLoader` constructor so it can resolve `AdminBarContext` +
+  `TokenStorage`.
+
+### Verification
+- `php -l` clean on all three files.
+- `./vendor/bin/phpunit --testsuite BookPress` — 58 tests, 213 assertions,
+  1 failure (`SiteCatalogControllerTest::test_unauthenticated_gets_401`,
+  302 vs 401). Proven pre-existing by stashing. No new failures.
+
+### Files changed (Phase 4)
+- `modules/BookPress/Views/Routes/template-canvas.php` — `$BP_HEAD_CSS`,
+  `$BP_ADMIN_BAR` slots.
+- `modules/BookPress/ContextLoader/BookPressContextLoader.php` —
+  `collectHeadCss()`, `renderAdminBar()`, `Container` injection, canvas
+  exposure.
+- `modules/BookPress/Module.php` — wire `Container` into the loader DI.
+
+---
+
+## Phase 5 — Admin-bar "Context Builder" link targets the BookPress subsite + page context
+
+### Symptom
+From `/bookpress/demo-bookpress` the admin bar's "Context Builder" item linked to
+the **global** `/site-editor`, so editing opened the wrong template. The link
+also didn't carry the current page type — editing the home page should target
+the home context, not the global default.
+
+### Root cause
+`PrestoWorld\Admin\Module::registerDefaultAdminBarItems()` registered the
+`context-builder` item with a **static** `href: '/site-editor'` at boot. The
+`AdminBarRenderer` had no knowledge of the request path or the current page
+context, so it could never rewrite the link per subsite.
+
+### Changes
+- `framework/presto/Admin/AdminBar/AdminBarRenderer.php` — `render()` now
+  accepts optional `?string $requestPath` and `?string $targetContext`.
+  `rewriteContextBuilderLink()` rewrites the `context-builder` item's href to
+  `/bookpress/<siteId>/site-editor/<pageType>` when the request path is a
+  BookPress subsite page; non-BookPress paths keep the default.
+- `framework/presto/Contracts/Admin/AdminBar/AdminBarItem.php` +
+  `framework/presto/Admin/AdminBar/AdminBarItem.php` — added `setHref()`.
+- `modules/BookPress/ContextLoader/BookPressContextLoader.php` —
+  `renderAdminBar()` now takes `$subsiteId` + `$pageType`, builds the request
+  path from `$_SERVER['REQUEST_URI']` and the target context via
+  `resolveEditorTargetContext()`, and passes both to the renderer.
+- `app/Http/Controllers/SiteEditorController.php` — `show()` maps the raw page
+  type (`home`/`catalog`/`vouchers`/`about`) onto the matching BookPress
+  context name (`bookpress_home`/`bookpress_catalog`/`bookpress_vouchers`/
+  `bookpress_about`) via `mapBookPressPageType()`, so editing targets the right
+  template.
+- `modules/BookPress/Module.php` — `registerRoutes()` now registers
+  `/bookpress/{siteId}/site-editor[/{contextType}][/assets/{path}]` **before**
+  the generic `/bookpress/{siteId}/{pageType}/{slug}` catch-all.
+- `app/Http/Middleware/AdminAuthMiddleware.php` — protects
+  `/bookpress/<siteId>/site-editor` paths.
+
+### Verification
+- `php -l` clean on all seven files.
+- `--testsuite BookPress` — 58 tests, 1 failure (pre-existing
+  `SiteCatalogControllerTest::test_unauthenticated_gets_401`, 302 vs 401).
+- `tests/Unit` — 260 tests, 75 errors, 2 failures, 1 skipped. Identical with
+  the change stashed (pre-existing). No new failures.
+- **Admin-bar link proof** (self-contained, `php`, cleaned up): for request
+  paths `/bookpress/demo-bookpress/home`, `.../catalog`, `.../about` the
+  rendered bar contains `/bookpress/demo-bookpress/site-editor/<pageType>`; for
+  `/` and for a BookPress path with no target context the href stays at the
+  default `/site-editor`. Snippet deleted after running.
+
+### Files changed (Phase 5)
+- `framework/presto/Admin/AdminBar/AdminBarRenderer.php` — request-aware
+  `render()`, `rewriteContextBuilderLink()`.
+- `framework/presto/Contracts/Admin/AdminBar/AdminBarItem.php` — `setHref()`.
+- `framework/presto/Admin/AdminBar/AdminBarItem.php` — `setHref()`.
+- `modules/BookPress/ContextLoader/BookPressContextLoader.php` —
+  `renderAdminBar()` + `resolveEditorTargetContext()` pass request path +
+  page type to the renderer.
+- `app/Http/Controllers/SiteEditorController.php` — `mapBookPressPageType()`.
+- `modules/BookPress/Module.php` — BookPress site-editor routes.
+- `app/Http/Middleware/AdminAuthMiddleware.php` — protect BookPress editor.
