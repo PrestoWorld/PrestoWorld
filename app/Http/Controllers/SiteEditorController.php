@@ -35,6 +35,18 @@ class SiteEditorController
 
         $contextTypes = $this->resolveContextTypes();
 
+        // BookPress subsite editor: the URL is
+        // /bookpress/<siteId>/site-editor/<pageType> and <pageType> is the
+        // raw page type (home/catalog/about/...), not a ContextBuilder
+        // context name. Map it onto the matching BookPress context type so
+        // editing targets the right template.
+        if ($contextType !== null && !isset($contextTypes[$contextType])) {
+            $mapped = $this->mapBookPressPageType($contextType);
+            if ($mapped !== null && isset($contextTypes[$mapped])) {
+                $contextType = $mapped;
+            }
+        }
+
         if ($contextType === null || !isset($contextTypes[$contextType])) {
             $contextType = array_key_first($contextTypes) ?: 'post';
         }
@@ -81,6 +93,23 @@ class SiteEditorController
     /**
      * @return array<string, array<string, mixed>>
      */
+    /**
+     * Map a raw BookPress page type (home/catalog/vouchers/about) onto the
+     * matching ContextBuilder context name registered by the BookPress
+     * module (bookpress_home / bookpress_catalog / ...).
+     */
+    protected function mapBookPressPageType(string $pageType): ?string
+    {
+        $map = [
+            'home' => 'bookpress_home',
+            'catalog' => 'bookpress_catalog',
+            'vouchers' => 'bookpress_vouchers',
+            'about' => 'bookpress_about',
+        ];
+
+        return $map[$pageType] ?? null;
+    }
+
     protected function resolveContextTypes(): array
     {
         try {

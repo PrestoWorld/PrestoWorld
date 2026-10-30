@@ -45,10 +45,19 @@ class AdminBarRenderer
      *
      * @param array<string, mixed> $user
      */
-    public function render(array $user = []): string
+    public function render(array $user = [], ?string $requestPath = null, ?string $targetContext = null): string
     {
         $items = $this->context->getItems();
         $allItems = array_merge($this->defaultItems, $items);
+
+        // Request-aware "Context Builder" link. The item is registered with a
+        // static /site-editor href at boot, but on a BookPress subsite page
+        // (/bookpress/<siteId>/<pageType>) the editor must open on that
+        // subsite and target the current page type's context — otherwise the
+        // link lands on the global site editor and edits the wrong template.
+        if ($requestPath !== null && $targetContext !== null) {
+            $allItems = $this->rewriteContextBuilderLink($allItems, $requestPath, $targetContext);
+        }
 
         $themeClass = $this->theme === 'dark' ? 'presto-admin-bar--dark' : '';
 
@@ -100,6 +109,41 @@ class AdminBarRenderer
             ),
             'user' => $user,
         ];
+    }
+
+    /**
+     * Rewrite the "Context Builder" item's href for BookPress subsite pages.
+     *
+     * On a BookPress page the request path looks like /bookpress/<siteId>/<pageType>
+     * (e.g. /bookpress/demo-bookpress/home). The editor must open on that
+     * subsite and target the current page type's context, so the href becomes
+     * /bookpress/<siteId>/site-editor/<pageType>.
+     */
+    protected function rewriteContextBuilderLink(array $items, string $requestPath, string $targetContext): array
+    {
+        $prefix = '/bookpress/';
+        if (!str_starts_with($requestPath, $prefix)) {
+            return $items;
+        }
+
+        $rest = substr($requestPath, strlen($prefix));
+        $segments = array_values(array_filter(explode('/', $rest), static fn (string $s) => $s !== ''));
+
+        if (count($segments) < 2) {
+            return $items;
+        }
+
+        $siteId = (string) $segments[0];
+        $pageType = (string) $segments[1];
+        $href = $prefix . $siteId . '/site-editor/' . $pageType;
+
+        foreach ($items as $item) {
+            if ($item->getId() === 'context-builder') {
+                $item->setHref($href);
+            }
+        }
+
+        return $items;
     }
 
     /**

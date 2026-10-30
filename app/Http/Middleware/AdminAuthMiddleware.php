@@ -43,7 +43,9 @@ class AdminAuthMiddleware
 
         // Only apply to admin surfaces: dashboard SPA, admin API, the
         // standalone Site Editor page and the WordPress-compatible REST
-        // namespace the Site Editor talks to.
+        // namespace the Site Editor talks to. The editor is also reachable
+        // under BookPress subsite URLs (/bookpress/<siteId>/site-editor[/<ct>]),
+        // so match those too — but only the editor, not every subsite page.
         $protectedPrefixes = ['/dashboard', '/api/admin', '/site-editor', '/wp-json'];
         $isProtected = false;
         foreach ($protectedPrefixes as $prefix) {
@@ -51,6 +53,10 @@ class AdminAuthMiddleware
                 $isProtected = true;
                 break;
             }
+        }
+
+        if (!$isProtected && preg_match('#^/bookpress/[^/]+/site-editor(/|$)#', $path)) {
+            $isProtected = true;
         }
 
         if (!$isProtected) {

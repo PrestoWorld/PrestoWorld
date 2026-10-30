@@ -39,6 +39,11 @@ class AdminBarItem implements AdminBarItemContract
         return $this->href;
     }
 
+    public function setHref(string $href): void
+    {
+        $this->href = $href;
+    }
+
     public function getType(): string
     {
         return $this->type;
