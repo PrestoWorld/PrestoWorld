@@ -65,6 +65,34 @@ Access Control là core feature và được đăng ký trực tiếp trong
 `pw_acl_role_permissions` và `pw_acl_subject_roles`.
 Không cần khai báo module hoặc chạy WP-CLI.
 
+### Nguồn cấu hình table prefix
+
+Access Control không tự đọc `getenv('PW_TABLE_PREFIX')`. Prefix được lấy qua
+singleton `App\Config\ConfigManager::getTablePrefix()`, để schema sync,
+repository RBAC và thao tác gán role dùng chung một nguồn cấu hình trong suốt
+vòng đời application.
+
+`ConfigManager` dùng `ConfigReaderRegistry` để hỗ trợ cả hai nguồn:
+
+- Có `wp-config.php`: `WordPressConfigReader` lấy `$table_prefix` và ánh xạ
+  sang `PW_TABLE_PREFIX`. Giá trị `PW_TABLE_PREFIX` được publish từ `.env`/
+  process environment có thể override giá trị WordPress.
+- Không có WordPress config: `EnvConfigReader` đọc `PW_TABLE_PREFIX` từ
+  process environment, `$_ENV` hoặc `$_SERVER`.
+- Nếu không nguồn nào khai báo prefix, dùng mặc định `pw_`.
+
+Có thể đọc prefix trong code qua container dùng chung:
+
+```php
+$prefix = app(\App\Config\ConfigManager::class)->getTablePrefix();
+```
+
+Installer publish prefix được chọn vào process environment, rồi xóa cache của
+config reader và config repository trước khi sync schema. Nhờ vậy singleton
+đọc lại giá trị mới, thay vì giữ prefix đã cache trước lúc cài đặt. Những luồng
+khởi tạo khác nên dùng `ConfigManager::getTablePrefix()` thay vì đọc
+`getenv('PW_TABLE_PREFIX')` trực tiếp.
+
 Các bảng Access Control không có prefix cũ (ví dụ `acl_roles`) được giữ nguyên;
 core không tự chuyển dữ liệu. Sau khi đổi cấu hình prefix, cần chủ động chuyển
 dữ liệu cũ sang các bảng có prefix trước khi dùng lại các role đã gán.

@@ -89,6 +89,13 @@ class WordPressConfigReader implements ConfigReaderInterface
         return 'wordpress';
     }
 
+    public function clearCache(): void
+    {
+        $this->config = null;
+        $this->supported = null;
+        $this->configPath = $this->detectConfigPath();
+    }
+
     /**
      * Get the detected wp-config.php path
      */

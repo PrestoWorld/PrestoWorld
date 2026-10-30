@@ -141,6 +141,14 @@ class ConfigReaderRegistry
         return $reader->all();
     }
 
+    public function clearCache(): void
+    {
+        $this->activeReader = null;
+        foreach ($this->readers as $reader) {
+            $reader->clearCache();
+        }
+    }
+
     /**
      * Get the name of the active reader
      */

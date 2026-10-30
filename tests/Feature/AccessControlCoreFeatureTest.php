@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Foundation\Database\ModuleSchemaManager;
+use App\Config\ConfigManager;
 use Cycle\Database\Config\DatabaseConfig;
 use Cycle\Database\Config\SQLiteDriverConfig;
 use Cycle\Database\DatabaseInterface;
@@ -69,6 +70,7 @@ class AccessControlCoreFeatureTest extends TestCase
         $logger = new NullLogger();
         $app->instance(DatabaseProviderInterface::class, $dbal);
         $app->instance(DatabaseInterface::class, $db);
+        $app->singleton(ConfigManager::class, fn() => new ConfigManager(dirname(__DIR__, 2)));
         $app->instance(LoggerInterface::class, $logger);
         $app->instance(
             ModuleSchemaManager::class,
@@ -143,6 +145,7 @@ class AccessControlCoreFeatureTest extends TestCase
         $nextApp = new Application(dirname(__DIR__, 2));
         $nextApp->instance(DatabaseProviderInterface::class, $dbal);
         $nextApp->instance(DatabaseInterface::class, $db);
+        $nextApp->singleton(ConfigManager::class, fn() => new ConfigManager(dirname(__DIR__, 2)));
         $nextApp->instance(LoggerInterface::class, $logger);
         $nextApp->instance(
             ModuleSchemaManager::class,

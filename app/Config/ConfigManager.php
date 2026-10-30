@@ -119,6 +119,7 @@ class ConfigManager
     public function clearCache(): void
     {
         $this->cache = [];
+        $this->registry->clearCache();
     }
 
     /**
@@ -211,7 +212,7 @@ class ConfigManager
     public function getTablePrefix(): string
     {
         $prefix = $this->get('PW_TABLE_PREFIX', 'pw_');
-        return is_string($prefix) ? $prefix : 'pw_';
+        return is_string($prefix) && $prefix !== '' ? $prefix : 'pw_';
     }
 
     /**

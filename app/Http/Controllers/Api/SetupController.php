@@ -12,6 +12,7 @@ use Cycle\Database\DatabaseInterface;
 use Cycle\Database\Exception\Exception as DatabaseException;
 use PrestoWorld\Database\SchemaMigrationManager;
 use PrestoWorld\AccessControl\FirstUserRootAssigner;
+use App\Config\ConfigManager;
 use App\Foundation\Database\ModuleSchemaManager;
 use PDO;
 
@@ -299,11 +300,11 @@ class SetupController
         // Resolve the effective table prefix BEFORE any migration runs.
         // updateEnvFile() only rewrites the .env file on disk; the running
         // process still holds the previous prefix in its environment, so
-        // getenv('PW_TABLE_PREFIX') would return the stale value and the
-        // migrations would create the tables under the old prefix.
+        // The configuration manager reads the active env/config reader after
+        // publishing the installer value.
         $tablePrefix = !empty($input['db_prefix'])
             ? (string) $input['db_prefix']
-            : (getenv('PW_TABLE_PREFIX') ?: 'pw_');
+            : $this->app->make(ConfigManager::class)->getTablePrefix();
 
         $this->publishTablePrefix($tablePrefix);
 
@@ -338,7 +339,10 @@ class SetupController
             $this->logger,
             $db,
         );
-        $schemaManager->syncModule($this->app->basePath('framework/presto/AccessControl'), $tablePrefix);
+        $schemaManager->syncModule(
+            $this->app->basePath('framework/presto/AccessControl'),
+            $this->app->make(ConfigManager::class)->getTablePrefix(),
+        );
 
         // Sync module schemas (create tables from module definitions).
         if ($this->app->has(\App\Foundation\Module\ModuleManager::class)) {
@@ -463,7 +467,7 @@ class SetupController
         try {
             $dbal = $this->app->make(\Cycle\Database\DatabaseProviderInterface::class);
             $db = $dbal->database();
-            $tablePrefix = getenv('PW_TABLE_PREFIX') ?: 'pw_';
+            $tablePrefix = $this->app->make(ConfigManager::class)->getTablePrefix();
             $optionsTable = $tablePrefix . 'options';
 
             if (!$db->hasTable($optionsTable)) {
@@ -487,10 +491,8 @@ class SetupController
      * Publish the resolved table prefix to the running process.
      *
      * The .env file was rewritten by updateEnvFile(), but the process
-     * environment still carries the value it booted with. Config files and
-     * module repositories resolve their prefix through getenv()/env(), so the
-     * new prefix has to be pushed into the process environment and the config
-     * cache has to be dropped for them to pick it up.
+     * environment still carries the value it booted with, so update the
+     * process environment and invalidate the singleton config reader.
      */
     private function publishTablePrefix(string $prefix): void
     {
@@ -498,8 +500,10 @@ class SetupController
         $_ENV['PW_TABLE_PREFIX'] = $prefix;
         $_SERVER['PW_TABLE_PREFIX'] = $prefix;
 
+        $this->app->make(ConfigManager::class)->clearCache();
         $this->app->resolveConfigRepository()->clearCache();
         $this->syncWpConfigTablePrefix($prefix);
+        $this->app->make(ConfigManager::class)->clearCache();
     }
 
     /**

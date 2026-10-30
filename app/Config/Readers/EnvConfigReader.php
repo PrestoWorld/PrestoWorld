@@ -86,6 +86,11 @@ class EnvConfigReader implements ConfigReaderInterface
         return 'env';
     }
 
+    public function clearCache(): void
+    {
+        $this->cache = [];
+    }
+
     /**
      * Get known configuration keys
      *

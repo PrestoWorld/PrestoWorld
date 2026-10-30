@@ -5,6 +5,11 @@ Role `root` thuộc Access Control, được lưu trong
 `<PW_TABLE_PREFIX>acl_subject_roles`. Không dùng `pw_users.role` để cấp quyền
 root.
 
+Access Control lấy prefix từ singleton `App\Config\ConfigManager`, tương thích
+với `$table_prefix` trong `wp-config.php` và `PW_TABLE_PREFIX` từ môi trường.
+Nếu không cấu hình, prefix mặc định là `pw_`. Vì vậy tên bảng thực tế ví dụ là
+`pw_acl_subject_roles`; thay `pw_` theo prefix đang dùng khi chạy SQL thủ công.
+
 Khi core Access Control khởi động, hệ thống tự tạo role `root` nếu chưa có,
 với quyền `*`. Trong lần cài đặt đầu tiên, user đầu tiên trong `<prefix>users`
 được tự động gán role `root`. Nếu dùng lệnh seed để tạo user đầu tiên, lệnh
@@ -48,9 +53,15 @@ WHERE users.email = 'root@example.com'
   );
 ```
 
-Nếu cấu hình `PW_TABLE_PREFIX` khác `pw_`, thay `pw_users` và
-`pw_acl_subject_roles` bằng tên bảng tương ứng. Core tự thêm prefix vào tên các
-bảng ACL theo `PW_TABLE_PREFIX`.
+Nếu cấu hình prefix khác `pw_`, thay `pw_users` và `pw_acl_subject_roles` bằng
+tên bảng tương ứng. Khi chạy trong ứng dụng, đọc prefix thống nhất bằng:
+
+```php
+$prefix = app(\App\Config\ConfigManager::class)->getTablePrefix();
+```
+
+Installer sẽ làm mới cache config sau khi lưu prefix mới để các dịch vụ đang
+dùng singleton nhận cùng giá trị trước khi tạo schema và gán role.
 
 ## Xác minh quyền BookPress
 

@@ -7,6 +7,7 @@ namespace App\Console\Commands;
 use Witals\Framework\Console\Command;
 use Witals\Framework\Support\ConfigFileWriter;
 use Cycle\Database\DatabaseInterface;
+use App\Config\ConfigManager;
 use PrestoWorld\Modules\Schema\PostRepository;
 
 class SeedCommand extends Command
@@ -21,7 +22,7 @@ class SeedCommand extends Command
         $db = app(DatabaseInterface::class);
         $repo = new PostRepository($db);
 
-        $prefix = getenv('PW_TABLE_PREFIX') ?: 'pw_';
+        $prefix = app(ConfigManager::class)->getTablePrefix();
         $postsTable = $prefix . 'posts';
         $termsTable = $prefix . 'terms';
         $relationsTable = $prefix . 'term_relationships';

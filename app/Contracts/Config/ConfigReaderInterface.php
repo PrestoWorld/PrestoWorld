@@ -43,6 +43,11 @@ interface ConfigReaderInterface
     public function all(): array;
 
     /**
+     * Clear cached configuration values so changed sources can be re-read.
+     */
+    public function clearCache(): void;
+
+    /**
      * Get the reader name
      */
     public function getName(): string;

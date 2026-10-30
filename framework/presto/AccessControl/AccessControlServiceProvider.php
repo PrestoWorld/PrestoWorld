@@ -16,7 +16,7 @@ final class AccessControlServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(AccessControlRepositoryInterface::class, function ($app) {
-            $prefix = getenv('PW_TABLE_PREFIX') ?: 'pw_';
+            $prefix = $app->make(\App\Config\ConfigManager::class)->getTablePrefix();
             $tables = [];
             foreach ([
                 'permissions',
@@ -68,7 +68,7 @@ final class AccessControlServiceProvider extends ServiceProvider
             return;
         }
 
-        $prefix = getenv('PW_TABLE_PREFIX') ?: 'pw_';
+        $prefix = $this->app->make(\App\Config\ConfigManager::class)->getTablePrefix();
         $this->app->make(\App\Foundation\Database\ModuleSchemaManager::class)
             ->syncModule($this->app->basePath('framework/presto/AccessControl'), $prefix);
 
