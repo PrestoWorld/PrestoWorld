@@ -16,7 +16,29 @@ final class AccessControlServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(AccessControlRepositoryInterface::class, function ($app) {
-            return new DatabaseAccessControlRepository($app->make(DatabaseInterface::class));
+            $prefix = getenv('PW_TABLE_PREFIX') ?: 'pw_';
+            $tables = [];
+            foreach ([
+                'permissions',
+                'roles',
+                'role_permissions',
+                'subject_roles',
+                'data_resources',
+                'data_features',
+                'module_permissions',
+                'user_groups',
+                'group_roles',
+                'subject_groups',
+                'module_roles',
+                'module_features',
+            ] as $table) {
+                $tables[$table] = $prefix . 'acl_' . $table;
+            }
+
+            return new DatabaseAccessControlRepository(
+                $app->make(DatabaseInterface::class),
+                $tables,
+            );
         });
         $this->app->alias(AccessControlRepositoryInterface::class, 'access.control.repository');
 
@@ -46,8 +68,9 @@ final class AccessControlServiceProvider extends ServiceProvider
             return;
         }
 
+        $prefix = getenv('PW_TABLE_PREFIX') ?: 'pw_';
         $this->app->make(\App\Foundation\Database\ModuleSchemaManager::class)
-            ->syncModule($this->app->basePath('framework/presto/AccessControl'));
+            ->syncModule($this->app->basePath('framework/presto/AccessControl'), $prefix);
 
         $schema = json_decode(
             (string) file_get_contents(__DIR__ . '/schema.json'),
@@ -59,8 +82,11 @@ final class AccessControlServiceProvider extends ServiceProvider
         $missingTables = [];
         foreach ($schema['tables'] ?? [] as $table) {
             $tableName = $table['name'] ?? null;
-            if (is_string($tableName) && !$db->hasTable($tableName)) {
-                $missingTables[] = $tableName;
+            if (is_string($tableName)) {
+                $prefixedTableName = $prefix . $tableName;
+                if (!$db->hasTable($prefixedTableName)) {
+                    $missingTables[] = $prefixedTableName;
+                }
             }
         }
         if ($missingTables !== []) {

@@ -78,7 +78,7 @@ class SeedCommand extends Command
                 $firstUser = $existing;
             }
             if (is_array($firstUser) && isset($firstUser['id'])) {
-                (new \PrestoWorld\AccessControl\FirstUserRootAssigner($db))
+                (new \PrestoWorld\AccessControl\FirstUserRootAssigner($db, $prefix))
                     ->assign((string) $firstUser['id']);
                 $this->line("  - Root role assigned to first user (ID {$firstUser['id']}).");
             }

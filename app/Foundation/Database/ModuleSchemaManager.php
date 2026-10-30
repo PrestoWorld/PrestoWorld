@@ -118,7 +118,7 @@ class ModuleSchemaManager
      * @param string $modulePath Absolute path to the module root directory.
      * @return array  List of table names that were processed, empty if skipped.
      */
-    public function syncModule(string $modulePath): array
+    public function syncModule(string $modulePath, string $tablePrefix = ''): array
     {
         $schemaFile = rtrim($modulePath, '/') . '/schema.json';
 
@@ -140,6 +140,30 @@ class ModuleSchemaManager
                 ['file' => $schemaFile, 'error' => json_last_error_msg()]
             );
             return [];
+        }
+
+        if ($tablePrefix !== '') {
+            if (is_array($schema['tables'] ?? null)) {
+                foreach ($schema['tables'] as &$tableDef) {
+                    if (!is_array($tableDef) || !is_string($tableDef['name'] ?? null)) {
+                        continue;
+                    }
+
+                    $tableDef['name'] = $this->prefixTableName($tableDef['name'], $tablePrefix);
+                    if (is_array($tableDef['foreign_keys'] ?? null)) {
+                        foreach ($tableDef['foreign_keys'] as &$foreignKey) {
+                            if (is_string($foreignKey['references'] ?? null)) {
+                                $foreignKey['references'] = $this->prefixTableName(
+                                    $foreignKey['references'],
+                                    $tablePrefix,
+                                );
+                            }
+                        }
+                        unset($foreignKey);
+                    }
+                }
+                unset($tableDef);
+            }
         }
 
         $moduleName    = $schema['module'] ?? $schema['feature'] ?? basename($modulePath);
@@ -189,6 +213,11 @@ class ModuleSchemaManager
         }
 
         return $processed;
+    }
+
+    private function prefixTableName(string $tableName, string $tablePrefix): string
+    {
+        return $tablePrefix . $tableName;
     }
 
     /**

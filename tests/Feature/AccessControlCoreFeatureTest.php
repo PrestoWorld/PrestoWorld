@@ -21,17 +21,27 @@ use Witals\Framework\Container\Container;
 
 class AccessControlCoreFeatureTest extends TestCase
 {
+    private const PREFIX = 'test_';
+
     private ?Container $previousContainer;
+    private string|false $previousTablePrefix;
 
     protected function setUp(): void
     {
         parent::setUp();
         $this->previousContainer = Container::getInstance();
+        $this->previousTablePrefix = getenv('PW_TABLE_PREFIX');
+        putenv('PW_TABLE_PREFIX=' . self::PREFIX);
     }
 
     protected function tearDown(): void
     {
         Container::setInstance($this->previousContainer);
+        if ($this->previousTablePrefix === false) {
+            putenv('PW_TABLE_PREFIX');
+        } else {
+            putenv('PW_TABLE_PREFIX=' . $this->previousTablePrefix);
+        }
         parent::tearDown();
     }
 
@@ -70,27 +80,29 @@ class AccessControlCoreFeatureTest extends TestCase
         $provider->boot();
 
         foreach ([
-            'acl_permissions',
-            'acl_roles',
-            'acl_role_permissions',
-            'acl_subject_roles',
+            self::PREFIX . 'acl_permissions',
+            self::PREFIX . 'acl_roles',
+            self::PREFIX . 'acl_role_permissions',
+            self::PREFIX . 'acl_subject_roles',
         ] as $table) {
             $this->assertTrue($db->hasTable($table), "Expected core schema table {$table}.");
         }
         foreach ([
-            'acl_data_resources',
-            'acl_data_features',
-            'acl_module_permissions',
-            'acl_user_groups',
-            'acl_group_roles',
-            'acl_subject_groups',
-            'acl_module_roles',
-            'acl_module_features',
+            self::PREFIX . 'acl_data_resources',
+            self::PREFIX . 'acl_data_features',
+            self::PREFIX . 'acl_module_permissions',
+            self::PREFIX . 'acl_user_groups',
+            self::PREFIX . 'acl_group_roles',
+            self::PREFIX . 'acl_subject_groups',
+            self::PREFIX . 'acl_module_roles',
+            self::PREFIX . 'acl_module_features',
         ] as $table) {
             $this->assertFalse($db->hasTable($table), "Core RBAC should not create unused table {$table}.");
         }
 
-        $roles = array_column($db->select('slug')->from('acl_roles')->fetchAll(), 'slug');
+        $rolesTable = self::PREFIX . 'acl_roles';
+        $rolePermissionsTable = self::PREFIX . 'acl_subject_roles';
+        $roles = array_column($db->select('slug')->from($rolesTable)->fetchAll(), 'slug');
         $this->assertContains('root', $roles);
         $this->assertContains('administrator', $roles);
         $this->assertContains('editor', $roles);
@@ -101,31 +113,32 @@ class AccessControlCoreFeatureTest extends TestCase
         $this->assertTrue($manager->hasRole('user-123', 'root'));
         $this->assertSame(
             'root',
-            $db->select('role')->from('acl_subject_roles')->where('subject', 'user-123')->fetchAll()[0]['role'],
+            $db->select('role')->from($rolePermissionsTable)->where('subject', 'user-123')->fetchAll()[0]['role'],
         );
-        (new FirstUserRootAssigner($db))->assign('first-user');
+        (new FirstUserRootAssigner($db, self::PREFIX))->assign('first-user');
         $this->assertSame(
             'root',
-            $db->select('role')->from('acl_subject_roles')->where('subject', 'first-user')->fetchAll()[0]['role'],
+            $db->select('role')->from($rolePermissionsTable)->where('subject', 'first-user')->fetchAll()[0]['role'],
         );
-        (new FirstUserRootAssigner($db))->assign('first-user');
+        (new FirstUserRootAssigner($db, self::PREFIX))->assign('first-user');
         $this->assertCount(
             1,
             $db->select('role')
-                ->from('acl_subject_roles')
+                ->from($rolePermissionsTable)
                 ->where('subject', 'first-user')
                 ->where('role', 'root')
                 ->fetchAll(),
         );
         $this->assertSame($app->make(AccessControlManager::class), \PrestoWorld\AccessControl\access($app));
 
-        $rolesSchema = $db->table('acl_roles')->getSchema();
+        $rolesSchema = $db->table($rolesTable)->getSchema();
         $rolesSchema->declareDropped();
         $rolesSchema->save();
         $app->make(ModuleSchemaManager::class)->syncModule(
             dirname(__DIR__, 2) . '/framework/presto/AccessControl',
+            self::PREFIX,
         );
-        $this->assertTrue($db->hasTable('acl_roles'), 'A missing table must be recreated even when the schema hash is unchanged.');
+        $this->assertTrue($db->hasTable($rolesTable), 'A missing table must be recreated even when the schema hash is unchanged.');
 
         $nextApp = new Application(dirname(__DIR__, 2));
         $nextApp->instance(DatabaseProviderInterface::class, $dbal);
@@ -141,7 +154,7 @@ class AccessControlCoreFeatureTest extends TestCase
 
         $this->assertSame(
             count($roles),
-            count($db->select('slug')->from('acl_roles')->fetchAll()),
+            count($db->select('slug')->from($rolesTable)->fetchAll()),
             'Repeated core boot must not duplicate role rows.',
         );
     }

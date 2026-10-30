@@ -338,7 +338,7 @@ class SetupController
             $this->logger,
             $db,
         );
-        $schemaManager->syncModule($this->app->basePath('framework/presto/AccessControl'));
+        $schemaManager->syncModule($this->app->basePath('framework/presto/AccessControl'), $tablePrefix);
 
         // Sync module schemas (create tables from module definitions).
         if ($this->app->has(\App\Foundation\Module\ModuleManager::class)) {
@@ -398,7 +398,7 @@ class SetupController
             }
 
             if (is_array($firstUser) && isset($firstUser['id'])) {
-                (new FirstUserRootAssigner($db))->assign((string) $firstUser['id']);
+                (new FirstUserRootAssigner($db, $tablePrefix))->assign((string) $firstUser['id']);
                 $this->logger->info('Root role assigned to first user', ['user_id' => (string) $firstUser['id']]);
             }
         }

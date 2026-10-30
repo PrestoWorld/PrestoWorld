@@ -60,9 +60,14 @@ Kiểm tra: user có role nào, role đó có quyền `action` trên `resource` 
 
 Access Control là core feature và được đăng ký trực tiếp trong
 `App\Foundation\Application`. Khi application khởi động, service provider đồng bộ
-`schema.json` và tạo các role mặc định. Core RBAC chỉ tạo bốn bảng:
-`acl_permissions`, `acl_roles`, `acl_role_permissions` và `acl_subject_roles`.
+`schema.json` và tạo các role mặc định. Core RBAC chỉ tạo bốn bảng theo
+`PW_TABLE_PREFIX` (mặc định `pw_`): `pw_acl_permissions`, `pw_acl_roles`,
+`pw_acl_role_permissions` và `pw_acl_subject_roles`.
 Không cần khai báo module hoặc chạy WP-CLI.
+
+Các bảng Access Control không có prefix cũ (ví dụ `acl_roles`) được giữ nguyên;
+core không tự chuyển dữ liệu. Sau khi đổi cấu hình prefix, cần chủ động chuyển
+dữ liệu cũ sang các bảng có prefix trước khi dùng lại các role đã gán.
 
 Sau khi cập nhật từ phiên bản từng discover Access Control như module, chạy
 `php witals cache:clear --modules` một lần để xóa metadata discovery cũ.
@@ -116,8 +121,8 @@ new AccessCanMiddleware($app, 'posts.edit', 'post:{id}');
 User đầu tiên được tạo trong quá trình cài đặt hoặc bằng lệnh seed tự động
 được gán `root`. Có thể gán thủ công bằng
 `access()->assignRole($userId, 'root')`. BookPress kiểm tra role này theo
-`user_id` của token trong `acl_subject_roles`; không dùng `pw_users.role` để
-cấp quyền truy cập site.
+`user_id` của token trong `<PW_TABLE_PREFIX>acl_subject_roles`; không dùng
+`pw_users.role` để cấp quyền truy cập site.
 
 Mỗi permission mới tạo trong RBAC cũng tự động được cấp cho role `root`.
 Các bảng mở rộng dành cho module, feature và group không được tạo hoặc seed
