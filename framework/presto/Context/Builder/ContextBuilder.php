@@ -33,6 +33,86 @@ class ContextBuilder
     }
 
     /**
+     * Seed a default layout from the theme's templates/{name}.html when no
+     * layout file exists yet (never edited, and no theme default).
+     *
+     * e.g. bookpress_home → content/themes/timeless/templates/home.html.
+     * The template's blocks are parsed and placed into the first region so the
+     * Site Editor has something to open instead of showing "item doesn't exist".
+     *
+     * @return array<string, array<array<string, mixed>>>
+     */
+    protected function seedLayoutFromTemplate(ContextType $contextType): array
+    {
+        $name = $contextType->getName();
+        if ($name === '') {
+            return [];
+        }
+
+        $themeDir = $this->loader->getThemeDir();
+        if ($themeDir === '') {
+            return [];
+        }
+
+        // BookPress context names are prefixed (bookpress_home) while the
+        // theme templates use the raw page type (home). Strip the prefix so
+        // bookpress_home → templates/home.html.
+        $templateName = $this->stripBookPressPrefix($name);
+
+        $candidates = [
+            $themeDir . '/templates/' . $templateName . '.html',
+            $themeDir . '/templates/' . $templateName . '/layout.html',
+            $themeDir . '/templates/' . $name . '.html',
+            $themeDir . '/templates/' . $name . '/layout.html',
+        ];
+
+        $templatePath = null;
+        foreach ($candidates as $candidate) {
+            if (is_file($candidate)) {
+                $templatePath = $candidate;
+                break;
+            }
+        }
+
+        if ($templatePath === null) {
+            return [];
+        }
+
+        $parserClass = \PrestoWorld\Module\ContextBuilder\Parser\BlockParser::class;
+
+        try {
+            $blocks = $parserClass::parseFile($templatePath);
+        } catch (\Throwable $e) {
+            error_log('[ContextBuilder] seedLayout parse failed: ' . $e->getMessage());
+
+            return [];
+        }
+
+        if ($blocks === []) {
+            error_log('[ContextBuilder] seedLayout: parsed 0 blocks');
+
+            return [];
+        }
+
+        $regions = $contextType->getRegions();
+        $firstRegion = is_array($regions) && $regions !== [] ? (string) array_key_first($regions) : 'content';
+
+        return [$firstRegion => $blocks];
+    }
+
+    /**
+     * Strip a BookPress context-name prefix (bookpress_) so the theme
+     * template lookup uses the raw page type: bookpress_home → home,
+     * bookpress_catalog → catalog.
+     */
+    protected function stripBookPressPrefix(string $name): string
+    {
+        $prefix = 'bookpress_';
+
+        return str_starts_with($name, $prefix) ? substr($name, strlen($prefix)) : $name;
+    }
+
+    /**
      * FULL SITE EDIT: Lấy layout hiện tại của context type (để Gutenberg edit).
      *
      * Trả về layout JSON để Gutenberg editor load vào.
@@ -46,7 +126,20 @@ class ContextBuilder
             return [];
         }
 
-        return $this->loader->loadLayout($context);
+        $layout = $this->loader->loadLayout($context);
+
+        // No layout file yet (never edited, and no theme default) — seed one
+        // from the theme's templates/{name}.html so the Site Editor has
+        // something to open instead of showing "item doesn't exist".
+        // e.g. bookpress_home → content/themes/timeless/templates/home.html.
+        if ($layout === []) {
+            $seeded = $this->seedLayoutFromTemplate($context);
+            if ($seeded !== []) {
+                $layout = $seeded;
+            }
+        }
+
+        return $layout;
     }
 
     /**
