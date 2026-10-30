@@ -10,3 +10,6 @@
 [submodule "content/themes/timeless"]
 	path = content/themes/timeless
 	url = git@github.com:PrestoWorld/timeless-theme.git
+[submodule "modules/HeadlessCms"]
+	path = modules/HeadlessCms
+	url = git@github.com:PrestoWorld/Headless-CMS-Module.git
