@@ -45,27 +45,44 @@ class AdminBarRenderer
      *
      * @param array<string, mixed> $user
      */
-    public function render(array $user = [], ?string $requestPath = null, ?string $targetContext = null): string
+    public function render(array $user = [], ?string $requestPath = null, ?string $targetContext = null, ?string $contextBuilderHref = null): string
     {
         $items = $this->context->getItems();
         $allItems = array_merge($this->defaultItems, $items);
 
-        // Request-aware "Context Builder" link. The item is registered with a
-        // static /site-editor href at boot, but on a BookPress subsite page
-        // (/bookpress/<siteId>/<pageType>) the editor must open on that
-        // subsite and target the current page type's context — otherwise the
-        // link lands on the global site editor and edits the wrong template.
-        if ($requestPath !== null && $targetContext !== null) {
-            $allItems = $this->rewriteContextBuilderLink($allItems, $requestPath, $targetContext);
+        // "Context Builder" link. The item is registered with a static /site-editor
+        // href at boot, but on a BookPress subsite page
+        // (/bookpress/<siteId>/<pageType>) the editor must open on that subsite
+        // and target the current page type's context — otherwise the link
+        // lands on the global site editor and edits the wrong template.
+        //
+        // Resolution order (first wins):
+        //   1. explicit $contextBuilderHref — the caller knows the exact URL
+        //      (locale prefix, query string, etc.).
+        //   2. $requestPath — parse it (locale-aware) to derive the subsite +
+        //      page type. Used by callers that only have the request path
+        //      (ContentRenderer, PrestoModernSkin).
+        //   3. fall back to the registered /site-editor default.
+        if ($contextBuilderHref !== null && $contextBuilderHref !== '') {
+            $allItems = $this->setContextBuilderHref($allItems, $contextBuilderHref);
+        } else {
+            $path = $requestPath !== null
+                ? $requestPath
+                : (string) ($_SERVER['REQUEST_URI'] ?? '');
+            $allItems = $this->rewriteContextBuilderLink(
+                $allItems,
+                $path,
+                $targetContext ?? '',
+            );
         }
+
+        $themeClass = $this->theme === 'dark' ? 'presto-admin-bar--dark' : '';
 
         // Dedupe by id: buildDefaultItems() and the Admin Module's
         // registerDefaultAdminBarItems() both register the same default items
         // (visit-site / new-post / comments), so array_merge would render each
         // twice. Keep the first occurrence.
         $allItems = $this->dedupeItems($allItems);
-
-        $themeClass = $this->theme === 'dark' ? 'presto-admin-bar--dark' : '';
 
         $html = '<div id="presto-adminbar" class="presto-admin-bar ' . $themeClass . '" role="navigation" aria-label="Admin Bar">';
         $html .= '<div class="presto-admin-bar-inner">';
@@ -127,12 +144,13 @@ class AdminBarRenderer
      */
     protected function rewriteContextBuilderLink(array $items, string $requestPath, string $targetContext): array
     {
-        $prefix = '/bookpress/';
-        if (!str_starts_with($requestPath, $prefix)) {
+        $path = $this->normalizeBookPressPath($requestPath);
+        if ($path === null) {
             return $items;
         }
 
-        $rest = substr($requestPath, strlen($prefix));
+        $prefix = '/bookpress/';
+        $rest = substr($path, strlen($prefix));
         $segments = array_values(array_filter(explode('/', $rest), static fn (string $s) => $s !== ''));
 
         if (count($segments) < 1) {
@@ -146,6 +164,49 @@ class AdminBarRenderer
         $pageType = $targetContext !== '' ? $targetContext : (isset($segments[1]) ? (string) $segments[1] : 'home');
         $href = $prefix . $siteId . '/site-editor/' . $pageType;
 
+        foreach ($items as $item) {
+            if ($item->getId() === 'context-builder') {
+                $item->setHref($href);
+            }
+        }
+
+        return $items;
+    }
+
+    /**
+     * Normalize a request path so the BookPress prefix can be matched.
+     *
+     * Strips the query string and any leading locale segment
+     * (/en/..., /vi/...) that LocaleMiddleware injects, since the app is
+     * localized and REQUEST_URI therefore looks like /vi/bookpress/<siteId>.
+     *
+     * Returns null when the path is not a BookPress subsite page.
+     */
+    protected function normalizeBookPressPath(string $requestPath): ?string
+    {
+        // Strip query string / fragment.
+        $path = (string) preg_replace('/[?#].*$/', '', $requestPath);
+
+        // Strip a leading locale segment: /<locale>/bookpress/...
+        $path = (string) preg_replace('#^/[a-z]{2}(/bookpress/)#', '$1', $path);
+
+        if (!str_starts_with($path, '/bookpress/')) {
+            return null;
+        }
+
+        return $path;
+    }
+
+    /**
+     * Set the "Context Builder" item's href directly.
+     *
+     * Preferred over rewriteContextBuilderLink() when the caller already knows
+     * the exact URL (locale prefix, query string, etc.) — parsing
+     * $_SERVER['REQUEST_URI'] is fragile because the app is localized and the
+     * path may carry a locale segment or query string.
+     */
+    protected function setContextBuilderHref(array $items, string $href): array
+    {
         foreach ($items as $item) {
             if ($item->getId() === 'context-builder') {
                 $item->setHref($href);
