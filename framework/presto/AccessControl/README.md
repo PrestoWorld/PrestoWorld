@@ -113,15 +113,72 @@ if ($result['allowed']) {
 }
 ```
 
-### Quản lý Role / Permission
+### Gán role cho user
+
+Subject trong Access Control phải khớp với `user_id` của token đăng nhập
+(thường là `id` trong bảng `<PW_TABLE_PREFIX>users`). Dùng API để gán hoặc
+thu hồi role:
 
 ```php
-access()->createRole('moderator', 'Moderator', ['posts.edit', 'posts.delete']);
-access()->assignRole('user-123', 'moderator');
-access()->grantPermission('moderator', 'posts.publish');
-access()->getSubjectRoles('user-123'); // ['moderator']
-access()->hasRole('user-123', 'moderator'); // true
+$userId = (string) $user['id'];
+
+access()->assignRole($userId, 'editor');
+
+access()->getSubjectRoles($userId); // ['editor']
+access()->hasRole($userId, 'editor'); // true
+
+access()->unassignRole($userId, 'editor');
 ```
+
+Gán `root` cũng dùng cùng API: `access()->assignRole($userId, 'root')`.
+
+### Cấp permission cho user
+
+RBAC không gán permission trực tiếp cho user. Permission được cấp cho role,
+sau đó user nhận permission thông qua role được gán. Tạo permission và role
+dùng chung cho nhiều user như sau:
+
+```php
+$access = access();
+$userId = (string) $user['id'];
+
+if ($access->getPermission('books.publish') === null) {
+    $access->createPermission(
+        'books.publish',
+        'Publish books',
+        'Cho phép xuất bản sách',
+        'books',
+    );
+}
+
+if ($access->getRole('book-publisher') === null) {
+    $access->createRole('book-publisher', 'Book Publisher');
+}
+
+$access->grantPermission('book-publisher', 'books.publish');
+$access->assignRole($userId, 'book-publisher');
+
+$access->can($userId, 'books.publish'); // ['allowed' => true, ...]
+```
+
+Để cấp permission riêng cho một user, tạo một role riêng cho user đó, cấp
+permission cho role rồi gán role đó:
+
+```php
+$userRole = 'user-' . $userId . '.book-publisher';
+
+if ($access->getRole($userRole) === null) {
+    $access->createRole($userRole, 'Book Publisher for user ' . $userId);
+}
+
+$access->grantPermission($userRole, 'books.publish');
+$access->assignRole($userId, $userRole);
+```
+
+Thu hồi permission dùng `revokePermission($role, $permission)`. Nếu role chỉ
+dành cho một user và không cần quyền nào nữa, cũng có thể gỡ role khỏi user bằng
+`unassignRole($userId, $userRole)`. Permission mới được tạo trong RBAC tự động
+được cấp cho role `root`; user có role `root` sẽ thừa hưởng quyền đó.
 
 ### Middleware bảo vệ route
 

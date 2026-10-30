@@ -27,8 +27,14 @@ Nên thực hiện qua Access Control API trong code ứng dụng:
 access()->assignRole((string) $userId, 'root');
 ```
 
-Trong đó `$userId` là giá trị `id` của bản ghi trong `pw_users`. Việc gán qua
-API sẽ lưu vào `<PW_TABLE_PREFIX>acl_subject_roles`.
+Trong đó `$userId` phải là cùng giá trị với `user_id` trong token đăng nhập
+(thông thường là `id` của bản ghi trong `pw_users`). API sẽ ghi assignment vào
+`<PW_TABLE_PREFIX>acl_subject_roles`. Có thể xác minh role đã được gán:
+
+```php
+access()->getSubjectRoles((string) $userId); // ['root', ...]
+access()->hasRole((string) $userId, 'root'); // true
+```
 
 Có thể kiểm tra bằng SQL:
 
@@ -62,6 +68,38 @@ $prefix = app(\App\Config\ConfigManager::class)->getTablePrefix();
 
 Installer sẽ làm mới cache config sau khi lưu prefix mới để các dịch vụ đang
 dùng singleton nhận cùng giá trị trước khi tạo schema và gán role.
+
+## Gán permission cho user
+
+RBAC không gán permission trực tiếp cho user. Cấp permission cho role, sau đó
+gán role đó cho user. Ví dụ tạo role chuyên xuất bản sách:
+
+```php
+$access = access();
+$userId = (string) $user['id'];
+
+if ($access->getPermission('books.publish') === null) {
+    $access->createPermission(
+        'books.publish',
+        'Publish books',
+        'Cho phép xuất bản sách',
+        'books',
+    );
+}
+
+if ($access->getRole('book-publisher') === null) {
+    $access->createRole('book-publisher', 'Book Publisher');
+}
+
+$access->grantPermission('book-publisher', 'books.publish');
+$access->assignRole($userId, 'book-publisher');
+$access->can($userId, 'books.publish'); // ['allowed' => true, ...]
+```
+
+Nếu quyền chỉ dành cho một user, tạo role riêng cho user đó thay vì dùng chung
+`book-publisher`. Thu hồi permission bằng
+`$access->revokePermission($role, 'books.publish')`; thu hồi role khỏi user bằng
+`$access->unassignRole($userId, $role)`.
 
 ## Xác minh quyền BookPress
 
