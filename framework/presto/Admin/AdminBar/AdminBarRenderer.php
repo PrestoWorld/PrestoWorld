@@ -59,6 +59,12 @@ class AdminBarRenderer
             $allItems = $this->rewriteContextBuilderLink($allItems, $requestPath, $targetContext);
         }
 
+        // Dedupe by id: buildDefaultItems() and the Admin Module's
+        // registerDefaultAdminBarItems() both register the same default items
+        // (visit-site / new-post / comments), so array_merge would render each
+        // twice. Keep the first occurrence.
+        $allItems = $this->dedupeItems($allItems);
+
         $themeClass = $this->theme === 'dark' ? 'presto-admin-bar--dark' : '';
 
         $html = '<div id="presto-adminbar" class="presto-admin-bar ' . $themeClass . '" role="navigation" aria-label="Admin Bar">';
@@ -134,8 +140,10 @@ class AdminBarRenderer
         }
 
         $siteId = (string) $segments[0];
-        // /bookpress/<siteId> (no page type in URL) is the home page.
-        $pageType = isset($segments[1]) ? (string) $segments[1] : 'home';
+        // /bookpress/<siteId> (no page type in URL) is the home page. Prefer
+        // the explicitly-passed target context (the loader knows the page type
+        // even when the URL omits it); fall back to the URL segment.
+        $pageType = $targetContext !== '' ? $targetContext : (isset($segments[1]) ? (string) $segments[1] : 'home');
         $href = $prefix . $siteId . '/site-editor/' . $pageType;
 
         foreach ($items as $item) {
@@ -145,6 +153,32 @@ class AdminBarRenderer
         }
 
         return $items;
+    }
+
+    /**
+     * Dedupe admin bar items by id, keeping the first occurrence.
+     *
+     * buildDefaultItems() (in the renderer) and
+     * registerDefaultAdminBarItems() (in the Admin Module) both register the
+     * same default items (visit-site / new-post / comments), so array_merge
+     * would render each twice. Keep the first occurrence — the Admin Module's
+     * registration is the one that can be extended by other modules.
+     */
+    protected function dedupeItems(array $items): array
+    {
+        $seen = [];
+        $out = [];
+
+        foreach ($items as $item) {
+            $id = $item->getId();
+            if (isset($seen[$id])) {
+                continue;
+            }
+            $seen[$id] = true;
+            $out[] = $item;
+        }
+
+        return $out;
     }
 
     /**
