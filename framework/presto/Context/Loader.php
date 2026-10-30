@@ -97,7 +97,9 @@ class Loader
      * @param string $templatePath
      * @param array<string, mixed> $data
      * @return string
-     * @throws UnsupportedBlockException
+     * @throws UnsupportedBlockException                                            legacy path: an unsupported block type
+     * @throws \PrestoWorld\Gutenberg\Exceptions\BlockNotRegisteredException        blockRenderer path: block type not registered
+     * @throws \PrestoWorld\Gutenberg\Exceptions\TemplateNotFoundException           blockRenderer path: an unresolvable template-part/pattern slug
      */
     public function renderTemplate(string $templatePath, array $data = []): string
     {
@@ -496,10 +498,30 @@ class Loader
     }
 
     /**
-     * Resolve template path: STORAGE → THEME.
+     * Resolve template path: absolute → STORAGE → THEME.
+     *
+     * Callers may pass either a relative template id (e.g. "home" /
+     * "home.html") which is resolved against STORAGE and the THEME dir, or
+     * an already-resolved absolute file path (e.g. produced by a
+     * subsite-aware loader's own resolveTemplatePath()). Re-prepending the
+     * storage/theme dirs onto an absolute path mangles it into a path that
+     * never matches a file, so absolute paths are used as-is when they point
+     * at an existing file.
      */
     protected function resolveTemplatePath(string $templatePath): ?string
     {
+        // 0. Absolute path already resolved by the caller — use it directly
+        // instead of re-prepending storage/theme dirs (which would mangle it).
+        if (str_starts_with($templatePath, DIRECTORY_SEPARATOR)) {
+            if (is_file($templatePath)) {
+                return $templatePath;
+            }
+
+            if (is_file($templatePath . '.html')) {
+                return $templatePath . '.html';
+            }
+        }
+
         $candidates = [];
 
         // 1. STORAGE
