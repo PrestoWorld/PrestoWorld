@@ -6,6 +6,7 @@ namespace App\Http\Middleware;
 
 use App\Http\Rest\RestHeaders;
 use App\Http\Rest\WpNonce;
+use PrestoWorld\AccessControl\AccessControlManager;
 use Witals\Framework\Contracts\Auth\AuthContextInterface;
 use Witals\Framework\Http\Request;
 use Witals\Framework\Http\Response;
@@ -29,8 +30,10 @@ class AdminAuthMiddleware
 
     protected ?AuthContextInterface $auth;
 
-    public function __construct(?AuthContextInterface $auth = null)
-    {
+    public function __construct(
+        ?AuthContextInterface $auth = null,
+        protected ?AccessControlManager $accessControl = null,
+    ) {
         $this->auth = $auth;
     }
 
@@ -132,6 +135,19 @@ class AdminAuthMiddleware
      */
     protected function isAdmin(?object $actor, ?\Witals\Framework\Contracts\Auth\TokenInterface $token = null): bool
     {
+        // The ACL root role is assigned by user_id and is not necessarily
+        // present in the actor or in an already-issued token's role claim.
+        if ($token !== null && $this->accessControl !== null) {
+            $userId = $token->getPayload()['user_id'] ?? null;
+            if (
+                (is_int($userId) || is_string($userId))
+                && (string) $userId !== ''
+                && $this->accessControl->hasRole((string) $userId, 'root')
+            ) {
+                return true;
+            }
+        }
+
         // 1. Check actor if available
         if ($actor !== null) {
             if (method_exists($actor, 'isAdmin')) {

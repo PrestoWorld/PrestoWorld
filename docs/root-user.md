@@ -105,7 +105,8 @@ Nếu quyền chỉ dành cho một user, tạo role riêng cho user đó thay v
 
 Sau khi gán role, đăng nhập bằng tài khoản đó và truy cập dashboard hoặc API
 của BookPress site mà user không sở hữu. BookPress kiểm tra role `root` từ
-Access Control theo subject `user_id`; role claim trong token hoặc giá trị
+Access Control theo subject `user_id` trong token; middleware tra ACL trực tiếp
+nên việc gán role có hiệu lực mà không cần role claim trong token. Giá trị
 `pw_users.role` không tự cấp quyền này.
 
 Chỉ gán `root` cho tài khoản vận hành đáng tin cậy vì role này có quyền `*`
