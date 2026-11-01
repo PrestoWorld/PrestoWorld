@@ -353,6 +353,7 @@ class Application extends BaseApplication
         $this->register(\App\Providers\ConsoleServiceProvider::class);
         $this->register(\App\Providers\PrestoWorldServiceProvider::class);
         $this->register(\PrestoWorld\Plugin\PluginServiceProvider::class);
+        $this->register(\PrestoWorld\Core\Admin\AdminDashboardServiceProvider::class);
 
         // Context system
         $this->singleton(\Witals\Framework\Context\Contracts\BlockManagerInterface::class, \Witals\Framework\Context\BlockManager::class);
