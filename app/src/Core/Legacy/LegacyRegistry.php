@@ -352,15 +352,33 @@ class LegacyRegistry
         }
 
         if (is_array($callback)) {
-            return ['type' => 'class_method', 'data' => implode('@', array_map('strval', $callback))];
+            try {
+                $parts = [];
+                foreach ($callback as $part) {
+                    if (is_object($part)) {
+                        $parts[] = get_class($part);
+                    } elseif (is_string($part)) {
+                        $parts[] = $part;
+                    } else {
+                        $parts[] = (string)$part;
+                    }
+                }
+                return ['type' => 'class_method', 'data' => implode('@', $parts)];
+            } catch (\Throwable) {
+                return ['type' => 'class_method', 'data' => 'unknown'];
+            }
         }
 
         if ($callback instanceof \Closure) {
             $ref = new \ReflectionFunction($callback);
-            return ['type' => 'closure', 'data' => $ref->getFileName() . ':' . $ref->getStartLine()];
+            return ['type' => 'closure', 'data' => ($ref->getFileName() ?: 'unknown') . ':' . $ref->getStartLine()];
         }
 
-        return ['type' => 'invokable', 'data' => get_class($callback)];
+        if (is_object($callback)) {
+            return ['type' => 'invokable', 'data' => get_class($callback)];
+        }
+
+        return ['type' => 'unknown', 'data' => 'unknown'];
     }
 
     /**
