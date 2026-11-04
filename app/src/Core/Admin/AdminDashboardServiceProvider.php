@@ -18,11 +18,11 @@ class AdminDashboardServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->app->singleton(AdminContextInterface::class, AdminContext::class);
-        $this->app->singleton(AdminContext::class, fn($app) => $app->make(AdminContextInterface::class));
+        $this->app->singleton(AdminContext::class);
+        $this->app->singleton(AdminContextInterface::class, fn($app) => $app->make(AdminContext::class));
 
-        $this->app->singleton(AdminRegistryInterface::class, AdminPageRegistry::class);
-        $this->app->singleton(AdminPageRegistry::class, fn($app) => $app->make(AdminRegistryInterface::class));
+        $this->app->singleton(AdminPageRegistry::class);
+        $this->app->singleton(AdminRegistryInterface::class, fn($app) => $app->make(AdminPageRegistry::class));
 
         $this->app->singleton(WpBridgeMenuAdapter::class);
 

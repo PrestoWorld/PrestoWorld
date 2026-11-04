@@ -16,10 +16,13 @@ use PrestoWorld\Admin\ScreenOptions\ScreenOption;
 use PrestoWorld\Admin\ScreenOptions\ScreenOptionsContext;
 use PrestoWorld\Admin\AdminBar\AdminBarItem;
 use PrestoWorld\Admin\AdminBar\AdminBarContext;
+use PrestoWorld\Bridge\WordPress\Admin\Integration\SharedAdminBridge;
+use Witals\Framework\Contracts\Container;
 
 class SpaController
 {
     protected bool $adminHooksDispatched = false;
+    protected Container $container;
 
     /** Widget-to-component mapping */
     protected const WIDGET_COMPONENTS = [
@@ -35,7 +38,11 @@ class SpaController
         protected DashboardWidgetRepository $widgets,
         protected DashboardScreenRegistryInterface $screens,
         protected ?AuthContextInterface $auth = null,
-    ) {}
+        protected ?AccessControlManager $access = null,
+        ?Container $container = null,
+    ) {
+        $this->container = $container ?? (function_exists('app') ? app(Container::class) : app()->make(Container::class));
+    }
 
     protected const WP_SCREEN_MAP = [
         // Dashboard
@@ -634,6 +641,46 @@ class SpaController
     protected function buildMenuSections(): array
     {
         $this->dispatchAdminHooks();
+
+        // Try to merge from shared admin bridge if available
+        try {
+            if (isset($this->container) && $this->container instanceof Container) {
+                $bridge = new SharedAdminBridge($this->container);
+                $shared = $bridge->getSharedMenuTree();
+                if (is_array($shared) && !empty($shared)) {
+                    // Convert shared tree to sections format if needed
+                    $sections = [];
+                    foreach ($shared as $i => $group) {
+                        $children = $group['children'] ?? [];
+                        if (empty($children)) {
+                            continue;
+                        }
+                        $sections[] = [
+                            'id' => $group['id'] ?? 'section-' . $i,
+                            'title' => $group['label'] ?? $group['title'] ?? '',
+                            'priority' => $group['priority'] ?? 10,
+                            'groups' => [[
+                                'id' => $group['id'] ?? 'group-' . $i,
+                                'label' => $group['label'] ?? $group['title'] ?? '',
+                                'items' => array_map(fn(array $child) => [
+                                    'id' => $child['id'] ?? $child['screenId'] ?? '',
+                                    'screenId' => $child['screenId'] ?? $child['id'] ?? '',
+                                    'label' => $child['label'] ?? $child['title'] ?? '',
+                                    'icon' => $child['icon'] ?? 'Circle',
+                                    'url' => $child['url'] ?? '',
+                                    'href' => $child['url'] ?? '',
+                                    'priority' => $child['priority'] ?? 10,
+                                ], $children),
+                            ]],
+                        ];
+                    }
+                    if (!empty($sections)) {
+                        return $sections;
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+        }
 
         $sections = [];
         

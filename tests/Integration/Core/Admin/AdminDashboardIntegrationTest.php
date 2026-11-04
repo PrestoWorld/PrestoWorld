@@ -7,7 +7,11 @@ namespace Tests\Integration\Core\Admin;
 use PHPUnit\Framework\TestCase;
 use PrestoWorld\Core\Admin\AdminDashboardManager;
 use PrestoWorld\Core\Admin\AdminDashboardServiceProvider;
+use PrestoWorld\Core\Admin\Context\AdminContext;
+use PrestoWorld\Core\Admin\Contracts\AdminContextInterface;
+use PrestoWorld\Core\Admin\Contracts\AdminRegistryInterface;
 use PrestoWorld\Core\Admin\Contracts\AdminPageInterface;
+use PrestoWorld\Core\Admin\Registry\AdminPageRegistry;
 
 class AdminDashboardIntegrationTest extends TestCase
 {
@@ -22,6 +26,11 @@ class AdminDashboardIntegrationTest extends TestCase
         $app->register(AdminDashboardServiceProvider::class);
         $provider = $app->make(AdminDashboardServiceProvider::class);
         $provider->boot();
+
+        $context = $app->make(AdminContextInterface::class);
+        $this->assertSame($context, $app->make(AdminContext::class));
+        $registry = $app->make(AdminRegistryInterface::class);
+        $this->assertSame($registry, $app->make(AdminPageRegistry::class));
 
         $_SERVER['REQUEST_URI'] = '/admin/integration';
         $manager = $app->make(AdminDashboardManager::class);
