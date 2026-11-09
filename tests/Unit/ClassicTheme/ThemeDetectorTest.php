@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\ClassicTheme;
 
 use PHPUnit\Framework\TestCase;
-use PrestoWorld\Modules\ClassicTheme\ThemeDetector;
+use Presto\Theme\Legacy\ThemeDetector;
 use PrestoWorld\Contracts\Theme\ThemeType;
 
 class ThemeDetectorTest extends TestCase

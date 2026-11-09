@@ -6,7 +6,7 @@ namespace Tests\Unit\ClassicTheme;
 
 use PHPUnit\Framework\TestCase;
 use App\Foundation\Application;
-use PrestoWorld\Modules\ClassicTheme\ThemeDetector;
+use Presto\Theme\Legacy\ThemeDetector;
 use PrestoWorld\Contracts\Theme\ThemeType;
 
 class TwentyTwentyIntegrationTest extends TestCase
