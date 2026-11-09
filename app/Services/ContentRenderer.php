@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use PrestoWorld\Modules\ClassicTheme\ClassicThemeEngine;
+use Presto\Theme\Legacy\ClassicThemeEngine;
 use Presto\Theme\Legacy\ThemeDetector;
 use Presto\Context\Loader as ContextLoader;
 use App\Contracts\Services\ContentRenderer as ContentRendererContract;

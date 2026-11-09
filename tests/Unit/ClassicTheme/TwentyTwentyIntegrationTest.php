@@ -54,7 +54,7 @@ class TwentyTwentyIntegrationTest extends TestCase
             $this->markTestSkipped();
         }
 
-        $engine = self::$app->make(\PrestoWorld\Modules\ClassicTheme\ClassicThemeEngine::class);
+        $engine = self::$app->make(\Presto\Theme\Legacy\ClassicThemeEngine::class);
         $loader = $engine->getFunctionsLoader();
         $loader->load();
 
@@ -211,7 +211,7 @@ class TwentyTwentyIntegrationTest extends TestCase
             $this->markTestSkipped();
         }
 
-        $engine = self::$app->make(\PrestoWorld\Modules\ClassicTheme\ClassicThemeEngine::class);
+        $engine = self::$app->make(\Presto\Theme\Legacy\ClassicThemeEngine::class);
         $parser = $engine->getStyleParser();
 
         $this->assertSame('Twenty Twenty', $parser->name());

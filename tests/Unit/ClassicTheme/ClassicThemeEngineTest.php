@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\ClassicTheme;
 
 use PHPUnit\Framework\TestCase;
-use PrestoWorld\Modules\ClassicTheme\ClassicThemeEngine;
+use Presto\Theme\Legacy\ClassicThemeEngine;
 use App\Contracts\Services\RenderedContent;
 use Witals\Framework\Contracts\Container;
 
