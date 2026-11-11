@@ -192,6 +192,7 @@ export const SellerCenterSidebar: React.FC<SellerCenterSidebarProps> = ({
 
   const [activeGroupKey, setActiveGroupKey] = useState<string | null>(() => groupForTab(activeTab));
   const [isLevel2Open, setIsLevel2Open] = useState<boolean>(true);
+  const [groupTooltip, setGroupTooltip] = useState<{ title: string; subtitle?: string; top: number; left: number } | null>(null);
 
   useEffect(() => {
     const next = groupForTab(activeTab);
@@ -368,8 +369,8 @@ export const SellerCenterSidebar: React.FC<SellerCenterSidebarProps> = ({
         </div>
       )}
 
-      <aside className="hidden md:flex h-[calc(100vh-53px)] shrink-0 select-none">
-        <div className="w-[72px] bg-slate-900 text-slate-300 border-r border-slate-800 flex flex-col items-center justify-between py-3 px-2 shrink-0">
+      <aside className="hidden md:flex h-[calc(100vh-53px)] shrink-0 select-none relative">
+        <div className="w-[72px] h-full bg-slate-900 text-slate-300 border-r border-slate-800 flex flex-col items-center py-3 px-2 shrink-0">
           <div className="flex flex-col items-center gap-3 w-full">
             <button
               onClick={onBackToMain}
@@ -379,39 +380,50 @@ export const SellerCenterSidebar: React.FC<SellerCenterSidebarProps> = ({
               <LayoutDashboard className="w-5 h-5" />
             </button>
             <div className="w-8 h-px bg-slate-800" />
-            <div className="space-y-2.5 w-full flex flex-col items-center overflow-visible pb-2">
-              {groups.map((group) => {
-                const Icon = group.icon;
-                const isActive = activeGroup?.key === group.key;
-                const isGroupActive =
-                  group.kind === 'nav' && group.navId
-                    ? isTabActive(group.navId)
-                    : containsActive(group.section?.items as CoreItem[] | undefined, isTabActive);
-                return (
-                  <div key={group.key} className="relative group/tooltip flex flex-col items-center">
-                    <button
-                      onClick={() => handleGroupClick(group)}
-                      aria-label={group.title}
-                      className={`w-11 h-11 rounded-xl flex items-center justify-center transition-all cursor-pointer relative ${
-                        isActive || isGroupActive
-                          ? 'bg-blue-500/20 text-blue-300 border border-blue-500/40'
-                          : 'text-slate-400 hover:text-white hover:bg-slate-800/80'
-                      }`}
-                    >
-                      <Icon className="w-5 h-5" />
-                      {isActive && <span className="absolute left-[-8px] top-2.5 bottom-2.5 w-1 bg-blue-400 rounded-r-md" />}
-                    </button>
-                    <div className="absolute left-full top-1/2 ml-3 -translate-y-1/2 translate-x-1 scale-95 px-2.5 py-1.5 rounded-md bg-slate-950 text-white text-xs whitespace-nowrap shadow-lg border border-slate-800 pointer-events-none opacity-0 transition-all duration-150 ease-out group-hover/tooltip:opacity-100 group-hover/tooltip:translate-x-0 group-hover/tooltip:scale-100 z-50">
-                      <div className="font-semibold">{group.title}</div>
-                      {group.subtitle && <div className="text-[10px] text-slate-400">{group.subtitle}</div>}
+            <div className="flex-1 min-h-0 w-full overflow-y-auto no-scrollbar overscroll-contain pb-2">
+              <div className="space-y-2.5 w-full flex flex-col items-center">
+                {groups.map((group) => {
+                  const Icon = group.icon;
+                  const isActive = activeGroup?.key === group.key;
+                  const isGroupActive =
+                    group.kind === 'nav' && group.navId
+                      ? isTabActive(group.navId)
+                      : containsActive(group.section?.items as CoreItem[] | undefined, isTabActive);
+                  const showTooltip = (e: React.MouseEvent<HTMLButtonElement> | React.FocusEvent<HTMLButtonElement>) => {
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    setGroupTooltip({
+                      title: group.title,
+                      subtitle: group.subtitle,
+                      top: rect.top + rect.height / 2,
+                      left: rect.right + 12,
+                    });
+                  };
+                  return (
+                    <div key={group.key} className="relative flex flex-col items-center">
+                      <button
+                        onClick={() => handleGroupClick(group)}
+                        onMouseEnter={showTooltip}
+                        onMouseLeave={() => setGroupTooltip(null)}
+                        onFocus={showTooltip}
+                        onBlur={() => setGroupTooltip(null)}
+                        aria-label={group.title}
+                        className={`w-11 h-11 rounded-xl flex items-center justify-center transition-all cursor-pointer relative ${
+                          isActive || isGroupActive
+                            ? 'bg-blue-500/20 text-blue-300 border border-blue-500/40'
+                            : 'text-slate-400 hover:text-white hover:bg-slate-800/80'
+                        }`}
+                      >
+                        <Icon className="w-5 h-5" />
+                        {isActive && <span className="absolute left-[-8px] top-2.5 bottom-2.5 w-1 bg-blue-400 rounded-r-md" />}
+                      </button>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
           </div>
 
-          <div className="flex flex-col items-center gap-2 w-full pt-3 border-t border-slate-800">
+          <div className="flex flex-col items-center gap-2 w-full pt-3 mt-2 border-t border-slate-800 shrink-0">
             <button
               onClick={() => setIsLevel2Open((v) => !v)}
               className="w-9 h-9 rounded-lg bg-slate-800/90 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
@@ -421,6 +433,15 @@ export const SellerCenterSidebar: React.FC<SellerCenterSidebarProps> = ({
             </button>
           </div>
         </div>
+        {groupTooltip && (
+          <div
+            className="fixed -translate-y-1/2 px-2.5 py-1.5 rounded-md bg-slate-950 text-white text-xs whitespace-nowrap shadow-lg border border-slate-800 pointer-events-none z-[60] transition-opacity duration-150"
+            style={{ top: groupTooltip.top, left: groupTooltip.left }}
+          >
+            <div className="font-semibold">{groupTooltip.title}</div>
+            {groupTooltip.subtitle && <div className="text-[10px] text-slate-400">{groupTooltip.subtitle}</div>}
+          </div>
+        )}
 
         {isLevel2Open && activeGroup && (
           <div className="w-72 bg-white border-r border-slate-200 flex flex-col h-full shadow-sm">
