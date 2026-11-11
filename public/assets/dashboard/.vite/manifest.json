@@ -3,80 +3,80 @@
     "file": "js/vendor-Bb8JjhAW.js",
     "name": "vendor"
   },
-  "_vendor-lucide-BlvTGd9P.js": {
-    "file": "js/vendor-lucide-BlvTGd9P.js",
+  "_vendor-lucide-B38J1o_s.js": {
+    "file": "js/vendor-lucide-B38J1o_s.js",
     "name": "vendor-lucide",
     "imports": [
-      "_vendor-react-ioS9alIq.js"
+      "_vendor-react-CEXlOd6k.js"
     ]
   },
-  "_vendor-react-ioS9alIq.js": {
-    "file": "js/vendor-react-ioS9alIq.js",
+  "_vendor-react-CEXlOd6k.js": {
+    "file": "js/vendor-react-CEXlOd6k.js",
     "name": "vendor-react",
     "imports": [
       "_vendor-Bb8JjhAW.js"
     ]
   },
   "src/components/pages/AnalyticsPage.tsx": {
-    "file": "js/AnalyticsPage-8EbzBqwF.js",
+    "file": "js/AnalyticsPage-DXE6yKbJ.js",
     "name": "AnalyticsPage",
     "src": "src/components/pages/AnalyticsPage.tsx",
     "isDynamicEntry": true,
     "imports": [
-      "_vendor-react-ioS9alIq.js",
+      "_vendor-react-CEXlOd6k.js",
       "_vendor-Bb8JjhAW.js"
     ]
   },
   "src/components/pages/CachePage.tsx": {
-    "file": "js/CachePage-jXJQ0kg5.js",
+    "file": "js/CachePage-CEinRlpo.js",
     "name": "CachePage",
     "src": "src/components/pages/CachePage.tsx",
     "isDynamicEntry": true,
     "imports": [
-      "_vendor-react-ioS9alIq.js",
-      "_vendor-lucide-BlvTGd9P.js",
+      "_vendor-react-CEXlOd6k.js",
+      "_vendor-lucide-B38J1o_s.js",
       "_vendor-Bb8JjhAW.js"
     ]
   },
   "src/components/pages/InventoryPage.tsx": {
-    "file": "js/InventoryPage-hbtndbuF.js",
+    "file": "js/InventoryPage-Dq6btqvh.js",
     "name": "InventoryPage",
     "src": "src/components/pages/InventoryPage.tsx",
     "isDynamicEntry": true,
     "imports": [
-      "_vendor-react-ioS9alIq.js",
-      "_vendor-lucide-BlvTGd9P.js",
+      "_vendor-react-CEXlOd6k.js",
+      "_vendor-lucide-B38J1o_s.js",
       "_vendor-Bb8JjhAW.js"
     ]
   },
   "src/components/pages/MarketingPage.tsx": {
-    "file": "js/MarketingPage-C2e-SFiJ.js",
+    "file": "js/MarketingPage-CkusaaWA.js",
     "name": "MarketingPage",
     "src": "src/components/pages/MarketingPage.tsx",
     "isDynamicEntry": true,
     "imports": [
-      "_vendor-react-ioS9alIq.js",
+      "_vendor-react-CEXlOd6k.js",
       "_vendor-Bb8JjhAW.js"
     ]
   },
   "src/components/pages/OrdersPage.tsx": {
-    "file": "js/OrdersPage-DspFX2Cc.js",
+    "file": "js/OrdersPage-Bi78nzAH.js",
     "name": "OrdersPage",
     "src": "src/components/pages/OrdersPage.tsx",
     "isDynamicEntry": true,
     "imports": [
-      "_vendor-react-ioS9alIq.js",
+      "_vendor-react-CEXlOd6k.js",
       "_vendor-Bb8JjhAW.js"
     ]
   },
   "src/components/pages/OverviewPage.tsx": {
-    "file": "js/OverviewPage-CFRO5OU2.js",
+    "file": "js/OverviewPage-1p4PzG5M.js",
     "name": "OverviewPage",
     "src": "src/components/pages/OverviewPage.tsx",
     "isDynamicEntry": true,
     "imports": [
-      "_vendor-react-ioS9alIq.js",
-      "_vendor-lucide-BlvTGd9P.js",
+      "_vendor-react-CEXlOd6k.js",
+      "_vendor-lucide-B38J1o_s.js",
       "_vendor-Bb8JjhAW.js"
     ]
   },
@@ -86,8 +86,8 @@
     "src": "src/main.tsx",
     "isEntry": true,
     "imports": [
-      "_vendor-react-ioS9alIq.js",
-      "_vendor-lucide-BlvTGd9P.js",
+      "_vendor-react-CEXlOd6k.js",
+      "_vendor-lucide-B38J1o_s.js",
       "_vendor-Bb8JjhAW.js"
     ],
     "dynamicImports": [
