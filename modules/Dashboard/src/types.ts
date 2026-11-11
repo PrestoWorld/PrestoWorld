@@ -6,6 +6,10 @@ export interface User {
   email?: string;
 }
 
+/**
+ * Menu item contract for PHP-registered dashboard menus.
+ * PHP may serialize nested entries as `items` and/or `children`.
+ */
 export interface MenuItem {
   id: string;
   label: string;
@@ -18,6 +22,10 @@ export interface MenuItem {
   items?: MenuItem[];
 }
 
+/**
+ * Menu section contract (Level 1 group with nested Level 2+ items).
+ * Registered/assembled on PHP side and delivered via initial state/API.
+ */
 export interface MenuSection {
   id: string;
   title: string;
@@ -27,6 +35,10 @@ export interface MenuSection {
   items: MenuItem[];
 }
 
+/**
+ * Subsystem nav contract (Level 1 rail item), typically registered via
+ * `DashboardSubsystem::register(...)` on PHP side.
+ */
 export interface SubsystemNavItem {
   id: string;
   label: string;
@@ -89,7 +101,9 @@ export interface AdminBarContext {
 export interface InitialState {
   user: User;
   screens: Screen[];
+  /** PHP-registered content/menu sections rendered as Level 1 groups with nested items. */
   menuSections: MenuSection[];
+  /** PHP-registered subsystems rendered as Level 1 rail entries. */
   subsystems?: SubsystemNavItem[];
   widgets: DashboardWidget[];
   screenOptions: ScreenOptionsContext[];
@@ -112,5 +126,21 @@ declare global {
     __INITIAL_DASHBOARD_STATE__?: InitialState;
   }
 }
+
+export type {
+  DashboardMenuItem,
+  DashboardMenuSection,
+  DashboardSubsystemNavItem,
+  SidebarLevel,
+  SidebarMenuGroup,
+  SidebarMenuNode,
+} from './nav/menuConcept';
+export {
+  PhpMenuRegistrationConcept,
+  normalizeMenuSections,
+  normalizeSubsystemNav,
+  normalizeMenuNode,
+  resolveMenuItemId,
+} from './nav/menuConcept';
 
 export {};
