@@ -158,7 +158,7 @@ export const SellerCenterPage: React.FC<SellerCenterPageProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col font-sans transition-colors animate-in fade-in duration-200 overflow-x-hidden">
+    <div className="h-full bg-slate-100 flex flex-col font-sans transition-colors animate-in fade-in duration-200 overflow-x-hidden">
       <SellerCenterHeader
         onBackToMain={onBackToMain}
         activeTab={activeTab}

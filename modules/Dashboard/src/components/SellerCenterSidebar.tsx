@@ -368,9 +368,9 @@ export const SellerCenterSidebar: React.FC<SellerCenterSidebarProps> = ({
         </div>
       )}
 
-      <aside className="hidden md:flex h-[calc(100vh-53px)] shrink-0 select-none">
-        <div className="w-[72px] bg-slate-900 text-slate-300 border-r border-slate-800 flex flex-col items-center justify-between py-3 px-2 shrink-0">
-          <div className="flex flex-col items-center gap-3 w-full">
+      <aside className="hidden md:flex h-full shrink-0 select-none relative">
+        <div className="w-[72px] h-full bg-slate-900 text-slate-300 border-r border-slate-800 flex flex-col items-center py-3 px-2 shrink-0">
+          <div className="flex flex-col items-center gap-3 w-full flex-1 min-h-0">
             <button
               onClick={onBackToMain}
               title="Về Trang Chủ"
