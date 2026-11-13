@@ -114,6 +114,8 @@ export interface InitialState {
     title: string;
     screenId: string;
   };
+  /** Module bundle URLs that register menus (to preload before render) */
+  menuBundles?: string[];
 }
 
 export interface ApiResponse<T> {

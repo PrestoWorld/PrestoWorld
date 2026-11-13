@@ -348,6 +348,7 @@ class SpaController
             'menuSections' => $menuSections,
             'subsystems' => $subsystems,
             'widgets' => $widgets,
+            'menuBundles' => $this->getMenuBundles(),
             'page' => [
                 'path' => $path ?? '/dashboard',
                 'title' => $title,
@@ -635,6 +636,37 @@ class SpaController
         }
 
         return null;
+    }
+
+    /** Get module bundle URLs that register menus (to preload on dashboard load) */
+    protected function getMenuBundles(): array
+    {
+        $bundles = [];
+        $moduleDirs = [
+            'OwlRoyalty' => 'modules/OwlRoyalty',
+            'accounting' => 'modules/Accounting',
+            'socialfeed' => 'modules/SocialFeed',
+            'MarketingCampaign' => 'modules/MarketingCampaign',
+        ];
+
+        foreach ($moduleDirs as $dirName => $modulePath) {
+            $manifestPath = base_path("public/assets/modules/{$dirName}/.vite/manifest.json");
+            if (!is_file($manifestPath)) {
+                continue;
+            }
+            $manifest = json_decode(file_get_contents($manifestPath), true);
+            if (!is_array($manifest)) {
+                continue;
+            }
+            foreach ($manifest as $node) {
+                if (is_array($node) && ($node['isEntry'] ?? false) === true && ($node['file'] ?? '')) {
+                    $bundles[] = "/assets/modules/{$dirName}/" . $node['file'];
+                    break;
+                }
+            }
+        }
+
+        return $bundles;
     }
 
     /** Build sidebar sections from the registered menu tree */
