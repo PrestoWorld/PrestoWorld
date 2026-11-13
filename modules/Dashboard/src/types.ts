@@ -67,6 +67,7 @@ export interface Screen {
   icon: string;
   position: number;
   component?: string | null;
+  componentUrl?: string;
   source?: string;
   settings?: Record<string, unknown>;
 }
@@ -131,6 +132,8 @@ export type {
   DashboardMenuItem,
   DashboardMenuSection,
   DashboardSubsystemNavItem,
+  NavGroup,
+  NavItem,
   SidebarLevel,
   SidebarMenuGroup,
   SidebarMenuNode,

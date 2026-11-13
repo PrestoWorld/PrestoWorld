@@ -9,6 +9,7 @@ export interface ScreenProps {
   menuSections: MenuSection[];
   user: User;
   settings?: Record<string, unknown>;
+  onNavigate?: (screenId: string) => void;
 }
 
 export type ScreenComponent = ComponentType<ScreenProps>;
