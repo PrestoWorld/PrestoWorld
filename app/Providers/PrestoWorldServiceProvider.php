@@ -55,6 +55,13 @@ class PrestoWorldServiceProvider extends ServiceProvider
     public function boot(): void
     {
         if (function_exists('storage_path')) {
+            // Load project-level WordPress admin menu shims BEFORE vendor shims
+            // so our PrestoWorld-backed implementations take priority.
+            $shimFile = __DIR__ . '/../../src/Core/Admin/WpAdminMenuShims.php';
+            if (is_file($shimFile)) {
+                require_once $shimFile;
+            }
+
             $shims = new ShimLoader();
             $shims->loadGroup('hooks');
             $shims->loadGroup('compat');
