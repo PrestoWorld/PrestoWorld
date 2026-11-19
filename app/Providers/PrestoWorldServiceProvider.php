@@ -6,6 +6,8 @@ namespace App\Providers;
 
 use App\Support\ServiceProvider;
 use PrestoWorld\Core\Database\PrestoWpdb;
+use PrestoWorld\Core\Admin\Contracts\CurrentScreenInterface;
+use PrestoWorld\Core\Admin\Context\CurrentScreenService;
 use PrestoWorld\Core\Legacy\LegacyHook;
 use PrestoWorld\Core\Legacy\LegacyRegistry;
 use PrestoWorld\Core\Legacy\LegacyState;
@@ -45,6 +47,12 @@ class PrestoWorldServiceProvider extends ServiceProvider
         $this->singleton(PrestoWpdb::class, function (): PrestoWpdb {
             return PrestoWpdb::instance();
         });
+
+        // Admin Dashboard bindings
+        $this->app->singleton(MenuContextRepositoryContract::class, MenuContextRepository::class);
+        $this->app->singleton(DashboardScreenRegistryInterface::class, DashboardScreenRegistry::class);
+        $this->app->singleton(DashboardWidgetRepositoryContract::class, DashboardWidgetRepository::class);
+        $this->app->singleton(CurrentScreenInterface::class, CurrentScreenService::class);
 
         // Lifecycle adapter: quét ResettableInterface gọi LegacyState::reset()
         // sau mỗi request (spec 10 §10.7.2).

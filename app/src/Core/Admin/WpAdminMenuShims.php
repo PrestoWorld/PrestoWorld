@@ -257,3 +257,29 @@ if (!function_exists('_presto_sanitize_key')) {
         return trim($key, '-');
     }
 }
+
+if (!function_exists('get_current_screen')) {
+    /**
+     * WordPress-compatible get_current_screen() shim.
+     *
+     * Returns a WP_Screen-compatible object describing the current admin
+     * screen, or null if not on a wp-admin page. Backed by
+     * CurrentScreenService (request-scoped, Roadrunner-safe).
+     *
+     * @return \PrestoWorld\Core\Admin\Contracts\WpScreenInterface|null
+     */
+    function get_current_screen(): ?\PrestoWorld\Core\Admin\Contracts\WpScreenInterface
+    {
+        try {
+            $app = function_exists('app') ? app() : null;
+            if ($app === null || !method_exists($app, 'has') || !$app->has(\PrestoWorld\Core\Admin\Contracts\CurrentScreenInterface::class)) {
+                return null;
+            }
+            /** @var \PrestoWorld\Core\Admin\Contracts\CurrentScreenInterface $service */
+            $service = $app->make(\PrestoWorld\Core\Admin\Contracts\CurrentScreenInterface::class);
+            return $service instanceof \PrestoWorld\Core\Admin\Contracts\CurrentScreenInterface ? $service->getScreen() : null;
+        } catch (\Throwable $e) {
+            return null;
+        }
+    }
+}
