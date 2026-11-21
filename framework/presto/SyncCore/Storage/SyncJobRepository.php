@@ -160,11 +160,30 @@ final class SyncJobRepository
             ->limit(1)
             ->run()->fetch();
 
+        $dayAgo = time() - 86400;
+        $recentQuery = $this->db->select('*')->from($this->table('sync_jobs'))
+            ->where('platform', $platform)
+            ->where('created_at', '>=', $dayAgo);
+
+        $total = (int) $this->db->select('*')->from($this->table('sync_jobs'))->where('platform', $platform)->count();
+        $running = (int) $this->db->select('*')->from($this->table('sync_jobs'))->where('platform', $platform)->where('status', SyncStatus::RUNNING->value)->count();
+        $failed = (int) $this->db->select('*')->from($this->table('sync_jobs'))->where('platform', $platform)->where('status', SyncStatus::FAILED->value)->count();
+        $lastRow = $last === false ? null : SyncJob::fromRow((array) $last)->toArray();
+        $lastSyncAt = 0;
+        if ($lastRow !== null) {
+            $finishedAt = (int) ($lastRow['finished_at'] ?? 0);
+            $createdAt = (int) ($lastRow['created_at'] ?? 0);
+            $lastSyncAt = $finishedAt > 0 ? $finishedAt : $createdAt;
+        }
+
         return [
-            'total' => (int) $this->db->select('*')->from($this->table('sync_jobs'))->where('platform', $platform)->count(),
-            'running' => (int) $this->db->select('*')->from($this->table('sync_jobs'))->where('platform', $platform)->where('status', SyncStatus::RUNNING->value)->count(),
-            'failed' => (int) $this->db->select('*')->from($this->table('sync_jobs'))->where('platform', $platform)->where('status', SyncStatus::FAILED->value)->count(),
-            'last' => $last === false ? null : SyncJob::fromRow((array) $last)->toArray(),
+            'total' => $total,
+            'total_jobs' => $total,
+            'jobs_24h' => (int) $recentQuery->count(),
+            'running' => $running,
+            'failed' => $failed,
+            'last_sync_at' => $lastSyncAt,
+            'last' => $lastRow,
         ];
     }
 

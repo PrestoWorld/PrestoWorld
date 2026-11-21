@@ -14,6 +14,7 @@ use PrestoWorld\Core\SyncCore\Storage\SyncJobRepository;
 use PrestoWorld\Core\SyncCore\Storage\SyncMappingRepository;
 use PrestoWorld\Core\SyncCore\Storage\SyncRecordRepository;
 use PrestoWorld\Core\SyncCore\Storage\SyncSettingsRepository;
+use PrestoWorld\Core\SyncCore\Service\SyncLogger;
 use Witals\Framework\Application;
 use Witals\Framework\Queue\QueueManager;
 
@@ -26,6 +27,7 @@ final class SyncEngine
         private SyncJobRepository $jobs,
         private SyncRecordRepository $records,
         private SyncMappingRepository $mappings,
+        private ?SyncLogger $logger = null,
     ) {
     }
 
@@ -177,6 +179,13 @@ final class SyncEngine
 
         $this->jobs->markRunning($jobId);
 
+        $this->logger?->system(
+            sprintf('Bắt đầu đồng bộ %s/%s (%s)', $job->platform, $job->resource, $job->direction),
+            ['job_id' => $jobId],
+            $job->platform,
+            $job->resource,
+        );
+
         try {
             $count = $direction === SyncDirection::INBOUND
                 ? $connector->runInbound($job->resource, $job->options, $settings, $observer)
@@ -192,6 +201,21 @@ final class SyncEngine
                 $totals['failed'],
                 $totals['skipped'],
                 $totals['page'],
+            );
+
+            $this->logger?->system(
+                sprintf(
+                    'Hoàn tất %s/%s: %d thành công, %d lỗi, %d bỏ qua (job #%d)',
+                    $job->platform,
+                    $job->resource,
+                    $totals['succeeded'],
+                    $totals['failed'],
+                    $totals['skipped'],
+                    $jobId,
+                ),
+                ['job_id' => $jobId, 'succeeded' => $totals['succeeded'], 'failed' => $totals['failed'], 'skipped' => $totals['skipped']],
+                $job->platform,
+                $job->resource,
             );
 
             if ($observer->cancelled()) {
@@ -219,6 +243,12 @@ final class SyncEngine
         } catch (\Throwable $e) {
             $observer->flush(true);
             $this->jobs->finish($jobId, SyncStatus::FAILED, $e->getMessage());
+            $this->logger?->error(
+                sprintf('Lỗi đồng bộ %s/%s (job #%d): %s', $job->platform, $job->resource, $jobId, $e->getMessage()),
+                ['job_id' => $jobId, 'exception' => $e::class],
+                $job->platform,
+                $job->resource,
+            );
 
             return false;
         }

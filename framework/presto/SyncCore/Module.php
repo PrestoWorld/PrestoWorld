@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PrestoWorld\Core\SyncCore;
 
 use App\Http\Routing\Contracts\RouteRegistryInterface;
+use Cycle\Database\DatabaseInterface;
 use PrestoWorld\Core\SyncCore\Domain\Contracts\ConnectorRegistryInterface;
 use PrestoWorld\Core\SyncCore\Engine\ConnectorRegistry;
 use PrestoWorld\Core\SyncCore\Engine\SyncEngine;
@@ -13,6 +14,7 @@ use PrestoWorld\Core\SyncCore\Storage\SyncJobRepository;
 use PrestoWorld\Core\SyncCore\Storage\SyncMappingRepository;
 use PrestoWorld\Core\SyncCore\Storage\SyncRecordRepository;
 use PrestoWorld\Core\SyncCore\Storage\SyncSettingsRepository;
+use PrestoWorld\Core\SyncCore\Service\SyncLogger;
 use Witals\Framework\Application;
 use Witals\Framework\Console\Kernel;
 use Witals\Framework\Module\Module as WitalsModule;
@@ -66,6 +68,12 @@ class Module extends WitalsModule
             $app->make(SyncJobRepository::class),
             $app->make(SyncRecordRepository::class),
             $app->make(SyncMappingRepository::class),
+            $app->make(SyncLogger::class),
+        ));
+
+        $app->singleton(SyncLogger::class, fn (Application $app) => new SyncLogger(
+            $app,
+            $app->make(DatabaseInterface::class),
         ));
     }
 
