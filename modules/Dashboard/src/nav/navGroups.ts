@@ -75,6 +75,7 @@ export const NAV_GROUP_CONFIGS: NavGroupConfig[] = [
     label: 'Nội Dung & Sách',
     icon: BookOpen,
     subsystemIds: ['books', 'book-social', 'book-auction', 'book-rental', 'social-feed', 'user-follows'],
+    sectionIds: ['media'],
   },
   {
     key: 'marketing',

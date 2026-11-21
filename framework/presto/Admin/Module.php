@@ -119,6 +119,7 @@ class Module extends WitalsModule
         $menu->registerItem('posts-group', 'Tags', '#/edit-tags?taxonomy=post_tag', icon: 'Tags', priority: 40, id: 'post-tags', screenId: 'edit-tags');
 
         $m++; // Media
+        $menu->registerSection('media', 'Media', 'Image', $m);
         $menu->registerGroup('media-group', 'Media', icon: 'Image', priority: $m++, attributes: ['section' => 'media']);
         $menu->registerItem('media-group', 'Library', '#/upload', icon: 'Image', priority: 10, id: 'media', screenId: 'upload');
         $menu->registerItem('media-group', 'Add New', '#/media-new', icon: 'Plus', priority: 20, id: 'media-new', screenId: 'media-new');
